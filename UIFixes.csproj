@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net471</TargetFramework>
+    <AssemblyName>Tyfon.UIFixes</AssemblyName>
+    <Description>SPT UI Fixes</Description>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<Reference Include="Aki.Reflection">
+	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
+	</Reference>
+	<Reference Include="Assembly-CSharp">
+	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEngine">
+	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEngine.CoreModule">
+	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+	</Reference>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+  </ItemGroup> 
+  
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup> 
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0-debug\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0-debug\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;)" />
+  </Target>
+</Project>
