@@ -15,6 +15,7 @@ namespace UIFixes
             new MailReceiveAllPatch().Enable();
             ScrollPatches.Enable();
             WeaponZoomPatch.Enable();
+            new WeaponBindingPatch().Enable();
         }
     }
 }
