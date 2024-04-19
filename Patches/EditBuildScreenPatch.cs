@@ -12,6 +12,12 @@ namespace UIFixes
     {
         public static bool MoveForward;
 
+        public static void Enable()
+        {
+            new CloseScreenInterruptionPatch().Enable();
+            new ConfirmDiscardPatch().Enable();
+        }
+
         public class CloseScreenInterruptionPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()

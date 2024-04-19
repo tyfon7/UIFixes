@@ -9,8 +9,7 @@ namespace UIFixes
         {
             Settings.Init(Config);
 
-            new EditBuildScreenPatch.CloseScreenInterruptionPatch().Enable();
-            new EditBuildScreenPatch.ConfirmDiscardPatch().Enable();
+            EditBuildScreenPatch.Enable();
             new TransferConfirmPatch().Enable();
             new MailReceiveAllPatch().Enable();
             ScrollPatches.Enable();
