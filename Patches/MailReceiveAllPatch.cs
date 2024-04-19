@@ -1,7 +1,7 @@
 using Aki.Reflection.Patching;
+using EFT.UI.Chat;
 using System;
 using System.Reflection;
-using EFT.UI.Chat;
 
 namespace UIFixes
 {

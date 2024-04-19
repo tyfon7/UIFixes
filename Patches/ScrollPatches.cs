@@ -7,7 +7,6 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -58,6 +57,45 @@ namespace UIFixes
             }
         }
 
+        // LightScrollers don't expose heights that I can see, so just fudge it with fake OnScroll events
+        protected static void HandleInput(LightScroller lightScroller)
+        {
+            if (lightScroller != null)
+            {
+                if (Settings.UseHomeEnd.Value)
+                {
+                    if (Input.GetKeyDown(KeyCode.Home))
+                    {
+                        lightScroller.SetScrollPosition(0f);
+                    }
+                    if (Input.GetKeyDown(KeyCode.End))
+                    {
+                        lightScroller.SetScrollPosition(1f);
+                    }
+                }
+
+                if (Settings.RebindPageUpDown.Value)
+                {
+                    if (Input.GetKeyDown(KeyCode.PageUp))
+                    {
+                        var eventData = new PointerEventData(EventSystem.current)
+                        {
+                            scrollDelta = new Vector2(0f, 25f)
+                        };
+                        lightScroller.OnScroll(eventData);
+                    }
+                    if (Input.GetKeyDown(KeyCode.PageDown))
+                    {
+                        var eventData = new PointerEventData(EventSystem.current)
+                        {
+                            scrollDelta = new Vector2(0f, -25f)
+                        };
+                        lightScroller.OnScroll(eventData);
+                    }
+                }
+            }
+        }
+
         protected static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
         {
             foreach (var instruction in instructions)
@@ -92,10 +130,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(SimpleStashPanel __instance)
+            private static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
             {
-                ScrollRect stashScroll = Traverse.Create(__instance).Field("_stashScroll").GetValue<ScrollRect>();
-                HandleInput(stashScroll);
+                HandleInput(____stashScroll);
             }
 
             [PatchTranspiler]
@@ -119,11 +156,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(TraderDealScreen __instance)
+            private static void Prefix(TraderDealScreen __instance, TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
             {
-                TraderDealScreen.ETraderMode mode = Traverse.Create(__instance).Field("etraderMode_0").GetValue<TraderDealScreen.ETraderMode>();
-                ScrollRect traderScroll = Traverse.Create(__instance).Field(mode == TraderDealScreen.ETraderMode.Purchase ? "_traderScroll" : "_stashScroll").GetValue<ScrollRect>();
-                HandleInput(traderScroll);
+                HandleInput(___etraderMode_0 == TraderDealScreen.ETraderMode.Purchase ? ____traderScroll : ____stashScroll);
             }
 
             [PatchTranspiler]
@@ -147,46 +182,11 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(OfferViewList __instance)
+            private static void Prefix(OfferViewList __instance, LightScroller ____scroller)
             {
-                LightScroller scroller = Traverse.Create(__instance).Field("_scroller").GetValue<LightScroller>();
-
                 // Different kind of scroller - I don't see a way to get the rects. 
                 // New approach: faking scroll events
-                if (scroller != null)
-                {
-                    if (Settings.UseHomeEnd.Value)
-                    {
-                        if (Input.GetKeyDown(KeyCode.Home))
-                        {
-                            scroller.SetScrollPosition(0f);
-                        }
-                        if (Input.GetKeyDown(KeyCode.End))
-                        {
-                            scroller.SetScrollPosition(1f);
-                        }
-                    }
-
-                    if (Settings.RebindPageUpDown.Value)
-                    {
-                        if (Input.GetKeyDown(KeyCode.PageUp))
-                        {
-                            var eventData = new PointerEventData(EventSystem.current)
-                            {
-                                scrollDelta = new Vector2(0f, 25f)
-                            };
-                            scroller.OnScroll(eventData);
-                        }
-                        if (Input.GetKeyDown(KeyCode.PageDown))
-                        {
-                            var eventData = new PointerEventData(EventSystem.current)
-                            {
-                                scrollDelta = new Vector2(0f, -25f)
-                            };
-                            scroller.OnScroll(eventData);
-                        }
-                    }
-                }
+                HandleInput(____scroller);
             }
 
             [PatchTranspiler]
@@ -210,10 +210,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(MessagesContainer __instance)
+            private static void Prefix(MessagesContainer __instance, LightScroller ____scroller)
             {
-                ScrollRect scroller = Traverse.Create(__instance).Field("_scroller").GetValue<ScrollRect>();
-                HandleInput(scroller);
+                HandleInput(____scroller);
             }
 
             [PatchTranspiler]

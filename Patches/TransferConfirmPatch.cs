@@ -1,7 +1,7 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.UI;
 using System;
 using System.Reflection;
-using EFT.UI;
 using System.Threading.Tasks;
 
 namespace UIFixes

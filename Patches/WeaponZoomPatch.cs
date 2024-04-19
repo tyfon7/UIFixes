@@ -2,7 +2,6 @@
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.WeaponModding;
-using HarmonyLib;
 using System;
 using System.Reflection;
 using UnityEngine.EventSystems;
@@ -27,9 +26,8 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(EditBuildScreen __instance)
+            private static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
             {
-                WeaponPreview weaponPreview = Traverse.Create(__instance).Field("_weaponPreview").GetValue<WeaponPreview>();
                 if (ScrollTrigger == null)
                 {
                     ScrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
@@ -37,9 +35,9 @@ namespace UIFixes
 
                 ScrollTrigger.OnOnScroll += (PointerEventData eventData) =>
                 {
-                    if (weaponPreview != null && __instance != null)
+                    if (____weaponPreview != null && __instance != null)
                     {
-                        weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                        ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
                         __instance.UpdatePositions();
                     }
                 };
@@ -56,9 +54,8 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            private static void Prefix(WeaponModdingScreen __instance)
+            private static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
             {
-                WeaponPreview weaponPreview = Traverse.Create(__instance).Field("_weaponPreview").GetValue<WeaponPreview>();
                 if (ScrollTrigger == null)
                 {
                     ScrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
@@ -66,9 +63,9 @@ namespace UIFixes
 
                 ScrollTrigger.OnOnScroll += (PointerEventData eventData) =>
                 {
-                    if (weaponPreview != null && __instance != null)
+                    if (____weaponPreview != null && __instance != null)
                     {
-                        weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                        ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
                         __instance.UpdatePositions();
                     }
                 };
