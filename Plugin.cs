@@ -14,6 +14,7 @@ namespace UIFixes
             new EditBuildScreenPatch.ConfirmDiscardPatch().Enable();
             new TransferConfirmPatch().Enable();
             new MailReceiveAllPatch().Enable();
+            ScrollPatches.Enable();
         }
     }
 }
