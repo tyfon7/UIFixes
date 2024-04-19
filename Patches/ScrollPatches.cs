@@ -121,7 +121,8 @@ namespace UIFixes
             [PatchPrefix]
             private static void Prefix(TraderDealScreen __instance)
             {
-                ScrollRect traderScroll = Traverse.Create(__instance).Field("_traderScroll").GetValue<ScrollRect>();
+                TraderDealScreen.ETraderMode mode = Traverse.Create(__instance).Field("etraderMode_0").GetValue<TraderDealScreen.ETraderMode>();
+                ScrollRect traderScroll = Traverse.Create(__instance).Field(mode == TraderDealScreen.ETraderMode.Purchase ? "_traderScroll" : "_stashScroll").GetValue<ScrollRect>();
                 HandleInput(traderScroll);
             }
 
