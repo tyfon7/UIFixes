@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using BepInEx.Configuration;
 
 namespace UIFixes
 {
@@ -15,6 +14,7 @@ namespace UIFixes
             new TransferConfirmPatch().Enable();
             new MailReceiveAllPatch().Enable();
             ScrollPatches.Enable();
+            WeaponZoomPatch.Enable();
         }
     }
 }
