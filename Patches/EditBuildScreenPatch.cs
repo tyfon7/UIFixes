@@ -1,6 +1,7 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.UI;
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -22,8 +23,8 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(EditBuildScreen.GClass3126);
-                return type.GetMethod("CloseScreenInterruption", BindingFlags.Public | BindingFlags.Instance);
+                Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3126
+                return type.GetMethod("CloseScreenInterruption");
             }
 
             [PatchPrefix]
@@ -38,7 +39,7 @@ namespace UIFixes
             protected override MethodBase GetTargetMethod() 
             {
                 Type type = typeof(EditBuildScreen);
-                return type.GetMethod("method_35", BindingFlags.Public | BindingFlags.Instance);
+                return type.GetMethod("method_35");
             }
 
             [PatchPrefix]
