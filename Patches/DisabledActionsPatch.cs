@@ -27,7 +27,6 @@ namespace UIFixes
                 {
                     if (__result.Actions[i].Disabled)
                     {
-                        Logger.LogInfo(__result.Actions[i].Name);
                         __result.Actions.RemoveAt(i);
                     }
                 }
