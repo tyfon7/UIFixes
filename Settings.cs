@@ -9,6 +9,7 @@ namespace UIFixes
         public static ConfigEntry<bool> TransferConfirmOnClose { get; set; }
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
+        public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
 
         public static void Init(ConfigFile config)
         {
@@ -17,6 +18,7 @@ namespace UIFixes
             TransferConfirmOnClose = config.Bind<bool>("Transfer Items", "Confirm untransfered items", false, "Whether to pointlessly confirm that you're leaving the item transfer with literally no consequences");
             UseHomeEnd = config.Bind<bool>("Keybinds", "Add support for Home and End", true, "Home and End will scroll to the top and bottom of lists");
             RebindPageUpDown = config.Bind<bool>("Keybinds", "Use normal PageUp and PageDown (requires restart)", true, "Changes PageUp and PageDown to simply page up and down, not scroll all the way to top and bottom");
+            RemoveDisabledActions = config.Bind<bool>("In Raid", "Hide unimplemented actions", false, "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors and other interactable objects");
         }
     }
 }

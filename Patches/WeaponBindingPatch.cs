@@ -1,14 +1,10 @@
 ﻿using Aki.Reflection.Patching;
+using Aki.Reflection.Utils;
+using EFT.InputSystem;
 using EFT.InventoryLogic;
-using EFT.UI.WeaponModding;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using EFT.InputSystem;
-using Aki.Reflection.Utils;
 
 namespace UIFixes
 {
@@ -25,7 +21,7 @@ namespace UIFixes
         }
 
         [PatchPostfix]
-        private static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
+        private static void Postfix(object /*GClass960*/ __instance, EBoundItem boundItem, ref string __result)
         {
             switch(boundItem)
             {
