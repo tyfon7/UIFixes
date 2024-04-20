@@ -189,8 +189,6 @@ namespace UIFixes
             [PatchPrefix]
             private static void Prefix(OfferViewList __instance, LightScroller ____scroller)
             {
-                // Different kind of scroller - I don't see a way to get the rects. 
-                // New approach: faking scroll events
                 HandleInput(____scroller);
             }
 
