@@ -132,6 +132,11 @@ namespace UIFixes
             [PatchPrefix]
             private static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
             {
+                if (____stashScroll == null)
+                {
+                    // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
+                    ____stashScroll = __instance.GetComponentInChildren<ScrollRect>();
+                }
                 HandleInput(____stashScroll);
             }
 
