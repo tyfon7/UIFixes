@@ -12,13 +12,16 @@ namespace UIFixes
         [PatchPrefix]
         public static void Prefix(ScrollRect ____stashScroll)
         {
-            if (Settings.FasterInventoryScroll.Value)
+            if (____stashScroll != null)
             {
-                ____stashScroll.scrollSensitivity = Settings.FasterInventoryScrollSpeed.Value;
-            }
-            else
-            {
-                ____stashScroll.scrollSensitivity = 63;
+                if (Settings.FasterInventoryScroll.Value)
+                {
+                    ____stashScroll.scrollSensitivity = Settings.FasterInventoryScrollSpeed.Value;
+                }
+                else
+                {
+                    ____stashScroll.scrollSensitivity = 63;
+                } 
             }
         }
     }
