@@ -16,6 +16,7 @@ namespace UIFixes
             WeaponZoomPatch.Enable();
             new WeaponBindingPatch().Enable();
             new DisabledActionsPatch().Enable();
+            SwapPatch.Enable(); 
         }
     }
 }
