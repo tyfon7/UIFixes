@@ -8,6 +8,7 @@ namespace UIFixes
 {
     public class DisabledActionsPatch : ModulePatch
     {
+        private static string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
         protected override MethodBase GetTargetMethod()
         {
             Type type = typeof(GetActionsClass);
@@ -25,7 +26,8 @@ namespace UIFixes
             {
                 for (int i = __result.Actions.Count - 1; i >= 0; i--)
                 {
-                    if (__result.Actions[i].Disabled)
+                    // if (__result.Actions[i].Disabled)
+                    if (UnimplementedActions.Contains(__result.Actions[i].Name))
                     {
                         __result.Actions.RemoveAt(i);
                     }

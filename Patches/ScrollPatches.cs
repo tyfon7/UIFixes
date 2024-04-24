@@ -21,6 +21,7 @@ namespace UIFixes
             new TraderDealScreenPatch().Enable();
             new OfferViewListPatch().Enable();
             new MessagesContainerPatch().Enable();
+            new MouseScrollSpeedPatch().Enable();
         }
 
         protected static void HandleInput(ScrollRect scrollRect)
@@ -227,6 +228,21 @@ namespace UIFixes
                 }
 
                 return instructions;
+            }
+        }
+
+        public class MouseScrollSpeedPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                Type type = typeof(ScrollRectNoDrag);
+                return type.GetMethod("OnScroll");
+            }
+
+            [PatchPrefix]
+            private static void Prefix(PointerEventData data)
+            {
+                data.scrollDelta *= Settings.MouseScrollMulti.Value;
             }
         }
     }

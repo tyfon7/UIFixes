@@ -15,8 +15,41 @@ namespace UIFixes
 {
     public class SwapPatch
     {
+        // Types needed
+        private static Type GridItemAddressType; // GClass2769
+        private static FieldInfo GridItemAddressLocationInGridField;
+        private static PropertyInfo GridItemAddressGridProperty;
+
+        private static Type SlotItemAddressType; // GClass2767
+        private static FieldInfo SlotItemAddressSlotField;
+
+        private static Type CanAcceptOperationType; // GStruct413
+        private static PropertyInfo CanAcceptOperationSucceededProperty;
+        private static PropertyInfo CanAcceptOperationErrorProperty;
+
+        private static Type SwapOperationType;
+        private static MethodInfo SwapOperationToCanAcceptOperationOperator;
+/*
+        private static Type CannotApplyErrorType; // GClass3300
+        private static Type CannotAddErrorType; // GClass3296
+        private static Type NoActionsErrorType; // GClass3293
+*/
         public static void Enable()
         {
+            GridItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && AccessTools.Property(t, "Grid") != null);
+            GridItemAddressLocationInGridField = AccessTools.Field(GridItemAddressType, "LocationInGrid");
+            GridItemAddressGridProperty = AccessTools.Property(GridItemAddressType, "Grid");
+
+            SlotItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && AccessTools.Field(t, "Slot") != null);
+            SlotItemAddressSlotField = AccessTools.Field(SlotItemAddressType, "Slot");
+
+            CanAcceptOperationType = AccessTools.Method(typeof(GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type
+            CanAcceptOperationSucceededProperty = AccessTools.Property(CanAcceptOperationType, "Succeeded");
+            CanAcceptOperationErrorProperty = AccessTools.Property(CanAcceptOperationType, "Error");
+
+            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), "Swap").ReturnType;
+            SwapOperationToCanAcceptOperationOperator = SwapOperationType.GetMethods().First(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptOperationType);
+
             new GridViewCanAcceptPatch().Enable();
             new GetHightLightColorPatch().Enable();
             new SlotViewCanAcceptPatch().Enable();
@@ -26,9 +59,14 @@ namespace UIFixes
 
         public class GridViewCanAcceptPatch : ModulePatch
         {
+            private static FieldInfo GridViewTraderControllerClassField;
+
             protected override MethodBase GetTargetMethod()
             {
                 Type type = typeof(GridView);
+
+                GridViewTraderControllerClassField = AccessTools.GetDeclaredFields(type).First(f => f.FieldType == typeof(TraderControllerClass));
+
                 return type.GetMethod("CanAccept");
             }
 
@@ -41,13 +79,14 @@ namespace UIFixes
                     return false;
                 }
 
-                if (itemAddressA is GClass2769 && itemAddressB is GClass2769)
+                //if (itemAddressA is GClass2769 && itemAddressB is GClass2769)
+                if (GridItemAddressType.IsInstanceOfType(itemAddressA) && GridItemAddressType.IsInstanceOfType(itemAddressB))
                 {
-                    LocationInGrid locationA = (itemAddressA as GClass2769).LocationInGrid;
-                    LocationInGrid locationB = (itemAddressB as GClass2769).LocationInGrid;
-                    StashGridClass grid = (itemAddressA as GClass2769).Grid;
+                    LocationInGrid locationA = GridItemAddressLocationInGridField.GetValue(itemAddressA) as LocationInGrid; // (itemAddressA as GClass2769).LocationInGrid;
+                    LocationInGrid locationB = GridItemAddressLocationInGridField.GetValue(itemAddressB) as LocationInGrid; // (itemAddressB as GClass2769).LocationInGrid;
+                    StashGridClass grid = GridItemAddressGridProperty.GetValue(itemAddressA) as StashGridClass;  //(itemAddressA as GClass2769).Grid;
 
-                    GStruct24 itemASize = itemA.CalculateRotatedSize(locationA.r);
+                    var itemASize = itemA.CalculateRotatedSize(locationA.r);
                     var itemASlots = new List<int>();
                     for (int y = 0; y < itemASize.Y; y++)
                     {
@@ -57,7 +96,7 @@ namespace UIFixes
                         }
                     }
 
-                    GStruct24 itemBSize = itemB.CalculateRotatedSize(locationB.r);
+                    var itemBSize = itemB.CalculateRotatedSize(locationB.r);
                     for (int y = 0; y < itemBSize.Y; y++)
                     {
                         for (int x = 0; x < itemBSize.X; x++)
@@ -75,14 +114,14 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, TraderControllerClass ___gclass2758_0)
+            private static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result)
             {
                 if (!Settings.SwapItems.Value)
                 {
                     return;
                 }
 
-                if (InHighlight || itemContext == null || targetItemContext == null)
+                if (InHighlight || itemContext == null || targetItemContext == null || (bool)CanAcceptOperationSucceededProperty.GetValue(operation) == true)
                 {
                     return;
                 }
@@ -92,10 +131,16 @@ namespace UIFixes
 
                 // 3300 cannot apply a to b
                 // 3293 no possible actions
-                if (item != targetItem && (operation.Error is GClass3300 || operation.Error is GClass3293))
+                if (item == targetItem)
+                {
+                    return;
+                }
+
+                string error = CanAcceptOperationErrorProperty.GetValue(operation).ToString(); // operation.Error.ToString();
+                if (error.StartsWith("Cannot add") || error.StartsWith("Cannot apply") || error == "InventoryError/NoPossibleActions")
                 {
                     ItemAddress itemAddress = item.Parent;
-                    GClass2769 targetAddress = targetItem.Parent as GClass2769;
+                    ItemAddress targetAddress = targetItem.Parent;
 
                     if (targetAddress == null)
                     {
@@ -103,51 +148,57 @@ namespace UIFixes
                     }
 
                     LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext); // This is the location you're dragging it over, including rotation
-                    var itemToAddress = new GClass2769(targetAddress.Grid, itemToLocation); // This is a grid because we're in the GridView patch, i.e. you're dragging it over a grid
+                    ItemAddress itemToAddress = Activator.CreateInstance(GridItemAddressType, [GridItemAddressGridProperty.GetValue(targetAddress), itemToLocation]) as ItemAddress; //new GClass2769(targetAddress.Grid, itemToLocation); // This is a grid because we're in the GridView patch, i.e. you're dragging it over a grid
 
                     ItemAddress targetToAddress;
-                    if (itemAddress is GClass2769) // The item source is a grid
+                    //if (itemAddress is GClass2769) // The item source is a grid
+                    if (GridItemAddressType.IsInstanceOfType(itemAddress))
                     {
-                        var itemGridAddress = itemAddress as GClass2769;
+                        LocationInGrid targetToLocation = (GridItemAddressLocationInGridField.GetValue(itemAddress) as LocationInGrid).Clone(); //itemGridAddress.LocationInGrid.Clone();
+                        targetToLocation.r = (GridItemAddressLocationInGridField.GetValue(targetAddress) as LocationInGrid).r;
 
-                        LocationInGrid targetToLocation = itemGridAddress.LocationInGrid.Clone();
-                        targetToLocation.r = targetAddress.LocationInGrid.r;
-                        targetToAddress = new GClass2769(itemGridAddress.Grid, targetToLocation);
+                        StashGridClass grid = GridItemAddressGridProperty.GetValue(itemAddress) as StashGridClass;  //(itemAddressA as GClass2769).Grid;
+                        targetToAddress = Activator.CreateInstance(GridItemAddressType, [grid, targetToLocation]) as ItemAddress; //new GClass2769(itemGridAddress.Grid, targetToLocation);
                     }
-                    else if (itemAddress is GClass2767) // The item source is a slot
+                    //else if (itemAddress is GClass2767) // The item source is a slot
+                    else if (SlotItemAddressType.IsInstanceOfType(itemAddress))
                     {
-                        var itemSlotAddress = itemAddress as GClass2767;
-                        targetToAddress = new GClass2767(itemSlotAddress.Slot);
+                        //var itemSlotAddress = itemAddress as GClass2767;
+                        targetToAddress = Activator.CreateInstance(SlotItemAddressType, [SlotItemAddressSlotField.GetValue(itemAddress)]) as ItemAddress; //new GClass2767(itemSlotAddress.Slot);
                     } else
                     {
                         return;
                     }
 
+                    // Get the TraderControllerClass
+                    TraderControllerClass traderControllerClass = GridViewTraderControllerClassField.GetValue(__instance) as TraderControllerClass;
+
                     // Check that the destinations won't overlap (Swap won't check this)
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                     {
                         // Try original rotations
-                        var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, ___gclass2758_0, true);
+                        var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                         if (result.Succeeded)
                         {
-                            operation = result;
-                            __result = operation.Succeeded;
+                            // operation = result;
+                            operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                            __result = true;
                             return;
                         }
                     }
 
                     // If we're coming from a grid, try rotating the target object 
-                    if (targetToAddress is GClass2769) 
+                    if (GridItemAddressType.IsInstanceOfType(itemAddress))
                     {
-                        var targetToLocation = (targetToAddress as GClass2769).LocationInGrid;
+                        var targetToLocation = GridItemAddressLocationInGridField.GetValue(targetToAddress) as LocationInGrid; // (targetToAddress as GClass2769).LocationInGrid;
                         targetToLocation.r = targetToLocation.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                         if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                         {
-                            var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, ___gclass2758_0, true);
+                            var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                             if (result.Succeeded)
                             {
-                                operation = result;
-                                __result = operation.Succeeded;
+                                operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                                __result = true;
                                 return;
                             }
                         }
@@ -167,33 +218,35 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(SlotView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, InventoryControllerClass ___InventoryController, ref bool __result)
+            private static void Postfix(SlotView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, InventoryControllerClass ___InventoryController, ref bool __result)
             {
                 if (!@Settings.SwapItems.Value)
                 {
                     return;
                 }
 
-                if (InHighlight || itemContext == null || targetItemContext == null)
+                if (InHighlight || itemContext == null || targetItemContext == null || (bool)CanAcceptOperationSucceededProperty.GetValue(operation) == true)
                 {
                     return;
                 }
 
                 // 3300 cannot apply a to b
                 // 3293 no possible actions
-                if (operation.Error is GClass3300 || operation.Error is GClass3293)
+                //if (operation.Error is GClass3300 || operation.Error is GClass3293)
+                string error = CanAcceptOperationErrorProperty.GetValue(operation).ToString(); // operation.Error.ToString();
+                if (error.StartsWith("Cannot add") || error.StartsWith("Cannot apply") || error == "InventoryError/NoPossibleActions")
                 {
                     var item = itemContext.Item;
                     var targetItem = targetItemContext.Item;
 
-                    var itemToAddress = new GClass2767(__instance.Slot);
+                    var itemToAddress = Activator.CreateInstance(SlotItemAddressType, [__instance.Slot]) as ItemAddress; // new GClass2767(__instance.Slot);
                     var targetToAddress = item.Parent;
 
                     var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, ___InventoryController, true);
                     if (result.Succeeded)
                     {
-                        operation = result;
-                        __result = operation.Succeeded;
+                        operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                        __result = true;
                     }
                 }
             }
