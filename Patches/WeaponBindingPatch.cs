@@ -21,18 +21,18 @@ namespace UIFixes
         }
 
         [PatchPostfix]
-        private static void Postfix(object /*GClass960*/ __instance, EBoundItem boundItem, ref string __result)
+        private static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
         {
             switch(boundItem)
             {
                 case EBoundItem.Item1:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.SecondaryWeapon]) as string; //__instance.GetKeyName(EGameKey.SecondaryWeapon);
+                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.SecondaryWeapon]) as string;
                     break;
                 case EBoundItem.Item2:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponFirst]) as string; //__instance.GetKeyName(EGameKey.PrimaryWeaponFirst);
+                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponFirst]) as string;
                     break;
                 case EBoundItem.Item3:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponSecond]) as string; //__instance.GetKeyName(EGameKey.PrimaryWeaponSecond);
+                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponSecond]) as string;
                     break;
             }
         }
