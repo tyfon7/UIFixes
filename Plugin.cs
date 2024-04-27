@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using UIFixes.Patches;
 
 namespace UIFixes
 {
@@ -16,7 +17,8 @@ namespace UIFixes
             WeaponZoomPatch.Enable();
             new WeaponBindingPatch().Enable();
             new DisabledActionsPatch().Enable();
-            SwapPatch.Enable(); 
+            SwapPatch.Enable();
+            new TooltipPatch().Enable();
         }
     }
 }
