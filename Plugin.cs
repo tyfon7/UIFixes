@@ -19,6 +19,7 @@ namespace UIFixes
             SwapPatch.Enable();
             new TooltipPatch().Enable();
             ItemPanelPatches.Enable();
+            new ContainerStackPatch().Enable();
         }
     }
 }

@@ -9,33 +9,38 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.8.0-debug</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.8.0</PathToSPT>
+  </PropertyGroup>
+
   <ItemGroup>
 	<Reference Include="Aki.Reflection">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
 	</Reference>
 	<Reference Include="Assembly-CSharp">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
 	</Reference>
 	<Reference Include="ItemComponent.Types">
-	  <HintPath>..\..\..\..\SPT\3.8.0-debug\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
 	</Reference>
 	<Reference Include="Sirenix.Serialization">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
 	</Reference>
 	<Reference Include="Unity.TextMeshPro">
-	  <HintPath>..\..\..\..\SPT\3.8.0-debug\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEngine">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEngine.CoreModule">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEngine.InputLegacyModule">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
 	</Reference>
 	<Reference Include="UnityEngine.UI">
-	  <HintPath>..\..\..\..\SPT\3.8.0\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
 	</Reference>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
@@ -47,6 +52,6 @@
   </ItemGroup> 
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0-debug\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0-debug\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\..\..\..\..\SPT\3.8.0\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;)" />
+    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;)" />
   </Target>
 </Project>
