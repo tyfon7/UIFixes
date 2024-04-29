@@ -11,7 +11,8 @@ namespace UIFixes
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
         public static ConfigEntry<int> MouseScrollMulti { get; set; }
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
-        public static ConfigEntry<bool> SwapItems {  get; set; }
+        public static ConfigEntry<bool> SwapItems { get; set; }
+        public static ConfigEntry<bool> ShowModStats { get; set; }
 
         public static void Init(ConfigFile config)
         {
@@ -23,6 +24,7 @@ namespace UIFixes
             MouseScrollMulti = config.Bind<int>("Inventory", "Mousewheel scrolling multiplier", 1, "How many rows to scroll with the mousewheel");
             SwapItems = config.Bind<bool>("Inventory", "In-place item swapping", true);
             RemoveDisabledActions = config.Bind<bool>("In Raid", "Hide unimplemented actions", false, "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors and other interactable objects");
+            ShowModStats = config.Bind<bool>("Items", "Show total mod stats", true, "Item mods will show stats that include mods attached to them (you can also control this from a mod's inspect window)");
         }
     }
 }

@@ -3,7 +3,7 @@ using EFT.UI.DragAndDrop;
 using System;
 using System.Reflection;
 
-namespace UIFixes.Patches
+namespace UIFixes
 {
     public class TooltipPatch : ModulePatch
     {

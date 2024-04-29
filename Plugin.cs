@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using UIFixes.Patches;
 
 namespace UIFixes
 {
@@ -19,6 +18,7 @@ namespace UIFixes
             new DisabledActionsPatch().Enable();
             SwapPatch.Enable();
             new TooltipPatch().Enable();
+            ItemPanelPatches.Enable();
         }
     }
 }
