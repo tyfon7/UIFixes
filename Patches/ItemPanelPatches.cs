@@ -116,10 +116,15 @@ namespace UIFixes
             [PatchPrefix]
             private static void Prefix(Item compareItem)
             {
-                if (compareItem is ArmorClass)
+                if (compareItem == null)
                 {
-                    // Armor points is added in method_5, but not in other places so it's missed by compare
-                    ArmorComponent[] armorComponents = compareItem.GetItemComponentsInChildren<ArmorComponent>(true).Where(c => c.ArmorClass > 0).ToArray<ArmorComponent>();
+                    return;
+                }
+
+                // Armor points is added in method_5, but not in other places so it's missed by compare
+                ArmorComponent[] armorComponents = compareItem.GetItemComponentsInChildren<ArmorComponent>(true).Where(c => c.ArmorClass > 0).ToArray<ArmorComponent>();
+                if (armorComponents.Any())
+                {
                     float maxDurability = armorComponents.Sum(c => c.Repairable.Durability);
 
                     ItemAttributeClass itemAttributeClass = new ItemAttributeClass(EItemAttributeId.ArmorPoints);
