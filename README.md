@@ -23,6 +23,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Skips needless unsaved changes warnings when navigating to another screen from a weapon preset (optional, defaults ON)
 - Skip all unsaved changes warnings when closing a weapon preset (optional, defaults OFF)
 - ✨ Show the total stats (including sub-mods) when inspecting mods (optional, toggleable *in* the inspect pane with a new button!)
+- ✨ See stats change as you add/remove mods, with color-coded deltas!
 
 ## Mail
 - Skips "You can return to this later" warnings when not transferring all items (optional, defaults ON)
