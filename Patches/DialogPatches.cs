@@ -1,65 +1,36 @@
 ﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
 using EFT.UI;
-using EFT.UI.Ragfair;
 using HarmonyLib;
 using System;
-using System.Linq;
 using System.Reflection;
-using TMPro;
 using UnityEngine;
 
 namespace UIFixes
 {
-    public class DialogPatches
+    public class DialogPatch : ModulePatch
     {
-        public static void Enable()
+        private static MethodInfo AcceptMethod;
+
+        protected override MethodBase GetTargetMethod()
         {
-            new DialogWindowPatch().Enable();
-            new FleaPurchaseDialogPatch().Enable();
+            Type dialogWindowType = typeof(MessageWindow).BaseType;
+            AcceptMethod = AccessTools.Method(dialogWindowType, "Accept");
+
+            return AccessTools.Method(dialogWindowType, "Update");
         }
 
-        private class DialogWindowPatch : ModulePatch
+        [PatchPostfix]
+        private static void Postfix(object __instance, bool ___bool_0)
         {
-            private static MethodInfo AcceptMethod;
-
-            protected override MethodBase GetTargetMethod()
+            if (!___bool_0)
             {
-                Type dialogWindowType = typeof(MessageWindow).BaseType;
-                AcceptMethod = AccessTools.Method(dialogWindowType, "Accept");
-
-                return AccessTools.Method(dialogWindowType, "Update");
+                return;
             }
 
-            [PatchPostfix]
-            private static void Postfix(object __instance, bool ___bool_0)
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
             {
-                if (!___bool_0)
-                {
-                    return;
-                }
-
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-                {
-                    AcceptMethod.Invoke(__instance, []);
-                    return;
-                }
-            }
-        }
-
-        private class FleaPurchaseDialogPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                // The parent has a Show() so need to be specific
-                return typeof(HandoverRagfairMoneyWindow).GetMethods().First(m => m.Name == "Show" && m.GetParameters()[0].ParameterType == typeof(Inventory));
-            }
-
-            [PatchPostfix]
-            private static void Postfix(TMP_InputField ____inputField)
-            {
-                ____inputField.Select();
-                ____inputField.ActivateInputField();
+                AcceptMethod.Invoke(__instance, []);
+                return;
             }
         }
     }
