@@ -17,7 +17,7 @@ namespace UIFixes
         [PatchPrefix]
         private static bool Prefix(ref Task<bool> __result)
         {
-            if (Settings.TransferConfirmOnClose.Value)
+            if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
             {
                 return true;
             }

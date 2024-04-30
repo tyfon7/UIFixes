@@ -19,6 +19,7 @@ namespace UIFixes
             new ConfirmDiscardPatch().Enable();
         }
 
+        // This patch just caches whether this navigation is a forward navigation, which determines if the preset is actually closing
         public class CloseScreenInterruptionPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -45,12 +46,12 @@ namespace UIFixes
             [PatchPrefix]
             private static bool Prefix(ref Task<bool> __result)
             {
-                if (MoveForward && Settings.WeaponPresetConfirmOnNavigate.Value)
+                if (MoveForward && Settings.ShowPresetConfirmations.Value == WeaponPresetConfirmationOption.Always)
                 {
                     return true;
                 }
 
-                if (!MoveForward && Settings.WeaponPresetConfirmOnClose.Value)
+                if (!MoveForward && Settings.ShowPresetConfirmations.Value != WeaponPresetConfirmationOption.Never)
                 { 
                     return true;
                 }
