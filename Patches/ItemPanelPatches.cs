@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace UIFixes
 {
-    internal class ItemPanelPatches
+    public class ItemPanelPatches
     {
         private static FieldInfo AttributeCompactPanelDictionaryField;
         private static FieldInfo AttributeCompactDropdownDictionaryField;
@@ -329,7 +329,7 @@ namespace UIFixes
                 }
 
                 // Remove trailing 0s
-                text = Regex.Replace(text, @"(\d)(\.[0-9]*[^0])?\.?0+\b", "$1$2");
+                text = RemoveTrailingZeros(text);
 
                 // Fix spacing
                 text = text.Replace(" %", "%");
@@ -411,6 +411,17 @@ namespace UIFixes
                     yield return combined;
                 }
             }
+        }
+
+        public static string RemoveTrailingZeros(string input)
+        {
+            // This matches: a number (so it doesn't apply to periods in words), named "integer"
+            // Followed by either
+            // a) a dot, some digits, and then a non-zero digit (named "significantDigits"), which is followed by one or more trailing 0
+            // b) a dot and some trailing 0
+            // And all that is replaced to the original integer, and the significantDigits (if they exist)
+            // If neither matches this doesn't match and does nothing
+            return Regex.Replace(input, @"(?<integer>\d)((?<significantDecimals>\.[0-9]*[^0])0*\b)?(\.0+\b)?", "${integer}${significantDecimals}");
         }
     }
 }

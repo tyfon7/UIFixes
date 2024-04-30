@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{A1684561-953B-4240-9F71-E812C02803E4}") = "UIFixes", "UIFixes.csproj", "{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UIFixes", "UIFixes.csproj", "{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIFixes.Test", "UIFixes.Test\UIFixes.Test.csproj", "{FE27D858-0061-4BAD-BE4D-FABBDB53213F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE27D858-0061-4BAD-BE4D-FABBDB53213F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE27D858-0061-4BAD-BE4D-FABBDB53213F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE27D858-0061-4BAD-BE4D-FABBDB53213F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE27D858-0061-4BAD-BE4D-FABBDB53213F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
