@@ -277,18 +277,22 @@ namespace UIFixes
                 var match = Regex.Match(text, @" %\((.*)\)");
                 if (match.Success)
                 {
-                    float value = float.Parse(match.Groups[1].Value);
-                    string sign = value > 0 ? "+" : "";
-                    string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
+                    float value;
+                    // If this fails to parse, I don't know what it is, leave it be
+                    if (float.TryParse(match.Groups[1].Value, out value))
+                    {
+                        string sign = value > 0 ? "+" : "";
+                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
 
-                    // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
-                    if (NonPercentPercents.Contains((EItemAttributeId)attribute.Id))
-                    {
-                        text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value + "%)</color>");
-                    }
-                    else
-                    {
-                        text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
+                        // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
+                        if (NonPercentPercents.Contains((EItemAttributeId)attribute.Id))
+                        {
+                            text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value + "%)</color>");
+                        }
+                        else
+                        {
+                            text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
+                        }
                     }
                 }
                 else
@@ -297,10 +301,14 @@ namespace UIFixes
                     match = Regex.Match(text, @"(\S)%\((.*)\)");
                     if (match.Success)
                     {
-                        float value = float.Parse(match.Groups[2].Value);
-                        string sign = value > 0 ? "+" : "";
-                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
-                        text = Regex.Replace(text, @"(\S)%\((.*)\)", match.Groups[1].Value + "%<color=" + color + ">(" + sign + value + "%)</color>");
+                        float value;
+                        // If this fails to parse, I don't know what it is, leave it be
+                        if (float.TryParse(match.Groups[2].Value, out value))
+                        {
+                            string sign = value > 0 ? "+" : "";
+                            string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
+                            text = Regex.Replace(text, @"(\S)%\((.*)\)", match.Groups[1].Value + "%<color=" + color + ">(" + sign + value + "%)</color>");
+                        }
                     }
                     else
                     {
@@ -308,17 +316,20 @@ namespace UIFixes
                         match = Regex.Match(text, @"\((.*)\)");
                         if (match.Success)
                         {
-                            float value = float.Parse(match.Groups[1].Value);
-                            string sign = value > 0 ? "+" : "";
-                            string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
-                            text = Regex.Replace(text, @"\((.*)\)", "<color=" + color + ">(" + sign + value + ")</color>");
+                            float value;
+                            // If this fails to parse, I don't know what it is, leave it be
+                            if (float.TryParse(match.Groups[1].Value, out value))
+                            {
+                                string sign = value > 0 ? "+" : "";
+                                string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
+                                text = Regex.Replace(text, @"\((.*)\)", "<color=" + color + ">(" + sign + value + ")</color>");
+                            }
                         }
                     }
                 }
 
                 // Remove trailing 0s
-                text = Regex.Replace(text, @"\.([1-9]*)0+\b", ".$1");
-                text = Regex.Replace(text, @"\.\B", "");
+                text = Regex.Replace(text, @"(\d)(\.[0-9]*[^0])?\.?0+\b", "$1$2");
 
                 // Fix spacing
                 text = text.Replace(" %", "%");

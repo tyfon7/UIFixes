@@ -160,7 +160,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result)
+            private static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
             {
                 if (!ValidPrerequisites(itemContext, targetItemContext, operation))
                 {
@@ -175,6 +175,16 @@ namespace UIFixes
                 if (targetAddress == null)
                 {
                     return;
+                }
+
+                // Repair kits are special
+                ItemView targetItemView;
+                if (___dictionary_0.TryGetValue(targetItem.Id, out targetItemView))
+                {
+                    if (targetItemView.CanInteract(itemContext))
+                    {
+                        return;
+                    }
                 }
 
                 // This is the location you're dragging it over, including rotation
