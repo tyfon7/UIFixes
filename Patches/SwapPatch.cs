@@ -1,7 +1,8 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
+using Comfort.Common;
+using EFT;
 using EFT.InventoryLogic;
-using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System;
@@ -35,20 +36,24 @@ namespace UIFixes
         // Whether we're being called from the "check every slot" loop
         private static bool InHighlight = false;
 
+        // The most recent CheckItemFilter result
+        private static string LastCheckItemFilterId;
+        private static bool LastCheckItemFilterResult;
+
         public static void Enable()
         {
-            GridItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && AccessTools.Property(t, "Grid") != null);
+            GridItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
             GridItemAddressLocationInGridField = AccessTools.Field(GridItemAddressType, "LocationInGrid");
             GridItemAddressGridProperty = AccessTools.Property(GridItemAddressType, "Grid");
 
-            SlotItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && AccessTools.Field(t, "Slot") != null);
+            SlotItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2767
             SlotItemAddressSlotField = AccessTools.Field(SlotItemAddressType, "Slot");
 
-            CanAcceptOperationType = AccessTools.Method(typeof(GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type
+            CanAcceptOperationType = AccessTools.Method(typeof(GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct413, parameter is a ref type, get underlying type
             CanAcceptOperationSucceededProperty = AccessTools.Property(CanAcceptOperationType, "Succeeded");
             CanAcceptOperationErrorProperty = AccessTools.Property(CanAcceptOperationType, "Error");
 
-            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), "Swap").ReturnType;
+            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), "Swap").ReturnType; // GStruct414<GClass2797>
             SwapOperationToCanAcceptOperationOperator = SwapOperationType.GetMethods().First(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptOperationType);
 
             GridViewNonInteractableField = AccessTools.Field(typeof(GridView), "_nonInteractable");
@@ -57,6 +62,12 @@ namespace UIFixes
             new GridViewCanAcceptPatch().Enable();
             new GetHightLightColorPatch().Enable();
             new SlotViewCanAcceptPatch().Enable();
+            new CheckItemFilterPatch().Enable();
+        }
+        private static bool InRaid()
+        {
+            bool? inRaid = Singleton<AbstractGame>.Instance?.InRaid;
+            return inRaid.HasValue && inRaid.Value;
         }
 
         private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, object operation)
@@ -75,6 +86,7 @@ namespace UIFixes
             {
                 return false;
             }
+
             // Check if the source container is a non-interactable GridView. Specifically for StashSearch, but may exist in other scenarios?
             if (SourceContainer != null && SourceContainer is GridView && (bool)GridViewNonInteractableField.GetValue(SourceContainer))
             {
@@ -82,12 +94,51 @@ namespace UIFixes
             }
 
             string error = CanAcceptOperationErrorProperty.GetValue(operation).ToString();
+            if (Settings.SwapImpossibleContainers.Value && !InRaid() && error.StartsWith("No free room"))
+            {
+                // Check if it isn't allowed in that container, if so try to swap
+                if (LastCheckItemFilterId == itemContext.Item.Id && !LastCheckItemFilterResult)
+                {
+                    return true;
+                }
+
+                // Check if it would ever fit no matter what, if not try to swap
+                if (!CouldEverFit(itemContext, targetItemContext))
+                {
+                    return true;
+                }
+            }
+
             if (!error.StartsWith("Cannot add") && !error.StartsWith("Cannot apply") && error != "InventoryError/NoPossibleActions")
             {
                 return false;
             }
 
             return true;
+        }
+
+        private static bool CouldEverFit(ItemContextClass itemContext, ItemContextAbstractClass containerItemContext)
+        {
+            Item item = itemContext.Item;
+            LootItemClass container = containerItemContext.Item as LootItemClass;
+            if (container == null)
+            {
+                return false;
+            }
+
+            var size = item.CalculateCellSize();
+            var rotatedSize = item.CalculateRotatedSize(itemContext.ItemRotation == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal);
+
+            foreach (StashGridClass grid in container.Grids)
+            {
+                if (size.X <= grid.GridWidth.Value && size.Y <= grid.GridHeight.Value ||
+                    rotatedSize.X <= grid.GridWidth.Value && rotatedSize.Y <= grid.GridHeight.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public class ItemViewOnDragPatch : ModulePatch
@@ -219,10 +270,10 @@ namespace UIFixes
                 {
                     // Try original rotations
                     var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
+                    operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                    __result = (bool)CanAcceptOperationSucceededProperty.GetValue(operation);
                     if (result.Succeeded)
                     {
-                        operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
-                        __result = true;
                         return;
                     }
                 }
@@ -301,5 +352,22 @@ namespace UIFixes
             }
         }
 
+        // CanApply, when dealing with containers, eventually calls down into FindPlaceForItem, which calls CheckItemFilter. For reasons,
+        // if an item fails the filters, it returns the error "no space", instead of "no action". Try to detect this, so we can swap.
+        public class CheckItemFilterPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                Type type = PatchConstants.EftTypes.First(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2510
+                return AccessTools.Method(type, "CheckItemFilter");
+            }
+
+            [PatchPostfix]
+            private static void Postfix(Item item, ref bool __result)
+            {
+                LastCheckItemFilterId = item.Id;
+                LastCheckItemFilterResult = __result;
+            }
+        }
     }
 }

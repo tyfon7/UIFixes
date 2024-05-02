@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace UIFixes.Test
 {
     [TestClass]
@@ -21,13 +23,16 @@ namespace UIFixes.Test
                 { "del. 2sec", "del. 2sec" },
                 { "Hello.world", "Hello.world" },
                 { "2Fast20Furious0", "2Fast20Furious0" },
-                { "1.0.2", "1.0.2" }
+                { "2.720(+0.57)", "2.72(+0.57)" },
+                { "2.720<color=#FFFFFF>(+0.64)</color>", "2.72<color=#FFFFFF>(+0.64)</color>" },
+                { "Class 3 (34)", "Class 3 (34)" },
+                { "$1234 (30)", "$1234 (30)" }
             };
 
             foreach (var testCase in testCases)
             {
                 string result = ItemPanelPatches.RemoveTrailingZeros(testCase.Key);
-                Assert.AreEqual(result, testCase.Value);
+                Assert.AreEqual(testCase.Value, result);
             }
         }
     }

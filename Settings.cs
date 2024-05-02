@@ -25,6 +25,7 @@ namespace UIFixes
         private const string InputSection = "2. Input";
         private const string InventorySection = "3. Inventory";
         private const string InRaidSection = "4. In Raid";
+        private const string AdvancedSection = "5. Advanced";
 
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
@@ -38,12 +39,16 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> SwapItems { get; set; }
+        public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
+
+        // Advanced
+        public static ConfigEntry<bool> StyleItemPanel { get; set; }
 
         public static void Init(ConfigFile config)
         {
@@ -115,6 +120,15 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
+            configEntries.Add(SwapImpossibleContainers = config.Bind(
+                InventorySection,
+                "Swap with Incompatible Containers",
+                false,
+                new ConfigDescription(
+                    "Enable swapping items with containers that could never fit that item due to size or filter restrictions. Disabled in raid to avoid costly mistakes.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
             configEntries.Add(MergeFIRMoney = config.Bind(
                 InventorySection,
                 "Autostack Money with FiR Money",
@@ -151,6 +165,16 @@ namespace UIFixes
                     "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors",
                     null,
                     new ConfigurationManagerAttributes { })));
+
+            // Advanced
+            configEntries.Add(StyleItemPanel = config.Bind(
+                AdvancedSection,
+                "Style Item Panel",
+                true,
+                new ConfigDescription(
+                    "Clean up and colorize item stats",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             RecalcOrder(configEntries);
         }

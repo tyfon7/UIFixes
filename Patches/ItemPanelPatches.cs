@@ -21,18 +21,23 @@ namespace UIFixes
 
         private static FieldInfo ItemComponentItemField;
 
+        private static FieldInfo CompactCharacteristicPanelItemAttributeField;
+
         public static void Enable()
         {
             AttributeCompactPanelDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicPanel>>).IsAssignableFrom(f.FieldType));
             AttributeCompactDropdownDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicDropdownPanel>>).IsAssignableFrom(f.FieldType));
 
-            Type ItemComponentType = PatchConstants.EftTypes.First(t => typeof(IItemComponent).IsAssignableFrom(t) && AccessTools.Field(t, "Item") != null);
-            ItemComponentItemField = AccessTools.Field(ItemComponentType, "Item");
+            Type itemComponentType = PatchConstants.EftTypes.First(t => typeof(IItemComponent).IsAssignableFrom(t) && t.GetField("Item") != null); // GClass2754
+            ItemComponentItemField = AccessTools.Field(itemComponentType, "Item");
+
+            CompactCharacteristicPanelItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "ItemAttribute");
 
             new InjectButtonPatch().Enable();
             new LoadModStatsPatch().Enable();
             new CompareModPatch().Enable();
-            new FormatValuesPatch().Enable();
+            new FormatCompactValuesPatch().Enable();
+            new FormatFullValuesPatch().Enable();
         }
 
         private class LoadModStatsPatch : ModulePatch
@@ -238,105 +243,133 @@ namespace UIFixes
             }
         }
 
-        private class FormatValuesPatch : ModulePatch
+        private class FormatCompactValuesPatch : ModulePatch
         {
-            // These fields are percents, but have been manually multipied by 100 already
-            private static EItemAttributeId[] NonPercentPercents = [EItemAttributeId.ChangeMovementSpeed, EItemAttributeId.ChangeTurningSpeed, EItemAttributeId.Ergonomics];
-
-            private static FieldInfo ItemAttributeField;
-            private static FieldInfo IncreasingColorField;
-            private static FieldInfo DecreasingColorField;
-
             protected override MethodBase GetTargetMethod()
             {
-                ItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "ItemAttribute");
-                IncreasingColorField = AccessTools.Field(typeof(CompactCharacteristicPanel), "_increasingColor");
-                DecreasingColorField = AccessTools.Field(typeof(CompactCharacteristicPanel), "_decreasingColor");
-
                 return AccessTools.Method(typeof(CompactCharacteristicPanel), "SetValues");
             }
 
             [PatchPostfix]
             private static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
             {
-                // Comparisons are shown as <value>(<changed>)
-                // <value> is from each attribute type's StringValue() function, so is formatted *mostly* ok
-                // <changed> is just naively formatted with ToString("F2"), so I have to figure out what it is and fix that
-                // This method is a gnarly pile of regex and replacements, blame BSG
+                try
+                {
+                    FormatText(__instance, ___ValueText);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex);
+                }
+            }
+        }
 
-                Color increasingColor = (Color)IncreasingColorField.GetValue(__instance);
-                string increasingColorHex = "#" + ColorUtility.ToHtmlStringRGB(increasingColor);
+        private class FormatFullValuesPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(CharacteristicPanel), "SetValues");
+            }
 
-                Color decreasingColor = (Color)DecreasingColorField.GetValue(__instance);
-                string decreasingColorHex = "#" + ColorUtility.ToHtmlStringRGB(decreasingColor);
+            [PatchPostfix]
+            private static void Postfix(CharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
+            {
+                try
+                {
+                    FormatText(__instance, ___ValueText);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex);
+                }
+            }
+        }
 
-                string text = ___ValueText.text;
-                ItemAttributeClass attribute = ItemAttributeField.GetValue(__instance) as ItemAttributeClass;
+        // These fields are percents, but have been manually multipied by 100 already
+        private static readonly EItemAttributeId[] NonPercentPercents = [EItemAttributeId.ChangeMovementSpeed, EItemAttributeId.ChangeTurningSpeed, EItemAttributeId.Ergonomics];
 
-                // Some percents are formatted with ToString("P1"), which puts a space before the %. These are percents from 0-1, so the <changed> value need to be converted
-                var match = Regex.Match(text, @" %\((.*)\)");
+        private static void FormatText(CompactCharacteristicPanel panel, TextMeshProUGUI textMesh)
+        {
+            // Comparisons are shown as <value>(<changed>)
+            // <value> is from each attribute type's StringValue() function, so is formatted *mostly* ok
+            // <changed> is just naively formatted with ToString("F2"), so I have to figure out what it is and fix that
+            // This method is a gnarly pile of regex and replacements, blame BSG
+            if (!Settings.StyleItemPanel.Value)
+            {
+                return;
+            }
+
+            // These come from CompactCharacteristicPanel._increasingColor and _decreasingColor, which are hardcoded. Hardcoding here too because 
+            // CharacteristicPanel doesn't define and you get clear
+            const string IncreasingColorHex = "#5EC1FF";
+            const string DecreasingColorHex = "#C40000";
+
+            string text = textMesh.text;
+            ItemAttributeClass attribute = CompactCharacteristicPanelItemAttributeField.GetValue(panel) as ItemAttributeClass;
+
+            // Some percents are formatted with ToString("P1"), which puts a space before the %. These are percents from 0-1, so the <changed> value need to be converted
+            var match = Regex.Match(text, @" %\(([+-].*)\)");
+            if (match.Success)
+            {
+                float value;
+                // If this fails to parse, I don't know what it is, leave it be
+                if (float.TryParse(match.Groups[1].Value, out value))
+                {
+                    string sign = value > 0 ? "+" : "";
+                    string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+
+                    // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
+                    if (NonPercentPercents.Contains((EItemAttributeId)attribute.Id))
+                    {
+                        text = Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value + "%)</color>");
+                    }
+                    else
+                    {
+                        text = Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
+                    }
+                }
+            }
+            else
+            {
+                // Others are rendered as num + "%", so there's no space before the %. These are percents but are from 0-100, not 0-1.
+                match = Regex.Match(text, @"(\S)%\(([+-].*)\)");
                 if (match.Success)
                 {
                     float value;
                     // If this fails to parse, I don't know what it is, leave it be
-                    if (float.TryParse(match.Groups[1].Value, out value))
+                    if (float.TryParse(match.Groups[2].Value, out value))
                     {
                         string sign = value > 0 ? "+" : "";
-                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
-
-                        // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
-                        if (NonPercentPercents.Contains((EItemAttributeId)attribute.Id))
-                        {
-                            text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value + "%)</color>");
-                        }
-                        else
-                        {
-                            text = Regex.Replace(text, @"%\(.*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
-                        }
+                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                        text = Regex.Replace(text, @"(\S)%\(([+-].*)\)", match.Groups[1].Value + "%<color=" + color + ">(" + sign + value + "%)</color>");
                     }
                 }
                 else
                 {
-                    // Others are rendered as num + "%", so there's no space before the %. These are percents but are from 0-100, not 0-1.
-                    match = Regex.Match(text, @"(\S)%\((.*)\)");
+                    // Finally the ones that aren't percents
+                    match = Regex.Match(text, @"\(([+-].*)\)");
                     if (match.Success)
                     {
                         float value;
                         // If this fails to parse, I don't know what it is, leave it be
-                        if (float.TryParse(match.Groups[2].Value, out value))
+                        if (float.TryParse(match.Groups[1].Value, out value))
                         {
                             string sign = value > 0 ? "+" : "";
-                            string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
-                            text = Regex.Replace(text, @"(\S)%\((.*)\)", match.Groups[1].Value + "%<color=" + color + ">(" + sign + value + "%)</color>");
-                        }
-                    }
-                    else
-                    {
-                        // Finally the ones that aren't percents
-                        match = Regex.Match(text, @"\((.*)\)");
-                        if (match.Success)
-                        {
-                            float value;
-                            // If this fails to parse, I don't know what it is, leave it be
-                            if (float.TryParse(match.Groups[1].Value, out value))
-                            {
-                                string sign = value > 0 ? "+" : "";
-                                string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
-                                text = Regex.Replace(text, @"\((.*)\)", "<color=" + color + ">(" + sign + value + ")</color>");
-                            }
+                            string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                            text = Regex.Replace(text, @"\(([+-].*)\)", "<color=" + color + ">(" + sign + value + ")</color>");
                         }
                     }
                 }
-
-                // Remove trailing 0s
-                text = RemoveTrailingZeros(text);
-
-                // Fix spacing
-                text = text.Replace(" %", "%");
-                text = text.Replace("(", " (");
-
-                ___ValueText.text = text;
             }
+
+            // Remove trailing 0s
+            text = RemoveTrailingZeros(text);
+
+            // Fix spacing
+            text = text.Replace(" %", "%");
+            text = text.Replace("(", " (");
+
+            textMesh.text = text;
         }
 
         private static List<ItemAttributeClass> GetDeepAttributes(Item item, out bool changed)
@@ -421,7 +454,7 @@ namespace UIFixes
             // b) a dot and some trailing 0
             // And all that is replaced to the original integer, and the significantDigits (if they exist)
             // If neither matches this doesn't match and does nothing
-            return Regex.Replace(input, @"(?<integer>\d)((?<significantDecimals>\.[0-9]*[^0])0*\b)?(\.0+\b)?", "${integer}${significantDecimals}");
+            return Regex.Replace(input, @"(?<integer>\d)((?<significantDecimals>\.[0-9]*[1-9])0*\b)?(\.0+\b)?", "${integer}${significantDecimals}");
         }
     }
 }
