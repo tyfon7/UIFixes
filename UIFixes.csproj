@@ -59,6 +59,6 @@
   </ItemGroup> 
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;)" />
+    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\dist\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx&#xD;&#xA;    move /Y Tyfon-UIFixes-$(Version).7z dist\&#xD;&#xA;)" />
   </Target>
 </Project>
