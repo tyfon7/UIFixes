@@ -7,6 +7,7 @@
     <Version>1.3.3</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;Dist</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -16,6 +17,7 @@
   <PropertyGroup>
     <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.8.0-debug</PathToSPT>
     <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.8.0</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.8.0</PathToSPT>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,6 +61,6 @@
   </ItemGroup> 
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) else (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\dist\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx&#xD;&#xA;    move /Y Tyfon-UIFixes-$(Version).7z dist\&#xD;&#xA;)" />
+    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    copy &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).pdb&quot;&#xD;&#xA;) &#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;)&#xD;&#xA;if $(Configurationname) == Dist (&#xD;&#xA;    mkdir &quot;$(ProjectDir)\dist\BepInDex\plugins&quot;&#xD;&#xA;    copy &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\dist\BepInEx\plugins\$(TargetName).dll&quot;&#xD;&#xA;    7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx&#xD;&#xA;    move /Y Tyfon-UIFixes-$(Version).7z dist\&#xD;&#xA;)" />
   </Target>
 </Project>

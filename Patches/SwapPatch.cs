@@ -82,7 +82,7 @@ namespace UIFixes
                 return false;
             }
 
-            if (itemContext.Item == targetItemContext.Item)
+            if (itemContext.Item == targetItemContext.Item || targetItemContext.Item.GetAllParentItems().Contains(itemContext.Item))
             {
                 return false;
             }

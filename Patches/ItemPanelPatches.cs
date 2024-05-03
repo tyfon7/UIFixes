@@ -168,7 +168,7 @@ namespace UIFixes
             private static FieldInfo InteractionsButtonsContainerContainerField;
 
             private static FieldInfo InteractionsButtonContainerUIField;
-            private static MethodInfo InteractionsButtonContainerUIDisposeMethod;
+            private static MethodInfo InteractionsButtonContainerUIAddDisposableMethod;
 
             private static FieldInfo SimpleContextMenuButtonTextField;
 
@@ -178,7 +178,7 @@ namespace UIFixes
                 InteractionsButtonsContainerContainerField = AccessTools.Field(typeof(InteractionButtonsContainer), "_buttonsContainer");
 
                 InteractionsButtonContainerUIField = AccessTools.Field(typeof(InteractionButtonsContainer), "UI");
-                InteractionsButtonContainerUIDisposeMethod = AccessTools.Method(InteractionsButtonContainerUIField.FieldType, "AddDisposable", [typeof(Action)]);
+                InteractionsButtonContainerUIAddDisposableMethod = AccessTools.Method(InteractionsButtonContainerUIField.FieldType, "AddDisposable", [typeof(Action)]);
 
                 SimpleContextMenuButtonTextField = AccessTools.Field(typeof(ContextMenuButton), "_text");
 
@@ -203,21 +203,15 @@ namespace UIFixes
 
                 SimpleContextMenuButton toggleButton = null;
 
-                Action onClick = () =>
-                {
-                    Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
+                Action onClick = () => Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
 
-                    var text = SimpleContextMenuButtonTextField.GetValue(toggleButton) as TextMeshProUGUI;
-                    text.text = GetLabel();
-
-                    __instance.method_5(); // rebuild stat panels
-                };
-
-                // Listen to the setting to handle multiple windows open at once
+                // Listen to the setting and the work there to handle multiple windows open at once
                 EventHandler onSettingChanged = (sender, args) =>
                 {
                     var text = SimpleContextMenuButtonTextField.GetValue(toggleButton) as TextMeshProUGUI;
                     text.text = GetLabel();
+
+                    __instance.method_5(); // rebuild stat panels
                 };
                 Settings.ShowModStats.SettingChanged += onSettingChanged;
 
@@ -233,7 +227,7 @@ namespace UIFixes
                 contextInteractions.OnRedrawRequired += createButton;
 
                 // And unsubscribe when the window goes away
-                InteractionsButtonContainerUIDisposeMethod.Invoke(InteractionsButtonContainerUIField.GetValue(____interactionButtonsContainer), [() => 
+                InteractionsButtonContainerUIAddDisposableMethod.Invoke(InteractionsButtonContainerUIField.GetValue(____interactionButtonsContainer), [() => 
                 {
                     contextInteractions.OnRedrawRequired -= createButton;
                     Settings.ShowModStats.SettingChanged -= onSettingChanged;
@@ -376,10 +370,8 @@ namespace UIFixes
         {
             changed = false;
             List<ItemAttributeClass> itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
-            var subComponents = item.GetItemComponentsInChildren<IItemComponent>(true);
-            foreach (var subComponent in subComponents)
+            foreach (var subItem in item.GetAllItems())
             {
-                var subItem = ItemComponentItemField.GetValue(subComponent) as Item;
                 if (subItem == item)
                 {
                     continue;
