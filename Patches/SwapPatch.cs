@@ -115,7 +115,7 @@ namespace UIFixes
                 }
             }
 
-            if (!error.StartsWith("Cannot add") && !error.StartsWith("Cannot apply") && error != "InventoryError/NoPossibleActions")
+            if (!error.EndsWith("not applicable") && !error.StartsWith("Cannot apply") && error != "InventoryError/NoPossibleActions")
             {
                 return false;
             }
