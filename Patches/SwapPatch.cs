@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine.EventSystems;
 
 namespace UIFixes
 {
@@ -26,7 +27,7 @@ namespace UIFixes
         private static PropertyInfo CanAcceptOperationSucceededProperty;
         private static PropertyInfo CanAcceptOperationErrorProperty;
 
-        private static Type SwapOperationType; // GStruct414
+        private static Type SwapOperationType; // GStruct414<GClass2797>
         private static MethodInfo SwapOperationToCanAcceptOperationOperator;
 
         // Source container for the drag - we have to grab this early to check it
@@ -36,9 +37,12 @@ namespace UIFixes
         // Whether we're being called from the "check every slot" loop
         private static bool InHighlight = false;
 
-        // The most recent CheckItemFilter result
+        // The most recent CheckItemFilter result - needed to differentiate "No room" from incompatible
         private static string LastCheckItemFilterId;
         private static bool LastCheckItemFilterResult;
+
+        // The most recent GridItemView that was hovered - needed to forcibly update hover state after swap
+        private static GridItemView LastHoveredGridItemView;
 
         public static void Enable()
         {
@@ -63,6 +67,8 @@ namespace UIFixes
             new GetHightLightColorPatch().Enable();
             new SlotViewCanAcceptPatch().Enable();
             new CheckItemFilterPatch().Enable();
+            new SwapOperationRaiseEventsPatch().Enable();
+            new GridItemViewOnPointerEnterPatch().Enable();
         }
         private static bool InRaid()
         {
@@ -294,6 +300,71 @@ namespace UIFixes
                         }
                     }
                 }
+            }
+        }
+
+        // Operations signal their completion status by raising events when they are disposed. 
+        // The Move operation, for example, builds a list of moved items that are no longer valid for binding, and raises unbind events when it completes successfully
+        // Swap does not do that, because spaghetti, so do it here.
+        public class SwapOperationRaiseEventsPatch : ModulePatch
+        {
+            private static MethodInfo RaiseUnbindItemEvent;
+            private static Type RaiseUnbindItemEventArgs; // GEventArgs13
+
+            protected override MethodBase GetTargetMethod()
+            {
+                RaiseUnbindItemEvent = AccessTools.Method(typeof(InventoryControllerClass), "RaiseUnbindItemEvent");
+                RaiseUnbindItemEventArgs = RaiseUnbindItemEvent.GetParameters()[0].ParameterType;
+                return AccessTools.Method(SwapOperationType.GenericTypeArguments[0], "RaiseEvents"); // GClass2787
+            }
+
+            [PatchPostfix]
+            private static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item1)
+            {
+                InventoryControllerClass inventoryController = controller as InventoryControllerClass;
+                if (status != CommandStatus.Succeed || inventoryController == null ||  ___Item == null || ___Item1 == null)
+                {
+                    return;
+                }
+
+                if (!inventoryController.IsAtBindablePlace(___Item))
+                {
+                    var result = inventoryController.UnbindItemDirect(___Item, false);
+                    if (result.Succeeded)
+                    {
+                        result.Value.RaiseEvents(controller, CommandStatus.Begin);
+                        result.Value.RaiseEvents(controller, CommandStatus.Succeed);
+                    }
+                }
+
+                if (!inventoryController.IsAtBindablePlace(___Item1))
+                {
+                    var result = inventoryController.UnbindItemDirect(___Item1, false);
+                    if (result.Succeeded)
+                    {
+                        result.Value.RaiseEvents(controller, CommandStatus.Begin);
+                        result.Value.RaiseEvents(controller, CommandStatus.Succeed);
+                    }
+                }
+
+                if (LastHoveredGridItemView != null)
+                {
+                    LastHoveredGridItemView.OnPointerEnter(new PointerEventData(EventSystem.current));
+                }
+            }
+        }
+
+        public class GridItemViewOnPointerEnterPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridItemView), "OnPointerEnter");
+            }
+
+            [PatchPostfix]
+            private static void Postfix(GridItemView __instance)
+            {
+                LastHoveredGridItemView = __instance;
             }
         }
 
