@@ -72,6 +72,7 @@ namespace UIFixes
             new CheckItemFilterPatch().Enable();
             new SwapOperationRaiseEventsPatch().Enable();
             new GridItemViewOnPointerEnterPatch().Enable();
+            new DraggedItemContextUpdateTargetPatch().Enable();
         }
         private static bool InRaid()
         {
@@ -475,6 +476,31 @@ namespace UIFixes
             {
                 LastCheckItemFilterId = item.Id;
                 LastCheckItemFilterResult = __result;
+            }
+        }
+
+        // When dragging an item around, by default it updates an ItemSpecificationPanel when you drag an item on top of a slot
+        // It doesn't do anything when you drag an item from a slot onto some other item elsewhere. But with swap, we should update the item panel then too.
+        public class DraggedItemContextUpdateTargetPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(DraggedItemView), "UpdateTargetUnderCursor");
+            }
+
+            [PatchPostfix]
+            private static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
+            {
+                if (SourceContainer is Component)
+                {
+                    ItemSpecificationPanel panel = (SourceContainer as Component).GetComponentInParent<ItemSpecificationPanel>();
+                    if (panel != null)
+                    {
+                        Slot slot = SlotItemAddressSlotField.GetValue(__instance.ItemAddress) as Slot;
+                        ItemContextClass itemUnderCursorContext = itemUnderCursor != null ? new ItemContextClass(itemUnderCursor, ItemRotation.Horizontal) : null;
+                        panel.method_15(slot, itemUnderCursorContext);
+                    }
+                }
             }
         }
     }
