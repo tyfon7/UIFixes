@@ -491,9 +491,9 @@ namespace UIFixes
             [PatchPostfix]
             private static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
             {
-                if (SourceContainer is Component)
+                if (SourceContainer is Component sourceComponent)
                 {
-                    ItemSpecificationPanel panel = (SourceContainer as Component).GetComponentInParent<ItemSpecificationPanel>();
+                    ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
                     if (panel != null)
                     {
                         Slot slot = SlotItemAddressSlotField.GetValue(__instance.ItemAddress) as Slot;
