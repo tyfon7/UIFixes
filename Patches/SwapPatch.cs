@@ -3,12 +3,14 @@ using Aki.Reflection.Utils;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace UIFixes
@@ -64,8 +66,9 @@ namespace UIFixes
 
             new ItemViewOnDragPatch().Enable();
             new GridViewCanAcceptPatch().Enable();
-            new GetHightLightColorPatch().Enable();
-            new SlotViewCanAcceptPatch().Enable();
+            new GridGetHightLightColorPatch().Enable();
+            new SlotGetHightLightColorPatch().Enable();
+            new ItemContextClassCanAcceptPatch().Enable();
             new CheckItemFilterPatch().Enable();
             new SwapOperationRaiseEventsPatch().Enable();
             new GridItemViewOnPointerEnterPatch().Enable();
@@ -115,7 +118,7 @@ namespace UIFixes
                 }
             }
 
-            if (!error.EndsWith("not applicable") && !error.StartsWith("Cannot apply") && error != "InventoryError/NoPossibleActions")
+            if (!error.EndsWith("not applicable") && !(error.StartsWith("Cannot apply") && !error.EndsWith("modified")) && error != "InventoryError/NoPossibleActions")
             {
                 return false;
             }
@@ -182,7 +185,6 @@ namespace UIFixes
                     return false;
                 }
 
-                //if (itemAddressA is GClass2769 && itemAddressB is GClass2769)
                 if (GridItemAddressType.IsInstanceOfType(itemAddressA) && GridItemAddressType.IsInstanceOfType(itemAddressB))
                 {
                     LocationInGrid locationA = GridItemAddressLocationInGridField.GetValue(itemAddressA) as LocationInGrid;
@@ -277,7 +279,7 @@ namespace UIFixes
                     // Try original rotations
                     var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                     operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
-                    __result = (bool)CanAcceptOperationSucceededProperty.GetValue(operation);
+                    __result = result.Succeeded;
                     if (result.Succeeded)
                     {
                         return;
@@ -294,6 +296,7 @@ namespace UIFixes
                         var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                         if (result.Succeeded)
                         {
+                            // Only save this operation result if it succeeded, otherwise we return the non-rotated result from above
                             operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
                             __result = true;
                             return;
@@ -347,7 +350,7 @@ namespace UIFixes
                     }
                 }
 
-                if (LastHoveredGridItemView != null)
+                if (LastHoveredGridItemView != null && LastHoveredGridItemView.ItemContext != null)
                 {
                     LastHoveredGridItemView.OnPointerEnter(new PointerEventData(EventSystem.current));
                 }
@@ -370,44 +373,78 @@ namespace UIFixes
 
         // Called when dragging an item onto an equipment slot
         // Handles any kind of ItemAddress as the target destination (aka where the dragged item came from)
-        public class SlotViewCanAcceptPatch : ModulePatch
+        public class ItemContextClassCanAcceptPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(SlotView);
+                Type type = typeof(ItemContextClass);
                 return type.GetMethod("CanAccept");
             }
 
             [PatchPostfix]
-            private static void Postfix(SlotView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, InventoryControllerClass ___InventoryController, ref bool __result)
+            private static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref object operation, TraderControllerClass itemController, bool simulate, ref bool __result)
             {
-                if (!ValidPrerequisites(itemContext, targetItemContext, operation))
+                // targetItemContext here is not the target item, it's the *parent* context, i.e. the owner of the slot
+                // Do a few more checks
+                if (slot.ContainedItem == null || __instance.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(__instance.Item))
                 {
                     return;
                 }
 
-                var item = itemContext.Item;
-                var targetItem = targetItemContext.Item;
-                var itemToAddress = Activator.CreateInstance(SlotItemAddressType, [__instance.Slot]) as ItemAddress;
+                if (!ValidPrerequisites(__instance, targetItemContext, operation))
+                {
+                    return;
+                }
+
+                var item = __instance.Item;
+                var targetItem = slot.ContainedItem;
+                var itemToAddress = Activator.CreateInstance(SlotItemAddressType, [slot]) as ItemAddress;
                 var targetToAddress = item.Parent;
 
-                var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, ___InventoryController, true);
-                if (result.Succeeded)
+                // Repair kits again
+                // Don't have access to ItemView to call CanInteract, but repair kits can't go into any slot I'm aware of, so...
+                if (item.Template is RepairKitClass)
                 {
-                    operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
-                    __result = true;
+                    return;
                 }
+
+                var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
+                operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                __result = result.Succeeded;
             }
         }
 
         // The patched method here is called when iterating over all slots to highlight ones that the dragged item can interact with
         // Since swap has no special highlight, I just skip the patch here (minor perf savings, plus makes debugging a million times easier)
-        public class GetHightLightColorPatch : ModulePatch
+        public class GridGetHightLightColorPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
                 Type type = typeof(GridItemView);
                 return type.GetMethod("method_12");
+            }
+
+            [PatchPrefix]
+            private static void Prefix()
+            {
+                InHighlight = true;
+            }
+
+            [PatchPostfix]
+            private static void Postfix()
+            {
+                InHighlight = false;
+            }
+        }
+
+        // The patched method here is called when iterating over all slots to highlight ones that the dragged item can interact with
+        // Since swap has no special highlight, I just skip the patch here (minor perf savings, plus makes debugging a million times easier)
+        public class SlotGetHightLightColorPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                Type type = typeof(SlotView);
+                return type.GetMethod("method_2");
             }
 
             [PatchPrefix]

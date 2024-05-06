@@ -1,5 +1,4 @@
 ﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -8,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -19,19 +19,16 @@ namespace UIFixes
         private static FieldInfo AttributeCompactPanelDictionaryField;
         private static FieldInfo AttributeCompactDropdownDictionaryField;
 
-        private static FieldInfo ItemComponentItemField;
-
         private static FieldInfo CompactCharacteristicPanelItemAttributeField;
+        private static FieldInfo CompactCharacteristicPanelCompareItemAttributeField;
 
         public static void Enable()
         {
             AttributeCompactPanelDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicPanel>>).IsAssignableFrom(f.FieldType));
             AttributeCompactDropdownDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicDropdownPanel>>).IsAssignableFrom(f.FieldType));
 
-            Type itemComponentType = PatchConstants.EftTypes.First(t => typeof(IItemComponent).IsAssignableFrom(t) && t.GetField("Item") != null); // GClass2754
-            ItemComponentItemField = AccessTools.Field(itemComponentType, "Item");
-
             CompactCharacteristicPanelItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "ItemAttribute");
+            CompactCharacteristicPanelCompareItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "CompareItemAttribute");
 
             new InjectButtonPatch().Enable();
             new LoadModStatsPatch().Enable();
@@ -260,8 +257,14 @@ namespace UIFixes
 
         private class FormatFullValuesPatch : ModulePatch
         {
+            private static MethodInfo RoundToIntMethod;
+            private static MethodInfo ToStringMethod;
+
             protected override MethodBase GetTargetMethod()
             {
+                RoundToIntMethod = AccessTools.Method(typeof(Mathf), "RoundToInt");
+                ToStringMethod = AccessTools.Method(typeof(float), "ToString", [typeof(string)]);
+
                 return AccessTools.Method(typeof(CharacteristicPanel), "SetValues");
             }
 
@@ -270,11 +273,53 @@ namespace UIFixes
             {
                 try
                 {
-                    FormatText(__instance, ___ValueText);
+                    FormatText(__instance, ___ValueText, true);
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex);
+                }
+            }
+
+            // This transpiler looks for where it rounds a float to an int, and skips that. Instead it calls ToString("0.0#") on it
+            [PatchTranspiler]
+            private static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
+            {
+                int skip = 0;
+                CodeInstruction lastInstruction = null;
+                CodeInstruction currentInstruction = null;
+                foreach (var instruction in instructions)
+                {
+                    if (lastInstruction == null)
+                    {
+                        lastInstruction = instruction;
+                        continue;   
+                    }
+
+                    currentInstruction = instruction;
+
+                    if (skip > 0)
+                    {
+                        --skip;
+                    }
+                    else if (currentInstruction.Calls(RoundToIntMethod))
+                    {
+                        yield return new CodeInstruction(OpCodes.Ldloca_S, 17);
+                        yield return new CodeInstruction(OpCodes.Ldstr, "0.0#");
+                        yield return new CodeInstruction(OpCodes.Call, ToStringMethod);
+                        skip = 4;
+                    }
+                    else
+                    {
+                        yield return lastInstruction;
+                    }
+
+                    lastInstruction = instruction;
+                }
+
+                if (currentInstruction != null)
+                {
+                    yield return currentInstruction;
                 }
             }
         }
@@ -282,7 +327,7 @@ namespace UIFixes
         // These fields are percents, but have been manually multipied by 100 already
         private static readonly EItemAttributeId[] NonPercentPercents = [EItemAttributeId.ChangeMovementSpeed, EItemAttributeId.ChangeTurningSpeed, EItemAttributeId.Ergonomics];
 
-        private static void FormatText(CompactCharacteristicPanel panel, TextMeshProUGUI textMesh)
+        private static void FormatText(CompactCharacteristicPanel panel, TextMeshProUGUI textMesh, bool fullBar = false)
         {
             // Comparisons are shown as <value>(<changed>)
             // <value> is from each attribute type's StringValue() function, so is formatted *mostly* ok
@@ -300,6 +345,40 @@ namespace UIFixes
 
             string text = textMesh.text;
             ItemAttributeClass attribute = CompactCharacteristicPanelItemAttributeField.GetValue(panel) as ItemAttributeClass;
+
+            // Holy shit did they mess up MOA. Half of the calculation is done in the StringValue() method, so calculating delta from Base() loses all that
+            // Plus, they round the difference to the nearest integer (!?)
+            // Completely redo it
+            if ((EItemAttributeId)attribute.Id == EItemAttributeId.CenterOfImpact)
+            {
+                ItemAttributeClass compareAttribute = CompactCharacteristicPanelCompareItemAttributeField.GetValue(panel) as ItemAttributeClass;
+                if (compareAttribute != null)
+                {
+                    string currentStringValue = attribute.StringValue();
+                    var moaMatch = Regex.Match(currentStringValue, @"^(\S+)");
+                    float moa;
+                    if (float.TryParse(moaMatch.Groups[1].Value, out moa))
+                    {
+                        string compareStringValue = compareAttribute.StringValue();
+                        moaMatch = Regex.Match(compareStringValue, @"^(\S+)");
+                        float compareMoa;
+                        if (float.TryParse(moaMatch.Groups[1].Value, out compareMoa))
+                        {
+                            float delta = compareMoa - moa;
+                            string final = currentStringValue;
+                            if (Math.Abs(delta) > 0)
+                            {
+                                string sign = delta > 0 ? "+" : "";
+                                string color = (attribute.LessIsGood && delta < 0) || (!attribute.LessIsGood && delta > 0) ? IncreasingColorHex : DecreasingColorHex;
+                                final += " <color=" + color + ">(" + sign + delta.ToString("0.0#") + ")</color>";
+                            }
+
+                            textMesh.text = final;
+                            return;
+                        }
+                    }
+                }
+            }
 
             // Some percents are formatted with ToString("P1"), which puts a space before the %. These are percents from 0-1, so the <changed> value need to be converted
             var match = Regex.Match(text, @" %\(([+-].*)\)");
@@ -326,7 +405,7 @@ namespace UIFixes
             else
             {
                 // Others are rendered as num + "%", so there's no space before the %. These are percents but are from 0-100, not 0-1.
-                match = Regex.Match(text, @"(\S)%\(([+-].*)\)");
+                match = Regex.Match(text, @"(\S)%\(([+-].*)\)");    
                 if (match.Success)
                 {
                     float value;
@@ -350,6 +429,11 @@ namespace UIFixes
                         {
                             string sign = value > 0 ? "+" : "";
                             string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                            if (fullBar && Math.Abs(value) >= 1)
+                            {
+                                // Fullbar rounds to nearest int, but I transpiled it not to. Restore the rounding, but only if the value won't just round to 0
+                                value = Mathf.RoundToInt(value);
+                            }
                             text = Regex.Replace(text, @"\(([+-].*)\)", "<color=" + color + ">(" + sign + value + ")</color>");
                         }
                     }
