@@ -20,7 +20,8 @@ namespace UIFixes
             new TooltipPatch().Enable();
             ItemPanelPatches.Enable();
             new ContainerStackPatch().Enable();
-            new DialogPatch().Enable();
+            DialogPatches.Enable();
+            ItemPanelResizePatches.Enable();
         }
     }
 }

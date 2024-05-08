@@ -31,6 +31,7 @@ namespace UIFixes
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
         public static ConfigEntry<bool> ShowModStats { get; set; }
+        public static ConfigEntry<bool> RememberInspectSize { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -79,6 +80,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Item mods will show stats that include mods attached to them (you can also control this from a mod's inspect window)",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(RememberInspectSize = config.Bind(
+                GeneralSection,
+                "Remember Inspect Panel Size",
+                true,
+                new ConfigDescription(
+                    "Save the size of the inspect panel when you resize it",
                     null,
                     new ConfigurationManagerAttributes { })));
 
