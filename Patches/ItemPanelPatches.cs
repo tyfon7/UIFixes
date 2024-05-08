@@ -212,7 +212,7 @@ namespace UIFixes
                 };
                 Settings.ShowModStats.SettingChanged += onSettingChanged;
 
-                Action createButton = () => 
+                Action createButton = () =>
                 {
                     Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
                     toggleButton = UnityEngine.Object.Instantiate(template, transform, false);
@@ -224,7 +224,7 @@ namespace UIFixes
                 contextInteractions.OnRedrawRequired += createButton;
 
                 // And unsubscribe when the window goes away
-                InteractionsButtonContainerUIAddDisposableMethod.Invoke(InteractionsButtonContainerUIField.GetValue(____interactionButtonsContainer), [() => 
+                InteractionsButtonContainerUIAddDisposableMethod.Invoke(InteractionsButtonContainerUIField.GetValue(____interactionButtonsContainer), [() =>
                 {
                     contextInteractions.OnRedrawRequired -= createButton;
                     Settings.ShowModStats.SettingChanged -= onSettingChanged;
@@ -293,7 +293,7 @@ namespace UIFixes
                     if (lastInstruction == null)
                     {
                         lastInstruction = instruction;
-                        continue;   
+                        continue;
                     }
 
                     currentInstruction = instruction;
@@ -405,7 +405,7 @@ namespace UIFixes
             else
             {
                 // Others are rendered as num + "%", so there's no space before the %. These are percents but are from 0-100, not 0-1.
-                match = Regex.Match(text, @"(\S)%\(([+-].*)\)");    
+                match = Regex.Match(text, @"(\S)%\(([+-].*)\)");
                 if (match.Success)
                 {
                     float value;
@@ -454,14 +454,14 @@ namespace UIFixes
         {
             changed = false;
             List<ItemAttributeClass> itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
-            foreach (var subItem in item.GetAllItems())
+            foreach (var subItem in item.GetAllItems()) // This get all items, recursively
             {
                 if (subItem == item)
                 {
                     continue;
                 }
 
-                var subAttributes = GetDeepAttributes(subItem, out changed);
+                var subAttributes = subItem.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
                 itemAttributes = CombineAttributes(itemAttributes, subAttributes).ToList();
                 changed = true;
             }
