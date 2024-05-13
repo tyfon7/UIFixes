@@ -32,6 +32,7 @@ namespace UIFixes
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
         public static ConfigEntry<bool> ShowModStats { get; set; }
         public static ConfigEntry<bool> RememberInspectSize { get; set; }
+        public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -89,6 +90,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Save the size of the inspect panel when you resize it",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(LockInspectPreviewSize = config.Bind(
+                GeneralSection,
+                "Lock Inspect Preview Size",
+                true,
+                new ConfigDescription(
+                    "Keep the 3D preview from growing when you resize inspect panels",
                     null,
                     new ConfigurationManagerAttributes { })));
 

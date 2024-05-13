@@ -72,6 +72,15 @@ namespace UIFixes
             [PatchPostfix]
             private static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0)
             {
+                if (Settings.LockInspectPreviewSize.Value)
+                {
+                    LayoutElement previewPanel = __instance.GetComponentsInChildren<LayoutElement>().FirstOrDefault(e => e.name == "Preview Panel");
+                    if (previewPanel != null)
+                    {
+                        previewPanel.flexibleHeight = -1;
+                    }
+                }
+
                 Button closeButton = __instance.GetComponentsInChildren<Button>().FirstOrDefault(b => b.name == "Close Button");
                 if (closeButton != null)
                 {
