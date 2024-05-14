@@ -24,16 +24,13 @@ namespace UIFixes
         private const string GeneralSection = "1. General";
         private const string InputSection = "2. Input";
         private const string InventorySection = "3. Inventory";
-        private const string InRaidSection = "4. In Raid";
-        private const string AdvancedSection = "5. Advanced";
+        private const string InspectSection = "4. Inspect Windows";
+        private const string InRaidSection = "5. In Raid";
+        private const string AdvancedSection = "6. Advanced";
 
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
-        public static ConfigEntry<bool> ShowModStats { get; set; }
-        public static ConfigEntry<bool> RememberInspectSize { get; set; }
-        public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
-        public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -46,6 +43,12 @@ namespace UIFixes
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
+
+        // Inspect Panels
+        public static ConfigEntry<bool> ShowModStats { get; set; }
+        public static ConfigEntry<bool> RememberInspectSize { get; set; }
+        public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
+        public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
@@ -73,42 +76,6 @@ namespace UIFixes
                 TransferConfirmationOption.Never,
                 new ConfigDescription(
                     "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
-                    null,
-                    new ConfigurationManagerAttributes { })));
-
-            configEntries.Add(ShowModStats = config.Bind(
-                GeneralSection,
-                "Show Total Stats on Mods",
-                true,
-                new ConfigDescription(
-                    "Item mods will show stats that include mods attached to them (you can also control this from a mod's inspect window)",
-                    null,
-                    new ConfigurationManagerAttributes { })));
-
-            configEntries.Add(RememberInspectSize = config.Bind(
-                GeneralSection,
-                "Remember Inspect Panel Size",
-                true,
-                new ConfigDescription(
-                    "Save the size of the inspect panel when you resize it",
-                    null,
-                    new ConfigurationManagerAttributes { })));
-
-            configEntries.Add(LockInspectPreviewSize = config.Bind(
-                GeneralSection,
-                "Lock Inspect Preview Size",
-                true,
-                new ConfigDescription(
-                    "Keep the 3D preview from growing when you resize inspect panels",
-                    null,
-                    new ConfigurationManagerAttributes { })));
-
-            configEntries.Add(ExpandDescriptionHeight = config.Bind(
-                GeneralSection,
-                "Auto-expand to Fit Description",
-                true,
-                new ConfigDescription(
-                    "Automatically stretch the inspect panel to fit as much of the description as possible",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -183,6 +150,43 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            // Inspect
+            configEntries.Add(ShowModStats = config.Bind(
+                InspectSection,
+                "Show Total Stats on Mods",
+                true,
+                new ConfigDescription(
+                    "Item mods will show stats that include mods attached to them (you can also control this from a mod's inspect window)",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(RememberInspectSize = config.Bind(
+                InspectSection,
+                "Remember Window Size",
+                true,
+                new ConfigDescription(
+                    "Save the size of the inspect window when you resize it",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(LockInspectPreviewSize = config.Bind(
+                InspectSection,
+                "Lock Inspect Preview Size",
+                true,
+                new ConfigDescription(
+                    "Keep the 3D preview from growing when you resize inspect windows",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ExpandDescriptionHeight = config.Bind(
+                InspectSection,
+                "Auto-expand to Fit Description",
+                true,
+                new ConfigDescription(
+                    "Automatically stretch the inspect window to fit as much of the description as possible",
                     null,
                     new ConfigurationManagerAttributes { })));
 
