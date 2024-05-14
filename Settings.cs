@@ -33,6 +33,7 @@ namespace UIFixes
         public static ConfigEntry<bool> ShowModStats { get; set; }
         public static ConfigEntry<bool> RememberInspectSize { get; set; }
         public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
+        public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -99,6 +100,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Keep the 3D preview from growing when you resize inspect panels",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ExpandDescriptionHeight = config.Bind(
+                GeneralSection,
+                "Auto-expand to Fit Description",
+                true,
+                new ConfigDescription(
+                    "Automatically stretch the inspect panel to fit as much of the description as possible",
                     null,
                     new ConfigurationManagerAttributes { })));
 

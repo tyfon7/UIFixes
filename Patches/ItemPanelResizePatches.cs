@@ -1,7 +1,9 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -14,16 +16,19 @@ namespace UIFixes
         private static float SavedPreferredWidth = -1f;
         private static float SavedPreferredHeight = -1f;
 
-        // Seems like this is the default for everything?
+        // Seems like this is the always the default for ItemSpecificationPanels
         private const float DefaultPreferredWidth = 670f;
         private const float DefaultPreferredHeight = 500f;
 
         private const string RestoreButtonName = "Restore";
 
+        private const float ButtonPadding = 3f;
+
         public static void Enable()
         {
             new ResizeWindowPatch().Enable();
             new ShowPatch().Enable();
+            new ItemUiContextInspectPatch().Enable();
         }
 
         private class ResizeWindowPatch : ModulePatch
@@ -65,7 +70,7 @@ namespace UIFixes
             {
                 if (Settings.RememberInspectSize.Value)
                 {
-                    Resize(___layoutElement_0);
+                    RestoreSavedSize(___layoutElement_0);
                 }
             }
 
@@ -84,41 +89,100 @@ namespace UIFixes
                 Button closeButton = __instance.GetComponentsInChildren<Button>().FirstOrDefault(b => b.name == "Close Button");
                 if (closeButton != null)
                 {
-                    RectTransform closeRect = (RectTransform)closeButton.transform;
-
-                    Button restoreButton = UnityEngine.Object.Instantiate(closeButton, closeButton.transform.parent, false);
-                    restoreButton.name = RestoreButtonName;
-                    RectTransform restoreRect = (RectTransform)restoreButton.transform;
-                    restoreRect.localPosition = new Vector3(closeRect.localPosition.x - closeRect.rect.width, closeRect.localPosition.y, closeRect.localPosition.z);
-
-                    Image restoreImage = restoreButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
-                    restoreImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.EffectiveDist);
-                    restoreImage.overrideSprite = null;
-                    restoreImage.SetNativeSize();
-                    restoreImage.transform.Rotate(180f, 180f, 0f);
-                    if (SavedPreferredWidth < 0 && SavedPreferredHeight < 0)
-                    {
-                        restoreButton.gameObject.SetActive(false);
-                    }
-
-                    restoreButton.onClick.AddListener(() =>
-                    {
-                        SavedPreferredWidth = -1f;
-                        SavedPreferredHeight = -1f;
-                        Resize(___layoutElement_0);
-                        restoreButton.gameObject.SetActive(false);
-
-                        // I'm really not sure why this is necessary, but something in the layout gets borked trying to just restore the default size
-                        // This recreates a lot of the children, and it works
-                        __instance.method_1();
-                    });
-                    __instance.AddDisposable(() => restoreButton.onClick.RemoveAllListeners());
+                    CreateRightButton(__instance, closeButton);
+                    CreateLeftButton(__instance, closeButton);
+                    CreateRestoreButton(__instance, ___layoutElement_0, closeButton);
                 }
             }
 
-            // Copied from StretchArea.OnDrag, this updates where the stretch areas are
-            // Simplified a little since we know this panel is resizable in all 4 directions
-            private static void Resize(LayoutElement layout)
+            private static void CreateRestoreButton(ItemSpecificationPanel inspectPanel, LayoutElement inspectLayout, Button template)
+            {
+                RectTransform templateRect = (RectTransform)template.transform;
+
+                Button restoreButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
+                restoreButton.name = RestoreButtonName;
+                RectTransform restoreRect = (RectTransform)restoreButton.transform;
+                restoreRect.localPosition = new Vector3(templateRect.localPosition.x - 3 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
+
+                Image restoreImage = restoreButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                restoreImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.EffectiveDist);
+                restoreImage.overrideSprite = null;
+                restoreImage.SetNativeSize();
+                restoreImage.transform.localScale = new Vector3(restoreImage.transform.localScale.x * 0.8f, restoreImage.transform.localScale.y * 0.8f, restoreImage.transform.localScale.z);
+
+                Image restoreImage2 = UnityEngine.Object.Instantiate(restoreImage, restoreImage.transform.parent, false);
+                restoreImage2.transform.Rotate(180f, 180f, 0f);
+
+                Vector3 startPosition = restoreImage2.transform.localPosition;
+                restoreImage.transform.localPosition = new Vector3(startPosition.x - 3f, startPosition.y - 3f, startPosition.z);
+                restoreImage2.transform.localPosition = new Vector3(startPosition.x + 2.5f, startPosition.y + 2f, startPosition.z);
+
+                if (SavedPreferredWidth < 0 && SavedPreferredHeight < 0)
+                {
+                    restoreButton.gameObject.SetActive(false);
+                }
+
+                restoreButton.onClick.AddListener(() =>
+                {
+                    SavedPreferredWidth = -1f;
+                    SavedPreferredHeight = -1f;
+                    RestoreSavedSize(inspectLayout);
+                    restoreButton.gameObject.SetActive(false);
+
+                    // I'm really not sure why this is necessary, but something in the layout gets borked trying to just restore the default size
+                    // This recreates a lot of the children, but it works
+                    inspectPanel.method_1();
+
+                    StretchDescription(inspectLayout);
+                });
+                inspectPanel.AddDisposable(() => restoreButton.onClick.RemoveAllListeners());
+            }
+
+            private static void CreateLeftButton(ItemSpecificationPanel inspectPanel, Button template)
+            {
+                RectTransform templateRect = (RectTransform)template.transform;
+
+                Button leftButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
+                RectTransform leftRect = (RectTransform)leftButton.transform;
+                leftRect.localPosition = new Vector3(templateRect.localPosition.x - 2 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
+
+                Image leftImage = leftButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
+                leftImage.overrideSprite = null;
+                leftImage.SetNativeSize();
+
+                leftButton.onClick.AddListener(() =>
+                {
+                    RectTransform inspectRect = (RectTransform)inspectPanel.transform;
+                    inspectRect.anchoredPosition = new Vector2((float)Screen.width / 4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
+                });
+                inspectPanel.AddDisposable(() => leftButton.onClick.RemoveAllListeners());
+            }
+
+            private static void CreateRightButton(ItemSpecificationPanel inspectPanel, Button template)
+            {
+                RectTransform templateRect = (RectTransform)template.transform;
+
+                Button rightButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
+                RectTransform rightRect = (RectTransform)rightButton.transform;
+                rightRect.localPosition = new Vector3(templateRect.localPosition.x - (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
+
+                Image leftImage = rightButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
+                leftImage.transform.Rotate(0f, 180f, 0f);
+                leftImage.overrideSprite = null;
+                leftImage.SetNativeSize();
+
+                rightButton.onClick.AddListener(() =>
+                {
+                    RectTransform inspectRect = (RectTransform)inspectPanel.transform;
+                    inspectRect.anchoredPosition = new Vector2((float)Screen.width * 3f/4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
+                });
+                inspectPanel.AddDisposable(() => rightButton.onClick.RemoveAllListeners());
+            }
+
+            // Informed by StretchArea.OnDrag
+            private static void RestoreSavedSize(LayoutElement layout)
             {
                 RectTransform layoutRect = (RectTransform)layout.transform;
 
@@ -126,6 +190,44 @@ namespace UIFixes
                 layout.preferredHeight = SavedPreferredHeight > 0 ? SavedPreferredHeight : DefaultPreferredHeight;
 
                 LayoutRebuilder.ForceRebuildLayoutImmediate(layoutRect);
+
+                layoutRect.CorrectPositionResolution(default(MarginsStruct));
+            }
+        }
+
+        private static void StretchDescription(LayoutElement inspectLayout)
+        {
+            if (!Settings.ExpandDescriptionHeight.Value)
+            {
+                return;
+            }
+
+            LayoutElement scrollArea = inspectLayout.GetComponentsInChildren<LayoutElement>().FirstOrDefault(le => le.name == "Scroll Area");
+            if (inspectLayout != null && scrollArea != null && scrollArea.transform.childCount > 0)
+            {
+                RectTransform description = (RectTransform)scrollArea.transform.GetChild(0);
+
+                // Try to figure out how much extra I can work with
+                float maxGrowth = (Screen.height / inspectLayout.transform.lossyScale.y) - ((RectTransform)inspectLayout.transform).rect.height;
+                scrollArea.minHeight = Mathf.Max(scrollArea.minHeight, Mathf.Min(maxGrowth, description.rect.height));
+            }
+        }
+
+        private class ItemUiContextInspectPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemUiContext), "Inspect");
+            }
+
+            [PatchPostfix]
+            private static void Postfix(List<InputNode> ____children)
+            {
+                var inspectWindow = ____children.Last();
+                if (inspectWindow != null)
+                {
+                    StretchDescription(inspectWindow.GetComponent<LayoutElement>());
+                }
             }
         }
     }
