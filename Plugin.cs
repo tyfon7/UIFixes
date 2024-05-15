@@ -23,6 +23,7 @@ namespace UIFixes
             DialogPatches.Enable();
             ItemPanelResizePatches.Enable();
             ProductionPanelPatches.Enable();
+            ScrollSyncPatches.Enable();
         }
     }
 }

@@ -40,6 +40,7 @@ namespace UIFixes
         // Inventory
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
+        public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
@@ -123,6 +124,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Enable swapping items with containers that could never fit that item due to size or filter restrictions. Disabled in raid to avoid costly mistakes.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(SynchronizeStashScrolling = config.Bind(
+                InventorySection,
+                "Synchronize Stash Scroll Position",
+                false,
+                new ConfigDescription(
+                    "Remember your scroll position all the places you see your stash - inventory, trading screen, mail screen, etc.",
                     null,
                     new ConfigurationManagerAttributes { })));
 
