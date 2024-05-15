@@ -46,6 +46,8 @@ namespace UIFixes
         // The most recent GridItemView that was hovered - needed to forcibly update hover state after swap
         private static GridItemView LastHoveredGridItemView;
 
+        private static EOwnerType[] BannedOwnerTypes = [EOwnerType.Mail, EOwnerType.Trader];
+
         public static void Enable()
         {
             GridItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
@@ -88,6 +90,11 @@ namespace UIFixes
             }
 
             if (InHighlight || itemContext == null || targetItemContext == null || (bool)CanAcceptOperationSucceededProperty.GetValue(operation) == true)
+            {
+                return false;
+            }
+
+            if (BannedOwnerTypes.Contains(itemContext.Item.Owner.OwnerType) || BannedOwnerTypes.Contains(targetItemContext.Item.Owner.OwnerType))
             {
                 return false;
             }
