@@ -22,6 +22,7 @@ namespace UIFixes
             new ContainerStackPatch().Enable();
             DialogPatches.Enable();
             ItemPanelResizePatches.Enable();
+            ProductionPanelPatches.Enable();
         }
     }
 }
