@@ -11,6 +11,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Customizable mouse scrolling speed
 - Fix item tooltips if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
 - Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!)
+- ✨ Option to synchronize stash scroll position everywhere your stash is visible
 
 ## Doors
 - Remove the unimplemented actions like "Bang & clear" that, lets face it, are never going to happen anyway.
@@ -30,11 +31,14 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - ✨ Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
 - ✨ Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 
+## Hideout
+- ✨ Remember search text when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+
 ## Mail
 - Skips "You can return to this later" warnings when not transferring all items (optional, defaults ON)
 - "Receive All" button no longer shows up when there is nothing to receive.
 
 ## Misc
-- Confirm dialogs with Return/Enter instead of just Y
+- Confirm dialogs with Return/Enter/Space instead of just Y
 
 ## More to come... ?
