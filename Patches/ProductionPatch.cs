@@ -26,6 +26,8 @@ namespace UIFixes
             new ShowContentsPatch().Enable();
             new ClosePatch().Enable();
             new ReturnToPreviousStatePatch().Enable();
+            new GetSortedProductsPatch().Enable();
+            new OnSearchChangePatch().Enable();
         }
 
         // Deactivate ProduceViews as they lazy load if they don't match the search
@@ -62,16 +64,19 @@ namespace UIFixes
                 return AccessTools.Method(typeof(ProductionPanel), "ShowContents");
             }
 
-            [PatchPostfix]
-            private static void Postfix(ProductionPanel __instance)
+            [PatchPrefix]
+            private static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
             {
-                var searchField = ProductionPanelSearch.GetValue(__instance) as ValidationInputField;
                 string lastSearch;
                 if (LastSearches.TryGetValue(__instance.AreaData.ToString(), out lastSearch))
                 {
-                    searchField.text = lastSearch;
+                    ____searchInputField.text = lastSearch;
                 }
+            }
 
+            [PatchPostfix]
+            private static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+            {
                 // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
                 if (__instance.method_4().Count() > 2)
                 {
@@ -80,6 +85,47 @@ namespace UIFixes
                     layoutElement.minHeight = 750f; // aka areaScreenSubstrate._maxHeight
                     areaScreenSubstrate.method_8();
                 }
+
+                ____searchInputField.ActivateInputField();
+                ____searchInputField.Select();
+            }
+        }
+
+        // method_4 gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
+        public class GetSortedProductsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ProductionPanel), "method_4");
+            }
+
+            // Working with GClasses directly here, because this would be a nightmare with reflection
+            // Copied directly from method_4
+            [PatchPrefix]
+            private static bool Prefix(ref IEnumerable<GClass1923> __result, ProductionPanel __instance, GClass1922[] ___gclass1922_0, ValidationInputField ____searchInputField)
+            {
+                __result = ___gclass1922_0.OfType<GClass1923>().Where(scheme => !scheme.locked)
+                    .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
+                    .ThenBy(__instance.method_10)
+                    .ThenBy(scheme => scheme.FavoriteIndex)
+                    .ThenBy(scheme => scheme.Level);
+
+                return false;
+            }
+        }
+
+        // method_9 activates/decactives the product game objects based on the search. Need to resort the list due to above patch
+        public class OnSearchChangePatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ProductionPanel), "method_9");
+            }
+
+            [PatchPrefix]
+            private static void Prefix(ProductionPanel __instance)
+            {
+                __instance.method_8(); // update sort order
             }
         }
 
