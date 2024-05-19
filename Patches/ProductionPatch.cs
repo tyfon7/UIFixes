@@ -114,7 +114,7 @@ namespace UIFixes
             }
         }
 
-        // method_9 activates/decactives the product game objects based on the search. Need to resort the list due to above patch
+        // method_9 activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
         public class OnSearchChangePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
