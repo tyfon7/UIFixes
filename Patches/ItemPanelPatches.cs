@@ -41,32 +41,30 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ItemSpecificationPanel), "method_5");
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_5));
             }
 
             [PatchPostfix]
-            private static void Postfix(
+            public static void Postfix(
                 ItemSpecificationPanel __instance,
                 Item ___item_0,
                 CompactCharacteristicPanel ____compactCharTemplate,
                 Transform ____compactPanel,
                 SimpleTooltip ___simpleTooltip_0)
             {
-                if (!Settings.ShowModStats.Value || !(___item_0 is Mod))
+                if (!Settings.ShowModStats.Value || ___item_0 is not Mod)
                 {
                     return;
                 }
 
-                bool changed;
-                var deepAttributes = GetDeepAttributes(___item_0, out changed);
+                var deepAttributes = GetDeepAttributes(___item_0, out bool changed);
                 if (!changed)
                 {
                     return;
                 }
 
-                var compactPanels = AttributeCompactPanelDictionaryField.GetValue(__instance) as IDisposable;
                 // Clean up existing one
-                if (compactPanels != null)
+                if (AttributeCompactPanelDictionaryField.GetValue(__instance) is IDisposable compactPanels)
                 {
                     compactPanels.Dispose();
                 }
@@ -110,13 +108,13 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                RefreshStaticMethod = AccessTools.Method(typeof(ItemSpecificationPanel), "smethod_1", null, [typeof(CompactCharacteristicPanel)]);
+                RefreshStaticMethod = AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.smethod_1), null, [typeof(CompactCharacteristicPanel)]);
 
-                return AccessTools.Method(typeof(ItemSpecificationPanel), "method_6");
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_6));
             }
 
             [PatchPrefix]
-            private static void Prefix(Item compareItem)
+            public static void Prefix(Item compareItem)
             {
                 if (compareItem == null)
                 {
@@ -129,26 +127,27 @@ namespace UIFixes
                 {
                     float maxDurability = armorComponents.Sum(c => c.Repairable.Durability);
 
-                    ItemAttributeClass itemAttributeClass = new ItemAttributeClass(EItemAttributeId.ArmorPoints);
-                    itemAttributeClass.Name = EItemAttributeId.ArmorPoints.GetName();
-                    itemAttributeClass.Base = () => maxDurability;
-                    itemAttributeClass.StringValue = () => Math.Round(maxDurability, 1).ToString(CultureInfo.InvariantCulture);
-                    itemAttributeClass.DisplayType = () => EItemAttributeDisplayType.Compact;
+                    var itemAttributeClass = new ItemAttributeClass(EItemAttributeId.ArmorPoints)
+                    {
+                        Name = EItemAttributeId.ArmorPoints.GetName(),
+                        Base = () => maxDurability,
+                        StringValue = () => Math.Round(maxDurability, 1).ToString(CultureInfo.InvariantCulture),
+                        DisplayType = () => EItemAttributeDisplayType.Compact
+                    };
 
                     compareItem.Attributes.Insert(0, itemAttributeClass);
                 }
             }
 
             [PatchPostfix]
-            private static void Postfix(ItemSpecificationPanel __instance, Item compareItem)
+            public static void Postfix(ItemSpecificationPanel __instance, Item compareItem)
             {
-                if (!Settings.ShowModStats.Value || !(compareItem is Mod))
+                if (!Settings.ShowModStats.Value || compareItem is not Mod)
                 {
                     return;
                 }
 
-                bool changed;
-                List<ItemAttributeClass> deepAttributes = GetDeepAttributes(compareItem, out changed);
+                List<ItemAttributeClass> deepAttributes = GetDeepAttributes(compareItem, out bool changed);
                 if (!changed)
                 {
                     return;
@@ -179,7 +178,7 @@ namespace UIFixes
 
                 SimpleContextMenuButtonTextField = AccessTools.Field(typeof(ContextMenuButton), "_text");
 
-                return AccessTools.Method(typeof(ItemSpecificationPanel), "method_4");
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_4));
             }
 
             private static string GetLabel()
@@ -188,9 +187,9 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(ItemSpecificationPanel __instance, ItemInfoInteractionsAbstractClass<EItemInfoButton> contextInteractions, Item ___item_0, InteractionButtonsContainer ____interactionButtonsContainer)
+            public static void Postfix(ItemSpecificationPanel __instance, ItemInfoInteractionsAbstractClass<EItemInfoButton> contextInteractions, Item ___item_0, InteractionButtonsContainer ____interactionButtonsContainer)
             {
-                if (!(___item_0 is Mod))
+                if (___item_0 is not Mod)
                 {
                     return;
                 }
@@ -200,25 +199,28 @@ namespace UIFixes
 
                 SimpleContextMenuButton toggleButton = null;
 
-                Action onClick = () => Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
-
                 // Listen to the setting and the work there to handle multiple windows open at once
-                EventHandler onSettingChanged = (sender, args) =>
+                void onSettingChanged(object sender, EventArgs args)
                 {
                     var text = SimpleContextMenuButtonTextField.GetValue(toggleButton) as TextMeshProUGUI;
                     text.text = GetLabel();
 
                     __instance.method_5(); // rebuild stat panels
-                };
+                }
                 Settings.ShowModStats.SettingChanged += onSettingChanged;
 
-                Action createButton = () =>
+                static void onClick()
+                {
+                    Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
+                }
+
+                void createButton()
                 {
                     Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
                     toggleButton = UnityEngine.Object.Instantiate(template, transform, false);
                     toggleButton.Show(GetLabel(), null, sprite, onClick, null);
                     ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
-                };
+                }
 
                 // Subscribe to redraws to recreate when mods get dropped in
                 contextInteractions.OnRedrawRequired += createButton;
@@ -238,11 +240,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(CompactCharacteristicPanel), "SetValues");
+                return AccessTools.Method(typeof(CompactCharacteristicPanel), nameof(CompactCharacteristicPanel.SetValues));
             }
 
             [PatchPostfix]
-            private static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
+            public static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
             {
                 try
                 {
@@ -262,14 +264,14 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                RoundToIntMethod = AccessTools.Method(typeof(Mathf), "RoundToInt");
-                ToStringMethod = AccessTools.Method(typeof(float), "ToString", [typeof(string)]);
+                RoundToIntMethod = AccessTools.Method(typeof(Mathf), nameof(Mathf.RoundToInt));
+                ToStringMethod = AccessTools.Method(typeof(float), nameof(float.ToString), [typeof(string)]);
 
-                return AccessTools.Method(typeof(CharacteristicPanel), "SetValues");
+                return AccessTools.Method(typeof(CharacteristicPanel), nameof(CharacteristicPanel.SetValues));
             }
 
             [PatchPostfix]
-            private static void Postfix(CharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
+            public static void Postfix(CharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
             {
                 try
                 {
@@ -283,7 +285,7 @@ namespace UIFixes
 
             // This transpiler looks for where it rounds a float to an int, and skips that. Instead it calls ToString("0.0#") on it
             [PatchTranspiler]
-            private static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
             {
                 int skip = 0;
                 CodeInstruction lastInstruction = null;
@@ -351,18 +353,15 @@ namespace UIFixes
             // Completely redo it
             if ((EItemAttributeId)attribute.Id == EItemAttributeId.CenterOfImpact)
             {
-                ItemAttributeClass compareAttribute = CompactCharacteristicPanelCompareItemAttributeField.GetValue(panel) as ItemAttributeClass;
-                if (compareAttribute != null)
+                if (CompactCharacteristicPanelCompareItemAttributeField.GetValue(panel) is ItemAttributeClass compareAttribute)
                 {
                     string currentStringValue = attribute.StringValue();
                     var moaMatch = Regex.Match(currentStringValue, @"^(\S+)");
-                    float moa;
-                    if (float.TryParse(moaMatch.Groups[1].Value, out moa))
+                    if (float.TryParse(moaMatch.Groups[1].Value, out float moa))
                     {
                         string compareStringValue = compareAttribute.StringValue();
                         moaMatch = Regex.Match(compareStringValue, @"^(\S+)");
-                        float compareMoa;
-                        if (float.TryParse(moaMatch.Groups[1].Value, out compareMoa))
+                        if (float.TryParse(moaMatch.Groups[1].Value, out float compareMoa))
                         {
                             float delta = compareMoa - moa;
                             string final = currentStringValue;
@@ -384,9 +383,8 @@ namespace UIFixes
             var match = Regex.Match(text, @" %\(([+-].*)\)");
             if (match.Success)
             {
-                float value;
                 // If this fails to parse, I don't know what it is, leave it be
-                if (float.TryParse(match.Groups[1].Value, out value))
+                if (float.TryParse(match.Groups[1].Value, out float value))
                 {
                     string sign = value > 0 ? "+" : "";
                     string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
@@ -408,9 +406,8 @@ namespace UIFixes
                 match = Regex.Match(text, @"(\S)%\(([+-].*)\)");
                 if (match.Success)
                 {
-                    float value;
                     // If this fails to parse, I don't know what it is, leave it be
-                    if (float.TryParse(match.Groups[2].Value, out value))
+                    if (float.TryParse(match.Groups[2].Value, out float value))
                     {
                         string sign = value > 0 ? "+" : "";
                         string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
@@ -423,9 +420,8 @@ namespace UIFixes
                     match = Regex.Match(text, @"\(([+-].*)\)");
                     if (match.Success)
                     {
-                        float value;
                         // If this fails to parse, I don't know what it is, leave it be
-                        if (float.TryParse(match.Groups[1].Value, out value))
+                        if (float.TryParse(match.Groups[1].Value, out float value))
                         {
                             string sign = value > 0 ? "+" : "";
                             string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
@@ -471,7 +467,7 @@ namespace UIFixes
 
         private static IEnumerable<ItemAttributeClass> CombineAttributes(IList<ItemAttributeClass> first, IList<ItemAttributeClass> second)
         {
-            foreach (EItemAttributeId id in first.Select(a => a.Id).Union(second.Select(a => a.Id)))
+            foreach (EItemAttributeId id in first.Select(a => a.Id).Union(second.Select(a => a.Id)).Select(v => (EItemAttributeId)v))
             {
                 // Need to cast the id since it's of type Enum for some reason
                 var attribute = first.FirstOrDefault(a => (EItemAttributeId)a.Id == id);

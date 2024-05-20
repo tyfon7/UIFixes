@@ -8,19 +8,20 @@ namespace UIFixes
 {
     public class DisabledActionsPatch : ModulePatch
     {
-        private static string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
+        private static readonly string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
+
         protected override MethodBase GetTargetMethod()
         {
             Type type = typeof(GetActionsClass);
             return AccessTools.GetDeclaredMethods(type).FirstOrDefault(x =>
             {
                 var parameters = x.GetParameters();
-                return x.Name == "GetAvailableActions" && parameters[0].Name == "owner";
+                return x.Name == nameof(GetActionsClass.GetAvailableActions) && parameters[0].Name == "owner";
             });
         }
 
         [PatchPostfix]
-        private static void Postfix(ref ActionsReturnClass __result)
+        public static void Postfix(ref ActionsReturnClass __result)
         {
             if (Settings.RemoveDisabledActions.Value && __result != null)
             {

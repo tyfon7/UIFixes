@@ -2,6 +2,7 @@
 using Aki.Reflection.Utils;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
+using HarmonyLib;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -16,12 +17,12 @@ namespace UIFixes
         protected override MethodBase GetTargetMethod()
         {
             ControlSettingsClass = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass960
-            GetKeyNameMethod = ControlSettingsClass.GetMethod("GetKeyName");
-            return ControlSettingsClass.GetMethod("GetBoundItemNames", BindingFlags.Public | BindingFlags.Instance);
+            GetKeyNameMethod = AccessTools.Method(ControlSettingsClass, "GetKeyName");
+            return AccessTools.Method(ControlSettingsClass, "GetBoundItemNames");
         }
 
         [PatchPostfix]
-        private static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
+        public static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
         {
             switch(boundItem)
             {

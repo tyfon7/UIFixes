@@ -32,7 +32,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(object __instance, bool ___bool_0)
+            public static void Postfix(object __instance, bool ___bool_0)
             {
                 if (!___bool_0)
                 {
@@ -52,11 +52,13 @@ namespace UIFixes
             protected override MethodBase GetTargetMethod()
             {
                 // The parent has a Show() so need to be specific
-                return typeof(HandoverRagfairMoneyWindow).GetMethods().First(m => m.Name == "Show" && m.GetParameters()[0].ParameterType == typeof(Inventory));
+                return AccessTools.GetDeclaredMethods(typeof(HandoverRagfairMoneyWindow)).First(
+                    m => m.Name == nameof(HandoverRagfairMoneyWindow.Show) && 
+                    m.GetParameters()[0].ParameterType == typeof(Inventory));
             }
 
             [PatchPostfix]
-            private static void Postfix(TMP_InputField ____inputField)
+            public static void Postfix(TMP_InputField ____inputField)
             {
                 ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 ____inputField.ActivateInputField();

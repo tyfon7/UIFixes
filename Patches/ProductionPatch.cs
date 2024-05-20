@@ -15,7 +15,7 @@ namespace UIFixes
         private static FieldInfo ProductionPanelSearch;
         private static FieldInfo SubstrateContentLayoutField;
 
-        private static Dictionary<string, string> LastSearches = [];
+        private static readonly Dictionary<string, string> LastSearches = [];
 
         public static void Enable()
         {
@@ -45,7 +45,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(ProductionPanel.Class1631 __instance, GClass1923 scheme, ProduceView view)
+            public static void Postfix(ProductionPanel.Class1631 __instance, GClass1923 scheme, ProduceView view)
             {
                 var searchField = ProductionPanelSearch.GetValue(__instance.productionPanel_0) as ValidationInputField;
                 if (searchField.text.Length > 0 && scheme.endProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
@@ -61,21 +61,20 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ProductionPanel), "ShowContents");
+                return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.ShowContents));
             }
 
             [PatchPrefix]
-            private static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+            public static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
             {
-                string lastSearch;
-                if (LastSearches.TryGetValue(__instance.AreaData.ToString(), out lastSearch))
+                if (LastSearches.TryGetValue(__instance.AreaData.ToString(), out string lastSearch))
                 {
                     ____searchInputField.text = lastSearch;
                 }
             }
 
             [PatchPostfix]
-            private static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+            public static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
             {
                 // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
                 if (__instance.method_4().Count() > 2)
@@ -96,13 +95,13 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ProductionPanel), "method_4");
+                return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_4));
             }
 
             // Working with GClasses directly here, because this would be a nightmare with reflection
             // Copied directly from method_4
             [PatchPrefix]
-            private static bool Prefix(ref IEnumerable<GClass1923> __result, ProductionPanel __instance, GClass1922[] ___gclass1922_0, ValidationInputField ____searchInputField)
+            public static bool Prefix(ref IEnumerable<GClass1923> __result, ProductionPanel __instance, GClass1922[] ___gclass1922_0, ValidationInputField ____searchInputField)
             {
                 __result = ___gclass1922_0.OfType<GClass1923>().Where(scheme => !scheme.locked)
                     .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
@@ -119,11 +118,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ProductionPanel), "method_9");
+                return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_9));
             }
 
             [PatchPrefix]
-            private static void Prefix(ProductionPanel __instance)
+            public static void Prefix(ProductionPanel __instance)
             {
                 __instance.method_8(); // update sort order
             }
@@ -134,11 +133,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ProductionPanel), "Close");
+                return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.Close));
             }
 
             [PatchPrefix]
-            private static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+            public static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
             {
                 LastSearches[__instance.AreaData.ToString()] = ____searchInputField.text;
 
@@ -154,11 +153,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(HideoutScreenOverlay), "ReturnToPreviousState");
+                return AccessTools.Method(typeof(HideoutScreenOverlay), nameof(HideoutScreenOverlay.ReturnToPreviousState));
             }
 
             [PatchPostfix]
-            private static void Postfix()
+            public static void Postfix()
             {
                 LastSearches.Clear();
             }

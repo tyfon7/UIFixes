@@ -39,11 +39,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(SimpleStashPanel), "Show");
+                return AccessTools.Method(typeof(SimpleStashPanel), nameof(SimpleStashPanel.Show));
             }
 
             [PatchPostfix]
-            private static void Postfix(SimpleStashPanel __instance)
+            public static void Postfix(SimpleStashPanel __instance)
             {
                 SynchronizeScrollRect(__instance);
             }
@@ -53,13 +53,13 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(TraderDealScreen), "method_3");
+                return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_3));
             }
 
             // TraderDealScreen is a monstrosity that loads multiple times and isn't done loading when Show() is done
             // method_3 shows the stash grid, if method_5() returned true
             [PatchPostfix]
-            private static void Postfix(TraderDealScreen __instance, ScrollRect ____stashScroll)
+            public static void Postfix(TraderDealScreen __instance, ScrollRect ____stashScroll)
             {
                 if (__instance.method_5())
                 {
@@ -72,11 +72,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(AddOfferWindow), "Show");
+                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
             }
 
             [PatchPostfix]
-            private static void Postfix(AddOfferWindow __instance)
+            public static void Postfix(AddOfferWindow __instance)
             {
                 SynchronizeScrollRect(__instance);
             }

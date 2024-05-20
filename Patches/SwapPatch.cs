@@ -46,7 +46,7 @@ namespace UIFixes
         // The most recent GridItemView that was hovered - needed to forcibly update hover state after swap
         private static GridItemView LastHoveredGridItemView;
 
-        private static EOwnerType[] BannedOwnerTypes = [EOwnerType.Mail, EOwnerType.Trader];
+        private static readonly EOwnerType[] BannedOwnerTypes = [EOwnerType.Mail, EOwnerType.Trader];
 
         public static void Enable()
         {
@@ -61,7 +61,7 @@ namespace UIFixes
             CanAcceptOperationSucceededProperty = AccessTools.Property(CanAcceptOperationType, "Succeeded");
             CanAcceptOperationErrorProperty = AccessTools.Property(CanAcceptOperationType, "Error");
 
-            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), "Swap").ReturnType; // GStruct414<GClass2797>
+            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2797>
             SwapOperationToCanAcceptOperationOperator = SwapOperationType.GetMethods().First(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptOperationType);
 
             GridViewNonInteractableField = AccessTools.Field(typeof(GridView), "_nonInteractable");
@@ -146,8 +146,7 @@ namespace UIFixes
         private static bool CouldEverFit(ItemContextClass itemContext, ItemContextAbstractClass containerItemContext)
         {
             Item item = itemContext.Item;
-            LootItemClass container = containerItemContext.Item as LootItemClass;
-            if (container == null)
+            if (containerItemContext.Item is not LootItemClass container)
             {
                 return false;
             }
@@ -171,12 +170,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(ItemView);
-                return type.GetMethod("OnDrag");
+                return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnDrag));
             }
 
             [PatchPrefix]
-            private static void Prefix(ItemView __instance)
+            public static void Prefix(ItemView __instance)
             {
                 SourceContainer = __instance.Container;
             }
@@ -188,9 +186,8 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(GridView);
-                GridViewTraderControllerClassField = AccessTools.GetDeclaredFields(type).First(f => f.FieldType == typeof(TraderControllerClass));
-                return type.GetMethod("CanAccept");
+                GridViewTraderControllerClassField = AccessTools.GetDeclaredFields(typeof(GridView)).First(f => f.FieldType == typeof(TraderControllerClass));
+                return AccessTools.Method(typeof(GridView), nameof(GridView.CanAccept));
             }
 
             // Essentially doing what happens in StashGridClass.method_6, which checks if any of the squares are already taken
@@ -236,7 +233,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
+            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
             {
                 if (!ValidPrerequisites(itemContext, targetItemContext, operation))
                 {
@@ -254,8 +251,7 @@ namespace UIFixes
                 }
 
                 // Repair kits are special
-                ItemView targetItemView;
-                if (___dictionary_0.TryGetValue(targetItem.Id, out targetItemView))
+                if (___dictionary_0.TryGetValue(targetItem.Id, out ItemView targetItemView))
                 {
                     if (targetItemView.CanInteract(itemContext))
                     {
@@ -328,21 +324,15 @@ namespace UIFixes
         // Swap does not do that, because spaghetti, so do it here.
         public class SwapOperationRaiseEventsPatch : ModulePatch
         {
-            private static MethodInfo RaiseUnbindItemEvent;
-            private static Type RaiseUnbindItemEventArgs; // GEventArgs13
-
             protected override MethodBase GetTargetMethod()
             {
-                RaiseUnbindItemEvent = AccessTools.Method(typeof(InventoryControllerClass), "RaiseUnbindItemEvent");
-                RaiseUnbindItemEventArgs = RaiseUnbindItemEvent.GetParameters()[0].ParameterType;
                 return AccessTools.Method(SwapOperationType.GenericTypeArguments[0], "RaiseEvents"); // GClass2787
             }
 
             [PatchPostfix]
-            private static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item1)
+            public static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item1)
             {
-                InventoryControllerClass inventoryController = controller as InventoryControllerClass;
-                if (status != CommandStatus.Succeed || inventoryController == null ||  ___Item == null || ___Item1 == null)
+                if (status != CommandStatus.Succeed || ___Item == null || ___Item1 == null || controller is not InventoryControllerClass inventoryController)
                 {
                     return;
                 }
@@ -378,11 +368,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GridItemView), "OnPointerEnter");
+                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.OnPointerEnter));
             }
 
             [PatchPostfix]
-            private static void Postfix(GridItemView __instance)
+            public static void Postfix(GridItemView __instance)
             {
                 LastHoveredGridItemView = __instance;
             }
@@ -394,12 +384,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(ItemContextClass);
-                return type.GetMethod("CanAccept");
+                return AccessTools.Method(typeof(ItemContextClass), nameof(ItemContextClass.CanAccept));
             }
 
             [PatchPostfix]
-            private static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref object operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+            public static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref object operation, TraderControllerClass itemController, bool simulate, ref bool __result)
             {
                 // targetItemContext here is not the target item, it's the *parent* context, i.e. the owner of the slot
                 // Do a few more checks
@@ -437,18 +426,17 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(GridItemView);
-                return type.GetMethod("method_12");
+                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_12));
             }
 
             [PatchPrefix]
-            private static void Prefix()
+            public static void Prefix()
             {
                 InHighlight = true;
             }
 
             [PatchPostfix]
-            private static void Postfix()
+            public static void Postfix()
             {
                 InHighlight = false;
             }
@@ -460,18 +448,18 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(SlotView);
-                return type.GetMethod("method_2");
+                return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_2));
+
             }
 
             [PatchPrefix]
-            private static void Prefix()
+            public static void Prefix()
             {
                 InHighlight = true;
             }
 
             [PatchPostfix]
-            private static void Postfix()
+            public static void Postfix()
             {
                 InHighlight = false;
             }
@@ -488,7 +476,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(Item item, ref bool __result)
+            public static void Postfix(Item item, ref bool __result)
             {
                 LastCheckItemFilterId = item.Id;
                 LastCheckItemFilterResult = __result;
@@ -501,11 +489,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(DraggedItemView), "UpdateTargetUnderCursor");
+                return AccessTools.Method(typeof(DraggedItemView), nameof(DraggedItemView.UpdateTargetUnderCursor));
             }
 
             [PatchPostfix]
-            private static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
+            public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
             {
                 if (SourceContainer is Component sourceComponent)
                 {

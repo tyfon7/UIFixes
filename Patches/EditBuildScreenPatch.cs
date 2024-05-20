@@ -1,5 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.UI;
+using HarmonyLib;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -25,11 +26,11 @@ namespace UIFixes
             protected override MethodBase GetTargetMethod()
             {
                 Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3126
-                return type.GetMethod("CloseScreenInterruption");
+                return AccessTools.Method(type, "CloseScreenInterruption");
             }
 
             [PatchPrefix]
-            private static void Prefix(bool moveForward)
+            public static void Prefix(bool moveForward)
             {
                 MoveForward = moveForward;
             }
@@ -39,12 +40,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod() 
             {
-                Type type = typeof(EditBuildScreen);
-                return type.GetMethod("method_35");
+                return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.method_35));
             }
 
             [PatchPrefix]
-            private static bool Prefix(ref Task<bool> __result)
+            public static bool Prefix(ref Task<bool> __result)
             {
                 if (MoveForward && Settings.ShowPresetConfirmations.Value == WeaponPresetConfirmationOption.Always)
                 {
@@ -56,7 +56,7 @@ namespace UIFixes
                     return true;
                 }
 
-                __result = Task.FromResult<bool>(true);
+                __result = Task.FromResult(true);
                 return false;
             }
         }

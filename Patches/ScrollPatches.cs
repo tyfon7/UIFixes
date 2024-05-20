@@ -126,23 +126,18 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(SimpleStashPanel);
-                return type.GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+                return AccessTools.Method(typeof(SimpleStashPanel), nameof(SimpleStashPanel.Update));
             }
 
             [PatchPrefix]
-            private static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
+            public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
             {
-                if (____stashScroll == null)
-                {
-                    // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
-                    ____stashScroll = __instance.GetComponentInChildren<ScrollRect>();
-                }
-                HandleInput(____stashScroll);
+                // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
+                HandleInput(____stashScroll ?? __instance.GetComponentInChildren<ScrollRect>());
             }
 
             [PatchTranspiler]
-            private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
             {
                 if (Settings.RebindPageUpDown.Value)
                 {
@@ -157,18 +152,17 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(TraderDealScreen);
-                return type.GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+                return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.Update));
             }
 
             [PatchPrefix]
-            private static void Prefix(TraderDealScreen __instance, TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
+            public static void Prefix(TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
             {
                 HandleInput(___etraderMode_0 == TraderDealScreen.ETraderMode.Purchase ? ____traderScroll : ____stashScroll);
             }
 
             [PatchTranspiler]
-            private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+            public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
             {
                 if (Settings.RebindPageUpDown.Value)
                 {
@@ -183,12 +177,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(OfferViewList);
-                return type.GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+                return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.Update));
             }
 
             [PatchPrefix]
-            private static void Prefix(OfferViewList __instance, LightScroller ____scroller)
+            public static void Prefix(LightScroller ____scroller)
             {
                 HandleInput(____scroller);
             }
@@ -209,12 +202,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(MessagesContainer);
-                return type.GetMethod("Update", BindingFlags.Public | BindingFlags.Instance);
+                return AccessTools.Method(typeof(MessagesContainer), nameof(MessagesContainer.Update));
             }
 
             [PatchPrefix]
-            private static void Prefix(MessagesContainer __instance, LightScroller ____scroller)
+            public static void Prefix(LightScroller ____scroller)
             {
                 HandleInput(____scroller);
             }
@@ -235,12 +227,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(ScrollRectNoDrag);
-                return type.GetMethod("OnScroll");
+                return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll)); //type.GetMethod("OnScroll");
             }
 
             [PatchPrefix]
-            private static void Prefix(PointerEventData data)
+            public static void Prefix(PointerEventData data)
             {
                 data.scrollDelta *= Settings.MouseScrollMulti.Value;
             }

@@ -35,11 +35,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(StretchArea), "OnDrag");
+                return AccessTools.Method(typeof(StretchArea), nameof(StretchArea.OnDrag));
             }
 
             [PatchPostfix]
-            private static void Postfix(LayoutElement ___layoutElement_0)
+            public static void Postfix(LayoutElement ___layoutElement_0)
             {
                 if (!Settings.RememberInspectSize.Value || ___layoutElement_0.GetComponent<ItemSpecificationPanel>() == null)
                 {
@@ -62,11 +62,11 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ItemSpecificationPanel), "Show");
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Show));
             }
 
             [PatchPrefix]
-            private static void Prefix(LayoutElement ___layoutElement_0)
+            public static void Prefix(LayoutElement ___layoutElement_0)
             {
                 if (Settings.RememberInspectSize.Value)
                 {
@@ -75,7 +75,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            private static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0)
+            public static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0)
             {
                 if (Settings.LockInspectPreviewSize.Value)
                 {
@@ -191,7 +191,7 @@ namespace UIFixes
 
                 LayoutRebuilder.ForceRebuildLayoutImmediate(layoutRect);
 
-                layoutRect.CorrectPositionResolution(default(MarginsStruct));
+                layoutRect.CorrectPositionResolution(default);
             }
         }
 
@@ -217,11 +217,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ItemUiContext), "Inspect");
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Inspect));
             }
 
             [PatchPostfix]
-            private static void Postfix(List<InputNode> ____children)
+            public static void Postfix(List<InputNode> ____children)
             {
                 var inspectWindow = ____children.Last();
                 if (inspectWindow != null)

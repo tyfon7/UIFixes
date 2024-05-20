@@ -2,6 +2,7 @@
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.WeaponModding;
+using HarmonyLib;
 using System;
 using System.Reflection;
 using UnityEngine.EventSystems;
@@ -18,22 +19,16 @@ namespace UIFixes
 
         public class EditBuildScreenZoomPatch : ModulePatch
         {
-            private static ScrollTrigger ScrollTrigger;
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(EditBuildScreen);
-                return type.GetMethod("Show", [typeof(Item), typeof(Item), typeof(InventoryControllerClass), typeof(ISession)]);
+                return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.Show), [typeof(Item), typeof(Item), typeof(InventoryControllerClass), typeof(ISession)]);
             }
 
             [PatchPrefix]
-            private static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
+            public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
             {
-                if (ScrollTrigger == null)
-                {
-                    ScrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-                }
-
-                ScrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+                var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
+                scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
                 {
                     if (____weaponPreview != null && __instance != null)
                     {
@@ -46,22 +41,16 @@ namespace UIFixes
 
         public class WeaponModdingScreenZoomPatch : ModulePatch
         {
-            private static ScrollTrigger ScrollTrigger;
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(WeaponModdingScreen);
-                return type.GetMethod("Show", [typeof(Item), typeof(InventoryControllerClass), typeof(LootItemClass[])]);
+                return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.Show), [typeof(Item), typeof(InventoryControllerClass), typeof(LootItemClass[])]);
             }
 
             [PatchPrefix]
-            private static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
+            public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
             {
-                if (ScrollTrigger == null)
-                {
-                    ScrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-                }
-
-                ScrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+                var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
+                scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
                 {
                     if (____weaponPreview != null && __instance != null)
                     {

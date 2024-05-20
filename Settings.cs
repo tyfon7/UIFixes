@@ -228,8 +228,7 @@ namespace UIFixes
             int settingOrder = configEntries.Count;
             foreach (var entry in configEntries)
             {
-                ConfigurationManagerAttributes attributes = entry.Description.Tags[0] as ConfigurationManagerAttributes;
-                if (attributes != null)
+                if (entry.Description.Tags[0] is ConfigurationManagerAttributes attributes)
                 {
                     attributes.Order = settingOrder;
                 }

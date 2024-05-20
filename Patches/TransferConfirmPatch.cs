@@ -1,6 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.UI;
-using System;
+using HarmonyLib;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -10,19 +10,18 @@ namespace UIFixes
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(TransferItemsScreen);
-            return type.GetMethod("method_4", BindingFlags.Public | BindingFlags.Instance);
+            return AccessTools.Method(typeof(TransferItemsScreen), nameof(TransferItemsScreen.method_4));
         }
 
         [PatchPrefix]
-        private static bool Prefix(ref Task<bool> __result)
+        public static bool Prefix(ref Task<bool> __result)
         {
             if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
             {
                 return true;
             }
 
-            __result = Task.FromResult<bool>(true);
+            __result = Task.FromResult(true);
             return false;
         }
     }

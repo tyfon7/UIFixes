@@ -14,14 +14,14 @@ namespace UIFixes
 
         protected override MethodBase GetTargetMethod()
         {
-            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), "smethod_0");
+            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
             MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type
             return method;
         }
 
         // Reimplementing this entire method to ignore SpawnedInSession for certain types
         [PatchPrefix]
-        private static bool Prefix(IEnumerable<StashGridClass> gridsToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
+        public static bool Prefix(IEnumerable<StashGridClass> gridsToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
         {
             if (!MergeableItemType.IsInstanceOfType(itemToMerge))
             {
