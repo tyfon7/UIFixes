@@ -17,11 +17,11 @@ namespace UIFixes
     {
         public static void Enable()
         {
-            new SimpleStashPanelPatch().Enable();
-            new TraderDealScreenPatch().Enable();
-            new OfferViewListPatch().Enable();
-            new MessagesContainerPatch().Enable();
-            new MouseScrollSpeedPatch().Enable();
+            new EnhanceStashScrollingPatch().Enable();
+            new EnchanceTraderStashScrollingPatch().Enable();
+            new EnhanceFleaScrollingPatch().Enable();
+            new EnhanceMailScrollingPatch().Enable();
+            new MouseScrollingSpeedPatch().Enable();
         }
 
         protected static void HandleInput(ScrollRect scrollRect)
@@ -122,7 +122,7 @@ namespace UIFixes
             }
         }
 
-        public class SimpleStashPanelPatch : ModulePatch
+        public class EnhanceStashScrollingPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -148,7 +148,7 @@ namespace UIFixes
             }
         }
 
-        public class TraderDealScreenPatch : ModulePatch
+        public class EnchanceTraderStashScrollingPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -173,7 +173,7 @@ namespace UIFixes
             }
         }
 
-        public class OfferViewListPatch : ModulePatch
+        public class EnhanceFleaScrollingPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -198,7 +198,7 @@ namespace UIFixes
             }
         }
 
-        public class MessagesContainerPatch : ModulePatch
+        public class EnhanceMailScrollingPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -223,7 +223,7 @@ namespace UIFixes
             }
         }
 
-        public class MouseScrollSpeedPatch : ModulePatch
+        public class MouseScrollingSpeedPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

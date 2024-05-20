@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class ProductionPanelPatches
+    public class HideoutSearchPatches
     {
         private static FieldInfo ProductionPanelSearch;
         private static FieldInfo SubstrateContentLayoutField;
@@ -22,16 +22,16 @@ namespace UIFixes
             ProductionPanelSearch = AccessTools.Field(typeof(ProductionPanel), "_searchInputField");
             SubstrateContentLayoutField = AccessTools.Field(typeof(AreaScreenSubstrate), "_contentLayout");
 
-            new LazyShowPatch().Enable();
-            new ShowContentsPatch().Enable();
-            new ClosePatch().Enable();
-            new ReturnToPreviousStatePatch().Enable();
-            new GetSortedProductsPatch().Enable();
-            new OnSearchChangePatch().Enable();
+            new FixHideoutSearchPatch().Enable();
+            new RestoreHideoutSearchPatch().Enable();
+            new SaveHideoutSearchPatch().Enable();
+            new CloseHideoutSearchPatch().Enable();
+            new FastHideoutSearchPatch().Enable();
+            new FixHideoutSearchAgainPatch().Enable();
         }
 
         // Deactivate ProduceViews as they lazy load if they don't match the search
-        public class LazyShowPatch : ModulePatch
+        public class FixHideoutSearchPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -56,7 +56,7 @@ namespace UIFixes
         }
 
         // Populate the search box, and force the window to render
-        public class ShowContentsPatch : ModulePatch
+        public class RestoreHideoutSearchPatch : ModulePatch
         {
 
             protected override MethodBase GetTargetMethod()
@@ -91,7 +91,7 @@ namespace UIFixes
         }
 
         // method_4 gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
-        public class GetSortedProductsPatch : ModulePatch
+        public class FastHideoutSearchPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -114,7 +114,7 @@ namespace UIFixes
         }
 
         // method_9 activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
-        public class OnSearchChangePatch : ModulePatch
+        public class FixHideoutSearchAgainPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -129,7 +129,7 @@ namespace UIFixes
         }
 
         // Save the search as the window closes
-        public class ClosePatch : ModulePatch
+        public class SaveHideoutSearchPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -149,7 +149,7 @@ namespace UIFixes
         }
 
         // Clear the search stuff when you exit out
-        public class ReturnToPreviousStatePatch : ModulePatch
+        public class CloseHideoutSearchPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

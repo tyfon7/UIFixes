@@ -9,21 +9,22 @@ namespace UIFixes
         {
             Settings.Init(Config);
 
-            EditBuildScreenPatch.Enable();
-            new TransferConfirmPatch().Enable();
-            new MailReceiveAllPatch().Enable();
+            new ConfirmationDialogKeysPatch().Enable();
+            new FixMailRecieveAllPatch().Enable();
+            new FixTooltipPatch().Enable();
+            new FixWeaponBindsDisplayPatch().Enable();
+            new FocusFleaOfferNumberPatch().Enable();
+            HideoutSearchPatches.Enable();
+            InspectWindowResizePatches.Enable();
+            InspectWindowStatsPatches.Enable();
+            new RemoveDoorActionsPatch().Enable();
             ScrollPatches.Enable();
-            WeaponZoomPatch.Enable();
-            new WeaponBindingPatch().Enable();
-            new DisabledActionsPatch().Enable();
-            SwapPatch.Enable();
-            new TooltipPatch().Enable();
-            ItemPanelPatches.Enable();
-            new ContainerStackPatch().Enable();
-            DialogPatches.Enable();
-            ItemPanelResizePatches.Enable();
-            ProductionPanelPatches.Enable();
-            ScrollSyncPatches.Enable();
+            new StackFirItemsPatch().Enable();
+            SwapPatches.Enable();
+            SyncScrollPositionPatches.Enable();
+            new TransferConfirmPatch().Enable();
+            WeaponPresetConfirmPatches.Enable();
+            WeaponZoomPatches.Enable();
         }
     }
 }

@@ -15,7 +15,7 @@ using UnityEngine.EventSystems;
 
 namespace UIFixes
 {
-    public class SwapPatch
+    public class SwapPatches
     {
         // Types needed
         private static Type GridItemAddressType; // GClass2769
@@ -66,15 +66,15 @@ namespace UIFixes
 
             GridViewNonInteractableField = AccessTools.Field(typeof(GridView), "_nonInteractable");
 
-            new ItemViewOnDragPatch().Enable();
-            new GridViewCanAcceptPatch().Enable();
-            new GridGetHightLightColorPatch().Enable();
-            new SlotGetHightLightColorPatch().Enable();
-            new ItemContextClassCanAcceptPatch().Enable();
-            new CheckItemFilterPatch().Enable();
+            new DetectSwapSourceContainerPatch().Enable();
+            new GridViewCanAcceptSwapPatch().Enable();
+            new DetectGridHighlightPrecheckPatch().Enable();
+            new DetectSlotHighlightPrecheckPatch().Enable();
+            new SlotCanAcceptSwapPatch().Enable();
+            new DetectFilterForSwapPatch().Enable();
             new SwapOperationRaiseEventsPatch().Enable();
-            new GridItemViewOnPointerEnterPatch().Enable();
-            new DraggedItemContextUpdateTargetPatch().Enable();
+            new RememberSwapGridHoverPatch().Enable();
+            new InspectWindowUpdateStatsOnSwapPatch().Enable();
         }
         private static bool InRaid()
         {
@@ -166,7 +166,7 @@ namespace UIFixes
             return false;
         }
 
-        public class ItemViewOnDragPatch : ModulePatch
+        public class DetectSwapSourceContainerPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -180,7 +180,7 @@ namespace UIFixes
             }
         }
 
-        public class GridViewCanAcceptPatch : ModulePatch
+        public class GridViewCanAcceptSwapPatch : ModulePatch
         {
             private static FieldInfo GridViewTraderControllerClassField;
 
@@ -364,7 +364,7 @@ namespace UIFixes
             }
         }
 
-        public class GridItemViewOnPointerEnterPatch : ModulePatch
+        public class RememberSwapGridHoverPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -380,7 +380,7 @@ namespace UIFixes
 
         // Called when dragging an item onto an equipment slot
         // Handles any kind of ItemAddress as the target destination (aka where the dragged item came from)
-        public class ItemContextClassCanAcceptPatch : ModulePatch
+        public class SlotCanAcceptSwapPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -422,7 +422,7 @@ namespace UIFixes
 
         // The patched method here is called when iterating over all slots to highlight ones that the dragged item can interact with
         // Since swap has no special highlight, I just skip the patch here (minor perf savings, plus makes debugging a million times easier)
-        public class GridGetHightLightColorPatch : ModulePatch
+        public class DetectGridHighlightPrecheckPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -444,7 +444,7 @@ namespace UIFixes
 
         // The patched method here is called when iterating over all slots to highlight ones that the dragged item can interact with
         // Since swap has no special highlight, I just skip the patch here (minor perf savings, plus makes debugging a million times easier)
-        public class SlotGetHightLightColorPatch : ModulePatch
+        public class DetectSlotHighlightPrecheckPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -467,7 +467,7 @@ namespace UIFixes
 
         // CanApply, when dealing with containers, eventually calls down into FindPlaceForItem, which calls CheckItemFilter. For reasons,
         // if an item fails the filters, it returns the error "no space", instead of "no action". Try to detect this, so we can swap.
-        public class CheckItemFilterPatch : ModulePatch
+        public class DetectFilterForSwapPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -485,7 +485,7 @@ namespace UIFixes
 
         // When dragging an item around, by default it updates an ItemSpecificationPanel when you drag an item on top of a slot
         // It doesn't do anything when you drag an item from a slot onto some other item elsewhere. But with swap, we should update the item panel then too.
-        public class DraggedItemContextUpdateTargetPatch : ModulePatch
+        public class InspectWindowUpdateStatsOnSwapPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

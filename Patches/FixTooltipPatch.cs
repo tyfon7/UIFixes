@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public class TooltipPatch : ModulePatch
+    public class FixTooltipPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {

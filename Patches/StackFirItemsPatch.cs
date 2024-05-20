@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public class ContainerStackPatch : ModulePatch
+    public class StackFirItemsPatch : ModulePatch
     {
         private static Type MergeableItemType;
 

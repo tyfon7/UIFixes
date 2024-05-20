@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 
 namespace UIFixes
 {
-    public class WeaponZoomPatch
+    public class WeaponZoomPatches
     {
         public static void Enable()
         {

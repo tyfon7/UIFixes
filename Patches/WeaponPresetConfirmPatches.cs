@@ -10,18 +10,18 @@ namespace UIFixes
 {
     // Two patches are required for the edit preset screen - one to grab the value of moveForward from CloseScreenInterruption(), and one to use it.
     // This is because BSG didn't think to pass the argument in to method_35
-    public class EditBuildScreenPatch
+    public class WeaponPresetConfirmPatches
     {
         public static bool MoveForward;
 
         public static void Enable()
         {
-            new CloseScreenInterruptionPatch().Enable();
-            new ConfirmDiscardPatch().Enable();
+            new DetectWeaponPresetCloseTypePatch().Enable();
+            new ConfirmDiscardWeaponPresetChangesPatch().Enable();
         }
 
         // This patch just caches whether this navigation is a forward navigation, which determines if the preset is actually closing
-        public class CloseScreenInterruptionPatch : ModulePatch
+        public class DetectWeaponPresetCloseTypePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -36,7 +36,7 @@ namespace UIFixes
             }
         }
 
-        public class ConfirmDiscardPatch : ModulePatch
+        public class ConfirmDiscardWeaponPresetChangesPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod() 
             {

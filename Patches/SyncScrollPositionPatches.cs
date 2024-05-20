@@ -8,15 +8,15 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class ScrollSyncPatches
+    public class SyncScrollPositionPatches
     {
         private static float StashScrollPosition = 1f;
 
         public static void Enable()
         {
-            new SimpleStashPanelPatch().Enable();
-            new TraderDealScreenPatch().Enable();
-            new AddOfferWindowPatch().Enable();
+            new SyncStashScrollPatch().Enable();
+            new SyncTraderStashScrollPatch().Enable();
+            new SyncOfferStashScrollPatch().Enable();
         }
 
         private static void UpdateScrollPosition(Vector2 position)
@@ -35,7 +35,7 @@ namespace UIFixes
             scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
         }
 
-        private class SimpleStashPanelPatch : ModulePatch
+        private class SyncStashScrollPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -49,7 +49,7 @@ namespace UIFixes
             }
         }
 
-        public class TraderDealScreenPatch : ModulePatch
+        public class SyncTraderStashScrollPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -68,7 +68,7 @@ namespace UIFixes
             }
         }
 
-        public class AddOfferWindowPatch : ModulePatch
+        public class SyncOfferStashScrollPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

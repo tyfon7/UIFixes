@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace UIFixes
 {
-    public class ItemPanelPatches
+    public class InspectWindowStatsPatches
     {
         private static FieldInfo AttributeCompactPanelDictionaryField;
         private static FieldInfo AttributeCompactDropdownDictionaryField;
@@ -30,14 +30,14 @@ namespace UIFixes
             CompactCharacteristicPanelItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "ItemAttribute");
             CompactCharacteristicPanelCompareItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "CompareItemAttribute");
 
-            new InjectButtonPatch().Enable();
-            new LoadModStatsPatch().Enable();
-            new CompareModPatch().Enable();
+            new AddShowHideModStatsButtonPatch().Enable();
+            new CalculateModStatsPatch().Enable();
+            new CompareModStatsPatch().Enable();
             new FormatCompactValuesPatch().Enable();
             new FormatFullValuesPatch().Enable();
         }
 
-        private class LoadModStatsPatch : ModulePatch
+        private class CalculateModStatsPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -102,7 +102,7 @@ namespace UIFixes
         // I wish I could prefix method_6 and update the compare item with the deep attributes, but that only works when adding a mod
         // When removing, current item and compare item end up the same since current item never considers the mod anyway
         // So I have to forcably call the refresh values method
-        private class CompareModPatch : ModulePatch
+        private class CompareModStatsPatch : ModulePatch
         {
             private static MethodInfo RefreshStaticMethod;
 
@@ -158,7 +158,7 @@ namespace UIFixes
             }
         }
 
-        private class InjectButtonPatch : ModulePatch
+        private class AddShowHideModStatsButtonPatch : ModulePatch
         {
             private static FieldInfo InteractionsButtonsContainerButtonTemplateField;
             private static FieldInfo InteractionsButtonsContainerContainerField;

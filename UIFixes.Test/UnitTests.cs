@@ -31,7 +31,7 @@ namespace UIFixes.Test
 
             foreach (var testCase in testCases)
             {
-                string result = ItemPanelPatches.RemoveTrailingZeros(testCase.Key);
+                string result = InspectWindowStatsPatches.RemoveTrailingZeros(testCase.Key);
                 Assert.AreEqual(testCase.Value, result);
             }
         }

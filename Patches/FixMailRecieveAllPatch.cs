@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public class MailReceiveAllPatch : ModulePatch
+    public class FixMailRecieveAllPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod() 
         {

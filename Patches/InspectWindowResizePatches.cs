@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    internal class ItemPanelResizePatches
+    internal class InspectWindowResizePatches
     {
         private static float SavedPreferredWidth = -1f;
         private static float SavedPreferredHeight = -1f;
@@ -26,12 +26,12 @@ namespace UIFixes
 
         public static void Enable()
         {
-            new ResizeWindowPatch().Enable();
-            new ShowPatch().Enable();
-            new ItemUiContextInspectPatch().Enable();
+            new SaveInspectWindowSizePatch().Enable();
+            new AddInspectWindowButtonsPatch().Enable();
+            new GrowInspectWindowDescriptionPatch().Enable();
         }
 
-        private class ResizeWindowPatch : ModulePatch
+        private class SaveInspectWindowSizePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -57,9 +57,8 @@ namespace UIFixes
             }
         }
 
-        private class ShowPatch : ModulePatch
+        private class AddInspectWindowButtonsPatch : ModulePatch
         {
-
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Show));
@@ -213,7 +212,7 @@ namespace UIFixes
             }
         }
 
-        private class ItemUiContextInspectPatch : ModulePatch
+        private class GrowInspectWindowDescriptionPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public class WeaponBindingPatch : ModulePatch
+    public class FixWeaponBindsDisplayPatch : ModulePatch
     {
         private static Type ControlSettingsClass;
         private static MethodInfo GetKeyNameMethod;

@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public class DisabledActionsPatch : ModulePatch
+    public class RemoveDoorActionsPatch : ModulePatch
     {
         private static readonly string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
 
