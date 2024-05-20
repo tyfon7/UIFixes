@@ -1,39 +1,32 @@
 ﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
 using HarmonyLib;
-using System;
-using System.Linq;
 using System.Reflection;
 
 namespace UIFixes
 {
     public class FixWeaponBindsDisplayPatch : ModulePatch
     {
-        private static Type ControlSettingsClass;
-        private static MethodInfo GetKeyNameMethod;
-
         protected override MethodBase GetTargetMethod()
         {
-            ControlSettingsClass = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass960
-            GetKeyNameMethod = AccessTools.Method(ControlSettingsClass, "GetKeyName");
-            return AccessTools.Method(ControlSettingsClass, "GetBoundItemNames");
+            return AccessTools.Method(R.ControlSettings.Type, "GetBoundItemNames");
         }
 
         [PatchPostfix]
         public static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
         {
+            var instance = new R.ControlSettings(__instance);
             switch(boundItem)
             {
                 case EBoundItem.Item1:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.SecondaryWeapon]) as string;
+                    __result = instance.GetKeyName(EGameKey.SecondaryWeapon);
                     break;
                 case EBoundItem.Item2:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponFirst]) as string;
+                    __result = instance.GetKeyName(EGameKey.PrimaryWeaponFirst);
                     break;
                 case EBoundItem.Item3:
-                    __result = GetKeyNameMethod.Invoke(__instance, [EGameKey.PrimaryWeaponSecond]) as string;
+                    __result = instance.GetKeyName(EGameKey.PrimaryWeaponSecond);
                     break;
             }
         }

@@ -17,24 +17,8 @@ namespace UIFixes
 {
     public class SwapPatches
     {
-        // Types needed
-        private static Type GridItemAddressType; // GClass2769
-        private static FieldInfo GridItemAddressLocationInGridField;
-        private static PropertyInfo GridItemAddressGridProperty;
-
-        private static Type SlotItemAddressType; // GClass2767
-        private static FieldInfo SlotItemAddressSlotField;
-
-        private static Type CanAcceptOperationType; // GStruct413
-        private static PropertyInfo CanAcceptOperationSucceededProperty;
-        private static PropertyInfo CanAcceptOperationErrorProperty;
-
-        private static Type SwapOperationType; // GStruct414<GClass2797>
-        private static MethodInfo SwapOperationToCanAcceptOperationOperator;
-
         // Source container for the drag - we have to grab this early to check it
         private static IContainer SourceContainer;
-        private static FieldInfo GridViewNonInteractableField;
 
         // Whether we're being called from the "check every slot" loop
         private static bool InHighlight = false;
@@ -50,22 +34,6 @@ namespace UIFixes
 
         public static void Enable()
         {
-            GridItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
-            GridItemAddressLocationInGridField = AccessTools.Field(GridItemAddressType, "LocationInGrid");
-            GridItemAddressGridProperty = AccessTools.Property(GridItemAddressType, "Grid");
-
-            SlotItemAddressType = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2767
-            SlotItemAddressSlotField = AccessTools.Field(SlotItemAddressType, "Slot");
-
-            CanAcceptOperationType = AccessTools.Method(typeof(GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct413, parameter is a ref type, get underlying type
-            CanAcceptOperationSucceededProperty = AccessTools.Property(CanAcceptOperationType, "Succeeded");
-            CanAcceptOperationErrorProperty = AccessTools.Property(CanAcceptOperationType, "Error");
-
-            SwapOperationType = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2797>
-            SwapOperationToCanAcceptOperationOperator = SwapOperationType.GetMethods().First(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptOperationType);
-
-            GridViewNonInteractableField = AccessTools.Field(typeof(GridView), "_nonInteractable");
-
             new DetectSwapSourceContainerPatch().Enable();
             new GridViewCanAcceptSwapPatch().Enable();
             new DetectGridHighlightPrecheckPatch().Enable();
@@ -89,7 +57,9 @@ namespace UIFixes
                 return false;
             }
 
-            if (InHighlight || itemContext == null || targetItemContext == null || (bool)CanAcceptOperationSucceededProperty.GetValue(operation) == true)
+            var wrappedOperation = new R.GridViewCanAcceptOperation(operation);
+
+            if (InHighlight || itemContext == null || targetItemContext == null || wrappedOperation.Succeeded)
             {
                 return false;
             }
@@ -114,12 +84,12 @@ namespace UIFixes
             }
 
             // Check if the source container is a non-interactable GridView. Specifically for StashSearch, but may exist in other scenarios?
-            if (SourceContainer != null && SourceContainer is GridView && (bool)GridViewNonInteractableField.GetValue(SourceContainer))
+            if (SourceContainer != null && SourceContainer is GridView && new R.GridView(SourceContainer).NonInteractable)
             {
                 return false;
             }
 
-            string error = CanAcceptOperationErrorProperty.GetValue(operation).ToString();
+            string error = wrappedOperation.Error.ToString();
             if (Settings.SwapImpossibleContainers.Value && !InRaid() && error.StartsWith("No free room"))
             {
                 // Check if it isn't allowed in that container, if so try to swap
@@ -182,11 +152,8 @@ namespace UIFixes
 
         public class GridViewCanAcceptSwapPatch : ModulePatch
         {
-            private static FieldInfo GridViewTraderControllerClassField;
-
             protected override MethodBase GetTargetMethod()
             {
-                GridViewTraderControllerClassField = AccessTools.GetDeclaredFields(typeof(GridView)).First(f => f.FieldType == typeof(TraderControllerClass));
                 return AccessTools.Method(typeof(GridView), nameof(GridView.CanAccept));
             }
 
@@ -199,11 +166,14 @@ namespace UIFixes
                     return false;
                 }
 
-                if (GridItemAddressType.IsInstanceOfType(itemAddressA) && GridItemAddressType.IsInstanceOfType(itemAddressB))
+                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddressA) && R.GridItemAddress.Type.IsInstanceOfType(itemAddressB))
                 {
-                    LocationInGrid locationA = GridItemAddressLocationInGridField.GetValue(itemAddressA) as LocationInGrid;
-                    LocationInGrid locationB = GridItemAddressLocationInGridField.GetValue(itemAddressB) as LocationInGrid;
-                    StashGridClass grid = GridItemAddressGridProperty.GetValue(itemAddressA) as StashGridClass;
+                    var gridItemAddressA = new R.GridItemAddress(itemAddressA);
+                    var gridItemAddressB = new R.GridItemAddress(itemAddressB);
+
+                    LocationInGrid locationA = gridItemAddressA.Location;
+                    LocationInGrid locationB = gridItemAddressB.Location;
+                    StashGridClass grid = gridItemAddressA.Grid;
 
                     var itemASize = itemA.CalculateRotatedSize(locationA.r);
                     var itemASlots = new List<int>();
@@ -243,9 +213,9 @@ namespace UIFixes
                 Item item = itemContext.Item;
                 Item targetItem = targetItemContext.Item;
                 ItemAddress itemAddress = item.Parent;
-                ItemAddress targetAddress = targetItem.Parent;
+                ItemAddress targetItemAddress = targetItem.Parent;
 
-                if (targetAddress == null)
+                if (targetItemAddress == null)
                 {
                     return;
                 }
@@ -259,24 +229,26 @@ namespace UIFixes
                     }
                 }
 
-                // This is the location you're dragging it over, including rotation
-                LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext); 
+                // This is the location you're dragging it, including rotation
+                LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext);
 
-                // This is a grid because we're in the GridView patch, i.e. you're dragging it over a grid
-                ItemAddress itemToAddress = Activator.CreateInstance(GridItemAddressType, [GridItemAddressGridProperty.GetValue(targetAddress), itemToLocation]) as ItemAddress; 
+                // Target is a grid because we're in the GridView patch, i.e. you're dragging it over a grid
+                var targetGridItemAddress = new R.GridItemAddress(targetItemAddress);
+                ItemAddress itemToAddress = R.GridItemAddress.Create(targetGridItemAddress.Grid, itemToLocation);
 
                 ItemAddress targetToAddress;
-                if (GridItemAddressType.IsInstanceOfType(itemAddress))
+                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
-                    LocationInGrid targetToLocation = (GridItemAddressLocationInGridField.GetValue(itemAddress) as LocationInGrid).Clone();
-                    targetToLocation.r = (GridItemAddressLocationInGridField.GetValue(targetAddress) as LocationInGrid).r;
+                    var gridItemAddress = new R.GridItemAddress(itemAddress);
 
-                    StashGridClass grid = GridItemAddressGridProperty.GetValue(itemAddress) as StashGridClass;
-                    targetToAddress = Activator.CreateInstance(GridItemAddressType, [grid, targetToLocation]) as ItemAddress;
+                    LocationInGrid targetToLocation = gridItemAddress.Location.Clone();
+                    targetToLocation.r = targetGridItemAddress.Location.r;
+
+                    targetToAddress = R.GridItemAddress.Create(gridItemAddress.Grid, targetToLocation);
                 }
-                else if (SlotItemAddressType.IsInstanceOfType(itemAddress))
+                else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
-                    targetToAddress = Activator.CreateInstance(SlotItemAddressType, [SlotItemAddressSlotField.GetValue(itemAddress)]) as ItemAddress;
+                    targetToAddress = R.SlotItemAddress.Create(new R.SlotItemAddress(itemAddress).Slot);
                 }
                 else
                 {
@@ -284,14 +256,14 @@ namespace UIFixes
                 }
 
                 // Get the TraderControllerClass
-                TraderControllerClass traderControllerClass = GridViewTraderControllerClassField.GetValue(__instance) as TraderControllerClass;
+                TraderControllerClass traderControllerClass = new R.GridView(__instance).TraderController;
 
                 // Check that the destinations won't overlap (Swap won't check this)
                 if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                 {
                     // Try original rotations
                     var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
-                    operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                    operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
                     __result = result.Succeeded;
                     if (result.Succeeded)
                     {
@@ -300,9 +272,10 @@ namespace UIFixes
                 }
 
                 // If we're coming from a grid, try rotating the target object 
-                if (GridItemAddressType.IsInstanceOfType(itemAddress))
+                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
-                    var targetToLocation = GridItemAddressLocationInGridField.GetValue(targetToAddress) as LocationInGrid;
+                    var gridItemAddress = new R.GridItemAddress(itemAddress);
+                    var targetToLocation = gridItemAddress.Location;
                     targetToLocation.r = targetToLocation.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                     {
@@ -310,7 +283,7 @@ namespace UIFixes
                         if (result.Succeeded)
                         {
                             // Only save this operation result if it succeeded, otherwise we return the non-rotated result from above
-                            operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                            operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
                             __result = true;
                             return;
                         }
@@ -326,7 +299,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(SwapOperationType.GenericTypeArguments[0], "RaiseEvents"); // GClass2787
+                return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass2797
             }
 
             [PatchPostfix]
@@ -404,7 +377,7 @@ namespace UIFixes
 
                 var item = __instance.Item;
                 var targetItem = slot.ContainedItem;
-                var itemToAddress = Activator.CreateInstance(SlotItemAddressType, [slot]) as ItemAddress;
+                var itemToAddress = R.SlotItemAddress.Create(slot);
                 var targetToAddress = item.Parent;
 
                 // Repair kits again
@@ -415,7 +388,7 @@ namespace UIFixes
                 }
 
                 var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
-                operation = SwapOperationToCanAcceptOperationOperator.Invoke(null, [result]);
+                operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
                 __result = result.Succeeded;
             }
         }
@@ -500,7 +473,7 @@ namespace UIFixes
                     ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
                     if (panel != null)
                     {
-                        Slot slot = SlotItemAddressSlotField.GetValue(__instance.ItemAddress) as Slot;
+                        Slot slot = new R.SlotItemAddress(__instance.ItemAddress).Slot;
                         ItemContextClass itemUnderCursorContext = itemUnderCursor != null ? new ItemContextClass(itemUnderCursor, ItemRotation.Horizontal) : null;
                         panel.method_15(slot, itemUnderCursorContext);
                     }

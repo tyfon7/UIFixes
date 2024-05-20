@@ -16,20 +16,8 @@ namespace UIFixes
 {
     public class InspectWindowStatsPatches
     {
-        private static FieldInfo AttributeCompactPanelDictionaryField;
-        private static FieldInfo AttributeCompactDropdownDictionaryField;
-
-        private static FieldInfo CompactCharacteristicPanelItemAttributeField;
-        private static FieldInfo CompactCharacteristicPanelCompareItemAttributeField;
-
         public static void Enable()
         {
-            AttributeCompactPanelDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicPanel>>).IsAssignableFrom(f.FieldType));
-            AttributeCompactDropdownDictionaryField = AccessTools.GetDeclaredFields(typeof(ItemSpecificationPanel)).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicDropdownPanel>>).IsAssignableFrom(f.FieldType));
-
-            CompactCharacteristicPanelItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "ItemAttribute");
-            CompactCharacteristicPanelCompareItemAttributeField = AccessTools.Field(typeof(CompactCharacteristicPanel), "CompareItemAttribute");
-
             new AddShowHideModStatsButtonPatch().Enable();
             new CalculateModStatsPatch().Enable();
             new CompareModStatsPatch().Enable();
@@ -52,6 +40,8 @@ namespace UIFixes
                 Transform ____compactPanel,
                 SimpleTooltip ___simpleTooltip_0)
             {
+                var instance = new R.ItemSpecificationPanel(__instance);
+
                 if (!Settings.ShowModStats.Value || ___item_0 is not Mod)
                 {
                     return;
@@ -64,28 +54,25 @@ namespace UIFixes
                 }
 
                 // Clean up existing one
-                if (AttributeCompactPanelDictionaryField.GetValue(__instance) is IDisposable compactPanels)
+                if (instance.CompactCharacteristicPanels is IDisposable compactPanels)
                 {
                     compactPanels.Dispose();
                 }
 
-                var newCompactPanels = Activator.CreateInstance(AttributeCompactPanelDictionaryField.FieldType,
-                [
+                var newCompactPanels = R.ItemSpecificationPanel.CreateCompactCharacteristicPanels(
                     deepAttributes,
                     ____compactCharTemplate,
                     ____compactPanel,
-                    (ItemAttributeClass attribute, CompactCharacteristicPanel viewer) => viewer.Show(attribute, ___simpleTooltip_0, __instance.Boolean_0, 100)
-                ]) as IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicPanel>>;
+                    (attribute, viewer) => viewer.Show(attribute, ___simpleTooltip_0, __instance.Boolean_0, 100));
 
-                AttributeCompactPanelDictionaryField.SetValue(__instance, newCompactPanels);
+                instance.CompactCharacteristicPanels = newCompactPanels;
 
                 if (newCompactPanels.Any())
                 {
                     newCompactPanels.Last().Value.OnTextWidthCalculated += __instance.method_3;
                     int siblingIndex = newCompactPanels.Last().Value.Transform.GetSiblingIndex();
 
-                    var compactDropdownPanels = AttributeCompactDropdownDictionaryField.GetValue(__instance) as IEnumerable<KeyValuePair<ItemAttributeClass, CompactCharacteristicDropdownPanel>>;
-                    foreach (var item in compactDropdownPanels)
+                    foreach (var item in instance.CompactCharacteristicDropdowns)
                     {
                         item.Value.Transform.SetSiblingIndex(++siblingIndex);
                     }
@@ -104,12 +91,8 @@ namespace UIFixes
         // So I have to forcably call the refresh values method
         private class CompareModStatsPatch : ModulePatch
         {
-            private static MethodInfo RefreshStaticMethod;
-
             protected override MethodBase GetTargetMethod()
             {
-                RefreshStaticMethod = AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.smethod_1), null, [typeof(CompactCharacteristicPanel)]);
-
                 return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_6));
             }
 
@@ -153,31 +136,15 @@ namespace UIFixes
                     return;
                 }
 
-                var compactPanels = AttributeCompactPanelDictionaryField.GetValue(__instance);
-                RefreshStaticMethod.Invoke(null, [compactPanels, deepAttributes]);
+                var compactPanels = new R.ItemSpecificationPanel(__instance).CompactCharacteristicPanels;
+                R.ItemSpecificationPanel.Refresh(compactPanels, deepAttributes);
             }
         }
 
         private class AddShowHideModStatsButtonPatch : ModulePatch
         {
-            private static FieldInfo InteractionsButtonsContainerButtonTemplateField;
-            private static FieldInfo InteractionsButtonsContainerContainerField;
-
-            private static FieldInfo InteractionsButtonContainerUIField;
-            private static MethodInfo InteractionsButtonContainerUIAddDisposableMethod;
-
-            private static FieldInfo SimpleContextMenuButtonTextField;
-
             protected override MethodBase GetTargetMethod()
             {
-                InteractionsButtonsContainerButtonTemplateField = AccessTools.Field(typeof(InteractionButtonsContainer), "_buttonTemplate");
-                InteractionsButtonsContainerContainerField = AccessTools.Field(typeof(InteractionButtonsContainer), "_buttonsContainer");
-
-                InteractionsButtonContainerUIField = AccessTools.Field(typeof(InteractionButtonsContainer), "UI");
-                InteractionsButtonContainerUIAddDisposableMethod = AccessTools.Method(InteractionsButtonContainerUIField.FieldType, "AddDisposable", [typeof(Action)]);
-
-                SimpleContextMenuButtonTextField = AccessTools.Field(typeof(ContextMenuButton), "_text");
-
                 return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_4));
             }
 
@@ -194,15 +161,14 @@ namespace UIFixes
                     return;
                 }
 
-                SimpleContextMenuButton template = InteractionsButtonsContainerButtonTemplateField.GetValue(____interactionButtonsContainer) as SimpleContextMenuButton;
-                Transform transform = InteractionsButtonsContainerContainerField.GetValue(____interactionButtonsContainer) as Transform;
+                var buttonsContainer = new R.InteractionButtonsContainer(____interactionButtonsContainer);
 
                 SimpleContextMenuButton toggleButton = null;
 
                 // Listen to the setting and the work there to handle multiple windows open at once
                 void onSettingChanged(object sender, EventArgs args)
                 {
-                    var text = SimpleContextMenuButtonTextField.GetValue(toggleButton) as TextMeshProUGUI;
+                    var text = new R.ContextMenuButton(toggleButton).Text;
                     text.text = GetLabel();
 
                     __instance.method_5(); // rebuild stat panels
@@ -217,7 +183,7 @@ namespace UIFixes
                 void createButton()
                 {
                     Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
-                    toggleButton = UnityEngine.Object.Instantiate(template, transform, false);
+                    toggleButton = UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
                     toggleButton.Show(GetLabel(), null, sprite, onClick, null);
                     ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
                 }
@@ -226,11 +192,11 @@ namespace UIFixes
                 contextInteractions.OnRedrawRequired += createButton;
 
                 // And unsubscribe when the window goes away
-                InteractionsButtonContainerUIAddDisposableMethod.Invoke(InteractionsButtonContainerUIField.GetValue(____interactionButtonsContainer), [() =>
+                buttonsContainer.AddDisposable(() => 
                 {
                     contextInteractions.OnRedrawRequired -= createButton;
                     Settings.ShowModStats.SettingChanged -= onSettingChanged;
-                }]);
+                });
 
                 createButton();
             }
@@ -346,14 +312,16 @@ namespace UIFixes
             const string DecreasingColorHex = "#C40000";
 
             string text = textMesh.text;
-            ItemAttributeClass attribute = CompactCharacteristicPanelItemAttributeField.GetValue(panel) as ItemAttributeClass;
+            var wrappedPanel = new R.CompactCharacteristicPanel(panel);
+            ItemAttributeClass attribute = wrappedPanel.ItemAttribute;
 
             // Holy shit did they mess up MOA. Half of the calculation is done in the StringValue() method, so calculating delta from Base() loses all that
             // Plus, they round the difference to the nearest integer (!?)
             // Completely redo it
             if ((EItemAttributeId)attribute.Id == EItemAttributeId.CenterOfImpact)
             {
-                if (CompactCharacteristicPanelCompareItemAttributeField.GetValue(panel) is ItemAttributeClass compareAttribute)
+                var compareAttribute = wrappedPanel.CompareItemAttribute;
+                if (compareAttribute != null)
                 {
                     string currentStringValue = attribute.StringValue();
                     var moaMatch = Regex.Match(currentStringValue, @"^(\S+)");

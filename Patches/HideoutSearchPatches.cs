@@ -12,16 +12,10 @@ namespace UIFixes
 {
     public class HideoutSearchPatches
     {
-        private static FieldInfo ProductionPanelSearch;
-        private static FieldInfo SubstrateContentLayoutField;
-
         private static readonly Dictionary<string, string> LastSearches = [];
 
         public static void Enable()
         {
-            ProductionPanelSearch = AccessTools.Field(typeof(ProductionPanel), "_searchInputField");
-            SubstrateContentLayoutField = AccessTools.Field(typeof(AreaScreenSubstrate), "_contentLayout");
-
             new FixHideoutSearchPatch().Enable();
             new RestoreHideoutSearchPatch().Enable();
             new SaveHideoutSearchPatch().Enable();
@@ -35,20 +29,17 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(ProductionPanel).GetNestedTypes().First(t =>
-                {
-                    MethodInfo method = t.GetMethod("method_6");
-                    return method != null && method.GetParameters().Length == 2 && method.GetParameters()[1].ParameterType == typeof(ProduceView);
-                });
-
-                return AccessTools.Method(type, "method_6");
+                return AccessTools.Method(R.ProductionPanelShowSubclass.Type, "method_6");
             }
 
             [PatchPostfix]
-            public static void Postfix(ProductionPanel.Class1631 __instance, GClass1923 scheme, ProduceView view)
+            public static void Postfix(object __instance, GClass1923 scheme, ProduceView view)
             {
-                var searchField = ProductionPanelSearch.GetValue(__instance.productionPanel_0) as ValidationInputField;
-                if (searchField.text.Length > 0 && scheme.endProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
+                var instance = new R.ProductionPanelShowSubclass(__instance);
+                var productScheme = new R.Scheme(scheme);
+
+                ValidationInputField searchField = new R.ProductionPanel(instance.ProductionPanel).SeachInputField;
+                if (searchField.text.Length > 0 && productScheme.EndProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
                 {
                     view.GameObject.SetActive(false);
                 }
@@ -58,7 +49,6 @@ namespace UIFixes
         // Populate the search box, and force the window to render
         public class RestoreHideoutSearchPatch : ModulePatch
         {
-
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.ShowContents));
@@ -80,7 +70,7 @@ namespace UIFixes
                 if (__instance.method_4().Count() > 2)
                 {
                     AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-                    LayoutElement layoutElement = SubstrateContentLayoutField.GetValue(areaScreenSubstrate) as LayoutElement;
+                    LayoutElement layoutElement = new R.AreaScreenSubstrate(areaScreenSubstrate).ContentLayout;
                     layoutElement.minHeight = 750f; // aka areaScreenSubstrate._maxHeight
                     areaScreenSubstrate.method_8();
                 }
@@ -98,8 +88,7 @@ namespace UIFixes
                 return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_4));
             }
 
-            // Working with GClasses directly here, because this would be a nightmare with reflection
-            // Copied directly from method_4
+            // Copied directly from method_4. Working with GClasses directly here, because this would be a nightmare with reflection
             [PatchPrefix]
             public static bool Prefix(ref IEnumerable<GClass1923> __result, ProductionPanel __instance, GClass1922[] ___gclass1922_0, ValidationInputField ____searchInputField)
             {
@@ -143,7 +132,7 @@ namespace UIFixes
 
                 // Reset the default behavior
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-                LayoutElement layoutElement = SubstrateContentLayoutField.GetValue(areaScreenSubstrate) as LayoutElement;
+                LayoutElement layoutElement = new R.AreaScreenSubstrate(areaScreenSubstrate).ContentLayout;
                 layoutElement.minHeight = -1f;
             }
         }

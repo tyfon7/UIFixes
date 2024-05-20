@@ -9,6 +9,8 @@ namespace UIFixes
         {
             Settings.Init(Config);
 
+            R.Init();
+
             new ConfirmationDialogKeysPatch().Enable();
             new FixMailRecieveAllPatch().Enable();
             new FixTooltipPatch().Enable();
