@@ -35,6 +35,7 @@ namespace UIFixes
         public static void Enable()
         {
             new DetectSwapSourceContainerPatch().Enable();
+            new CleanupSwapSourceContainerPatch().Enable();
             new GridViewCanAcceptSwapPatch().Enable();
             new DetectGridHighlightPrecheckPatch().Enable();
             new DetectSlotHighlightPrecheckPatch().Enable();
@@ -147,6 +148,20 @@ namespace UIFixes
             public static void Prefix(ItemView __instance)
             {
                 SourceContainer = __instance.Container;
+            }
+        }
+
+        public class CleanupSwapSourceContainerPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnEndDrag));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ItemView __instance)
+            {
+                SourceContainer = null;
             }
         }
 
@@ -468,13 +483,20 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
             {
+                if (itemUnderCursor?.Item == __instance.Item)
+                {
+                    return;
+                }
+
                 if (SourceContainer is Component sourceComponent)
                 {
                     ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
                     if (panel != null)
                     {
                         Slot slot = new R.SlotItemAddress(__instance.ItemAddress).Slot;
-                        ItemContextClass itemUnderCursorContext = itemUnderCursor != null ? new ItemContextClass(itemUnderCursor, ItemRotation.Horizontal) : null;
+
+                        // ItemContextClass must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
+                        using ItemContextClass itemUnderCursorContext = itemUnderCursor != null ? new ItemContextClass(itemUnderCursor, ItemRotation.Horizontal) : null;
                         panel.method_15(slot, itemUnderCursorContext);
                     }
                 }
