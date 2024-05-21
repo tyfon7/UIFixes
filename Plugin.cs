@@ -27,6 +27,7 @@ namespace UIFixes
             new TransferConfirmPatch().Enable();
             WeaponPresetConfirmPatches.Enable();
             WeaponZoomPatches.Enable();
+            new MoveTaskbarPatch().Enable();
         }
     }
 }
