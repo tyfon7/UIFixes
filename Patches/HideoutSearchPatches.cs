@@ -33,12 +33,12 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(object __instance, GClass1923 scheme, ProduceView view)
+            public static void Postfix(object __instance, object scheme, ProduceView view)
             {
                 var instance = new R.ProductionPanelShowSubclass(__instance);
                 var productScheme = new R.Scheme(scheme);
 
-                ValidationInputField searchField = new R.ProductionPanel(instance.ProductionPanel).SeachInputField;
+                ValidationInputField searchField = instance.ProductionPanel.R().SeachInputField;
                 if (searchField.text.Length > 0 && productScheme.EndProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
                 {
                     view.GameObject.SetActive(false);
@@ -70,7 +70,7 @@ namespace UIFixes
                 if (__instance.method_4().Count() > 2)
                 {
                     AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-                    LayoutElement layoutElement = new R.AreaScreenSubstrate(areaScreenSubstrate).ContentLayout;
+                    LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
                     layoutElement.minHeight = 750f; // aka areaScreenSubstrate._maxHeight
                     areaScreenSubstrate.method_8();
                 }
@@ -132,7 +132,7 @@ namespace UIFixes
 
                 // Reset the default behavior
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-                LayoutElement layoutElement = new R.AreaScreenSubstrate(areaScreenSubstrate).ContentLayout;
+                LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
                 layoutElement.minHeight = -1f;
             }
         }

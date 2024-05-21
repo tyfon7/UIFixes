@@ -1,8 +1,10 @@
 ﻿using Aki.Reflection.Utils;
 using Diz.LanguageExtensions;
+using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -307,5 +309,16 @@ namespace UIFixes
 
             public TextMeshProUGUI Text { get { return (TextMeshProUGUI)TextField.GetValue(Value); } }
         }
+    }
+
+    public static class RExtentensions
+    {
+        public static R.ProductionPanel R(this ProductionPanel value) => new(value);
+        public static R.AreaScreenSubstrate R(this AreaScreenSubstrate value) => new(value);
+        public static R.ItemSpecificationPanel R(this ItemSpecificationPanel value) => new(value);
+        public static R.CompactCharacteristicPanel R(this CompactCharacteristicPanel value) => new(value);
+        public static R.GridView R(this GridView value) => new(value);
+        public static R.InteractionButtonsContainer R(this InteractionButtonsContainer value) => new(value);
+        public static R.ContextMenuButton R(this ContextMenuButton value) => new(value);
     }
 }

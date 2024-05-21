@@ -271,7 +271,7 @@ namespace UIFixes
                 }
 
                 // Get the TraderControllerClass
-                TraderControllerClass traderControllerClass = new R.GridView(__instance).TraderController;
+                TraderControllerClass traderControllerClass = __instance.R().TraderController;
 
                 // Check that the destinations won't overlap (Swap won't check this)
                 if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))

@@ -40,7 +40,7 @@ namespace UIFixes
                 Transform ____compactPanel,
                 SimpleTooltip ___simpleTooltip_0)
             {
-                var instance = new R.ItemSpecificationPanel(__instance);
+                var instance = __instance.R();
 
                 if (!Settings.ShowModStats.Value || ___item_0 is not Mod)
                 {
@@ -136,7 +136,7 @@ namespace UIFixes
                     return;
                 }
 
-                var compactPanels = new R.ItemSpecificationPanel(__instance).CompactCharacteristicPanels;
+                var compactPanels = __instance.R().CompactCharacteristicPanels;
                 R.ItemSpecificationPanel.Refresh(compactPanels, deepAttributes);
             }
         }
@@ -161,14 +161,14 @@ namespace UIFixes
                     return;
                 }
 
-                var buttonsContainer = new R.InteractionButtonsContainer(____interactionButtonsContainer);
+                var buttonsContainer = ____interactionButtonsContainer.R();
 
-                SimpleContextMenuButton toggleButton = null;
+                ContextMenuButton toggleButton = null;
 
                 // Listen to the setting and the work there to handle multiple windows open at once
                 void onSettingChanged(object sender, EventArgs args)
                 {
-                    var text = new R.ContextMenuButton(toggleButton).Text;
+                    var text = toggleButton.R().Text;
                     text.text = GetLabel();
 
                     __instance.method_5(); // rebuild stat panels
@@ -183,7 +183,7 @@ namespace UIFixes
                 void createButton()
                 {
                     Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
-                    toggleButton = UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
+                    toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
                     toggleButton.Show(GetLabel(), null, sprite, onClick, null);
                     ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
                 }
@@ -312,7 +312,7 @@ namespace UIFixes
             const string DecreasingColorHex = "#C40000";
 
             string text = textMesh.text;
-            var wrappedPanel = new R.CompactCharacteristicPanel(panel);
+            var wrappedPanel = panel.R();
             ItemAttributeClass attribute = wrappedPanel.ItemAttribute;
 
             // Holy shit did they mess up MOA. Half of the calculation is done in the StringValue() method, so calculating delta from Base() loses all that
