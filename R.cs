@@ -200,7 +200,7 @@ namespace UIFixes
                 return (ItemAddress)Activator.CreateInstance(Type, [grid, location]);
             }
 
-            public LocationInGrid Location { get { return (LocationInGrid)LocationInGridField.GetValue(Value); } }
+            public LocationInGrid LocationInGrid { get { return (LocationInGrid)LocationInGridField.GetValue(Value); } }
             public StashGridClass Grid { get { return (StashGridClass)GridProperty.GetValue(Value); } }
         }
 

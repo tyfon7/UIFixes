@@ -186,8 +186,8 @@ namespace UIFixes
                     var gridItemAddressA = new R.GridItemAddress(itemAddressA);
                     var gridItemAddressB = new R.GridItemAddress(itemAddressB);
 
-                    LocationInGrid locationA = gridItemAddressA.Location;
-                    LocationInGrid locationB = gridItemAddressB.Location;
+                    LocationInGrid locationA = gridItemAddressA.LocationInGrid;
+                    LocationInGrid locationB = gridItemAddressB.LocationInGrid;
                     StashGridClass grid = gridItemAddressA.Grid;
 
                     var itemASize = itemA.CalculateRotatedSize(locationA.r);
@@ -256,8 +256,8 @@ namespace UIFixes
                 {
                     var gridItemAddress = new R.GridItemAddress(itemAddress);
 
-                    LocationInGrid targetToLocation = gridItemAddress.Location.Clone();
-                    targetToLocation.r = targetGridItemAddress.Location.r;
+                    LocationInGrid targetToLocation = gridItemAddress.LocationInGrid.Clone();
+                    targetToLocation.r = targetGridItemAddress.LocationInGrid.r;
 
                     targetToAddress = R.GridItemAddress.Create(gridItemAddress.Grid, targetToLocation);
                 }
@@ -289,8 +289,7 @@ namespace UIFixes
                 // If we're coming from a grid, try rotating the target object 
                 if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
-                    var gridItemAddress = new R.GridItemAddress(itemAddress);
-                    var targetToLocation = gridItemAddress.Location;
+                    var targetToLocation = new R.GridItemAddress(targetToAddress).LocationInGrid;
                     targetToLocation.r = targetToLocation.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                     {
