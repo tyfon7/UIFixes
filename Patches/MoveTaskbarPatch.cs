@@ -15,7 +15,7 @@ namespace UIFixes
         }
 
         [PatchPostfix]
-        private static void Postfix(MenuTaskBar __instance)
+        public static void Postfix(MenuTaskBar __instance)
         {
             var bottomPanel = __instance.GetComponentsInParent<RectTransform>().First(c => c.name == "BottomPanel");
 
