@@ -15,7 +15,6 @@ namespace UIFixes
         {
             new DoNotToggleOnMouseOverPatch().Enable();
             new ToggleOnOpenPatch().Enable();
-            new ToggleOnClosePatch().Enable();
         }
 
         public class DoNotToggleOnMouseOverPatch : ModulePatch
@@ -26,7 +25,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(PointerEventData eventData, Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
+            public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
             {
                 if (!___bool_3)
                 {
@@ -48,23 +47,6 @@ namespace UIFixes
                 if (___bool_3)
                 {
                     ____toggleImage.sprite = ____openSprite;
-                }
-            }
-        }
-
-        public class ToggleOnClosePatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(CategoryView), nameof(CategoryView.OpenCategory));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
-            {
-                if (!___bool_3)
-                {
-                    ____toggleImage.sprite = ____closeSprite;
                 }
             }
         }

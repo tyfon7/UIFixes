@@ -5,6 +5,8 @@ using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using EFT.UI.Ragfair;
+using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -36,6 +38,8 @@ namespace UIFixes
             SwapOperation.InitTypes();
             InteractionButtonsContainer.InitTypes();
             ContextMenuButton.InitTypes();
+            RagfairScreen.InitTypes();
+            OfferViewList.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -298,7 +302,7 @@ namespace UIFixes
 
         public class ContextMenuButton(object value) : Wrapper(value)
         {
-            public static Type Type { get; private set;}
+            public static Type Type { get; private set; }
             private static FieldInfo TextField;
 
             public static void InitTypes()
@@ -308,6 +312,34 @@ namespace UIFixes
             }
 
             public TextMeshProUGUI Text { get { return (TextMeshProUGUI)TextField.GetValue(Value); } }
+        }
+
+        public class RagfairScreen(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo OfferViewListField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.RagfairScreen);
+                OfferViewListField = AccessTools.Field(Type, "offerViewList_0");
+            }
+
+            public EFT.UI.Ragfair.OfferViewList OfferViewList { get { return (EFT.UI.Ragfair.OfferViewList)OfferViewListField.GetValue(Value); } }
+        }
+
+        public class OfferViewList(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo ScrollerField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.OfferViewList);
+                ScrollerField = AccessTools.Field(Type, "_scroller");
+            }
+
+            public LightScroller Scroller { get { return (LightScroller)ScrollerField.GetValue(Value); } }
         }
     }
 
@@ -320,5 +352,7 @@ namespace UIFixes
         public static R.GridView R(this GridView value) => new(value);
         public static R.InteractionButtonsContainer R(this InteractionButtonsContainer value) => new(value);
         public static R.ContextMenuButton R(this ContextMenuButton value) => new(value);
+        public static R.RagfairScreen R(this RagfairScreen value) => new(value);
+        public static R.OfferViewList R(this OfferViewList value) => new(value);
     }
 }

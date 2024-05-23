@@ -26,7 +26,8 @@ namespace UIFixes
         private const string InventorySection = "3. Inventory";
         private const string InspectSection = "4. Inspect Windows";
         private const string InRaidSection = "5. In Raid";
-        private const string AdvancedSection = "6. Advanced";
+        private const string FleaMarketSection = "6. Flea Market";
+        private const string AdvancedSection = "7. Advanced";
 
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
@@ -53,6 +54,9 @@ namespace UIFixes
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
+
+        // Flea Market
+        public static ConfigEntry<bool> EnableFleaHistory { get; set; }
 
         // Advanced
         public static ConfigEntry<bool> StyleItemPanel { get; set; }
@@ -207,6 +211,16 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            // Flea Market
+            configEntries.Add(EnableFleaHistory = config.Bind(
+                FleaMarketSection,
+                "Show Filter Back Button",
+                true,
+                new ConfigDescription(
+                    "Keep a history of flea market searches and filters, and show a back button to navigate it",
                     null,
                     new ConfigurationManagerAttributes { })));
 
