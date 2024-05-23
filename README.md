@@ -11,7 +11,10 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Customizable mouse scrolling speed
 - Fix item tooltips if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
 - Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!)
-- ✨ Option to synchronize stash scroll position everywhere your stash is visible
+- Option to synchronize stash scroll position everywhere your stash is visible
+
+## Flea market
+- ✨ Filter history remembers previous searches and filters, and adds a new BACK button to return to the previous results.
 
 ## Doors
 - Remove the unimplemented actions like "Bang & clear" that, lets face it, are never going to happen anyway.
@@ -27,12 +30,12 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 ## Inspect windows
 - Show the total stats (including sub-mods) when inspecting mods (optional, toggleable *in* the inspect pane with a new button!)
 - See stats change as you add/remove mods, with color-coded deltas!
-- ✨ Remember last window size when you change it, with restore button to resize to default
-- ✨ Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
-- ✨ Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
+- Remember last window size when you change it, with restore button to resize to default
+- Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
+- Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 
 ## Hideout
-- ✨ Remember search text when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+- Remember search text when you leave hideout without closing (e.g. when searching for a recipe item on flea)
 
 ## Mail
 - Skips "You can return to this later" warnings when not transferring all items (optional, defaults ON)
@@ -40,5 +43,6 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 
 ## Misc
 - Confirm dialogs with Return/Enter/Space instead of just Y
+- ✨ Bottom taskbar moved down a few pixels so you won't miss it if you snap your mouse down
 
 ## More to come... ?
