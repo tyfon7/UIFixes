@@ -57,6 +57,7 @@ namespace UIFixes
 
         // Flea Market
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
+        public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
 
         // Advanced
         public static ConfigEntry<bool> StyleItemPanel { get; set; }
@@ -221,6 +222,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Keep a history of flea market searches and filters, and show a back button to navigate it",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ShowRequiredQuest = config.Bind(
+                FleaMarketSection,
+                "Show Required Quest for Locked Offers",
+                true,
+                new ConfigDescription(
+                    "For trader items locked behind quest completion, add the name of the quest to the tooltip",
                     null,
                     new ConfigurationManagerAttributes { })));
 

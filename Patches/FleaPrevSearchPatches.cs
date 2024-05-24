@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.Quests;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
@@ -35,9 +36,10 @@ namespace UIFixes
         {
             new RagfairScreenShowPatch().Enable();
             new OfferViewListCategoryPickedPatch().Enable();
-            new OfferViewDoneLoadingPatch().Enable();
-            new OfferViewChangedPatch().Enable();
+            new OfferViewListDoneLoadingPatch().Enable();
+            new ChangedViewListType().Enable();
             new OfferItemFixMaskPatch().Enable();
+            new OfferViewLockedQuestPatch().Enable();
 
             Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
             {
@@ -138,7 +140,7 @@ namespace UIFixes
                 if (current != null && current.filterRule.IsSimilarTo(session.RagFair.FilterRule))
                 {
                     // Minor filter change, just update the current one
-                    History.Peek().filterRule = session.RagFair.FilterRule;
+                    current.filterRule = session.RagFair.FilterRule;
                     return;
                 }
 
@@ -198,12 +200,28 @@ namespace UIFixes
                     new(EFilterType.RemoveBartering, filterRule.RemoveBartering ? 1 : 0, filterRule.RemoveBartering),
                     new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0),
                     new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional),
-
-                    // The following are all mutually exclusive
-                    new(EFilterType.FilterSearch, filterRule.FilterSearchId, !filterRule.FilterSearchId.IsNullOrEmpty()),
-                    new(EFilterType.NeededSearch, filterRule.NeededSearchId, !filterRule.NeededSearchId.IsNullOrEmpty()),
-                    new(EFilterType.LinkedSearch, filterRule.LinkedSearchId, !filterRule.LinkedSearchId.IsNullOrEmpty())
                 };
+
+                // This part was tricky to figure out. Adding OR removing any of these ID filters will clear the others, so you can only do one of them.
+                // When going to a state with no id filter, you MUST remove something (or all to be safe)
+                if (!filterRule.FilterSearchId.IsNullOrEmpty())
+                {
+                    searches.Add(new(EFilterType.FilterSearch, filterRule.FilterSearchId, true));
+                }
+                else if (!filterRule.NeededSearchId.IsNullOrEmpty())
+                {
+                    searches.Add(new(EFilterType.NeededSearch, filterRule.NeededSearchId, true));
+                }
+                else if (!filterRule.LinkedSearchId.IsNullOrEmpty())
+                {
+                    searches.Add(new(EFilterType.LinkedSearch, filterRule.LinkedSearchId, true));
+                }
+                else
+                {
+                    searches.Add(new(EFilterType.FilterSearch, String.Empty, false));
+                    searches.Add(new(EFilterType.NeededSearch, String.Empty, false));
+                    searches.Add(new(EFilterType.LinkedSearch, String.Empty, false));
+                }
 
                 ragFair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
@@ -215,7 +233,7 @@ namespace UIFixes
                 // Treat HandbookId as a new search, since it feels like a new view
                 newRule.HandbookId = filterRule.HandbookId;
 
-                ragFair.SetFilterRule(newRule, true, true);
+                ragFair.SetFilterRule(newRule, true, !newRule.AnyIdSearch);
             }
 
             private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
@@ -247,7 +265,7 @@ namespace UIFixes
             }
         }
 
-        public class OfferViewChangedPatch : ModulePatch
+        public class ChangedViewListType : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -282,7 +300,7 @@ namespace UIFixes
             }
         }
 
-        public class OfferViewDoneLoadingPatch : ModulePatch
+        public class OfferViewListDoneLoadingPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -297,6 +315,47 @@ namespace UIFixes
                 if (History.Any())
                 {
                     ____scroller.SetScrollPosition(History.Peek().scrollPosition);
+                }
+            }
+        }
+
+        public class OfferViewLockedQuestPatch : ModulePatch
+        {
+            private static readonly Dictionary<string, RawQuestClass> QuestUnlocks = [];
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(OfferView), nameof(OfferView.method_10));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
+            {
+                if (!Settings.ShowRequiredQuest.Value)
+                {
+                    return; 
+                }
+
+                string templateId = __instance.Offer_0.Item.TemplateId;
+                if (__instance.Offer_0.Locked)
+                {
+                    RawQuestClass quest = null;
+                    if (QuestUnlocks.ContainsKey(templateId))
+                    {
+                        quest = QuestUnlocks[templateId];
+                    }
+                    else
+                    {
+                        quest = R.QuestCache.Instance.GetAllQuestTemplates()
+                            .FirstOrDefault(q => q.Rewards[EQuestStatus.Success]
+                                .Any(r => r.type == ERewardType.AssortmentUnlock && r.items.Any(i => i._tpl == templateId)));
+                        QuestUnlocks[templateId] = quest;
+                    }
+
+                    if (quest != null)
+                    {
+                        ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + quest.Name + ")", true); 
+                    }
                 }
             }
         }

@@ -41,6 +41,7 @@ namespace UIFixes
             RagfairScreen.InitTypes();
             OfferViewList.InitTypes();
             FiltersPanel.InitTypes();
+            QuestCache.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -377,6 +378,24 @@ namespace UIFixes
             public RagfairFilterButton OfferItemButton { get { return (RagfairFilterButton)OfferItemButtonField.GetValue(Value); } }
             public RagfairFilterButton PriceButton { get { return (RagfairFilterButton)PriceButtonField.GetValue(Value); } }
             public RagfairFilterButton ExpirationButton { get { return (RagfairFilterButton)ExpirationButtonField.GetValue(Value); } }
+        }
+
+        public class QuestCache(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static PropertyInfo InstanceProperty;
+            private static MethodInfo GetAllQuestTemplatesMethod;
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.First(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3212
+                InstanceProperty = AccessTools.Property(Type, "Instance");
+                GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
+
+            }
+
+            public static QuestCache Instance { get { return new QuestCache(InstanceProperty.GetValue(null)); } }
+            public IReadOnlyCollection<RawQuestClass> GetAllQuestTemplates() => (IReadOnlyCollection<RawQuestClass>)GetAllQuestTemplatesMethod.Invoke(Value, []);
         }
     }
 
