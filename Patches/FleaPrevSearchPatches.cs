@@ -1,5 +1,4 @@
 ﻿using Aki.Reflection.Patching;
-using EFT.Quests;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
@@ -9,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,8 +36,6 @@ namespace UIFixes
             new OfferViewListCategoryPickedPatch().Enable();
             new OfferViewListDoneLoadingPatch().Enable();
             new ChangedViewListType().Enable();
-            new OfferItemFixMaskPatch().Enable();
-            new OfferViewLockedQuestPatch().Enable();
 
             Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
             {
@@ -315,65 +311,6 @@ namespace UIFixes
                 if (History.Any())
                 {
                     ____scroller.SetScrollPosition(History.Peek().scrollPosition);
-                }
-            }
-        }
-
-        public class OfferViewLockedQuestPatch : ModulePatch
-        {
-            private static readonly Dictionary<string, RawQuestClass> QuestUnlocks = [];
-
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(OfferView), nameof(OfferView.method_10));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
-            {
-                if (!Settings.ShowRequiredQuest.Value)
-                {
-                    return; 
-                }
-
-                string templateId = __instance.Offer_0.Item.TemplateId;
-                if (__instance.Offer_0.Locked)
-                {
-                    RawQuestClass quest = null;
-                    if (QuestUnlocks.ContainsKey(templateId))
-                    {
-                        quest = QuestUnlocks[templateId];
-                    }
-                    else
-                    {
-                        quest = R.QuestCache.Instance.GetAllQuestTemplates()
-                            .FirstOrDefault(q => q.Rewards[EQuestStatus.Success]
-                                .Any(r => r.type == ERewardType.AssortmentUnlock && r.items.Any(i => i._tpl == templateId)));
-                        QuestUnlocks[templateId] = quest;
-                    }
-
-                    if (quest != null)
-                    {
-                        ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + quest.Name + ")", true); 
-                    }
-                }
-            }
-        }
-
-        public class OfferItemFixMaskPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(OfferItemDescription), nameof(OfferItemDescription.Show));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(TextMeshProUGUI ____offerItemName)
-            {
-                ____offerItemName.maskable = true;
-                foreach (var item in ____offerItemName.GetComponentsInChildren<TMP_SubMeshUI>())
-                {
-                    item.maskable = true;
                 }
             }
         }

@@ -28,7 +28,7 @@ namespace UIFixes
             WeaponPresetConfirmPatches.Enable();
             WeaponZoomPatches.Enable();
             new MoveTaskbarPatch().Enable();
-            FixTogglesPatches.Enable();
+            FixFleaPatches.Enable();
             FleaPrevSearchPatches.Enable();
         }
     }
