@@ -40,6 +40,7 @@ namespace UIFixes
             ContextMenuButton.InitTypes();
             RagfairScreen.InitTypes();
             OfferViewList.InitTypes();
+            FiltersPanel.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -332,14 +333,50 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo ScrollerField;
+            private static FieldInfo FiltersPanelField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.Ragfair.OfferViewList);
                 ScrollerField = AccessTools.Field(Type, "_scroller");
+                FiltersPanelField = AccessTools.Field(Type, "_filtersPanel");
             }
 
             public LightScroller Scroller { get { return (LightScroller)ScrollerField.GetValue(Value); } }
+            public EFT.UI.Ragfair.FiltersPanel FiltersPanel { get { return (EFT.UI.Ragfair.FiltersPanel)FiltersPanelField.GetValue(Value); } }
+        }
+
+        public class FiltersPanel(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static PropertyInfo DescendingProperty;
+            private static FieldInfo BarterButtonField;
+            private static FieldInfo RatingButtonField;
+            private static FieldInfo OfferItemButtonField;
+            private static FieldInfo PriceButtonField;
+            private static FieldInfo ExpirationButtonField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.FiltersPanel);
+                DescendingProperty = AccessTools.Property(Type, "Boolean_0");
+                BarterButtonField = AccessTools.Field(Type, "_barterButton");
+                RatingButtonField = AccessTools.Field(Type, "_ratingButton");
+                OfferItemButtonField = AccessTools.Field(Type, "_offerItemButton");
+                PriceButtonField = AccessTools.Field(Type, "_priceButton");
+                ExpirationButtonField = AccessTools.Field(Type, "_expirationButton");
+            }
+
+            public bool SortDescending
+            {
+                get { return (bool)DescendingProperty.GetValue(Value); }
+                set { DescendingProperty.SetValue(Value, value); }
+            }
+            public RagfairFilterButton BarterButton { get { return (RagfairFilterButton)BarterButtonField.GetValue(Value); } }
+            public RagfairFilterButton RatingButton { get { return (RagfairFilterButton)RatingButtonField.GetValue(Value); } }
+            public RagfairFilterButton OfferItemButton { get { return (RagfairFilterButton)OfferItemButtonField.GetValue(Value); } }
+            public RagfairFilterButton PriceButton { get { return (RagfairFilterButton)PriceButtonField.GetValue(Value); } }
+            public RagfairFilterButton ExpirationButton { get { return (RagfairFilterButton)ExpirationButtonField.GetValue(Value); } }
         }
     }
 
@@ -354,5 +391,6 @@ namespace UIFixes
         public static R.ContextMenuButton R(this ContextMenuButton value) => new(value);
         public static R.RagfairScreen R(this RagfairScreen value) => new(value);
         public static R.OfferViewList R(this OfferViewList value) => new(value);
+        public static R.FiltersPanel R(this FiltersPanel value) => new(value);
     }
 }

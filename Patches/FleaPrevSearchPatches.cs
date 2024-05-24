@@ -3,10 +3,12 @@ using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -27,11 +29,25 @@ namespace UIFixes
 
         private static DefaultUIButton PreviousButton;
 
+        private static float PossibleScrollPosition = -1f;
+
         public static void Enable()
         {
             new RagfairScreenShowPatch().Enable();
+            new OfferViewListCategoryPickedPatch().Enable();
             new OfferViewDoneLoadingPatch().Enable();
             new OfferViewChangedPatch().Enable();
+            new OfferItemFixMaskPatch().Enable();
+
+            Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
+            {
+                if (!Settings.EnableFleaHistory.Value && PreviousButton != null)
+                {
+                    UnityEngine.Object.Destroy(PreviousButton.gameObject);
+                    PreviousButton = null;
+                    History.Clear();
+                }
+            };
         }
 
         public class RagfairScreenShowPatch : ModulePatch
@@ -62,8 +78,13 @@ namespace UIFixes
                             PreviousButton.Interactable = false;
                         }
 
+                        HistoryEntry previousEntry = History.Peek();
+
+                        // Manually update parts of the UI because BSG sucks
+                        UpdateColumnHeaders(__instance.R().OfferViewList.R().FiltersPanel, previousEntry.filterRule.SortType, previousEntry.filterRule.SortDirection);
+
                         GoingBack = true;
-                        ApplyFullFilter(session.RagFair, History.Peek().filterRule);
+                        ApplyFullFilter(session.RagFair, previousEntry.filterRule);
                         GoingBack = false;
                     });
                 }
@@ -107,18 +128,32 @@ namespace UIFixes
             {
                 if (GoingBack ||
                     FirstFilter ||
-                    session.RagFair.FilterRule.ViewListType != EViewListType.AllOffers ||
-                    History.Any() && History.Peek().filterRule.Matches(session.RagFair.FilterRule))
+                    session.RagFair.FilterRule.ViewListType != EViewListType.AllOffers)
                 {
                     FirstFilter = false;
                     return;
                 }
 
-                // Save the current scroll position before pushing the new entry
-                if (History.Any())
+                HistoryEntry current = History.Any() ? History.Peek() : null;
+                if (current != null && current.filterRule.IsSimilarTo(session.RagFair.FilterRule))
                 {
-                    LightScroller scroller = ragScreen.R().OfferViewList.R().Scroller;
-                    History.Peek().scrollPosition = scroller.NormalizedScrollPosition;
+                    // Minor filter change, just update the current one
+                    History.Peek().filterRule = session.RagFair.FilterRule;
+                    return;
+                }
+
+                // Save the current scroll position before pushing the new entry
+                if (current != null)
+                {
+                    if (PossibleScrollPosition >= 0f)
+                    {
+                        current.scrollPosition = PossibleScrollPosition;
+                    }
+                    else
+                    {
+                        LightScroller scroller = ragScreen.R().OfferViewList.R().Scroller;
+                        current.scrollPosition = scroller.NormalizedScrollPosition;
+                    }
                 }
 
                 History.Push(new HistoryEntry() { filterRule = session.RagFair.FilterRule });
@@ -146,7 +181,6 @@ namespace UIFixes
                 }
             }
 
-
             // Using GClass because it's easier
             private static void ApplyFullFilter(RagFairClass ragFair, FilterRule filterRule)
             {
@@ -173,13 +207,43 @@ namespace UIFixes
 
                 ragFair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
-                // Other properties
+                // These properties don't consistute a new search, so much as a different view of the same search
                 newRule.Page = filterRule.Page;
                 newRule.SortType = filterRule.SortType;
                 newRule.SortDirection = filterRule.SortDirection;
+
+                // Treat HandbookId as a new search, since it feels like a new view
                 newRule.HandbookId = filterRule.HandbookId;
 
                 ragFair.SetFilterRule(newRule, true, true);
+            }
+
+            private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
+            {
+                var wrappedFiltersPanel = filtersPanel.R();
+                RagfairFilterButton button;
+                switch (sortType)
+                {
+                    case ESortType.Barter:
+                        button = wrappedFiltersPanel.BarterButton;
+                        break;
+                    case ESortType.Rating:
+                        button = wrappedFiltersPanel.RatingButton;
+                        break;
+                    case ESortType.OfferItem:
+                        button = wrappedFiltersPanel.OfferItemButton;
+                        break;
+                    case ESortType.ExpirationDate:
+                        button = wrappedFiltersPanel.ExpirationButton;
+                        break;
+                    case ESortType.Price:
+                    default: // Default to price if somehow this falls through
+                        button = wrappedFiltersPanel.PriceButton;
+                        break;
+                }
+
+                wrappedFiltersPanel.SortDescending = sortDirection;
+                filtersPanel.method_4(button);
             }
         }
 
@@ -194,6 +258,27 @@ namespace UIFixes
             public static void Postfix(EViewListType type)
             {
                 PreviousButton?.gameObject.SetActive(type == EViewListType.AllOffers);
+            }
+        }
+
+        public class OfferViewListCategoryPickedPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.method_10));
+            }
+
+            // The firs thing this method does is set scrollposition to 0, so we need to grab it first
+            [PatchPrefix]
+            public static void Prefix(LightScroller ____scroller)
+            {
+                PossibleScrollPosition = ____scroller.NormalizedScrollPosition;
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                PossibleScrollPosition = -1f;
             }
         }
 
@@ -216,13 +301,32 @@ namespace UIFixes
             }
         }
 
-        public static bool Matches(this FilterRule one, FilterRule two)
+        public class OfferItemFixMaskPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(OfferItemDescription), nameof(OfferItemDescription.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(TextMeshProUGUI ____offerItemName)
+            {
+                ____offerItemName.maskable = true;
+                foreach (var item in ____offerItemName.GetComponentsInChildren<TMP_SubMeshUI>())
+                {
+                    item.maskable = true;
+                }
+            }
+        }
+
+        // Commented out properties just affect the view, so consider the two filters to be a single history entry
+        public static bool IsSimilarTo(this FilterRule one, FilterRule two)
         {
             return one.ViewListType == two.ViewListType &&
-                one.Page == two.Page &&
+                // one.Page == two.Page &&
+                // one.SortType == two.SortType &&
+                // one.SortDirection == two.SortDirection &&
                 one.CurrencyType == two.CurrencyType &&
-                one.SortType == two.SortType &&
-                one.SortDirection == two.SortDirection &&
                 one.PriceFrom == two.PriceFrom &&
                 one.PriceTo == two.PriceTo &&
                 one.QuantityFrom == two.QuantityFrom &&
