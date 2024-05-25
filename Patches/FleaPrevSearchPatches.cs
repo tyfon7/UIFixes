@@ -115,6 +115,10 @@ namespace UIFixes
                 prevButtonLayout.minWidth = -1;
                 prevButtonLayout.preferredWidth = -1;
 
+                // Tighten up the spacing
+                var layoutGroup = PreviousButton.transform.parent.GetComponent<HorizontalLayoutGroup>();
+                layoutGroup.spacing = 5f;
+
                 if (History.Count < 2)
                 {
                     PreviousButton.Interactable = false;
@@ -182,23 +186,11 @@ namespace UIFixes
             }
 
             // Using GClass because it's easier
+            // Copied from RagFairClass.AddSearchesInRule, but actually all of the properties
             private static void ApplyFullFilter(RagFairClass ragFair, FilterRule filterRule)
             {
-                // copied from RagFairClass.AddSearchesInRule, but actually all of the properties
-                var searches = new List<GClass3196>
-                {
-                    new(EFilterType.Currency, filterRule.CurrencyType, filterRule.CurrencyType != 0),
-                    new(EFilterType.PriceFrom, filterRule.PriceFrom, filterRule.PriceFrom != 0),
-                    new(EFilterType.PriceTo, filterRule.PriceTo, filterRule.PriceTo != 0),
-                    new(EFilterType.QuantityFrom, filterRule.QuantityFrom, filterRule.QuantityFrom != 0),
-                    new(EFilterType.QuantityTo, filterRule.QuantityTo, filterRule.QuantityTo != 0),
-                    new(EFilterType.ConditionFrom, filterRule.ConditionFrom, filterRule.ConditionFrom != 0),
-                    new(EFilterType.ConditionTo, filterRule.ConditionTo, filterRule.ConditionTo != 100),
-                    new(EFilterType.OneHourExpiration, filterRule.OneHourExpiration ? 1 : 0, filterRule.OneHourExpiration),
-                    new(EFilterType.RemoveBartering, filterRule.RemoveBartering ? 1 : 0, filterRule.RemoveBartering),
-                    new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0),
-                    new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional),
-                };
+                // Order impacts the order the filters show in the UI
+                var searches = new List<GClass3196>();
 
                 // This part was tricky to figure out. Adding OR removing any of these ID filters will clear the others, so you can only do one of them.
                 // When going to a state with no id filter, you MUST remove something (or all to be safe)
@@ -220,6 +212,18 @@ namespace UIFixes
                     searches.Add(new(EFilterType.NeededSearch, String.Empty, false));
                     searches.Add(new(EFilterType.LinkedSearch, String.Empty, false));
                 }
+
+                searches.Add(new(EFilterType.Currency, filterRule.CurrencyType, filterRule.CurrencyType != 0));
+                searches.Add(new(EFilterType.PriceFrom, filterRule.PriceFrom, filterRule.PriceFrom != 0));
+                searches.Add(new(EFilterType.PriceTo, filterRule.PriceTo, filterRule.PriceTo != 0));
+                searches.Add(new(EFilterType.QuantityFrom, filterRule.QuantityFrom, filterRule.QuantityFrom != 0));
+                searches.Add(new(EFilterType.QuantityTo, filterRule.QuantityTo, filterRule.QuantityTo != 0));
+                searches.Add(new(EFilterType.ConditionFrom, filterRule.ConditionFrom, filterRule.ConditionFrom != 0));
+                searches.Add(new(EFilterType.ConditionTo, filterRule.ConditionTo, filterRule.ConditionTo != 100));
+                searches.Add(new(EFilterType.OneHourExpiration, filterRule.OneHourExpiration ? 1 : 0, filterRule.OneHourExpiration));
+                searches.Add(new(EFilterType.RemoveBartering, filterRule.RemoveBartering ? 1 : 0, filterRule.RemoveBartering));
+                searches.Add(new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0));
+                searches.Add(new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional));
 
                 ragFair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
@@ -331,25 +335,41 @@ namespace UIFixes
                     ____scroller.SetScrollPosition(History.Peek().scrollPosition);
                 }
 
-                // Try to auto-expand categories to use available space. Gotta do math to see what fits
-                const int ListHeight = 780;
-                const int CategoryHeight = 34;
-                const int SubcategoryHeight = 25;
-
-                IEnumerable<CategoryView> categories = __instance.GetComponentsInChildren<CategoryView>();
-                int totalHeight = categories.Count() * CategoryHeight;
-
-                while (categories.Any())
+                if (Settings.AutoExpandCategories.Value)
                 {
-                    // This is all child categories that have matching *offers* (x.Count), and if they have children themselves they're a category, otherwise a subcategory
-                    int nextHeight = categories.SelectMany(c => c.Node.Children).Where(x => x.Count > 0).Sum(sc => sc.Children.Any() ? CategoryHeight : SubcategoryHeight);
-                    if (totalHeight + nextHeight > ListHeight)
-                    {
-                        break;
-                    }
+                    // Try to auto-expand categories to use available space. Gotta do math to see what fits
+                    const int PanelHeight = 780;
+                    const int CategoryHeight = 34;
+                    const int SubcategoryHeight = 25;
 
-                    totalHeight += nextHeight;
-                    categories = categories.SelectMany(c => c.OpenCategory()).Where(v => v.gameObject.activeInHierarchy).OfType<CategoryView>();
+                    var wrappedInstance = __instance.R();
+
+                    var activeCategories = __instance.GetComponentsInChildren<CategoryView>();
+                    var activeSubcategories = __instance.GetComponentsInChildren<SubcategoryView>();
+                    int currentHeight = activeCategories.Length * CategoryHeight + activeSubcategories.Length * SubcategoryHeight;
+
+                    var categories = __instance.GetComponentsInChildren<CombinedView>()
+                        .Where(cv => cv.transform.childCount > 0)
+                        .Select(cv => cv.transform.GetChild(0).GetComponent<CategoryView>())
+                        .Where(c => c != null && c.gameObject.activeInHierarchy);
+
+                    while (categories.Any())
+                    {
+                        // This is all child categories that aren't already open; have matching *offers* (x.Count); and if they have children themselves they're a category, otherwise a subcategory
+                        int additionalHeight = categories
+                            .Where(c => !c.R().IsOpen && c.Node != null)
+                            .SelectMany(c => c.Node.Children)
+                            .Where(n => n.Count > 0)
+                            .Sum(n => n.Children.Any() ? CategoryHeight : SubcategoryHeight);
+
+                        if (currentHeight + additionalHeight > PanelHeight)
+                        {
+                            break;
+                        }
+
+                        currentHeight += additionalHeight;
+                        categories = categories.SelectMany(c => c.OpenCategory()).Where(v => v.gameObject.activeInHierarchy).OfType<CategoryView>();
+                    }
                 }
             }
         }
@@ -361,6 +381,7 @@ namespace UIFixes
                 // one.Page == two.Page &&
                 // one.SortType == two.SortType &&
                 // one.SortDirection == two.SortDirection &&
+                // one.HandbookId == two.HandbookId &&
                 one.CurrencyType == two.CurrencyType &&
                 one.PriceFrom == two.PriceFrom &&
                 one.PriceTo == two.PriceTo &&
@@ -372,7 +393,6 @@ namespace UIFixes
                 one.RemoveBartering == two.RemoveBartering &&
                 one.OfferOwnerType == two.OfferOwnerType &&
                 one.OnlyFunctional == two.OnlyFunctional &&
-                one.HandbookId == two.HandbookId &&
                 one.FilterSearchId == two.FilterSearchId &&
                 one.LinkedSearchId == two.LinkedSearchId &&
                 one.NeededSearchId == two.NeededSearchId;

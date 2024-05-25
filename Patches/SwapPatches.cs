@@ -159,7 +159,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(ItemView __instance)
+            public static void Prefix()
             {
                 SourceContainer = null;
             }

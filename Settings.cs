@@ -58,6 +58,7 @@ namespace UIFixes
         // Flea Market
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
         public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
+        public static ConfigEntry<bool> AutoExpandCategories { get; set; }
 
         // Advanced
         public static ConfigEntry<bool> StyleItemPanel { get; set; }
@@ -222,6 +223,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Keep a history of flea market searches and filters, and show a back button to navigate it",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(AutoExpandCategories = config.Bind(
+                FleaMarketSection,
+                "Auto-expand Categories",
+                true,
+                new ConfigDescription(
+                    "Searches will auto-expand categories in the left panel if there is room wtihout scrolling",
                     null,
                     new ConfigurationManagerAttributes { })));
 

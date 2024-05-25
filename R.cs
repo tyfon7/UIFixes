@@ -41,6 +41,7 @@ namespace UIFixes
             RagfairScreen.InitTypes();
             OfferViewList.InitTypes();
             FiltersPanel.InitTypes();
+            CategoryView.InitTypes();
             QuestCache.InitTypes();
         }
 
@@ -347,6 +348,20 @@ namespace UIFixes
             public EFT.UI.Ragfair.FiltersPanel FiltersPanel { get { return (EFT.UI.Ragfair.FiltersPanel)FiltersPanelField.GetValue(Value); } }
         }
 
+        public class CategoryView(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo IsOpenField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.CategoryView);
+                IsOpenField = AccessTools.Field(Type, "bool_3");
+            }
+
+            public bool IsOpen { get { return (bool)IsOpenField.GetValue(Value); } }
+        }
+
         public class FiltersPanel(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }
@@ -410,6 +425,7 @@ namespace UIFixes
         public static R.ContextMenuButton R(this ContextMenuButton value) => new(value);
         public static R.RagfairScreen R(this RagfairScreen value) => new(value);
         public static R.OfferViewList R(this OfferViewList value) => new(value);
+        public static R.CategoryView R(this CategoryView value) => new(value);
         public static R.FiltersPanel R(this FiltersPanel value) => new(value);
     }
 }
