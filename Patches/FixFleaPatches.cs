@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class FixFleaPatches
+    public static class FixFleaPatches
     {
         public static void Enable()
         {

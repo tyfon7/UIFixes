@@ -1,37 +1,88 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.UI.Ragfair;
 using HarmonyLib;
+using JetBrains.Annotations;
 using System.Linq;
 using System.Reflection;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class AddOfferClickablePricesPatches : ModulePatch
+    public static class AddOfferClickablePricesPatches
     {
-        protected override MethodBase GetTargetMethod()
+        public static void Enable()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
+            new AddButtonPatch().Enable();
         }
 
-        [PatchPostfix]
-        public static void Postfix(ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
+        public class AddButtonPatch : ModulePatch
         {
-            var panel = ____pricesPanel.R();
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
+            }
 
-            var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
+            [PatchPostfix]
+            public static void Postfix(ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
+            {
+                var panel = ____pricesPanel.R();
 
-            Button lowestButton = panel.LowestLabel.GetOrAddComponent<Button>();
-            lowestButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Minimum.ToString()));
-            ____pricesPanel.AddDisposable(lowestButton.onClick.RemoveAllListeners);
+                var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
 
-            Button averageButton = panel.AverageLabel.GetOrAddComponent<Button>();
-            averageButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Average.ToString()));
-            ____pricesPanel.AddDisposable(averageButton.onClick.RemoveAllListeners);
+                Button lowestButton = panel.LowestLabel.GetOrAddComponent<HighlightButton>();
+                lowestButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Minimum.ToString()));
+                ____pricesPanel.AddDisposable(lowestButton.onClick.RemoveAllListeners);
 
-            Button maximumButton = panel.MaximumLabel.GetOrAddComponent<Button>();
-            maximumButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Maximum.ToString()));
-            ____pricesPanel.AddDisposable(maximumButton.onClick.RemoveAllListeners);
+                Button averageButton = panel.AverageLabel.GetOrAddComponent<HighlightButton>();
+                averageButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Average.ToString()));
+                ____pricesPanel.AddDisposable(averageButton.onClick.RemoveAllListeners);
+
+                Button maximumButton = panel.MaximumLabel.GetOrAddComponent<HighlightButton>();
+                maximumButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Maximum.ToString()));
+                ____pricesPanel.AddDisposable(maximumButton.onClick.RemoveAllListeners);
+            }
+        }
+
+        public class HighlightButton : Button
+        {
+            private Color originalColor;
+            bool originalOverrideColorTags;
+
+            private TextMeshProUGUI _text;
+            private TextMeshProUGUI Text
+            {
+                get
+                {
+                    if (_text == null)
+                    {
+                        _text = GetComponent<TextMeshProUGUI>();
+                    }
+
+                    return _text;
+                }
+            }
+
+            public override void OnPointerEnter([NotNull] PointerEventData eventData)
+            {
+                base.OnPointerEnter(eventData);
+
+                originalColor = Text.color;
+                originalOverrideColorTags = Text.overrideColorTags;
+
+                Text.overrideColorTags = true;
+                Text.color = Color.white;
+            }
+
+            public override void OnPointerExit([NotNull] PointerEventData eventData)
+            {
+                base.OnPointerExit(eventData);
+
+                Text.overrideColorTags = originalOverrideColorTags;
+                Text.color = originalColor;
+            }
         }
     }
 }

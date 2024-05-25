@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class HideoutSearchPatches
+    public static class HideoutSearchPatches
     {
         private static readonly Dictionary<string, string> LastSearches = [];
 

@@ -13,7 +13,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class ScrollPatches
+    public static class ScrollPatches
     {
         public static void Enable()
         {
@@ -24,7 +24,7 @@ namespace UIFixes
             new MouseScrollingSpeedPatch().Enable();
         }
 
-        protected static void HandleInput(ScrollRect scrollRect)
+        private static void HandleInput(ScrollRect scrollRect)
         {
             if (scrollRect != null)
             {
@@ -59,7 +59,7 @@ namespace UIFixes
         }
 
         // LightScrollers don't expose heights that I can see, so just fudge it with fake OnScroll events
-        protected static void HandleInput(LightScroller lightScroller)
+        private static void HandleInput(LightScroller lightScroller)
         {
             if (lightScroller != null)
             {
@@ -97,7 +97,7 @@ namespace UIFixes
             }
         }
 
-        protected static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
+        private static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
         {
             foreach (var instruction in instructions)
             {

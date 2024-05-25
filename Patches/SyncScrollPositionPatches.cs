@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    public class SyncScrollPositionPatches
+    public static class SyncScrollPositionPatches
     {
         private static float StashScrollPosition = 1f;
 

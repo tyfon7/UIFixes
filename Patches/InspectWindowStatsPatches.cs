@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace UIFixes
 {
-    public class InspectWindowStatsPatches
+    public static class InspectWindowStatsPatches
     {
         public static void Enable()
         {

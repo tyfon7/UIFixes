@@ -10,7 +10,7 @@ namespace UIFixes
 {
     // Two patches are required for the edit preset screen - one to grab the value of moveForward from CloseScreenInterruption(), and one to use it.
     // This is because BSG didn't think to pass the argument in to method_35
-    public class WeaponPresetConfirmPatches
+    public static class WeaponPresetConfirmPatches
     {
         public static bool MoveForward;
 

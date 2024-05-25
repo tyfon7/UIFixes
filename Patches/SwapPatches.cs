@@ -15,7 +15,7 @@ using UnityEngine.EventSystems;
 
 namespace UIFixes
 {
-    public class SwapPatches
+    public static class SwapPatches
     {
         // Source container for the drag - we have to grab this early to check it
         private static IContainer SourceContainer;

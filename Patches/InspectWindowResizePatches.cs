@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace UIFixes
 {
-    internal class InspectWindowResizePatches
+    internal static class InspectWindowResizePatches
     {
         private static float SavedPreferredWidth = -1f;
         private static float SavedPreferredHeight = -1f;
