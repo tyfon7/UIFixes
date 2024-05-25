@@ -30,6 +30,7 @@ namespace UIFixes
             new MoveTaskbarPatch().Enable();
             FixFleaPatches.Enable();
             FleaPrevSearchPatches.Enable();
+            KeepOfferWindowOpenPatches.Enable();
         }
     }
 }

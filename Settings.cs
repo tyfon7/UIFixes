@@ -59,6 +59,7 @@ namespace UIFixes
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
         public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
         public static ConfigEntry<bool> AutoExpandCategories { get; set; }
+        public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
 
         // Advanced
         public static ConfigEntry<bool> StyleItemPanel { get; set; }
@@ -241,6 +242,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "For trader items locked behind quest completion, add the name of the quest to the tooltip",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(KeepAddOfferOpen = config.Bind(
+                FleaMarketSection,
+                "Keep Add Offer Window Open",
+                false,
+                new ConfigDescription(
+                    "Don't close the Add Offer window after you place an offer",
                     null,
                     new ConfigurationManagerAttributes { })));
 
