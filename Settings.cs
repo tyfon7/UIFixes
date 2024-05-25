@@ -63,6 +63,7 @@ namespace UIFixes
 
         // Advanced
         public static ConfigEntry<bool> StyleItemPanel { get; set; }
+        public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; }
 
         public static void Init(ConfigFile config)
         {
@@ -261,6 +262,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Clean up and colorize item stats",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(KeepAddOfferOpenIgnoreMaxOffers = config.Bind(
+                AdvancedSection,
+                "Keep Add Offer Window Open: Ignore Max Offers",
+                false,
+                new ConfigDescription(
+                    "Specifically for the Keep Add Offers Window Open, this setting will keep the window open even if you're at max offers.",
                     null,
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 

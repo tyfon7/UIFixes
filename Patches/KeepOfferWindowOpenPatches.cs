@@ -32,7 +32,7 @@ namespace UIFixes
                 {
                     // Close the window if you're gonna hit max offers
                     var ragfair = __instance.R().Ragfair;
-                    if (ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
+                    if (Settings.KeepAddOfferOpenIgnoreMaxOffers.Value || ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
                     {
                         BlockClose = true;
                     }
