@@ -25,6 +25,7 @@ namespace UIFixes
 
         private static bool FirstFilter = true;
         private static bool GoingBack = false;
+        private static string DelayedHandbookId = string.Empty;
 
         private static DefaultUIButton PreviousButton;
 
@@ -124,8 +125,9 @@ namespace UIFixes
 
             private static void OnFilterRuleChanged(RagfairScreen ragScreen, ISession session)
             {
-                if (GoingBack ||
-                    FirstFilter ||
+                if (FirstFilter ||
+                    GoingBack ||
+                    !String.IsNullOrEmpty(DelayedHandbookId) ||
                     session.RagFair.FilterRule.ViewListType != EViewListType.AllOffers)
                 {
                     FirstFilter = false;
@@ -225,11 +227,11 @@ namespace UIFixes
                 newRule.Page = filterRule.Page;
                 newRule.SortType = filterRule.SortType;
                 newRule.SortDirection = filterRule.SortDirection;
+                
+                // We can't set handbookId yet - it limits the result set and that in turn limits what categories even display
+                DelayedHandbookId = filterRule.HandbookId;
 
-                // Treat HandbookId as a new search, since it feels like a new view
-                newRule.HandbookId = filterRule.HandbookId;
-
-                ragFair.SetFilterRule(newRule, true, !newRule.AnyIdSearch);
+                ragFair.SetFilterRule(newRule, true, true);
             }
 
             private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
@@ -304,13 +306,50 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static async void Postfix(Task __result, LightScroller ____scroller)
+            public static async void Postfix(OfferViewList __instance, Task __result, LightScroller ____scroller, EViewListType ___eviewListType_0)
             {
                 await __result;
 
+                if (___eviewListType_0 != EViewListType.AllOffers)
+                {
+                    return;
+                }
+
+                if (!String.IsNullOrEmpty(DelayedHandbookId))
+                {
+                    // Super important to clear DelayedHandbookId *before* calling method_10, or infinite loops can occur!
+                    string newHandbookId = DelayedHandbookId;
+                    DelayedHandbookId = string.Empty;
+
+                    __instance.method_10(newHandbookId, false);
+                    return;
+                }
+
+                // Restore scroll position now that the we're loaded
                 if (History.Any())
                 {
                     ____scroller.SetScrollPosition(History.Peek().scrollPosition);
+                }
+
+                // Try to auto-expand categories to use available space. Gotta do math to see what fits
+                const int ListHeight = 780;
+                const int CategoryHeight = 34;
+                const int SubcategoryHeight = 25;
+
+                IEnumerable<CategoryView> categories = __instance.GetComponentsInChildren<CategoryView>();
+                int totalHeight = categories.Count() * CategoryHeight;
+
+                while (categories.Any())
+                {
+                    // This is all child categories that have matching *offers* (x.Count), and if they have children themselves they're a category, otherwise a subcategory
+                    int nextHeight = categories.SelectMany(c => c.Node.Children).Where(x => x.Count > 0).Sum(sc => sc.Children.Any() ? CategoryHeight : SubcategoryHeight);
+                    if (totalHeight + nextHeight > ListHeight)
+                    {
+                        break;
+                    }
+
+                    totalHeight += nextHeight;
+                    categories = categories.SelectMany(c => c.OpenCategory()).Where(v => v.gameObject.activeInHierarchy).OfType<CategoryView>();
                 }
             }
         }

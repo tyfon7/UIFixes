@@ -105,7 +105,7 @@ namespace UIFixes
                     {
                         quest = R.QuestCache.Instance.GetAllQuestTemplates()
                             .FirstOrDefault(q => q.Rewards[EQuestStatus.Success]
-                                .Any(r => r.type == ERewardType.AssortmentUnlock && r.items.Any(i => i._tpl == templateId)));
+                            .Any(r => r.type == ERewardType.AssortmentUnlock && r.items.Any(i => i._tpl == templateId)));
                         QuestUnlocks[templateId] = quest;
                     }
 
