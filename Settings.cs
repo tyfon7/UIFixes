@@ -250,7 +250,7 @@ namespace UIFixes
                 "Keep Add Offer Window Open",
                 false,
                 new ConfigDescription(
-                    "Don't close the Add Offer window after you place an offer",
+                    "Don't close the Add Offer window after you place an offer. Note that the window will still close if you are at max offers.",
                     null,
                     new ConfigurationManagerAttributes { })));
 

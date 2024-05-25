@@ -43,6 +43,8 @@ namespace UIFixes
             FiltersPanel.InitTypes();
             CategoryView.InitTypes();
             QuestCache.InitTypes();
+            ItemMarketPricesPanel.InitTypes();
+            AddOfferWindow.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -412,6 +414,40 @@ namespace UIFixes
             public static QuestCache Instance { get { return new QuestCache(InstanceProperty.GetValue(null)); } }
             public IReadOnlyCollection<RawQuestClass> GetAllQuestTemplates() => (IReadOnlyCollection<RawQuestClass>)GetAllQuestTemplatesMethod.Invoke(Value, []);
         }
+
+        public class ItemMarketPricesPanel(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo LowestLabelField;
+            private static FieldInfo AverageLabelField;
+            private static FieldInfo MaximumLabelField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.ItemMarketPricesPanel);
+                LowestLabelField = AccessTools.Field(Type, "_lowestLabel");
+                AverageLabelField = AccessTools.Field(Type, "_averageLabel");
+                MaximumLabelField = AccessTools.Field(Type, "_maximumLabel");
+            }
+
+            public TextMeshProUGUI LowestLabel { get { return (TextMeshProUGUI)LowestLabelField.GetValue(Value); } }
+            public TextMeshProUGUI AverageLabel { get { return (TextMeshProUGUI)AverageLabelField.GetValue(Value); } }
+            public TextMeshProUGUI MaximumLabel { get { return (TextMeshProUGUI)MaximumLabelField.GetValue(Value); } }
+        }
+
+        public class AddOfferWindow(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo RagfairField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.Ragfair.AddOfferWindow);
+                RagfairField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(RagFairClass));
+            }
+
+            public RagFairClass Ragfair { get { return (RagFairClass)RagfairField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
@@ -427,5 +463,7 @@ namespace UIFixes
         public static R.OfferViewList R(this OfferViewList value) => new(value);
         public static R.CategoryView R(this CategoryView value) => new(value);
         public static R.FiltersPanel R(this FiltersPanel value) => new(value);
+        public static R.ItemMarketPricesPanel R(this ItemMarketPricesPanel value) => new(value);
+        public static R.AddOfferWindow R(this AddOfferWindow value) => new(value);
     }
 }

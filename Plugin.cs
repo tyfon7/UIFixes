@@ -31,6 +31,7 @@ namespace UIFixes
             FixFleaPatches.Enable();
             FleaPrevSearchPatches.Enable();
             KeepOfferWindowOpenPatches.Enable();
+            new AddOfferClickablePricesPatches().Enable();
         }
     }
 }

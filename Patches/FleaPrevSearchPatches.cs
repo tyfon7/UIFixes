@@ -342,8 +342,6 @@ namespace UIFixes
                     const int CategoryHeight = 34;
                     const int SubcategoryHeight = 25;
 
-                    var wrappedInstance = __instance.R();
-
                     var activeCategories = __instance.GetComponentsInChildren<CategoryView>();
                     var activeSubcategories = __instance.GetComponentsInChildren<SubcategoryView>();
                     int currentHeight = activeCategories.Length * CategoryHeight + activeSubcategories.Length * SubcategoryHeight;

@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.InventoryLogic;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using System.Reflection;
@@ -25,14 +26,28 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix()
+            public static void Prefix(AddOfferWindow __instance)
             {
-                BlockClose = Settings.KeepAddOfferOpen.Value;
+                if (Settings.KeepAddOfferOpen.Value)
+                {
+                    // Close the window if you're gonna hit max offers
+                    var ragfair = __instance.R().Ragfair;
+                    if (ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
+                    {
+                        BlockClose = true;
+                    }
+                }
             }
 
             [PatchPostfix]
-            public static void Postfix()
+            public static void Postfix(RequirementView[] ____requirementViews)
             {
+                // clear old prices
+                foreach(var requirementView in ____requirementViews)
+                {
+                    requirementView.ResetRequirementInformation();
+                }
+
                 BlockClose = false;
             }
         }
