@@ -1,8 +1,10 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -78,7 +80,7 @@ namespace UIFixes
 
         public class OfferViewLockedQuestPatch : ModulePatch
         {
-            private static readonly Dictionary<string, RawQuestClass> QuestUnlocks = [];
+            private static readonly Dictionary<string, string> QuestUnlocks = [];
 
             protected override MethodBase GetTargetMethod()
             {
@@ -93,25 +95,55 @@ namespace UIFixes
                     return;
                 }
 
-                string templateId = __instance.Offer_0.Item.TemplateId;
                 if (__instance.Offer_0.Locked)
                 {
-                    RawQuestClass quest = null;
-                    if (QuestUnlocks.ContainsKey(templateId))
+                    string questName = null;
+                    if (QuestUnlocks.ContainsKey(__instance.Offer_0.Id))
                     {
-                        quest = QuestUnlocks[templateId];
+                        questName = QuestUnlocks[__instance.Offer_0.Id];
                     }
                     else
                     {
-                        quest = R.QuestCache.Instance.GetAllQuestTemplates()
-                            .FirstOrDefault(q => q.Rewards[EQuestStatus.Success]
-                            .Any(r => r.type == ERewardType.AssortmentUnlock && r.items.Any(i => i._tpl == templateId)));
-                        QuestUnlocks[templateId] = quest;
+                        // Filter by as much data available. There are some unlocks that are ambiguous without access to the server-side questassorts.json.
+                        // Using a tuple of (quest, rewards) to avoid doing all the reward checks more than once
+                        var questsAndRewards = R.QuestCache.Instance.GetAllQuestTemplates()
+                            .Select(q => (quest: q, rewards: q.Rewards[EQuestStatus.Success]
+                                .Where(r => r.type == ERewardType.AssortmentUnlock &&
+                                    r.traderId == __instance.Offer_0.User.Id &&
+                                    r.loyaltyLevel == __instance.Offer_0.LoyaltyLevel &&
+                                    r.items.First(i => i._id == r.target)._tpl == __instance.Offer_0.Item.TemplateId)))
+                            .Where(x => x.rewards.Any());
+
+                        if (questsAndRewards.Count() > 1)
+                        {
+                            // Some of the ambiguous unlocks are weapons with full loadouts we can actually compare
+                            List<Item> items = [];
+                            Item.smethod_0(__instance.Offer_0.Item, items, (item, container) => true); // complete list of items, including the top level item
+
+                            // Hashset.SetEquals compares lists, ignoring order (don't care) and duplicates (don't have any)
+                            var allItemTemplateIds = new HashSet<string>(items.Select(i => i.TemplateId));
+                            questsAndRewards = questsAndRewards.Where(x => x.rewards.Any(r => allItemTemplateIds.SetEquals(r.items.Select(i => i._tpl))));
+                        }
+
+                        if (questsAndRewards.Count() > 1)
+                        {
+                            // Some quests are USEC/Bear versions with the same name
+                            questsAndRewards = questsAndRewards.Distinct(x => x.quest.Name);
+                        }
+
+                        if (questsAndRewards.Count() == 1)
+                        {
+                            questName = questsAndRewards.First().quest.Name;
+                        }
+
+                        // If it's still not clear by now, it's either missing or too ambiguous (e.g. Zeus thermal scope) ¯\_(ツ)_/¯
+                        // Cache the result, even if empty
+                        QuestUnlocks.Add(__instance.Offer_0.Id, questName);
                     }
 
-                    if (quest != null)
+                    if (!String.IsNullOrEmpty(questName))
                     {
-                        ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + quest.Name + ")", true);
+                        ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + questName + ")", true);
                     }
                 }
             }

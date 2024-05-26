@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>1.5.0</Version>
+    <Version>1.5.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;Dist</Configurations>
