@@ -15,7 +15,7 @@ namespace UIFixes
             new FixMailRecieveAllPatch().Enable();
             new FixTooltipPatch().Enable();
             new FixWeaponBindsDisplayPatch().Enable();
-            new FocusFleaOfferNumberPatch().Enable();
+            FocusFleaOfferNumberPatches.Enable();
             HideoutSearchPatches.Enable();
             InspectWindowResizePatches.Enable();
             InspectWindowStatsPatches.Enable();
