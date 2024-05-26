@@ -104,7 +104,7 @@ namespace UIFixes
                     }
                     else
                     {
-                        // Filter by as much data available. There are some unlocks that are ambiguous without access to the server-side questassorts.json.
+                        // Filter by as much data available. There are some unlocks that are ambiguous without access to the server questassorts
                         // Using a tuple of (quest, rewards) to avoid doing all the reward checks more than once
                         var questsAndRewards = R.QuestCache.Instance.GetAllQuestTemplates()
                             .Select(q => (quest: q, rewards: q.Rewards[EQuestStatus.Success]
@@ -131,12 +131,25 @@ namespace UIFixes
                             questsAndRewards = questsAndRewards.Distinct(x => x.quest.Name);
                         }
 
+                        // Zeus thermal scope is the only remaining ambiguous item in the base game
+                        if (questsAndRewards.Count() > 1 && __instance.Offer_0.Item.TemplateId == "63fc44e2429a8a166c7f61e6") // Zeus thermal scope
+                        {
+                            if (__instance.Offer_0.Requirements.Any(r => r.TemplateId == "5fc64ea372b0dd78d51159dc")) // cultist knife
+                            {
+                                questsAndRewards = questsAndRewards.Where(x => x.quest.Id == "64ee99639878a0569d6ec8c9"); // Broadcast - Part 5
+                            }
+                            else if (__instance.Offer_0.Requirements.Any(r => r.TemplateId == "5c0530ee86f774697952d952")) // ledx
+                            {
+                                questsAndRewards = questsAndRewards.Where(x => x.quest.Id == "64e7b971f9d6fa49d6769b44"); // The Huntsman Path - Big Game
+                            }
+                        }
+
                         if (questsAndRewards.Count() == 1)
                         {
                             questName = questsAndRewards.First().quest.Name;
                         }
 
-                        // If it's still not clear by now, it's either missing or too ambiguous (e.g. Zeus thermal scope) ¯\_(ツ)_/¯
+                        // If it's not clear by now, it's either missing or still too ambiguous ¯\_(ツ)_/¯
                         // Cache the result, even if empty
                         QuestUnlocks.Add(__instance.Offer_0.Id, questName);
                     }

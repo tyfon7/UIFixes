@@ -408,7 +408,6 @@ namespace UIFixes
                 Type = PatchConstants.EftTypes.First(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3212
                 InstanceProperty = AccessTools.Property(Type, "Instance");
                 GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
-
             }
 
             public static QuestCache Instance { get { return new QuestCache(InstanceProperty.GetValue(null)); } }
