@@ -27,7 +27,6 @@ namespace UIFixes
         private const string InspectSection = "4. Inspect Windows";
         private const string InRaidSection = "5. In Raid";
         private const string FleaMarketSection = "6. Flea Market";
-        private const string AdvancedSection = "7. Advanced";
 
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
@@ -37,6 +36,8 @@ namespace UIFixes
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
         public static ConfigEntry<int> MouseScrollMulti { get; set; }
+        public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
+        public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
         // Inventory
         public static ConfigEntry<bool> SwapItems { get; set; }
@@ -51,6 +52,7 @@ namespace UIFixes
         public static ConfigEntry<bool> RememberInspectSize { get; set; }
         public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
         public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
+        public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
@@ -60,10 +62,7 @@ namespace UIFixes
         public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
         public static ConfigEntry<bool> AutoExpandCategories { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
-
-        // Advanced
-        public static ConfigEntry<bool> StyleItemPanel { get; set; }
-        public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; }
+        public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
 
         public static void Init(ConfigFile config)
         {
@@ -115,6 +114,24 @@ namespace UIFixes
                     "How many rows to scroll with the mousewheel",
                     new AcceptableValueRange<int>(1, 10),
                     new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
+                InputSection,
+                "Use Different Scrolling Speed in Raid",
+                false,
+                new ConfigDescription(
+                    "Change PageUp and PageDown to scroll up and down one page",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(MouseScrollMultiInRaid = config.Bind(
+                InputSection,
+                "Mousewheel Scrolling Speed in Raid",
+                1,
+                new ConfigDescription(
+                    "A separate mousewheel scroll speed for in raid.",
+                    new AcceptableValueRange<int>(1, 10),
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Inventory
             configEntries.Add(SwapItems = config.Bind(
@@ -208,6 +225,15 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
+            configEntries.Add(StyleItemPanel = config.Bind(
+                InspectSection,
+                "Style Attribute Panels",
+                true,
+                new ConfigDescription(
+                    "Clean up and colorize item stats",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
             // In Raid
             configEntries.Add(RemoveDisabledActions = config.Bind(
                 InRaidSection,
@@ -255,18 +281,8 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
-            // Advanced
-            configEntries.Add(StyleItemPanel = config.Bind(
-                AdvancedSection,
-                "Style Item Panel",
-                true,
-                new ConfigDescription(
-                    "Clean up and colorize item stats",
-                    null,
-                    new ConfigurationManagerAttributes { IsAdvanced = true })));
-
             configEntries.Add(KeepAddOfferOpenIgnoreMaxOffers = config.Bind(
-                AdvancedSection,
+                FleaMarketSection,
                 "Keep Add Offer Window Open: Ignore Max Offers",
                 false,
                 new ConfigDescription(

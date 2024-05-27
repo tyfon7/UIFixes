@@ -233,7 +233,8 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(PointerEventData data)
             {
-                data.scrollDelta *= Settings.MouseScrollMulti.Value;
+                int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
+                data.scrollDelta *= multi;
             }
         }
     }

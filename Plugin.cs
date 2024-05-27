@@ -1,4 +1,6 @@
 ﻿using BepInEx;
+using Comfort.Common;
+using EFT;
 
 namespace UIFixes
 {
@@ -17,6 +19,7 @@ namespace UIFixes
             new FixWeaponBindsDisplayPatch().Enable();
             FocusFleaOfferNumberPatches.Enable();
             HideoutSearchPatches.Enable();
+            HideoutLevelPatches.Enable();
             InspectWindowResizePatches.Enable();
             InspectWindowStatsPatches.Enable();
             new RemoveDoorActionsPatch().Enable();
@@ -32,6 +35,12 @@ namespace UIFixes
             FleaPrevSearchPatches.Enable();
             KeepOfferWindowOpenPatches.Enable();
             AddOfferClickablePricesPatches.Enable();
+        }
+
+        public static bool InRaid()
+        {
+            bool? inRaid = Singleton<AbstractGame>.Instance?.InRaid;
+            return inRaid.HasValue && inRaid.Value;
         }
     }
 }

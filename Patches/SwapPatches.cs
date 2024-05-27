@@ -1,7 +1,5 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
-using Comfort.Common;
-using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -45,11 +43,6 @@ namespace UIFixes
             new RememberSwapGridHoverPatch().Enable();
             new InspectWindowUpdateStatsOnSwapPatch().Enable();
         }
-        private static bool InRaid()
-        {
-            bool? inRaid = Singleton<AbstractGame>.Instance?.InRaid;
-            return inRaid.HasValue && inRaid.Value;
-        }
 
         private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, object operation)
         {
@@ -91,7 +84,7 @@ namespace UIFixes
             }
 
             string error = wrappedOperation.Error.ToString();
-            if (Settings.SwapImpossibleContainers.Value && !InRaid() && error.StartsWith("No free room"))
+            if (Settings.SwapImpossibleContainers.Value && !Plugin.InRaid() && error.StartsWith("No free room"))
             {
                 // Check if it isn't allowed in that container, if so try to swap
                 if (LastCheckItemFilterId == itemContext.Item.Id && !LastCheckItemFilterResult)
