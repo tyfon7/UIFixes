@@ -227,7 +227,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll)); //type.GetMethod("OnScroll");
+                return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll));
             }
 
             [PatchPrefix]

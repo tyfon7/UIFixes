@@ -31,6 +31,7 @@ namespace UIFixes
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+        public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -84,6 +85,15 @@ namespace UIFixes
                 TransferConfirmationOption.Never,
                 new ConfigDescription(
                     "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(AutofillQuestTurnIns = config.Bind(
+                GeneralSection,
+                "Autofill Quest Item Turn-ins",
+                true,
+                new ConfigDescription(
+                    "Auto-select matching items when turning in quest items. Like pushing the AUTO button for you.",
                     null,
                     new ConfigurationManagerAttributes { })));
 

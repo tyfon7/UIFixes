@@ -36,6 +36,7 @@ namespace UIFixes
             KeepOfferWindowOpenPatches.Enable();
             AddOfferClickablePricesPatches.Enable();
             new AssortUnlocksPatch().Enable();
+            new AutofillQuestItemsPatch().Enable();
         }
 
         public static bool InRaid()

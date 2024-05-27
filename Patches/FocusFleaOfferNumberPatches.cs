@@ -20,10 +20,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                // The parent has a Show() so need to be specific
-                return AccessTools.GetDeclaredMethods(typeof(HandoverRagfairMoneyWindow)).First(
-                    m => m.Name == nameof(HandoverRagfairMoneyWindow.Show) &&
-                    m.GetParameters()[0].ParameterType == typeof(Inventory));
+                return AccessTools.DeclaredMethod(typeof(HandoverRagfairMoneyWindow), nameof(HandoverRagfairMoneyWindow.Show));
             }
 
             [PatchPostfix]
@@ -39,10 +36,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                // The parent has a Show() so need to be specific
-                return AccessTools.GetDeclaredMethods(typeof(HandoverExchangeableItemsWindow)).First(
-                    m => m.Name == nameof(HandoverExchangeableItemsWindow.Show) &&
-                    m.GetParameters()[0].ParameterType == typeof(EExchangeableWindowType));
+                return AccessTools.DeclaredMethod(typeof(HandoverExchangeableItemsWindow), nameof(HandoverExchangeableItemsWindow.Show));
             }
 
             [PatchPostfix]
