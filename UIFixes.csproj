@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>1.5.1</Version>
+    <Version>1.6.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;Dist</Configurations>
@@ -21,6 +21,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<Reference Include="Aki.Common">
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Common.dll</HintPath>
+	</Reference>
 	<Reference Include="Aki.Reflection">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
 	</Reference>
@@ -32,6 +35,9 @@
 	</Reference>
 	<Reference Include="ItemComponent.Types">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+	</Reference>
+	<Reference Include="Newtonsoft.Json">
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
 	</Reference>
 	<Reference Include="Sirenix.Serialization">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>

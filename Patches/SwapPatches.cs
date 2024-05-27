@@ -63,15 +63,6 @@ namespace UIFixes
                 return false;
             }
 
-            // TODO: Remove in 3.9.0 when server bug is fixed
-            // If on the scav inventory screen (aka post-raid scav transfer), swap must be blocked not only between the scav inventory and the stash (normally blocked anyway),
-            // but even within the scav inventory itself, due to the server not handling it. 
-            if ((itemContext.ViewType == EItemViewType.ScavInventory || targetItemContext.ViewType == EItemViewType.ScavInventory)
-                && (itemContext.Item.Owner.ID != PatchConstants.BackEndSession.Profile.Id || targetItemContext.Item.Owner.ID != PatchConstants.BackEndSession.Profile.Id))
-            {
-                return false;
-            }
-
             if (itemContext.Item == targetItemContext.Item || targetItemContext.Item.GetAllParentItems().Contains(itemContext.Item))
             {
                 return false;

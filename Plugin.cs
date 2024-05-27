@@ -35,6 +35,7 @@ namespace UIFixes
             FleaPrevSearchPatches.Enable();
             KeepOfferWindowOpenPatches.Enable();
             AddOfferClickablePricesPatches.Enable();
+            new AssortUnlocksPatch().Enable();
         }
 
         public static bool InRaid()

@@ -38,6 +38,8 @@ import ignore from "ignore";
 import archiver from "archiver";
 import winston from "winston";
 
+const sptPath = "/SPT/3.8.1-debug";
+
 // Get the command line arguments to determine whether to use verbose logging.
 const args = process.argv.slice(2);
 const verbose = args.includes("--verbose") || args.includes("-v");
@@ -113,6 +115,12 @@ async function main() {
         await copyFiles(currentDir, projectDir, buildIgnorePatterns);
         logger.log("success", "Files successfully copied to temporary directory.");
 
+        // Copy output to SPT installation for testing
+        logger.log("info", "Copying output to SPT installation");
+        const sptModPath = path.join(sptPath, "/user/mods/", projectShortName);
+        await fs.copy(projectDir, sptModPath);
+        logger.log("success", `Files successfully copied to ${sptModPath}`);
+
         // Create a zip archive of the project files.
         logger.log("info", "Beginning folder compression...");
         const zipFilePath = path.join(path.dirname(projectDir), `${projectName}.zip`);
@@ -134,7 +142,7 @@ async function main() {
         logger.log("success", "------------------------------------");
         logger.log("success", "Build script completed successfully!");
         logger.log("success", "Your mod package has been created in the 'dist' directory:");
-        logger.log("success", `/${path.relative(process.cwd(), path.join(distDir, `${projectName}.zip`))}`);
+        logger.log("success", `${path.relative(process.cwd(), path.join(distDir, `${projectName}.zip`))}`);
         logger.log("success", "------------------------------------");
         if (!verbose) {
             logger.log("success", "To see a detailed build log, use `npm run buildinfo`.");
