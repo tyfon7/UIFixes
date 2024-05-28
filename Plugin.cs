@@ -24,7 +24,7 @@ namespace UIFixes
             InspectWindowStatsPatches.Enable();
             new RemoveDoorActionsPatch().Enable();
             ScrollPatches.Enable();
-            new StackFirItemsPatch().Enable();
+            StackFirItemsPatches.Enable();
             SwapPatches.Enable();
             SyncScrollPositionPatches.Enable();
             new TransferConfirmPatch().Enable();
