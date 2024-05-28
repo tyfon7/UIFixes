@@ -45,6 +45,10 @@ namespace UIFixes
             QuestCache.InitTypes();
             ItemMarketPricesPanel.InitTypes();
             AddOfferWindow.InitTypes();
+            ItemUiContext.InitTypes();
+            Money.InitTypes();
+            TraderScreensGroup.InitTypes();
+            TradingItemView.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -447,6 +451,71 @@ namespace UIFixes
 
             public RagFairClass Ragfair { get { return (RagFairClass)RagfairField.GetValue(Value); } }
         }
+
+        public class ItemUiContext(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo InventoryControllerField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.ItemUiContext);
+                InventoryControllerField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(InventoryControllerClass));
+            }
+
+            public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
+        }
+
+        public static class Money
+        {
+            public static Type Type { get; private set; }
+            private static MethodInfo GetMoneySumsMethod;
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.First(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null);
+                GetMoneySumsMethod = AccessTools.Method(Type, "GetMoneySums");
+            }
+
+            public static Dictionary<ECurrencyType, int> GetMoneySums(IEnumerable<Item> items) => (Dictionary<ECurrencyType, int>)GetMoneySumsMethod.Invoke(null, [items]);
+        }
+
+        public class TraderScreensGroup(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo UIField;
+            private static MethodInfo UIAddDisposableMethod;
+            private static FieldInfo BuyTabField;
+            private static FieldInfo SellTabField;
+
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.TraderScreensGroup);
+                UIField = AccessTools.Field(Type, "UI");
+                UIAddDisposableMethod = AccessTools.Method(UIField.FieldType, "AddDisposable", [typeof(Action)]);
+                BuyTabField = AccessTools.Field(Type, "_buyTab");
+                SellTabField = AccessTools.Field(Type, "_sellTab");
+            }
+
+            public object UI { get { return UIField.GetValue(Value); } }
+            public void AddDisposable(Action action) => UIAddDisposableMethod.Invoke(UI, [action]);
+            public Tab BuyTab { get { return (Tab)BuyTabField.GetValue(Value); } }
+            public Tab SellTab { get { return (Tab)SellTabField.GetValue(Value); } }
+        }
+
+        public class TradingItemView(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo TraderAssortmentControllerField;
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.DragAndDrop.TradingItemView);
+                TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(TraderAssortmentControllerClass));
+            }
+
+            public TraderAssortmentControllerClass TraderAssortmentControler { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
@@ -464,5 +533,8 @@ namespace UIFixes
         public static R.FiltersPanel R(this FiltersPanel value) => new(value);
         public static R.ItemMarketPricesPanel R(this ItemMarketPricesPanel value) => new(value);
         public static R.AddOfferWindow R(this AddOfferWindow value) => new(value);
+        public static R.ItemUiContext R(this ItemUiContext value) => new(value);
+        public static R.TraderScreensGroup R(this TraderScreensGroup value) => new(value);
+        public static R.TradingItemView R(this TradingItemView value) => new(value);
     }
 }

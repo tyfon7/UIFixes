@@ -37,6 +37,8 @@ namespace UIFixes
             AddOfferClickablePricesPatches.Enable();
             new AssortUnlocksPatch().Enable();
             new AutofillQuestItemsPatch().Enable();
+            InsureContextMenuPatches.Enable();
+            TradingAutoSwitchPatches.Enable();
         }
 
         public static bool InRaid()

@@ -32,6 +32,7 @@ namespace UIFixes
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
         public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
+        public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -94,6 +95,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Auto-select matching items when turning in quest items. Like pushing the AUTO button for you.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(AutoSwitchTrading = config.Bind(
+                GeneralSection,
+                "Autoswitch Buy/Sell when Trading",
+                true,
+                new ConfigDescription(
+                    "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
                     null,
                     new ConfigurationManagerAttributes { })));
 
