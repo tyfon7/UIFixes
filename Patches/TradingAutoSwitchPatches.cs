@@ -83,14 +83,18 @@ namespace UIFixes
                     __instance.ItemContext.CloseDependentWindows();
                     __instance.HideTooltip();
                     Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
+
                     SellTab.OnPointerClick(null);
+
                     return false;
                 }
 
                 if (___bool_8)
                 {
                     tradingItemView.TraderAssortmentControler.SelectItem(__instance.Item);
+
                     BuyTab.OnPointerClick(null);
+
                     return false;
                 }
 
