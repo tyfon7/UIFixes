@@ -13,12 +13,17 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!)
 - Option to synchronize stash scroll position everywhere your stash is visible
 
-## Flea market ✨
-- ✨ Filter history remembers previous searches and filters, and adds a new BACK button to return to the previous results.
-- ✨ Auto-expand categories when there's space to do so
+## Traders
+- ✨ Autoswitch between buy and sell when you click trader items or control-click your own items
+- ✨ Insure items directly from the context menu
+- ✨ Autoselect quest items when turning in
+
+## Flea market 
+- Filter history remembers previous searches and filters, and adds a new BACK button to return to the previous results.
+- Auto-expand categories when there's space to do so
 - ✨ Locked trader item tooltip reveals which specific quest will unlock it
-- ✨ Option to keep the Add Offer window open after placing your offer
-- ✨ Set prices in the Add Offer window by clicking the min/avg/max market prices
+- Option to keep the Add Offer window open after placing your offer
+- Set prices in the Add Offer window by clicking the min/avg/max market prices
 
 ## Doors
 - Remove the unimplemented actions like "Bang & clear" that, lets face it, are never going to happen anyway.
@@ -39,7 +44,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 
 ## Hideout
-- Remember search text when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+- Remember window state when you leave hideout without closing (e.g. when searching for a recipe item on flea)
 
 ## Mail
 - Skips "You can return to this later" warnings when not transferring all items (optional, defaults ON)

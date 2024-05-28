@@ -121,6 +121,12 @@ async function main() {
         await fs.copy(projectDir, sptModPath);
         logger.log("success", `Files successfully copied to ${sptModPath}`);
 
+        // Copy output to parent dist folder
+        logger.log("info", "Copying output to SPT installation");
+        const parentDistPath = path.join(currentDir, "../dist/user/mods/", projectShortName);
+        await fs.copy(projectDir, parentDistPath);
+        logger.log("success", `Files successfully copied to ${parentDistPath}`);
+
         // Create a zip archive of the project files.
         logger.log("info", "Beginning folder compression...");
         const zipFilePath = path.join(path.dirname(projectDir), `${projectName}.zip`);
