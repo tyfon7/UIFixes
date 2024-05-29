@@ -25,7 +25,7 @@ namespace UIFixes
             new FormatFullValuesPatch().Enable();
         }
 
-        private class CalculateModStatsPatch : ModulePatch
+        public class CalculateModStatsPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -89,7 +89,7 @@ namespace UIFixes
         // I wish I could prefix method_6 and update the compare item with the deep attributes, but that only works when adding a mod
         // When removing, current item and compare item end up the same since current item never considers the mod anyway
         // So I have to forcably call the refresh values method
-        private class CompareModStatsPatch : ModulePatch
+        public class CompareModStatsPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -141,7 +141,7 @@ namespace UIFixes
             }
         }
 
-        private class AddShowHideModStatsButtonPatch : ModulePatch
+        public class AddShowHideModStatsButtonPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -202,7 +202,7 @@ namespace UIFixes
             }
         }
 
-        private class FormatCompactValuesPatch : ModulePatch
+        public class FormatCompactValuesPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -223,7 +223,7 @@ namespace UIFixes
             }
         }
 
-        private class FormatFullValuesPatch : ModulePatch
+        public class FormatFullValuesPatch : ModulePatch
         {
             private static MethodInfo RoundToIntMethod;
             private static MethodInfo ToStringMethod;

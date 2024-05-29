@@ -36,7 +36,7 @@ namespace UIFixes
             new RagfairScreenShowPatch().Enable();
             new OfferViewListCategoryPickedPatch().Enable();
             new OfferViewListDoneLoadingPatch().Enable();
-            new ChangedViewListType().Enable();
+            new ChangedViewListTypePatch().Enable();
 
             Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
             {
@@ -268,7 +268,7 @@ namespace UIFixes
             }
         }
 
-        public class ChangedViewListType : ModulePatch
+        public class ChangedViewListTypePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

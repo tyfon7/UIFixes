@@ -35,7 +35,7 @@ namespace UIFixes
             scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
         }
 
-        private class SyncStashScrollPatch : ModulePatch
+        public class SyncStashScrollPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {

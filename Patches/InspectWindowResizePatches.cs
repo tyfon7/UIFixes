@@ -31,7 +31,7 @@ namespace UIFixes
             new GrowInspectWindowDescriptionPatch().Enable();
         }
 
-        private class SaveInspectWindowSizePatch : ModulePatch
+        public class SaveInspectWindowSizePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -57,7 +57,7 @@ namespace UIFixes
             }
         }
 
-        private class AddInspectWindowButtonsPatch : ModulePatch
+        public class AddInspectWindowButtonsPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -212,7 +212,7 @@ namespace UIFixes
             }
         }
 
-        private class GrowInspectWindowDescriptionPatch : ModulePatch
+        public class GrowInspectWindowDescriptionPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
