@@ -21,7 +21,7 @@ namespace UIFixes
         }
 
         [PatchPostfix]
-        public static async void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
+        public static void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
         {
             if (!Settings.ShowRequiredQuest.Value)
             {
@@ -32,7 +32,7 @@ namespace UIFixes
             {
                 Loading = true;
 
-                string response = await RequestHandler.GetJsonAsync("/uifixes/assortUnlocks");
+                string response = RequestHandler.GetJson("/uifixes/assortUnlocks");
                 if (!String.IsNullOrEmpty(response))
                 {
                     try
