@@ -65,6 +65,7 @@ namespace UIFixes
         public static ConfigEntry<bool> AutoExpandCategories { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
+        public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
         public static void Init(ConfigFile config)
         {
@@ -307,6 +308,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Specifically for the Keep Add Offers Window Open, this setting will keep the window open even if you're at max offers.",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(RememberAutoselectSimilar = config.Bind(
+                FleaMarketSection,
+                "Remember Add Offer Autoselect Similar",
+                true,
+                new ConfigDescription(
+                    "Remember the state of the Autoselect Similar checkbox in the Add Offer window",
                     null,
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 

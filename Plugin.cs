@@ -39,6 +39,7 @@ namespace UIFixes
             new AutofillQuestItemsPatch().Enable();
             InsureContextMenuPatches.Enable();
             TradingAutoSwitchPatches.Enable();
+            AddOfferRememberAutoselectPatches.Enable();
         }
 
         public static bool InRaid()
