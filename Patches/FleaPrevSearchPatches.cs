@@ -65,7 +65,7 @@ namespace UIFixes
                     var addOfferLayout = ____addOfferButton.GetComponent<LayoutElement>();
                     PreviousButton = UnityEngine.Object.Instantiate(____addOfferButton, ____addOfferButton.transform.parent, false);
                     PreviousButton.transform.SetAsFirstSibling();
-                    PreviousButton.SetRawText("< BACK", 20);
+                    PreviousButton.SetRawText("< " + "back".Localized(), 20);
 
                     session.RagFair.OnFilterRuleChanged += (source, clear, updateCategories) => OnFilterRuleChanged(__instance, session);
 
@@ -111,6 +111,7 @@ namespace UIFixes
                 addOfferLabel.localPosition = new Vector3(0f, 0f, 0f);
 
                 // For some reason the widths revert
+                PreviousButton.SetRawText("< " + "back".Localized(), 20); // Update text in case language changes
                 var prevButtonLayout = PreviousButton.GetComponent<LayoutElement>();
                 prevButtonLayout.minWidth = -1;
                 prevButtonLayout.preferredWidth = -1;
