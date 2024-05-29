@@ -41,7 +41,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Show the total stats (including sub-mods) when inspecting mods (optional, toggleable *in* the inspect pane with a new button!)
 - See stats change as you add/remove mods, with color-coded deltas!
 - Remember last window size when you change it, with restore button to resize to default
-- Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
+- Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons. ✨ Now with keybinds
 - Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 
 ## Hideout
