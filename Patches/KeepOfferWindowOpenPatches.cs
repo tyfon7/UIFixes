@@ -40,12 +40,15 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(RequirementView[] ____requirementViews)
+            public static void Postfix(RequirementView[] ____requirementViews, bool ___bool_2)
             {
-                // clear old prices
-                foreach(var requirementView in ____requirementViews)
+                if (Settings.KeepAddOfferOpen.Value && ___bool_2)
                 {
-                    requirementView.ResetRequirementInformation();
+                    // clear old prices
+                    foreach (var requirementView in ____requirementViews)
+                    {
+                        requirementView.ResetRequirementInformation();
+                    }
                 }
 
                 BlockClose = false;

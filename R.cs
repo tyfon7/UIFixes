@@ -442,14 +442,17 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo RagfairField;
+            private static FieldInfo BulkOfferField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.Ragfair.AddOfferWindow);
                 RagfairField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(RagFairClass));
+                BulkOfferField = AccessTools.Field(Type, "bool_0");
             }
 
             public RagFairClass Ragfair { get { return (RagFairClass)RagfairField.GetValue(Value); } }
+            public bool BulkOffer { get { return (bool)BulkOfferField.GetValue(Value); } }
         }
 
         public class ItemUiContext(object value) : Wrapper(value)

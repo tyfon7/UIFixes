@@ -26,24 +26,34 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
+            public static void Postfix(AddOfferWindow __instance, ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
             {
                 var panel = ____pricesPanel.R();
 
                 var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
 
                 Button lowestButton = panel.LowestLabel.GetOrAddComponent<HighlightButton>();
-                lowestButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Minimum.ToString("F0")));
+                lowestButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Minimum));
                 ____pricesPanel.AddDisposable(lowestButton.onClick.RemoveAllListeners);
 
                 Button averageButton = panel.AverageLabel.GetOrAddComponent<HighlightButton>();
-                averageButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Average.ToString("F0")));
+                averageButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Average));
                 ____pricesPanel.AddDisposable(averageButton.onClick.RemoveAllListeners);
 
                 Button maximumButton = panel.MaximumLabel.GetOrAddComponent<HighlightButton>();
-                maximumButton.onClick.AddListener(() => rublesRequirement.method_0(____pricesPanel.Maximum.ToString("F0")));
+                maximumButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Maximum));
                 ____pricesPanel.AddDisposable(maximumButton.onClick.RemoveAllListeners);
             }
+        }
+
+        private static void SetRequirement(AddOfferWindow window, RequirementView requirement, float price)
+        {
+            if (window.R().BulkOffer)
+            {
+                price *= window.Int32_0; // offer item count
+            }
+
+            requirement.method_0(price.ToString("F0"));
         }
 
         public class HighlightButton : Button
