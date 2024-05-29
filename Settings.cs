@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using System.Collections.Generic;
 using System.ComponentModel;
+using UnityEngine;
 
 namespace UIFixes
 {
@@ -54,6 +55,8 @@ namespace UIFixes
         public static ConfigEntry<bool> RememberInspectSize { get; set; }
         public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
         public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
+        public static ConfigEntry<KeyboardShortcut> SnapLeftKeybind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> SnapRightKeybind { get; set; }
         public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
 
         // In Raid
@@ -243,6 +246,24 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Automatically stretch the inspect window to fit as much of the description as possible",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(SnapLeftKeybind = config.Bind(
+                InspectSection,
+                "Snap Window Left shortcut",
+                new KeyboardShortcut(KeyCode.LeftArrow),
+                new ConfigDescription(
+                    "Keybind to snap the inspect panel to the left half of the screen",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(SnapRightKeybind = config.Bind(
+                InspectSection,
+                "Snap Window Right shortcut",
+                new KeyboardShortcut(KeyCode.RightArrow),
+                new ConfigDescription(
+                    "Keybind to snap the inspect panel to the right half of the screen",
                     null,
                     new ConfigurationManagerAttributes { })));
 

@@ -29,6 +29,7 @@ namespace UIFixes
             new SaveInspectWindowSizePatch().Enable();
             new AddInspectWindowButtonsPatch().Enable();
             new GrowInspectWindowDescriptionPatch().Enable();
+            new LeftRightKeybindsPatch().Enable();
         }
 
         public class SaveInspectWindowSizePatch : ModulePatch
@@ -150,11 +151,7 @@ namespace UIFixes
                 leftImage.overrideSprite = null;
                 leftImage.SetNativeSize();
 
-                leftButton.onClick.AddListener(() =>
-                {
-                    RectTransform inspectRect = (RectTransform)inspectPanel.transform;
-                    inspectRect.anchoredPosition = new Vector2((float)Screen.width / 4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
-                });
+                leftButton.onClick.AddListener(() => SnapLeft(inspectPanel));
                 inspectPanel.AddDisposable(() => leftButton.onClick.RemoveAllListeners());
             }
 
@@ -172,11 +169,7 @@ namespace UIFixes
                 leftImage.overrideSprite = null;
                 leftImage.SetNativeSize();
 
-                rightButton.onClick.AddListener(() =>
-                {
-                    RectTransform inspectRect = (RectTransform)inspectPanel.transform;
-                    inspectRect.anchoredPosition = new Vector2((float)Screen.width * 3f/4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
-                });
+                rightButton.onClick.AddListener(() => SnapRight(inspectPanel));
                 inspectPanel.AddDisposable(() => rightButton.onClick.RemoveAllListeners());
             }
 
@@ -192,6 +185,18 @@ namespace UIFixes
 
                 layoutRect.CorrectPositionResolution(default);
             }
+        }
+
+        private static void SnapLeft(ItemSpecificationPanel panel)
+        {
+            RectTransform inspectRect = (RectTransform)panel.transform;
+            inspectRect.anchoredPosition = new Vector2((float)Screen.width / 4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
+        }
+
+        private static void SnapRight(ItemSpecificationPanel panel)
+        {
+            RectTransform inspectRect = (RectTransform)panel.transform;
+            inspectRect.anchoredPosition = new Vector2((float)Screen.width * 3f / 4f / inspectRect.lossyScale.x, inspectRect.anchoredPosition.y);
         }
 
         private static void StretchDescription(LayoutElement inspectLayout)
@@ -226,6 +231,28 @@ namespace UIFixes
                 if (inspectWindow != null)
                 {
                     StretchDescription(inspectWindow.GetComponent<LayoutElement>());
+                }
+            }
+        }
+
+        public class LeftRightKeybindsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Update));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ItemSpecificationPanel __instance)
+            {
+                if (Settings.SnapLeftKeybind.Value.IsDown())
+                {
+                    SnapLeft(__instance);
+                }
+
+                if (Settings.SnapRightKeybind.Value.IsDown())
+                {
+                    SnapRight(__instance);
                 }
             }
         }
