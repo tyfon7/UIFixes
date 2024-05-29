@@ -10,7 +10,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - Rebind Home/End, PageUp/PageDown to work like they do in every other app ever released in the history of the world.
 - Customizable mouse scrolling speed
 - Fix item tooltips if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
-- Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!)
+- Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!). ✨ Top-up too!
 - Option to synchronize stash scroll position everywhere your stash is visible
 
 ## Traders
@@ -24,6 +24,7 @@ Tarkov is full of annoyances but we can fix them! Sometimes.
 - ✨ Locked trader item tooltip reveals which specific quest will unlock it
 - Option to keep the Add Offer window open after placing your offer
 - Set prices in the Add Offer window by clicking the min/avg/max market prices
+- ✨ Autoselect Similar checkbox is remembered across sessions and application restarts
 
 ## Doors
 - Remove the unimplemented actions like "Bang & clear" that, lets face it, are never going to happen anyway.
