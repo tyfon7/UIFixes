@@ -1,5 +1,4 @@
 ﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
@@ -20,7 +19,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.Show), [typeof(Item), typeof(Item), typeof(InventoryControllerClass), typeof(ISession)]);
+                return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.Awake));
             }
 
             [PatchPrefix]
@@ -42,7 +41,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.Show), [typeof(Item), typeof(InventoryControllerClass), typeof(LootItemClass[])]);
+                return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.Awake));
             }
 
             [PatchPrefix]
