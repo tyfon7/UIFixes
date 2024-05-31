@@ -33,6 +33,9 @@
 	<Reference Include="Comfort">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
 	</Reference>
+	<Reference Include="Comfort.Unity">
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
+	</Reference>
 	<Reference Include="ItemComponent.Types">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
 	</Reference>

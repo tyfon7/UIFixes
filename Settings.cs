@@ -32,6 +32,7 @@ namespace UIFixes
         // General
         public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
         public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+        public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
         public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
         public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
 
@@ -90,6 +91,15 @@ namespace UIFixes
                 TransferConfirmationOption.Never,
                 new ConfigDescription(
                     "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(KeepMessagesOpen = config.Bind(
+                GeneralSection,
+                "Keep Messages Window Open After Transfer",
+                true,
+                new ConfigDescription(
+                    "After receiving items from a transfer, reopen the messages window where you left off",
                     null,
                     new ConfigurationManagerAttributes { })));
 

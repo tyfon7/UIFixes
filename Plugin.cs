@@ -40,6 +40,7 @@ namespace UIFixes
             InsureContextMenuPatches.Enable();
             TradingAutoSwitchPatches.Enable();
             AddOfferRememberAutoselectPatches.Enable();
+            KeepMessagesOpenPatches.Enable();
         }
 
         public static bool InRaid()
