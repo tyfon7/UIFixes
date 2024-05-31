@@ -15,9 +15,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.8.1-debug</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.8.1</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.8.1</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.8.3-debug</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.8.3</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.8.3</PathToSPT>
   </PropertyGroup>
 
   <ItemGroup>
