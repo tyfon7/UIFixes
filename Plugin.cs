@@ -41,6 +41,7 @@ namespace UIFixes
             TradingAutoSwitchPatches.Enable();
             AddOfferRememberAutoselectPatches.Enable();
             KeepMessagesOpenPatches.Enable();
+            new FocusTradeQuantityPatch().Enable();
         }
 
         public static bool InRaid()
