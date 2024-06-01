@@ -49,6 +49,8 @@ namespace UIFixes
             Money.InitTypes();
             TraderScreensGroup.InitTypes();
             TradingItemView.InitTypes();
+            GridWindow.InitTypes();
+            GridSortPanel.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -459,14 +461,17 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo InventoryControllerField;
+            private static FieldInfo GridWindowTemplateField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.ItemUiContext);
                 InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryControllerClass));
+                GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
             }
 
             public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
+            public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
         }
 
         public static class Money
@@ -491,7 +496,6 @@ namespace UIFixes
             private static FieldInfo BuyTabField;
             private static FieldInfo SellTabField;
 
-
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.TraderScreensGroup);
@@ -511,6 +515,7 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo TraderAssortmentControllerField;
+
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.TradingItemView);
@@ -518,6 +523,34 @@ namespace UIFixes
             }
 
             public TraderAssortmentControllerClass TraderAssortmentControler { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+        }
+
+        public class GridWindow(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo GridSortPanelField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.GridWindow);
+                GridSortPanelField = AccessTools.Field(Type, "_sortPanel");
+            }
+
+            public EFT.UI.DragAndDrop.GridSortPanel GridSortPanel { get { return (EFT.UI.DragAndDrop.GridSortPanel)GridSortPanelField.GetValue(Value); } }
+        }
+
+        public class GridSortPanel(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo ButtonField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.DragAndDrop.GridSortPanel);
+                ButtonField = AccessTools.Field(Type, "_button");
+            }
+
+            public Button Button { get { return (Button)ButtonField.GetValue(Value); } }
         }
     }
 
@@ -539,5 +572,7 @@ namespace UIFixes
         public static R.ItemUiContext R(this ItemUiContext value) => new(value);
         public static R.TraderScreensGroup R(this TraderScreensGroup value) => new(value);
         public static R.TradingItemView R(this TradingItemView value) => new(value);
+        public static R.GridWindow R(this GridWindow value) => new(value);
+        public static R.GridSortPanel R(this GridSortPanel value) => new(value);
     }
 }

@@ -24,6 +24,8 @@ namespace UIFixes
 
         private const float ButtonPadding = 3f;
 
+        public static Image ButtonBackground; // Nice gray background for the new buttons
+
         public static void Enable()
         {
             new SaveInspectWindowSizePatch().Enable();
@@ -75,7 +77,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0)
+            public static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0, ItemUiContext ___itemUiContext_0)
             {
                 if (Settings.LockInspectPreviewSize.Value)
                 {
@@ -84,6 +86,12 @@ namespace UIFixes
                     {
                         previewPanel.flexibleHeight = -1;
                     }
+                }
+
+                if (ButtonBackground == null)
+                {
+                    // Steal the background image fom gridwindow sort
+                    ButtonBackground = ___itemUiContext_0.R().GridWindowTemplate.R().GridSortPanel.R().Button.image;
                 }
 
                 Button closeButton = __instance.GetComponentsInChildren<Button>().FirstOrDefault(b => b.name == "Close Button");
@@ -103,6 +111,9 @@ namespace UIFixes
                 restoreButton.name = RestoreButtonName;
                 RectTransform restoreRect = (RectTransform)restoreButton.transform;
                 restoreRect.localPosition = new Vector3(templateRect.localPosition.x - 3 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
+
+                Image background = restoreButton.GetComponent<Image>();
+                background.sprite = ButtonBackground.sprite;
 
                 Image restoreImage = restoreButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
                 restoreImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.EffectiveDist);
@@ -146,6 +157,9 @@ namespace UIFixes
                 RectTransform leftRect = (RectTransform)leftButton.transform;
                 leftRect.localPosition = new Vector3(templateRect.localPosition.x - 2 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
 
+                Image background = leftButton.GetComponent<Image>();
+                background.sprite = ButtonBackground.sprite;
+
                 Image leftImage = leftButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
                 leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
                 leftImage.overrideSprite = null;
@@ -162,6 +176,9 @@ namespace UIFixes
                 Button rightButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
                 RectTransform rightRect = (RectTransform)rightButton.transform;
                 rightRect.localPosition = new Vector3(templateRect.localPosition.x - (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
+
+                Image background = rightButton.GetComponent<Image>();
+                background.sprite = ButtonBackground.sprite;
 
                 Image leftImage = rightButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
                 leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
