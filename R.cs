@@ -105,7 +105,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().First(t => t.GetField("availableSearch") != null); // ProductionPanel.Class1631
+                Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().Single(t => t.GetField("availableSearch") != null); // ProductionPanel.Class1631
                 ProductionPanelField = AccessTools.Field(Type, "productionPanel_0");
             }
 
@@ -119,7 +119,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.First(t => t.GetField("endProduct") != null); // GClass1923
+                Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass1923
                 EndProductField = AccessTools.Field(Type, "endProduct");
             }
 
@@ -150,8 +150,8 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.ItemSpecificationPanel);
-                CompactCharacteristicPanelsField = AccessTools.GetDeclaredFields(Type).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, EFT.UI.CompactCharacteristicPanel>>).IsAssignableFrom(f.FieldType));
-                CompactCharacteristicDropdownsField = AccessTools.GetDeclaredFields(Type).First(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, EFT.UI.CompactCharacteristicDropdownPanel>>).IsAssignableFrom(f.FieldType));
+                CompactCharacteristicPanelsField = AccessTools.GetDeclaredFields(Type).Single(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, EFT.UI.CompactCharacteristicPanel>>).IsAssignableFrom(f.FieldType));
+                CompactCharacteristicDropdownsField = AccessTools.GetDeclaredFields(Type).Single(f => typeof(IEnumerable<KeyValuePair<ItemAttributeClass, EFT.UI.CompactCharacteristicDropdownPanel>>).IsAssignableFrom(f.FieldType));
 
                 RefreshMethod = AccessTools.Method(Type, nameof(EFT.UI.ItemSpecificationPanel.smethod_1), null, [typeof(EFT.UI.CompactCharacteristicPanel)]);
             }
@@ -205,7 +205,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
+                Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
                 LocationInGridField = AccessTools.Field(Type, "LocationInGrid");
                 GridProperty = AccessTools.Property(Type, "Grid");
             }
@@ -226,7 +226,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.First(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2767
+                Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2767
                 SlotField = AccessTools.Field(Type, "Slot");
             }
 
@@ -247,7 +247,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.GridView);
-                TraderControllerField = AccessTools.GetDeclaredFields(Type).First(f => f.FieldType == typeof(TraderControllerClass));
+                TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass));
                 NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
             }
 
@@ -280,7 +280,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2797>
-                ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().First(m => m.Name == "op_Implicit" && m.ReturnType == GridViewCanAcceptOperation.Type);
+                ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == GridViewCanAcceptOperation.Type);
             }
 
             public object ToGridViewCanAcceptOperation() => ImplicitCastToGridViewCanAcceptOperationMethod.Invoke(null, [Value]);
@@ -409,7 +409,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.First(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3212
+                Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3212
                 InstanceProperty = AccessTools.Property(Type, "Instance");
                 GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
             }
@@ -447,7 +447,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.Ragfair.AddOfferWindow);
-                RagfairField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(RagFairClass));
+                RagfairField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(RagFairClass));
                 BulkOfferField = AccessTools.Field(Type, "bool_0");
             }
 
@@ -463,7 +463,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.ItemUiContext);
-                InventoryControllerField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(InventoryControllerClass));
+                InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryControllerClass));
             }
 
             public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
@@ -476,7 +476,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.First(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null);
+                Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null);
                 GetMoneySumsMethod = AccessTools.Method(Type, "GetMoneySums");
             }
 
@@ -514,7 +514,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.TradingItemView);
-                TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).First(t => t.FieldType == typeof(TraderAssortmentControllerClass));
+                TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(TraderAssortmentControllerClass));
             }
 
             public TraderAssortmentControllerClass TraderAssortmentControler { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }

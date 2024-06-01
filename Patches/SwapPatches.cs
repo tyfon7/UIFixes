@@ -442,7 +442,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = PatchConstants.EftTypes.First(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2510
+                Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2510
                 return AccessTools.Method(type, "CheckItemFilter");
             }
 

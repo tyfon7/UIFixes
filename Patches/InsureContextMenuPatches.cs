@@ -48,10 +48,10 @@ namespace UIFixes
         public static void Enable()
         {
             // The context menus in the inventory and the trading screen inventory are *completely different code*
-            InventoryRootInteractionsType = PatchConstants.EftTypes.First(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3023
+            InventoryRootInteractionsType = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3023
 
             // GClass3032 - this is nuts to find, have to inspect a static enum array
-            TradingRootInteractionsType = PatchConstants.EftTypes.First(t =>
+            TradingRootInteractionsType = PatchConstants.EftTypes.Single(t =>
             {
                 var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
                 if (enumerableField != null)

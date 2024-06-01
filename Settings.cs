@@ -96,7 +96,7 @@ namespace UIFixes
 
             configEntries.Add(KeepMessagesOpen = config.Bind(
                 GeneralSection,
-                "Keep Messages Window Open After Transfer",
+                "Keep Messages Window Open",
                 true,
                 new ConfigDescription(
                     "After receiving items from a transfer, reopen the messages window where you left off",
