@@ -245,12 +245,13 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemSpecificationPanel __instance)
             {
-                if (Settings.SnapLeftKeybind.Value.IsDown())
+                bool isTopWindow = __instance.transform.GetSiblingIndex() == __instance.transform.parent.childCount - 1;
+                if (Settings.SnapLeftKeybind.Value.IsDown() && isTopWindow)
                 {
                     SnapLeft(__instance);
                 }
 
-                if (Settings.SnapRightKeybind.Value.IsDown())
+                if (Settings.SnapRightKeybind.Value.IsDown() && isTopWindow)
                 {
                     SnapRight(__instance);
                 }
