@@ -24,6 +24,7 @@ namespace UIFixes
         {
             // Order is significant, as some reference each other
             UIElement.InitUITypes();
+            UIInputNode.InitUITypes();
             UIContext.InitTypes();
             DialogWindow.InitTypes();
             ControlSettings.InitTypes();
@@ -67,6 +68,18 @@ namespace UIFixes
             public static void InitUITypes()
             {
                 UIField = AccessTools.Field(typeof(EFT.UI.UIElement), "UI");
+            }
+
+            public UIContext UI { get { return new UIContext(UIField.GetValue(Value)); } }
+        }
+
+        public class UIInputNode(object value) : Wrapper(value)
+        {
+            private static FieldInfo UIField;
+
+            public static void InitUITypes()
+            {
+                UIField = AccessTools.Field(typeof(EFT.UI.UIInputNode), "UI");
             }
 
             public UIContext UI { get { return new UIContext(UIField.GetValue(Value)); } }
@@ -510,7 +523,7 @@ namespace UIFixes
             public static Dictionary<ECurrencyType, int> GetMoneySums(IEnumerable<Item> items) => (Dictionary<ECurrencyType, int>)GetMoneySumsMethod.Invoke(null, [items]);
         }
 
-        public class TraderScreensGroup(object value) : UIElement(value)
+        public class TraderScreensGroup(object value) : UIInputNode(value)
         {
             public static Type Type { get; private set; }
             private static FieldInfo BuyTabField;
