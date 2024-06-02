@@ -35,7 +35,7 @@ namespace UIFixes
                 BuyTab = wrappedInstance.BuyTab;
                 SellTab = wrappedInstance.SellTab;
 
-                wrappedInstance.AddDisposable(() =>
+                wrappedInstance.UI.AddDisposable(() =>
                 {
                     BuyTab = null;
                     SellTab = null;

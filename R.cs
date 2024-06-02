@@ -23,6 +23,8 @@ namespace UIFixes
         public static void Init()
         {
             // Order is significant, as some reference each other
+            UIElement.InitUITypes();
+            UIContext.InitTypes();
             DialogWindow.InitTypes();
             ControlSettings.InitTypes();
             ProductionPanel.InitTypes();
@@ -56,6 +58,32 @@ namespace UIFixes
         public abstract class Wrapper(object value)
         {
             public object Value { get; protected set; } = value;
+        }
+
+        public class UIElement(object value) : Wrapper(value)
+        {
+            private static FieldInfo UIField;
+
+            public static void InitUITypes()
+            {
+                UIField = AccessTools.Field(typeof(EFT.UI.UIElement), "UI");
+            }
+
+            public UIContext UI { get { return new UIContext(UIField.GetValue(Value)); } }
+        }
+
+        public class UIContext(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static MethodInfo AddDisposableActionMethod;
+
+            public static void InitTypes()
+            {
+                Type = AccessTools.Field(typeof(EFT.UI.UIElement), "UI").FieldType;
+                AddDisposableActionMethod = AccessTools.Method(Type, "AddDisposable", [typeof(Action)]);
+            }
+
+            public void AddDisposable(Action destroy) => AddDisposableActionMethod.Invoke(Value, [destroy]);
         }
 
         public class DialogWindow(object value) : Wrapper(value)
@@ -288,27 +316,21 @@ namespace UIFixes
             public object ToGridViewCanAcceptOperation() => ImplicitCastToGridViewCanAcceptOperationMethod.Invoke(null, [Value]);
         }
 
-        public class InteractionButtonsContainer(object value) : Wrapper(value)
+        public class InteractionButtonsContainer(object value) : UIElement(value)
         {
             public static Type Type { get; private set; }
             private static FieldInfo ButtonTemplateField;
             private static FieldInfo ContainerField;
-            private static FieldInfo UIField;
-            private static MethodInfo UIAddDisposableMethod;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.InteractionButtonsContainer);
                 ButtonTemplateField = AccessTools.Field(Type, "_buttonTemplate");
                 ContainerField = AccessTools.Field(Type, "_buttonsContainer");
-                UIField = AccessTools.Field(Type, "UI"); // GClass767
-                UIAddDisposableMethod = AccessTools.Method(UIField.FieldType, "AddDisposable", [typeof(Action)]);
             }
 
             public SimpleContextMenuButton ButtonTemplate { get { return (SimpleContextMenuButton)ButtonTemplateField.GetValue(Value); } }
             public Transform Container { get { return (Transform)ContainerField.GetValue(Value); } }
-            public object UI { get { return UIField.GetValue(Value); } }
-            public void AddDisposable(Action action) => UIAddDisposableMethod.Invoke(UI, [action]);
         }
 
         public class ContextMenuButton(object value) : Wrapper(value)
@@ -488,25 +510,19 @@ namespace UIFixes
             public static Dictionary<ECurrencyType, int> GetMoneySums(IEnumerable<Item> items) => (Dictionary<ECurrencyType, int>)GetMoneySumsMethod.Invoke(null, [items]);
         }
 
-        public class TraderScreensGroup(object value) : Wrapper(value)
+        public class TraderScreensGroup(object value) : UIElement(value)
         {
             public static Type Type { get; private set; }
-            private static FieldInfo UIField;
-            private static MethodInfo UIAddDisposableMethod;
             private static FieldInfo BuyTabField;
             private static FieldInfo SellTabField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.TraderScreensGroup);
-                UIField = AccessTools.Field(Type, "UI");
-                UIAddDisposableMethod = AccessTools.Method(UIField.FieldType, "AddDisposable", [typeof(Action)]);
                 BuyTabField = AccessTools.Field(Type, "_buyTab");
                 SellTabField = AccessTools.Field(Type, "_sellTab");
             }
 
-            public object UI { get { return UIField.GetValue(Value); } }
-            public void AddDisposable(Action action) => UIAddDisposableMethod.Invoke(UI, [action]);
             public Tab BuyTab { get { return (Tab)BuyTabField.GetValue(Value); } }
             public Tab SellTab { get { return (Tab)SellTabField.GetValue(Value); } }
         }
@@ -552,6 +568,8 @@ namespace UIFixes
 
             public Button Button { get { return (Button)ButtonField.GetValue(Value); } }
         }
+
+        public class RepairerParametersPanel(object value) : UIElement(value) { }
     }
 
     public static class RExtentensions
@@ -574,5 +592,6 @@ namespace UIFixes
         public static R.TradingItemView R(this TradingItemView value) => new(value);
         public static R.GridWindow R(this GridWindow value) => new(value);
         public static R.GridSortPanel R(this GridSortPanel value) => new(value);
+        public static R.RepairerParametersPanel R(this RepairerParametersPanel value) => new(value);
     }
 }

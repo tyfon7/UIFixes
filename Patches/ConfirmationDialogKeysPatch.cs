@@ -1,31 +1,64 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.InputSystem;
+using EFT.UI;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
 
 namespace UIFixes
 {
-    public class ConfirmationDialogKeysPatch : ModulePatch
+    public static class ConfirmDialogKeysPatches
     {
-        protected override MethodBase GetTargetMethod()
+        public static void Enable()
         {
-            return AccessTools.Method(R.DialogWindow.Type, "Update");
+            new DialogWindowPatch().Enable();
+            new SplitDialogPatch().Enable();
         }
 
-        [PatchPostfix]
-        public static void Postfix(object __instance, bool ___bool_0)
+        public class DialogWindowPatch : ModulePatch
         {
-            var instance = new R.DialogWindow(__instance);
-
-            if (!___bool_0)
+            protected override MethodBase GetTargetMethod()
             {
-                return;
+                return AccessTools.Method(R.DialogWindow.Type, "Update");
             }
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+            [PatchPostfix]
+            public static void Postfix(object __instance, bool ___bool_0)
             {
-                instance.Accept();
-                return;
+                var instance = new R.DialogWindow(__instance);
+
+                if (!___bool_0)
+                {
+                    return;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+                {
+                    instance.Accept();
+                    return;
+                }
+            }
+        }
+
+        public class SplitDialogPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.TranslateCommand));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(ECommand command, ref InputNode.ETranslateResult __result, SplitDialog ___splitDialog_0)
+            {
+                // It's wild to me that they implement UI keyboard shortcuts via the in-raid movement keybinds
+                if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf && command == ECommand.Jump)
+                {
+                    ___splitDialog_0.Accept();
+                    __result = InputNode.ETranslateResult.Block;
+                    return false;
+                }
+
+                return true;
             }
         }
     }

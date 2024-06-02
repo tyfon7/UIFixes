@@ -13,9 +13,9 @@ namespace UIFixes
 
             R.Init();
 
-            new ConfirmationDialogKeysPatch().Enable();
+            ConfirmDialogKeysPatches.Enable();
             new FixMailRecieveAllPatch().Enable();
-            new FixTooltipPatch().Enable();
+            FixTooltipPatches.Enable();
             new FixWeaponBindsDisplayPatch().Enable();
             FocusFleaOfferNumberPatches.Enable();
             HideoutSearchPatches.Enable();
@@ -42,6 +42,7 @@ namespace UIFixes
             AddOfferRememberAutoselectPatches.Enable();
             KeepMessagesOpenPatches.Enable();
             new FocusTradeQuantityPatch().Enable();
+            new RememberRepairerPatch().Enable();
         }
 
         public static bool InRaid()

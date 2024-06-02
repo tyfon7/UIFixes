@@ -192,7 +192,7 @@ namespace UIFixes
                 contextInteractions.OnRedrawRequired += createButton;
 
                 // And unsubscribe when the window goes away
-                buttonsContainer.AddDisposable(() => 
+                buttonsContainer.UI.AddDisposable(() => 
                 {
                     contextInteractions.OnRedrawRequired -= createButton;
                     Settings.ShowModStats.SettingChanged -= onSettingChanged;
