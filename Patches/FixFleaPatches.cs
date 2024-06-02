@@ -1,12 +1,6 @@
 ﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
-using EFT.Quests;
-using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
@@ -23,6 +17,7 @@ namespace UIFixes
             new ToggleOnOpenPatch().Enable();
 
             new OfferItemFixMaskPatch().Enable();
+            new BlockActionsClickThroughPatch().Enable();
         }
 
         public class DoNotToggleOnMouseOverPatch : ModulePatch
@@ -74,6 +69,26 @@ namespace UIFixes
                 {
                     item.maskable = true;
                 }
+            }
+        }
+
+        public class BlockActionsClickThroughPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(OfferView), nameof(OfferView.Awake));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(OfferView __instance)
+            {
+                // Intercept clicks on the actions area
+                var blocker = __instance.transform.Find("Actions").gameObject.GetOrAddComponent<Button>();
+                blocker.transition = Selectable.Transition.None;
+
+                // But enable clicks specifically on the minimize button
+                var minimizeButton = __instance.transform.Find("Actions/MinimizeButton").gameObject.GetOrAddComponent<Button>();
+                minimizeButton.onClick.AddListener(() => __instance.OnPointerClick(null));
             }
         }
     }

@@ -93,7 +93,7 @@ namespace UIFixes
             public static void Postfix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton)
             {
                 // Delete the upper right display options, since they aren't even implemented
-                var tabs = __instance.GetComponentsInChildren<RectTransform>().FirstOrDefault(c => c.name == "Tabs");
+                var tabs = __instance.transform.Find("TopRightPanel/Tabs");
                 tabs?.gameObject.SetActive(false);
 
                 if (!Settings.EnableFleaHistory.Value)
@@ -107,7 +107,7 @@ namespace UIFixes
                 addOfferLayout.preferredWidth = -1;
 
                 // Recenter the add offer text
-                var addOfferLabel = ____addOfferButton.GetComponentsInChildren<RectTransform>().First(c => c.name == "SizeLabel");
+                var addOfferLabel = ____addOfferButton.transform.Find("SizeLabel");
                 addOfferLabel.localPosition = new Vector3(0f, 0f, 0f);
 
                 // For some reason the widths revert

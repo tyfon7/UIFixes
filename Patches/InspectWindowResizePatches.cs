@@ -20,8 +20,6 @@ namespace UIFixes
         private const float DefaultPreferredWidth = 670f;
         private const float DefaultPreferredHeight = 500f;
 
-        private const string RestoreButtonName = "Restore";
-
         private const float ButtonPadding = 3f;
 
         public static Image ButtonBackground; // Nice gray background for the new buttons
@@ -52,7 +50,7 @@ namespace UIFixes
                 SavedPreferredWidth = ___layoutElement_0.preferredWidth;
                 SavedPreferredHeight = ___layoutElement_0.preferredHeight;
 
-                Button resizeButton = ___layoutElement_0.GetComponentsInChildren<Button>(true).FirstOrDefault(b => b.name == RestoreButtonName);
+                Button resizeButton = ___layoutElement_0.transform.Find("Inner/Caption Panel/Restore")?.GetComponent<Button>();
                 if (resizeButton != null && !resizeButton.IsActive())
                 {
                     resizeButton.gameObject.SetActive(true);
@@ -81,7 +79,7 @@ namespace UIFixes
             {
                 if (Settings.LockInspectPreviewSize.Value)
                 {
-                    LayoutElement previewPanel = __instance.GetComponentsInChildren<LayoutElement>().FirstOrDefault(e => e.name == "Preview Panel");
+                    LayoutElement previewPanel = __instance.transform.Find("Inner/Contents/Preview Panel")?.GetComponent<LayoutElement>();
                     if (previewPanel != null)
                     {
                         previewPanel.flexibleHeight = -1;
@@ -94,7 +92,7 @@ namespace UIFixes
                     ButtonBackground = ___itemUiContext_0.R().GridWindowTemplate.R().GridSortPanel.R().Button.image;
                 }
 
-                Button closeButton = __instance.GetComponentsInChildren<Button>().FirstOrDefault(b => b.name == "Close Button");
+                Button closeButton = __instance.transform.Find("Inner/Caption Panel/Close Button")?.GetComponent<Button>();
                 if (closeButton != null)
                 {
                     CreateRightButton(__instance, closeButton);
@@ -108,14 +106,14 @@ namespace UIFixes
                 RectTransform templateRect = (RectTransform)template.transform;
 
                 Button restoreButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
-                restoreButton.name = RestoreButtonName;
+                restoreButton.name = "Restore";
                 RectTransform restoreRect = (RectTransform)restoreButton.transform;
                 restoreRect.localPosition = new Vector3(templateRect.localPosition.x - 3 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
 
                 Image background = restoreButton.GetComponent<Image>();
                 background.sprite = ButtonBackground.sprite;
 
-                Image restoreImage = restoreButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                Image restoreImage = restoreButton.transform.Find("X").GetComponent<Image>();
                 restoreImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.EffectiveDist);
                 restoreImage.overrideSprite = null;
                 restoreImage.SetNativeSize();
@@ -160,7 +158,7 @@ namespace UIFixes
                 Image background = leftButton.GetComponent<Image>();
                 background.sprite = ButtonBackground.sprite;
 
-                Image leftImage = leftButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                Image leftImage = leftButton.transform.Find("X").GetComponent<Image>();
                 leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
                 leftImage.overrideSprite = null;
                 leftImage.SetNativeSize();
@@ -180,7 +178,7 @@ namespace UIFixes
                 Image background = rightButton.GetComponent<Image>();
                 background.sprite = ButtonBackground.sprite;
 
-                Image leftImage = rightButton.GetComponentsInChildren<Image>().First(i => i.name == "X");
+                Image leftImage = rightButton.transform.Find("X").GetComponent<Image>();
                 leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
                 leftImage.transform.Rotate(0f, 180f, 0f);
                 leftImage.overrideSprite = null;
@@ -223,7 +221,7 @@ namespace UIFixes
                 return;
             }
 
-            LayoutElement scrollArea = inspectLayout.GetComponentsInChildren<LayoutElement>().FirstOrDefault(le => le.name == "Scroll Area");
+            LayoutElement scrollArea = inspectLayout.transform.Find("Inner/Contents/DescriptionPanel/DescriptionPanel/Scroll Area").GetComponent<LayoutElement>();
             if (inspectLayout != null && scrollArea != null && scrollArea.transform.childCount > 0)
             {
                 RectTransform description = (RectTransform)scrollArea.transform.GetChild(0);
