@@ -1,11 +1,14 @@
-import { DependencyContainer } from "tsyringe";
+import type { DependencyContainer } from "tsyringe";
 
 import type { IPreAkiLoadMod } from "@spt-aki/models/external/IPreAkiLoadMod";
 import type { InventoryController } from "@spt-aki/controllers/InventoryController";
 import type { ProfileHelper } from "@spt-aki/helpers/ProfileHelper";
+import type { InRaidHelper } from "@spt-aki/helpers/InRaidHelper";
 import type { StaticRouterModService } from "@spt-aki/services/mod/staticRouter/StaticRouterModService";
 import type { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
 import type { ILogger } from "@spt-aki/models/spt/utils/ILogger";
+import type { IPmcData } from "@spt-aki/models/eft/common/IPmcData";
+import type { JsonUtil } from "@spt-aki/utils/JsonUtil";
 
 class UIFixes implements IPreAkiLoadMod {
     private databaseServer: DatabaseServer;
@@ -17,6 +20,7 @@ class UIFixes implements IPreAkiLoadMod {
 
         const profileHelper = container.resolve<ProfileHelper>("ProfileHelper");
         const staticRouterModService = container.resolve<StaticRouterModService>("StaticRouterModService");
+        const jsonUtil = container.resolve<JsonUtil>("JsonUtil");
 
         // Handle scav profile for post-raid scav transfer swaps (fixed in 3.9.0)
         container.afterResolution(
@@ -31,6 +35,30 @@ class UIFixes implements IPreAkiLoadMod {
                     }
 
                     return original.call(inventoryController, playerData, request, sessionID);
+                };
+            },
+            { frequency: "Always" }
+        );
+
+        // Keep quickbinds for items that aren't actually lost on death
+        container.afterResolution(
+            "InRaidHelper",
+            (_, inRaidHelper: InRaidHelper) => {
+                const original = inRaidHelper.deleteInventory;
+
+                inRaidHelper.deleteInventory = (pmcData: IPmcData, sessionId: string): void => {
+                    // Copy the existing quickbinds
+                    const fastPanel = jsonUtil.clone(pmcData.Inventory.fastPanel);
+
+                    // Nukes the inventory and the fastpanel
+                    original.call(inRaidHelper, pmcData, sessionId);
+
+                    // Restore the quickbinds for items that still exist
+                    for (const index in fastPanel) {
+                        if (pmcData.Inventory.items.find(i => i._id == fastPanel[index])) {
+                            pmcData.Inventory.fastPanel[index] = fastPanel[index];
+                        }
+                    }
                 };
             },
             { frequency: "Always" }
