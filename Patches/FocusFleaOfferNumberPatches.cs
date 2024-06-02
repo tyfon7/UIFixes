@@ -2,9 +2,12 @@
 using EFT.InventoryLogic;
 using EFT.UI.Ragfair;
 using HarmonyLib;
+using System;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIFixes
 {
@@ -24,8 +27,11 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(TMP_InputField ____inputField)
+            public static void Postfix(HandoverRagfairMoneyWindow __instance, TMP_InputField ____inputField)
             {
+                AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
+                allKeybind.Init(__instance.method_9);
+
                 ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 ____inputField.ActivateInputField();
                 ____inputField.Select();
@@ -40,11 +46,32 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(TMP_InputField ____inputField)
+            public static void Postfix(HandoverExchangeableItemsWindow __instance, TMP_InputField ____inputField)
             {
+                AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
+                allKeybind.Init(__instance.method_16);
+
                 ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 ____inputField.ActivateInputField();
                 ____inputField.Select();
+            }
+        }
+
+        public class AllButtonKeybind : MonoBehaviour
+        {
+            private Action purchaseAllAction;
+
+            public void Init(Action purchaseAllAction)
+            {
+                this.purchaseAllAction = purchaseAllAction;
+            }
+
+            public void Update()
+            {
+                if (Settings.PurchaseAllKeybind.Value.IsDown())
+                {
+                    purchaseAllAction();
+                }
             }
         }
     }

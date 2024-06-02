@@ -68,6 +68,7 @@ namespace UIFixes
         public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
         public static ConfigEntry<bool> AutoExpandCategories { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
+        public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
         public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
@@ -330,6 +331,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Don't close the Add Offer window after you place an offer. Note that the window will still close if you are at max offers.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(PurchaseAllKeybind = config.Bind(
+                InspectSection,
+                "Purchase Dialog ALL Shortcut",
+                new KeyboardShortcut(KeyCode.A),
+                new ConfigDescription(
+                    "Keybind to set the quantity to all in the item purchase dialog. Equivalent to clicking the ALL button.",
                     null,
                     new ConfigurationManagerAttributes { })));
 
