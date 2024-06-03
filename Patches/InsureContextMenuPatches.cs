@@ -17,10 +17,9 @@ namespace UIFixes
         private static Type TradingRootInteractionsType;
         private static FieldInfo TradingRootInteractionsItemField;
 
-        private static int PlayerRubles;
-
         private static InsuranceInteractions CurrentInsuranceInteractions = null;
-        private static string CreatedContextMenuButtonTraderId = null;
+        private static RepairInteractions CurrentRepairInteractions = null;
+        private static string CreatedButtonInteractionId = null;
 
         private static readonly HashSet<EItemInfoButton> TradingRootInteractions =
         [
@@ -84,7 +83,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
             {
-                __result = __result.Append(EItemInfoButton.Insure);
+                __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
             }
         }
 
@@ -98,13 +97,21 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
             {
+                Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_1.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
+                int playerRubles = playerCurrencies[ECurrencyType.RUB];
+
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
-                    Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_1.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
-                    PlayerRubles = playerCurrencies[ECurrencyType.RUB];
-
-                    CurrentInsuranceInteractions = new(___item_0, ___itemUiContext_1);
+                    CurrentInsuranceInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
                     CurrentInsuranceInteractions.LoadAsync(() => subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions));
+
+                    return false;
+                }
+
+                if (parentInteraction == EItemInfoButton.Repair)
+                {
+                    CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
+                    subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
                     return false;
                 }
@@ -123,7 +130,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
             {
-                __result = __result.Append(EItemInfoButton.Insure);
+                __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
             }
         }
 
@@ -137,16 +144,24 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(object __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, ItemUiContext ___itemUiContext_0)
             {
+                Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_0.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
+                int playerRubles = playerCurrencies[ECurrencyType.RUB];
+
+                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
+                Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
-                    Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_0.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
-                    PlayerRubles = playerCurrencies[ECurrencyType.RUB];
-
-                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
-                    Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
-
-                    CurrentInsuranceInteractions = new(item, ___itemUiContext_0);
+                    CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
                     CurrentInsuranceInteractions.LoadAsync(() => subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions));
+
+                    return false;
+                }
+
+                if (parentInteraction == EItemInfoButton.Repair)
+                {
+                    CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
+                    subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
                     return false;
                 }
@@ -165,16 +180,16 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(DynamicInteractionClass interaction)
             {
-                if (interaction.IsInsuranceInteraction())
+                if (interaction.IsInsuranceInteraction() || interaction.IsRepairInteraction())
                 {
-                    CreatedContextMenuButtonTraderId = interaction.GetTraderId();
+                    CreatedButtonInteractionId = interaction.Id;
                 }
             }
 
             [PatchPostfix]
             public static void Postfix()
             {
-                CreatedContextMenuButtonTraderId = null;
+                CreatedButtonInteractionId = null;
             }
         }
 
@@ -188,9 +203,16 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(SimpleContextMenuButton button)
             {
-                if (!String.IsNullOrEmpty(CreatedContextMenuButtonTraderId) && CurrentInsuranceInteractions != null)
+                if (!String.IsNullOrEmpty(CreatedButtonInteractionId))
                 {
-                    button.SetButtonInteraction(CurrentInsuranceInteractions.GetButtonInteraction(CreatedContextMenuButtonTraderId));
+                    if (InsuranceInteractions.IsInsuranceInteractionId(CreatedButtonInteractionId) && CurrentInsuranceInteractions != null)
+                    {
+                        button.SetButtonInteraction(CurrentInsuranceInteractions.GetButtonInteraction(CreatedButtonInteractionId));
+                    }
+                    else if (RepairInteractions.IsRepairInteractionId(CreatedButtonInteractionId) && CurrentRepairInteractions != null)
+                    {
+                        button.SetButtonInteraction(CurrentRepairInteractions.GetButtonInteraction(CreatedButtonInteractionId));
+                    }
                 }
             }
         }
@@ -207,94 +229,6 @@ namespace UIFixes
             {
                 CurrentInsuranceInteractions = null;
             }
-        }
-
-        public class InsuranceInteractions(Item item, ItemUiContext uiContext) : ItemInfoInteractionsAbstractClass<InsuranceInteractions.EInsurers>(uiContext)
-        {
-            private readonly InsuranceCompanyClass insurance = uiContext.Session.InsuranceCompany;
-            private readonly Item item = item;
-            private List<ItemClass> items;
-            private readonly Dictionary<string, int> prices = [];
-
-            public void LoadAsync(Action callback)
-            {
-                ItemClass itemClass = ItemClass.FindOrCreate(item);
-                items = insurance.GetItemChildren(itemClass).Flatten(insurance.GetItemChildren).Concat([itemClass])
-                    .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
-                    .ToList();
-
-                insurance.GetInsurePriceAsync(items, _ =>
-                {
-                    foreach (var insurer in insurance.Insurers)
-                    {
-                        int price = this.items.Select(i => insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
-                        prices[insurer.Id] = price;
-
-                        string priceColor = price > PlayerRubles ? "#FF0000" : "#ADB8BC";
-
-                        string text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", insurer.LocalizedName, priceColor, price);
-
-                        base.method_2(MakeInteractionId(insurer.Id), text, () => this.Insure(insurer.Id));
-                    }
-
-                    callback();
-                });
-            }
-
-            public void Insure(string insurerId)
-            {
-                insurance.SelectedInsurerId = insurerId;
-                insurance.InsureItems(this.items, result => { });
-            }
-
-            public IResult GetButtonInteraction(string traderId)
-            {
-                if (prices[traderId] > PlayerRubles)
-                {
-                    return new FailedResult("ragfair/Not enough money", 0);
-                }
-
-                return SuccessfulResult.New;
-            }
-
-            public override void ExecuteInteractionInternal(EInsurers interaction)
-            {
-            }
-
-            public override bool IsActive(EInsurers button)
-            {
-                return button == EInsurers.None && !this.insurance.Insurers.Any();
-            }
-
-            public override IResult IsInteractive(EInsurers button)
-            {
-                return new FailedResult("No insurers??", 0);
-            }
-
-            public override bool HasIcons
-            {
-                get { return false; }
-            }
-
-            public enum EInsurers
-            {
-                None
-            }
-        }
-
-        private static string MakeInteractionId(string traderId)
-        {
-            return "UIFixesInsurerId:" + traderId;
-        }
-
-        private static bool IsInsuranceInteraction(this DynamicInteractionClass interaction)
-        {
-            return interaction.Id.StartsWith("UIFixesInsurerId:");
-        }
-
-        private static string GetTraderId(this DynamicInteractionClass interaction)
-        {
-            return interaction.Id.Split(':')[1];
         }
     }
 }

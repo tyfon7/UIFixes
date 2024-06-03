@@ -242,27 +242,14 @@ namespace UIFixes
             private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
             {
                 var wrappedFiltersPanel = filtersPanel.R();
-                RagfairFilterButton button;
-                switch (sortType)
+                RagfairFilterButton button = sortType switch
                 {
-                    case ESortType.Barter:
-                        button = wrappedFiltersPanel.BarterButton;
-                        break;
-                    case ESortType.Rating:
-                        button = wrappedFiltersPanel.RatingButton;
-                        break;
-                    case ESortType.OfferItem:
-                        button = wrappedFiltersPanel.OfferItemButton;
-                        break;
-                    case ESortType.ExpirationDate:
-                        button = wrappedFiltersPanel.ExpirationButton;
-                        break;
-                    case ESortType.Price:
-                    default: // Default to price if somehow this falls through
-                        button = wrappedFiltersPanel.PriceButton;
-                        break;
-                }
-
+                    ESortType.Barter => wrappedFiltersPanel.BarterButton,
+                    ESortType.Rating => wrappedFiltersPanel.RatingButton,
+                    ESortType.OfferItem => wrappedFiltersPanel.OfferItemButton,
+                    ESortType.ExpirationDate => wrappedFiltersPanel.ExpirationButton,
+                    _ => wrappedFiltersPanel.PriceButton,
+                };
                 wrappedFiltersPanel.SortDescending = sortDirection;
                 filtersPanel.method_4(button);
             }
