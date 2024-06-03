@@ -71,7 +71,7 @@ namespace UIFixes
 
         public override IResult IsInteractive(EInsurers button)
         {
-            return new FailedResult("No insurers??", 0);
+            return new FailedResult("No insurers?", 0);
         }
 
         public override bool HasIcons

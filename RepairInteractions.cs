@@ -39,7 +39,11 @@ namespace UIFixes
                 float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
 
                 string text;
-                if (repairer is GClass802 repairKit)
+                if (repairAmount < float.Epsilon)
+                {
+                    text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
+                }
+                else if (repairer is GClass802 repairKit)
                 {
                     float pointsLeft = repairKit.GetRepairPoints();
                     double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit);
@@ -125,7 +129,7 @@ namespace UIFixes
 
         public override IResult IsInteractive(ERepairers button)
         {
-            return new FailedResult("No repairers??", 0);
+            return new FailedResult("No repairers?", 0);
         }
 
         public override bool HasIcons
