@@ -107,6 +107,8 @@ namespace UIFixes
 
                 Button restoreButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
                 restoreButton.name = "Restore";
+                restoreButton.navigation = new Navigation() { mode = Navigation.Mode.None };
+
                 RectTransform restoreRect = (RectTransform)restoreButton.transform;
                 restoreRect.localPosition = new Vector3(templateRect.localPosition.x - 3 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
 
@@ -152,6 +154,8 @@ namespace UIFixes
                 RectTransform templateRect = (RectTransform)template.transform;
 
                 Button leftButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
+                leftButton.navigation = new Navigation() { mode = Navigation.Mode.None };
+
                 RectTransform leftRect = (RectTransform)leftButton.transform;
                 leftRect.localPosition = new Vector3(templateRect.localPosition.x - 2 * (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
 
@@ -172,17 +176,19 @@ namespace UIFixes
                 RectTransform templateRect = (RectTransform)template.transform;
 
                 Button rightButton = UnityEngine.Object.Instantiate(template, template.transform.parent, false);
+                rightButton.navigation = new Navigation() { mode = Navigation.Mode.None };
+
                 RectTransform rightRect = (RectTransform)rightButton.transform;
                 rightRect.localPosition = new Vector3(templateRect.localPosition.x - (templateRect.rect.width + ButtonPadding), templateRect.localPosition.y, templateRect.localPosition.z);
 
                 Image background = rightButton.GetComponent<Image>();
                 background.sprite = ButtonBackground.sprite;
 
-                Image leftImage = rightButton.transform.Find("X").GetComponent<Image>();
-                leftImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
-                leftImage.transform.Rotate(0f, 180f, 0f);
-                leftImage.overrideSprite = null;
-                leftImage.SetNativeSize();
+                Image rightImage = rightButton.transform.Find("X").GetComponent<Image>();
+                rightImage.sprite = EFTHardSettings.Instance.StaticIcons.GetAttributeIcon(EItemAttributeId.RecoilBack);
+                rightImage.transform.Rotate(0f, 180f, 0f);
+                rightImage.overrideSprite = null;
+                rightImage.SetNativeSize();
 
                 rightButton.onClick.AddListener(() => SnapRight(inspectPanel));
                 inspectPanel.AddDisposable(() => rightButton.onClick.RemoveAllListeners());

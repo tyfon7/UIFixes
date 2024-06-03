@@ -554,7 +554,7 @@ namespace UIFixes
             public TraderAssortmentControllerClass TraderAssortmentControler { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
         }
 
-        public class GridWindow(object value) : Wrapper(value)
+        public class GridWindow(object value) : UIInputNode(value)
         {
             public static Type Type { get; private set; }
             private static FieldInfo GridSortPanelField;

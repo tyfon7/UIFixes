@@ -43,6 +43,7 @@ namespace UIFixes
             KeepMessagesOpenPatches.Enable();
             new FocusTradeQuantityPatch().Enable();
             new RememberRepairerPatch().Enable();
+            new GridWindowButtonsPatch().Enable();
         }
 
         public static bool InRaid()

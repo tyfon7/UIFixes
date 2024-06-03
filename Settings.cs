@@ -60,6 +60,7 @@ namespace UIFixes
         public static ConfigEntry<KeyboardShortcut> SnapLeftKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> SnapRightKeybind { get; set; }
         public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
+        public static ConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
@@ -294,6 +295,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Clean up and colorize item stats",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(AddContainerButtons = config.Bind(
+                InspectSection,
+                "Add Left/Right Buttons on Containers",
+                true,
+                new ConfigDescription(
+                    "Adds snap left and snap right buttons to container windows too",
                     null,
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 
