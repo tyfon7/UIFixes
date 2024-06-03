@@ -4,6 +4,7 @@ using EFT.UI;
 using HarmonyLib;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIFixes
 {
@@ -13,6 +14,8 @@ namespace UIFixes
         {
             new DialogWindowPatch().Enable();
             new SplitDialogPatch().Enable();
+            new ClickOutPatch().Enable();
+            new ClickOutSplitDialogPatch().Enable();
         }
 
         public class DialogWindowPatch : ModulePatch
@@ -40,6 +43,7 @@ namespace UIFixes
             }
         }
 
+        // Of course SplitDialogs are a *completely different dialog impelementation*
         public class SplitDialogPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -59,6 +63,59 @@ namespace UIFixes
                 }
 
                 return true;
+            }
+        }
+
+        public class ClickOutPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(MessageWindow), nameof(MessageWindow.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(MessageWindow __instance)
+            {
+                if (!Settings.ClickOutOfDialogs.Value)
+                {
+                    return;
+                }
+
+                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+                Button button = __instance.transform.Find("Window/Firewall ")?.gameObject.GetOrAddComponent<Button>();
+                if (button != null)
+                {
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.AddListener(__instance.Close);
+                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+                }
+            }
+        }
+
+        public class ClickOutSplitDialogPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                // Using method_0 because there's 2 Show(), and they have 10+ args and f that
+                return AccessTools.Method(typeof(SplitDialog), nameof(SplitDialog.method_0));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(SplitDialog __instance)
+            {
+                if (!Settings.ClickOutOfDialogs.Value)
+                {
+                    return;
+                }
+
+                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+                Button button = __instance.transform.Find("Background")?.gameObject.GetOrAddComponent<Button>();
+                if (button != null)
+                {
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
+                    button.onClick.AddListener(__instance.method_2);
+                }
             }
         }
     }

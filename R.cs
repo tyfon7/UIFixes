@@ -99,14 +99,14 @@ namespace UIFixes
             public void AddDisposable(Action destroy) => AddDisposableActionMethod.Invoke(Value, [destroy]);
         }
 
-        public class DialogWindow(object value) : Wrapper(value)
+        public class DialogWindow(object value) : UIInputNode(value)
         {
             public static Type Type { get; private set; }
             private static MethodInfo AcceptMethod;
 
             public static void InitTypes()
             {
-                Type = typeof(MessageWindow).BaseType;
+                Type = typeof(EFT.UI.MessageWindow).BaseType;
                 AcceptMethod = AccessTools.Method(Type, "Accept");
             }
 
@@ -583,6 +583,8 @@ namespace UIFixes
         }
 
         public class RepairerParametersPanel(object value) : UIElement(value) { }
+
+        public class MessageWindow(object value) : UIInputNode(value) { }
     }
 
     public static class RExtentensions
@@ -606,5 +608,6 @@ namespace UIFixes
         public static R.GridWindow R(this GridWindow value) => new(value);
         public static R.GridSortPanel R(this GridSortPanel value) => new(value);
         public static R.RepairerParametersPanel R(this RepairerParametersPanel value) => new(value);
+        public static R.MessageWindow R(this MessageWindow value) => new(value);
     }
 }

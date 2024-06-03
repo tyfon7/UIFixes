@@ -35,6 +35,7 @@ namespace UIFixes
         public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
         public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
         public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
+        public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -121,6 +122,15 @@ namespace UIFixes
                     "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
                     null,
                     new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ClickOutOfDialogs = config.Bind(
+                GeneralSection,
+                "Click Outside of Dialogs to Close",
+                true,
+                new ConfigDescription(
+                    "Clicking outside of a popup dialog will close the dialog",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Input
             configEntries.Add(UseHomeEnd = config.Bind(
