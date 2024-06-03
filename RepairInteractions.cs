@@ -3,7 +3,6 @@ using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -13,7 +12,7 @@ namespace UIFixes
     {
         private readonly RepairControllerClass repairController;
         private readonly int playerRubles;
-        private readonly GInterface33 repairStrategy;
+        private readonly R.RepairStrategy repairStrategy;
 
         public RepairInteractions(Item item, ItemUiContext uiContext, int playerRubles) : base(uiContext)
         {
@@ -24,9 +23,7 @@ namespace UIFixes
 
             this.playerRubles = playerRubles;
 
-            repairStrategy = item.GetItemComponent<ArmorHolderComponent>() != null ?
-                new GClass804(item, repairController) :
-                new GClass803(item, repairController);
+            repairStrategy = R.RepairStrategy.Create(item, repairController);
 
             Load();
         }
@@ -39,7 +36,7 @@ namespace UIFixes
                 float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
 
                 string text;
-                if (repairAmount < float.Epsilon)
+                if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
                 {
                     text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
                 }
@@ -79,6 +76,11 @@ namespace UIFixes
             string repairerId = interactionId.Split(':')[1];
             IRepairer repairer = repairStrategy.Repairers.Single(r => r.RepairerId == repairerId);
             repairStrategy.CurrentRepairer = repairer;
+
+            if (!repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+            {
+                return new FailedResult(ERepairStatusWarning.ExceptionRepairItem.ToString());
+            }
 
             float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
 

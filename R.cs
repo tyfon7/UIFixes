@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Utils;
+using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT.Hideout;
 using EFT.InputSystem;
@@ -12,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -54,6 +56,7 @@ namespace UIFixes
             TradingItemView.InitTypes();
             GridWindow.InitTypes();
             GridSortPanel.InitTypes();
+            RepairStrategy.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -585,6 +588,65 @@ namespace UIFixes
         public class RepairerParametersPanel(object value) : UIElement(value) { }
 
         public class MessageWindow(object value) : UIInputNode(value) { }
+
+        public class RepairStrategy(object value) : Wrapper(value) 
+        {
+            public static Type Type { get; private set; }
+            private static Type ArmorStrategyType;
+            private static Type DefaultStrategyType;
+            private static PropertyInfo RepairersProperty;
+            private static PropertyInfo CurrentRepairerProperty;
+            private static MethodInfo HowMuchRepairScoresCanAcceptMethod;
+            private static MethodInfo GetRepairPriceMethod;
+            private static MethodInfo GetCurrencyPriceMethod;
+            private static MethodInfo RepairItemMethod;
+            private static MethodInfo DurabilityMethod;
+            private static MethodInfo CanRepairMethod;
+            private static MethodInfo BrokenItemErrorMethod;
+            private static MethodInfo IsNoCorrespondingAreaMethod;
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null);
+                ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null);
+                DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null);
+                RepairersProperty = AccessTools.Property(Type, "Repairers");
+                CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
+                HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
+                GetRepairPriceMethod = AccessTools.Method(Type, "GetRepairPrice");
+                GetCurrencyPriceMethod = AccessTools.Method(Type, "GetCurrencyPrice");
+                RepairItemMethod = AccessTools.Method(Type, "RepairItem");
+                DurabilityMethod = AccessTools.Method(Type, "Durability");
+                CanRepairMethod = AccessTools.Method(Type, "CanRepair");
+                BrokenItemErrorMethod = AccessTools.Method(Type, "BrokenItemError");
+                IsNoCorrespondingAreaMethod = AccessTools.Method(Type, "IsNoCorrespondingArea");
+            }
+
+            public static RepairStrategy Create(Item item, RepairControllerClass repairController)
+            {
+                if (item.GetItemComponent<ArmorHolderComponent>() != null)
+                {
+                    return new RepairStrategy(Activator.CreateInstance(ArmorStrategyType, [item, repairController]));
+                }
+
+                return new RepairStrategy(Activator.CreateInstance(DefaultStrategyType, [item, repairController]));
+            }
+
+            public IEnumerable<IRepairer> Repairers { get { return (IEnumerable<IRepairer>)RepairersProperty.GetValue(Value); } }
+            public IRepairer CurrentRepairer
+            {
+                get { return (IRepairer)CurrentRepairerProperty.GetValue(Value); }
+                set { CurrentRepairerProperty.SetValue(Value, value); }
+            }
+            public float HowMuchRepairScoresCanAccept() => (float)HowMuchRepairScoresCanAcceptMethod.Invoke(Value, []);
+            public double GetRepairPrice(float repairValue, object repairKit) => (double)GetRepairPriceMethod.Invoke(Value, [repairValue, repairKit]);
+            public int GetCurrencyPrice(float amount) => (int)GetCurrencyPriceMethod.Invoke(Value, [amount]);
+            public Task<IResult> RepairItem(float repairAmount, object repairKit) => (Task<IResult>)RepairItemMethod.Invoke(Value, [repairAmount, repairKit]);
+            public float Durability() => (float)DurabilityMethod.Invoke(Value, []);
+            public bool CanRepair(IRepairer repairer, string[] excludedCategories) => (bool)CanRepairMethod.Invoke(Value, [repairer, excludedCategories]);
+            public bool BrokenItemError() => (bool)BrokenItemErrorMethod.Invoke(Value, []);
+            public bool IsNoCorrespondingArea() => (bool)IsNoCorrespondingAreaMethod.Invoke(Value, []);
+        }
     }
 
     public static class RExtentensions

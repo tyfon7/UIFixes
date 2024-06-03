@@ -6,23 +6,46 @@ using UnityEngine;
 
 namespace UIFixes
 {
-    public class RememberRepairerPatch : ModulePatch
+    public static class RememberRepairerPatches
     {
-        private static readonly string PlayerPrefKey = "UIFixes.Repair.CurrentRepairerIndex";
-
-        protected override MethodBase GetTargetMethod()
+        public static void Enable()
         {
-            return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.Show));
+            new RememberRepairerPatch().Enable();
+            new DefaultMaxRepairPatch().Enable();
         }
 
-        [PatchPostfix]
-        public static void Postfix(RepairerParametersPanel __instance, DropDownBox ____tradersDropDown)
+        public class RememberRepairerPatch : ModulePatch
         {
-            __instance.R().UI.AddDisposable(____tradersDropDown.OnValueChanged.Subscribe(index => PlayerPrefs.SetInt(PlayerPrefKey, index)));
+            private static readonly string PlayerPrefKey = "UIFixes.Repair.CurrentRepairerIndex";
 
-            if (PlayerPrefs.HasKey(PlayerPrefKey))
+            protected override MethodBase GetTargetMethod()
             {
-                ____tradersDropDown.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey));
+                return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(RepairerParametersPanel __instance, DropDownBox ____tradersDropDown)
+            {
+                __instance.R().UI.AddDisposable(____tradersDropDown.OnValueChanged.Subscribe(index => PlayerPrefs.SetInt(PlayerPrefKey, index)));
+
+                if (PlayerPrefs.HasKey(PlayerPrefKey))
+                {
+                    ____tradersDropDown.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey));
+                }
+            }
+        }
+
+        public class DefaultMaxRepairPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.method_3));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ConditionCharacteristicsSlider ____conditionSlider)
+            {
+                ____conditionSlider.method_1(); // like clicking >>, aka select max value
             }
         }
     }

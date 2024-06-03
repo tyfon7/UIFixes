@@ -42,7 +42,7 @@ namespace UIFixes
             AddOfferRememberAutoselectPatches.Enable();
             KeepMessagesOpenPatches.Enable();
             new FocusTradeQuantityPatch().Enable();
-            new RememberRepairerPatch().Enable();
+            RememberRepairerPatches.Enable();
             new GridWindowButtonsPatch().Enable();
         }
 
