@@ -1,6 +1,5 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
-using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -11,7 +10,7 @@ using System.Reflection;
 
 namespace UIFixes
 {
-    public static class InsureContextMenuPatches
+    public static class ContextMenuPatches
     {
         private static Type InventoryRootInteractionsType;
         private static Type TradingRootInteractionsType;

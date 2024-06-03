@@ -37,7 +37,7 @@ namespace UIFixes
             AddOfferClickablePricesPatches.Enable();
             new AssortUnlocksPatch().Enable();
             new AutofillQuestItemsPatch().Enable();
-            InsureContextMenuPatches.Enable();
+            ContextMenuPatches.Enable();
             TradingAutoSwitchPatches.Enable();
             AddOfferRememberAutoselectPatches.Enable();
             KeepMessagesOpenPatches.Enable();
