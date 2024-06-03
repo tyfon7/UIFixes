@@ -597,6 +597,7 @@ namespace UIFixes
             private static PropertyInfo RepairersProperty;
             private static PropertyInfo CurrentRepairerProperty;
             private static MethodInfo HowMuchRepairScoresCanAcceptMethod;
+            private static MethodInfo TemplateDurabilityMethod;
             private static MethodInfo GetRepairPriceMethod;
             private static MethodInfo GetCurrencyPriceMethod;
             private static MethodInfo RepairItemMethod;
@@ -613,6 +614,7 @@ namespace UIFixes
                 RepairersProperty = AccessTools.Property(Type, "Repairers");
                 CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
                 HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
+                TemplateDurabilityMethod = AccessTools.Method(Type, "TemplateDurability");
                 GetRepairPriceMethod = AccessTools.Method(Type, "GetRepairPrice");
                 GetCurrencyPriceMethod = AccessTools.Method(Type, "GetCurrencyPrice");
                 RepairItemMethod = AccessTools.Method(Type, "RepairItem");
@@ -639,6 +641,7 @@ namespace UIFixes
                 set { CurrentRepairerProperty.SetValue(Value, value); }
             }
             public float HowMuchRepairScoresCanAccept() => (float)HowMuchRepairScoresCanAcceptMethod.Invoke(Value, []);
+            public int TemplateDurability() => (int)TemplateDurabilityMethod.Invoke(Value, []);
             public double GetRepairPrice(float repairValue, object repairKit) => (double)GetRepairPriceMethod.Invoke(Value, [repairValue, repairKit]);
             public int GetCurrencyPrice(float amount) => (int)GetCurrencyPriceMethod.Invoke(Value, [amount]);
             public Task<IResult> RepairItem(float repairAmount, object repairKit) => (Task<IResult>)RepairItemMethod.Invoke(Value, [repairAmount, repairKit]);

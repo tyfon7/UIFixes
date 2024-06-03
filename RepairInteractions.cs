@@ -33,7 +33,8 @@ namespace UIFixes
             foreach (IRepairer repairer in repairStrategy.Repairers)
             {
                 repairStrategy.CurrentRepairer = repairer;
-                float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
+
+                float repairAmount = GetClampedRepairAmount(repairStrategy);
 
                 string text;
                 if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
@@ -60,6 +61,17 @@ namespace UIFixes
             }
         }
 
+        private static float GetClampedRepairAmount(R.RepairStrategy repairStrategy)
+        {
+            float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
+
+            // The repair window round-trips this amount through a UI element that operatoes on percents, so it divides this by the max durability
+            // The UI element however has a minimum value of 0.001, which artificially caps how small a repair can be. To emulate this I have to do the same math
+            float percentAmount = repairAmount / repairStrategy.TemplateDurability();
+
+            return percentAmount < 0.001f ? 0 : repairAmount;
+        }
+
         private async void Repair(string repairerId)
         {
             repairStrategy.CurrentRepairer = repairStrategy.Repairers.Single(r => r.RepairerId == repairerId);
@@ -82,7 +94,7 @@ namespace UIFixes
                 return new FailedResult(ERepairStatusWarning.ExceptionRepairItem.ToString());
             }
 
-            float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
+            float repairAmount = GetClampedRepairAmount(repairStrategy);
 
             if (repairer is GClass802 repairKit)
             {
