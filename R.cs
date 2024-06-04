@@ -561,14 +561,17 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo GridSortPanelField;
+            private static FieldInfo LootItemField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.GridWindow);
                 GridSortPanelField = AccessTools.Field(Type, "_sortPanel");
+                LootItemField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(LootItemClass));
             }
 
             public EFT.UI.DragAndDrop.GridSortPanel GridSortPanel { get { return (EFT.UI.DragAndDrop.GridSortPanel)GridSortPanelField.GetValue(Value); } }
+            public LootItemClass LootItem { get { return (LootItemClass)LootItemField.GetValue(Value); } }
         }
 
         public class GridSortPanel(object value) : Wrapper(value)

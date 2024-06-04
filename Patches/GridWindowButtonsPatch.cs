@@ -18,7 +18,8 @@ namespace UIFixes
         [PatchPostfix]
         public static void Postfix(GridWindow __instance)
         {
-            if (Settings.AddContainerButtons.Value)
+            var wrappedInstance = __instance.R();
+            if (Settings.AddContainerButtons.Value && wrappedInstance.LootItem.Int32_0 > 2) // Greater than 2 cells wide
             {
                 Transform closeButton = __instance.transform.Find("Caption Panel/Close Button");
                 Image sortBackground = __instance.transform.Find("Caption Panel/Sort Button")?.GetComponent<Image>();
@@ -26,13 +27,13 @@ namespace UIFixes
                 // Left button
                 Button leftButton = CreateButton(closeButton, sortBackground.sprite, EItemAttributeId.RecoilBack);
                 leftButton.onClick.AddListener(() => SnapLeft(__instance));
-                __instance.R().UI.AddDisposable(() => leftButton.onClick.RemoveAllListeners());
+                wrappedInstance.UI.AddDisposable(() => leftButton.onClick.RemoveAllListeners());
 
                 // Right button
                 Button rightButton = CreateButton(closeButton, sortBackground.sprite, EItemAttributeId.RecoilBack);
                 rightButton.transform.Find("X").Rotate(0f, 180f, 0f);
                 rightButton.onClick.AddListener(() => SnapRight(__instance));
-                __instance.R().UI.AddDisposable(() => rightButton.onClick.RemoveAllListeners());
+                wrappedInstance.UI.AddDisposable(() => rightButton.onClick.RemoveAllListeners());
 
                 // Put close back on the end
                 closeButton.SetAsLastSibling();
