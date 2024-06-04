@@ -44,6 +44,7 @@ namespace UIFixes
             new FocusTradeQuantityPatch().Enable();
             RememberRepairerPatches.Enable();
             new GridWindowButtonsPatch().Enable();
+            new LoadMagPresetsPatch().Enable();
         }
 
         public static bool InRaid()
