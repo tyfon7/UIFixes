@@ -17,7 +17,7 @@ namespace UIFixes
             new ToggleOnOpenPatch().Enable();
 
             new OfferItemFixMaskPatch().Enable();
-            new BlockActionsClickThroughPatch().Enable();
+            new OfferViewTweaksPatch().Enable();
         }
 
         public class DoNotToggleOnMouseOverPatch : ModulePatch
@@ -72,7 +72,7 @@ namespace UIFixes
             }
         }
 
-        public class BlockActionsClickThroughPatch : ModulePatch
+        public class OfferViewTweaksPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -80,7 +80,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(OfferView __instance)
+            public static void Postfix(OfferView __instance, GameObject ____expirationTimePanel)
             {
                 // Intercept clicks on the actions area
                 var blocker = __instance.transform.Find("Actions").gameObject.GetOrAddComponent<Button>();
@@ -89,6 +89,10 @@ namespace UIFixes
                 // But enable clicks specifically on the minimize button
                 var minimizeButton = __instance.transform.Find("Actions/MinimizeButton").gameObject.GetOrAddComponent<Button>();
                 minimizeButton.onClick.AddListener(() => __instance.OnPointerClick(null));
+
+                // Stop expiration clock from dancing around
+                var timeLeft = ____expirationTimePanel.transform.Find("TimeLeft").GetComponent<HorizontalLayoutGroup>();
+                timeLeft.childControlWidth = false;
             }
         }
     }
