@@ -355,7 +355,7 @@ namespace UIFixes
                     new ConfigurationManagerAttributes { })));
 
             configEntries.Add(PurchaseAllKeybind = config.Bind(
-                InspectSection,
+                FleaMarketSection,
                 "Purchase Dialog ALL Shortcut",
                 new KeyboardShortcut(KeyCode.A),
                 new ConfigDescription(
