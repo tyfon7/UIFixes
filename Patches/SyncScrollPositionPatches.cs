@@ -32,7 +32,9 @@ namespace UIFixes
             }
 
             scrollRect.verticalNormalizedPosition = StashScrollPosition;
+
             scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
+            element.R().UI.AddDisposable(() => scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
         }
 
         public class SyncStashScrollPatch : ModulePatch

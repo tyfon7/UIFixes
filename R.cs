@@ -657,6 +657,8 @@ namespace UIFixes
 
     public static class RExtentensions
     {
+        public static R.UIElement R(this UIElement value) => new R.UIElement(value);
+        public static R.UIInputNode R(this UIInputNode value) => new R.UIInputNode(value);
         public static R.ProductionPanel R(this ProductionPanel value) => new(value);
         public static R.AreaScreenSubstrate R(this AreaScreenSubstrate value) => new(value);
         public static R.ItemSpecificationPanel R(this ItemSpecificationPanel value) => new(value);

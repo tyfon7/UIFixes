@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace UIFixes.Patches
+namespace UIFixes
 {
     public static class KeepWindowsOnScreenPatches
     {
@@ -27,7 +27,7 @@ namespace UIFixes.Patches
 
         public class KeepWindowOnScreenPatch(string methodName) : ModulePatch
         {
-            private string methodName = methodName;
+            private readonly string methodName = methodName;
 
             protected override MethodBase GetTargetMethod()
             {
