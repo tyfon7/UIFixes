@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Comfort.Common;
 using EFT;
+using UIFixes.Patches;
 
 namespace UIFixes
 {
@@ -45,6 +46,7 @@ namespace UIFixes
             RememberRepairerPatches.Enable();
             new GridWindowButtonsPatch().Enable();
             new LoadMagPresetsPatch().Enable();
+            KeepWindowsOnScreenPatches.Enable();
         }
 
         public static bool InRaid()
