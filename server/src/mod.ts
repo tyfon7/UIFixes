@@ -37,7 +37,7 @@ class UIFixes implements IPreAkiLoadMod {
                     return original.call(inventoryController, playerData, request, sessionID);
                 };
             },
-            { frequency: "Always" }
+            { frequency: "Once" }
         );
 
         // Keep quickbinds for items that aren't actually lost on death
@@ -61,7 +61,7 @@ class UIFixes implements IPreAkiLoadMod {
                     }
                 };
             },
-            { frequency: "Always" }
+            { frequency: "Once" }
         );
 
         staticRouterModService.registerStaticRouter(
