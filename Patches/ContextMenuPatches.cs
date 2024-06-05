@@ -93,14 +93,24 @@ namespace UIFixes
                 return AccessTools.Method(InventoryRootInteractionsType, "CreateSubInteractions");
             }
 
+            private static int GetPlayerRubles(ItemUiContext itemUiContext)
+            {
+                StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
+                if (stash == null)
+                {
+                    return 0;
+                }
+
+                return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
+            }
+
             [PatchPrefix]
             public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
             {
-                Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_1.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
-                int playerRubles = playerCurrencies[ECurrencyType.RUB];
-
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
+                    int playerRubles = GetPlayerRubles(___itemUiContext_1);
+
                     CurrentInsuranceInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
                     CurrentInsuranceInteractions.LoadAsync(() => subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions));
 
@@ -109,6 +119,8 @@ namespace UIFixes
 
                 if (parentInteraction == EItemInfoButton.Repair)
                 {
+                    int playerRubles = GetPlayerRubles(___itemUiContext_1);
+
                     CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
                     subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
