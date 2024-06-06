@@ -81,8 +81,10 @@ namespace UIFixes
                     return;
                 }
 
-                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
-                Button button = __instance.transform.Find("Window/Firewall ")?.gameObject.GetOrAddComponent<Button>();
+                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent.
+                // Also for some reason some MessageWindows have a Window child and some don't.
+                Transform firewall = __instance.transform.Find("Firewall ") ?? __instance.transform.Find("Window/Firewall ");
+                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
                 if (button != null)
                 {
                     button.transition = Selectable.Transition.None;
