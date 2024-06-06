@@ -76,7 +76,14 @@ namespace UIFixes
                 layoutElement.preferredWidth = -1;
 
                 // Prime the first filter
+                if (!History.Any())
+                {
+                    History.Push(new HistoryEntry() { filterRule = ragfair.method_3(EViewListType.AllOffers) }); // Player's saved default rule
+                }
+
+                // Load what they're searching now, which may or may not be the same as the default
                 OnFilterRuleChanged();
+
                 ragfair.OnFilterRuleChanged += OnFilterRuleChanged;
 
                 if (History.Count < 2)
