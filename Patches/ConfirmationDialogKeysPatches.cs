@@ -48,21 +48,21 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.TranslateCommand));
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
             }
 
-            [PatchPrefix]
-            public static bool Prefix(ECommand command, ref InputNode.ETranslateResult __result, SplitDialog ___splitDialog_0)
+            [PatchPostfix]
+            public static void Postfix(SplitDialog ___splitDialog_0)
             {
-                // It's wild to me that they implement UI keyboard shortcuts via the in-raid movement keybinds
-                if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf && command == ECommand.Jump)
+                if (___splitDialog_0 == null || !___splitDialog_0.gameObject.activeSelf)
                 {
-                    ___splitDialog_0.Accept();
-                    __result = InputNode.ETranslateResult.Block;
-                    return false;
+                    return;
                 }
 
-                return true;
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    ___splitDialog_0.Accept();
+                }
             }
         }
 

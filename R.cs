@@ -503,16 +503,19 @@ namespace UIFixes
             public static Type Type { get; private set; }
             private static FieldInfo InventoryControllerField;
             private static FieldInfo GridWindowTemplateField;
+            private static PropertyInfo ItemContextProperty;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.ItemUiContext);
                 InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryControllerClass));
                 GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
+                ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
             }
 
             public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
             public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
+            public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
         }
 
         public static class Money
@@ -595,7 +598,7 @@ namespace UIFixes
 
         public class MessageWindow(object value) : UIInputNode(value) { }
 
-        public class RepairStrategy(object value) : Wrapper(value) 
+        public class RepairStrategy(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }
             private static Type ArmorStrategyType;

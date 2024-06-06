@@ -46,6 +46,7 @@ namespace UIFixes
             new GridWindowButtonsPatch().Enable();
             new LoadMagPresetsPatch().Enable();
             KeepWindowsOnScreenPatches.Enable();
+            new ContextMenuShortcutPatch().Enable();
         }
 
         public static bool InRaid()

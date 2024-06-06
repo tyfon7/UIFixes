@@ -41,6 +41,12 @@ namespace UIFixes
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
         public static ConfigEntry<int> MouseScrollMulti { get; set; }
+
+        public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
         public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
         public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
@@ -159,6 +165,51 @@ namespace UIFixes
                 new ConfigDescription(
                     "How many rows to scroll with the mousewheel",
                     new AcceptableValueRange<int>(1, 10),
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(InspectKeyBind = config.Bind(
+                InputSection,
+                "Inspect Shortcut",
+                new KeyboardShortcut(KeyCode.I),
+                new ConfigDescription(
+                    "Keybind to inspect an item",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(OpenKeyBind = config.Bind(
+                InputSection,
+                "Open Shortcut",
+                new KeyboardShortcut(KeyCode.O),
+                new ConfigDescription(
+                    "Keybind to open a container",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(TopUpKeyBind = config.Bind(
+                InputSection,
+                "Top Up Ammo Shortcut",
+                new KeyboardShortcut(KeyCode.T),
+                new ConfigDescription(
+                    "Keybind to top up an ammo stack",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(FilterByKeyBind = config.Bind(
+                InputSection,
+                "Filter by Item Shortcut",
+                new KeyboardShortcut(KeyCode.F),
+                new ConfigDescription(
+                    "Keybind to search flea market for this item",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(LinkedSearchKeyBind = config.Bind(
+                InputSection,
+                "Linked Search Shortcut",
+                new KeyboardShortcut(KeyCode.L),
+                new ConfigDescription(
+                    "Keybind to search flea market for items linked to this item",
+                    null,
                     new ConfigurationManagerAttributes { })));
 
             configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
