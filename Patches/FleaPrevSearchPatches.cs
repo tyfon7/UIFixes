@@ -23,12 +23,7 @@ namespace UIFixes
 
         private static readonly Stack<HistoryEntry> History = new();
 
-        private static bool FirstFilter = true;
-        private static bool GoingBack = false;
         private static string DelayedHandbookId = string.Empty;
-
-        private static DefaultUIButton PreviousButton;
-
         private static float PossibleScrollPosition = -1f;
 
         public static void Enable()
@@ -40,110 +35,114 @@ namespace UIFixes
 
             Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
             {
-                if (!Settings.EnableFleaHistory.Value && PreviousButton != null)
+                if (!Settings.EnableFleaHistory.Value && PreviousFilterButton.Instance != null)
                 {
-                    UnityEngine.Object.Destroy(PreviousButton.gameObject);
-                    PreviousButton = null;
+                    UnityEngine.Object.Destroy(PreviousFilterButton.Instance.gameObject);
+                    PreviousFilterButton.Instance = null;
                     History.Clear();
                 }
             };
         }
 
-        public class RagfairScreenShowPatch : ModulePatch
+        public class PreviousFilterButton : MonoBehaviour
         {
-            protected override MethodBase GetTargetMethod()
+            private RagFairClass ragfair;
+            private RagfairScreen ragfairScreen;
+            private DefaultUIButton button;
+            private LayoutElement layoutElement;
+
+            private bool goingBack = false;
+
+            public static PreviousFilterButton Instance;
+
+            public void Awake()
             {
-                return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.Show));
+                Instance = this;
+                button = GetComponent<DefaultUIButton>();
+                layoutElement = GetComponent<LayoutElement>();
+
+                button.OnClick.RemoveAllListeners();
+                button.OnClick.AddListener(OnClick);
             }
 
-            [PatchPrefix]
-            public static void Prefix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton)
+            public void Show(RagfairScreen ragfairScreen, RagFairClass ragfair)
             {
-                // Create previous button
-                if (Settings.EnableFleaHistory.Value && PreviousButton == null)
-                {
-                    var addOfferLayout = ____addOfferButton.GetComponent<LayoutElement>();
-                    PreviousButton = UnityEngine.Object.Instantiate(____addOfferButton, ____addOfferButton.transform.parent, false);
-                    PreviousButton.transform.SetAsFirstSibling();
-                    PreviousButton.SetRawText("< " + "back".Localized(), 20);
+                this.ragfair = ragfair;
+                this.ragfairScreen = ragfairScreen;
 
-                    session.RagFair.OnFilterRuleChanged += (source, clear, updateCategories) => OnFilterRuleChanged(__instance, session);
+                button.SetRawText("< " + "back".Localized(), 20);
 
-                    PreviousButton.OnClick.AddListener(() =>
-                    {
-                        History.Pop(); // remove current
-                        if (History.Count < 2)
-                        {
-                            PreviousButton.Interactable = false;
-                        }
+                layoutElement.minWidth = -1;
+                layoutElement.preferredWidth = -1;
 
-                        HistoryEntry previousEntry = History.Peek();
-
-                        // Manually update parts of the UI because BSG sucks
-                        UpdateColumnHeaders(__instance.R().OfferViewList.R().FiltersPanel, previousEntry.filterRule.SortType, previousEntry.filterRule.SortDirection);
-
-                        GoingBack = true;
-                        ApplyFullFilter(session.RagFair, previousEntry.filterRule);
-                        GoingBack = false;
-                    });
-                }
-            }
-
-            [PatchPostfix]
-            public static void Postfix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton)
-            {
-                // Delete the upper right display options, since they aren't even implemented
-                var tabs = __instance.transform.Find("TopRightPanel/Tabs");
-                tabs?.gameObject.SetActive(false);
-
-                if (!Settings.EnableFleaHistory.Value)
-                {
-                    return;
-                }
-
-                // Resize the Add Offer button to use less extra space
-                var addOfferLayout = ____addOfferButton.GetComponent<LayoutElement>();
-                addOfferLayout.minWidth = -1;
-                addOfferLayout.preferredWidth = -1;
-
-                // Recenter the add offer text
-                var addOfferLabel = ____addOfferButton.transform.Find("SizeLabel");
-                addOfferLabel.localPosition = new Vector3(0f, 0f, 0f);
-
-                // For some reason the widths revert
-                PreviousButton.SetRawText("< " + "back".Localized(), 20); // Update text in case language changes
-                var prevButtonLayout = PreviousButton.GetComponent<LayoutElement>();
-                prevButtonLayout.minWidth = -1;
-                prevButtonLayout.preferredWidth = -1;
-
-                // Tighten up the spacing
-                var layoutGroup = PreviousButton.transform.parent.GetComponent<HorizontalLayoutGroup>();
-                layoutGroup.spacing = 5f;
+                // Prime the first filter
+                OnFilterRuleChanged();
+                ragfair.OnFilterRuleChanged += OnFilterRuleChanged;
 
                 if (History.Count < 2)
                 {
-                    PreviousButton.Interactable = false;
+                    button.Interactable = false;
                 }
 
-                PreviousButton.gameObject.SetActive(session.RagFair.FilterRule.ViewListType == EViewListType.AllOffers);
+                gameObject.SetActive(ragfair.FilterRule.ViewListType == EViewListType.AllOffers);
             }
 
-            private static void OnFilterRuleChanged(RagfairScreen ragScreen, ISession session)
+            public void Close()
             {
-                if (FirstFilter ||
-                    GoingBack ||
-                    !String.IsNullOrEmpty(DelayedHandbookId) ||
-                    session.RagFair.FilterRule.ViewListType != EViewListType.AllOffers)
+                ragfair.OnFilterRuleChanged -= OnFilterRuleChanged;
+                ragfair = null;
+                ragfairScreen = null;
+            }
+
+            public void OnOffersLoaded(OfferViewList offerViewList)
+            {
+                if (!String.IsNullOrEmpty(DelayedHandbookId))
                 {
-                    FirstFilter = false;
+                    // Super important to clear DelayedHandbookId *before* calling method_10, or infinite loops can occur!
+                    string newHandbookId = DelayedHandbookId;
+                    DelayedHandbookId = string.Empty;
+
+                    offerViewList.method_10(newHandbookId, false);
+                    return;
+                }
+
+                // Restore scroll position now that the we're loaded
+                if (History.Any())
+                {
+                    offerViewList.R().Scroller.SetScrollPosition(History.Peek().scrollPosition);
+                }
+            }
+
+            private void OnClick()
+            {
+                History.Pop(); // remove current
+                if (History.Count < 2)
+                {
+                    button.Interactable = false;
+                }
+
+                HistoryEntry previousEntry = History.Peek();
+
+                // Manually update parts of the UI because BSG sucks
+                UpdateColumnHeaders(ragfairScreen.R().OfferViewList.R().FiltersPanel, previousEntry.filterRule.SortType, previousEntry.filterRule.SortDirection);
+
+                goingBack = true;
+                ApplyFullFilter(previousEntry.filterRule);
+                goingBack = false;
+            }
+
+            private void OnFilterRuleChanged(RagFairClass.ESetFilterSource source = 0, bool clear = false, bool updateCategories = false)
+            {
+                if (goingBack || !string.IsNullOrEmpty(DelayedHandbookId) || ragfair.FilterRule.ViewListType != EViewListType.AllOffers)
+                {
                     return;
                 }
 
                 HistoryEntry current = History.Any() ? History.Peek() : null;
-                if (current != null && current.filterRule.IsSimilarTo(session.RagFair.FilterRule))
+                if (current != null && current.filterRule.IsSimilarTo(ragfair.FilterRule))
                 {
                     // Minor filter change, just update the current one
-                    current.filterRule = session.RagFair.FilterRule;
+                    current.filterRule = ragfair.FilterRule;
                     return;
                 }
 
@@ -156,16 +155,16 @@ namespace UIFixes
                     }
                     else
                     {
-                        LightScroller scroller = ragScreen.R().OfferViewList.R().Scroller;
+                        LightScroller scroller = ragfairScreen.R().OfferViewList.R().Scroller;
                         current.scrollPosition = scroller.NormalizedScrollPosition;
                     }
                 }
 
-                History.Push(new HistoryEntry() { filterRule = session.RagFair.FilterRule });
+                History.Push(new HistoryEntry() { filterRule = ragfair.FilterRule });
 
                 if (History.Count >= 2)
                 {
-                    PreviousButton.Interactable = true;
+                    button.Interactable = true;
                 }
 
                 // Basic sanity to keep this from growing out of control
@@ -188,7 +187,7 @@ namespace UIFixes
 
             // Using GClass because it's easier
             // Copied from RagFairClass.AddSearchesInRule, but actually all of the properties
-            private static void ApplyFullFilter(RagFairClass ragFair, FilterRule filterRule)
+            private void ApplyFullFilter(FilterRule filterRule)
             {
                 // Order impacts the order the filters show in the UI
                 var searches = new List<GClass3196>();
@@ -226,17 +225,17 @@ namespace UIFixes
                 searches.Add(new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0));
                 searches.Add(new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional));
 
-                ragFair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
+                ragfair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
                 // These properties don't consistute a new search, so much as a different view of the same search
                 newRule.Page = filterRule.Page;
                 newRule.SortType = filterRule.SortType;
                 newRule.SortDirection = filterRule.SortDirection;
-                
+
                 // We can't set handbookId yet - it limits the result set and that in turn limits what categories even display
                 DelayedHandbookId = filterRule.HandbookId;
 
-                ragFair.SetFilterRule(newRule, true, true);
+                ragfair.SetFilterRule(newRule, true, true);
             }
 
             private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
@@ -255,6 +254,63 @@ namespace UIFixes
             }
         }
 
+        public class RagfairScreenShowPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.Show));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton, ref PreviousFilterButton __state)
+            {
+                // Create previous button
+                if (!Settings.EnableFleaHistory.Value)
+                {
+                    return;
+                }
+
+                __state = ____addOfferButton.transform.parent.Find("PreviousFilterButton")?.GetComponent<PreviousFilterButton>();
+                if (__state == null)
+                {
+                    var clone = UnityEngine.Object.Instantiate(____addOfferButton, ____addOfferButton.transform.parent, false);
+                    clone.name = "PreviousFilterButton";
+                    clone.transform.SetAsFirstSibling();
+
+                    __state = clone.GetOrAddComponent<PreviousFilterButton>();
+                }
+            }
+
+            [PatchPostfix]
+            public static void Postfix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton, PreviousFilterButton __state)
+            {
+                // Delete the upper right display options, since they aren't even implemented
+                var tabs = __instance.transform.Find("TopRightPanel/Tabs");
+                tabs?.gameObject.SetActive(false);
+
+                if (!Settings.EnableFleaHistory.Value)
+                {
+                    return;
+                }
+
+                __state.Show(__instance, session.RagFair);
+                __instance.R().UI.AddDisposable(__state.Close);
+
+                // Resize the Add Offer button to use less extra space
+                var addOfferLayout = ____addOfferButton.GetComponent<LayoutElement>();
+                addOfferLayout.minWidth = -1;
+                addOfferLayout.preferredWidth = -1;
+
+                // Recenter the add offer text
+                var addOfferLabel = ____addOfferButton.transform.Find("SizeLabel");
+                addOfferLabel.localPosition = new Vector3(0f, 0f, 0f);
+
+                // Tighten up the spacing
+                var layoutGroup = PreviousFilterButton.Instance.transform.parent.GetComponent<HorizontalLayoutGroup>();
+                layoutGroup.spacing = 5f;
+            }
+        }
+
         public class ChangedViewListTypePatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -265,7 +321,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(EViewListType type)
             {
-                PreviousButton?.gameObject.SetActive(type == EViewListType.AllOffers);
+                PreviousFilterButton.Instance?.gameObject.SetActive(type == EViewListType.AllOffers);
             }
         }
 
@@ -307,21 +363,7 @@ namespace UIFixes
                     return;
                 }
 
-                if (!String.IsNullOrEmpty(DelayedHandbookId))
-                {
-                    // Super important to clear DelayedHandbookId *before* calling method_10, or infinite loops can occur!
-                    string newHandbookId = DelayedHandbookId;
-                    DelayedHandbookId = string.Empty;
-
-                    __instance.method_10(newHandbookId, false);
-                    return;
-                }
-
-                // Restore scroll position now that the we're loaded
-                if (History.Any())
-                {
-                    ____scroller.SetScrollPosition(History.Peek().scrollPosition);
-                }
+                PreviousFilterButton.Instance.OnOffersLoaded(__instance);
 
                 if (Settings.AutoExpandCategories.Value)
                 {

@@ -363,18 +363,21 @@ namespace UIFixes
             public TextMeshProUGUI Text { get { return (TextMeshProUGUI)TextField.GetValue(Value); } }
         }
 
-        public class RagfairScreen(object value) : Wrapper(value)
+        public class RagfairScreen(object value) : UIInputNode(value)
         {
             public static Type Type { get; private set; }
             private static FieldInfo OfferViewListField;
+            private static FieldInfo RagfairClassField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.Ragfair.RagfairScreen);
                 OfferViewListField = AccessTools.Field(Type, "offerViewList_0");
+                RagfairClassField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(RagFairClass));
             }
 
             public EFT.UI.Ragfair.OfferViewList OfferViewList { get { return (EFT.UI.Ragfair.OfferViewList)OfferViewListField.GetValue(Value); } }
+            public RagFairClass RagfairClass { get { return (RagFairClass)RagfairClassField.GetValue(Value); } }
         }
 
         public class OfferViewList(object value) : Wrapper(value)
