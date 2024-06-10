@@ -119,10 +119,12 @@ namespace UIFixes
                 return new FailedResult(ERepairStatusWarning.NothingToRepair.ToString());
             }
 
-            if (repairStrategy.BrokenItemError())
+            // BrokenItemError is not actually an error, they just implemented it that way - it shows a bunch of red text but it doesn't prevent repair
+            // Leaving this here to remember
+            /*if (repairStrategy.BrokenItemError())
             {
                 return new FailedResult(ERepairStatusWarning.BrokenItem.ToString());
-            }
+            }*/
 
             if (repairStrategy.IsNoCorrespondingArea())
             {
