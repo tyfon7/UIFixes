@@ -72,6 +72,7 @@ namespace UIFixes
 
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
+        public static ConfigEntry<bool> EnableLoadAmmo { get; set; }
 
         // Flea Market
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
@@ -385,6 +386,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(EnableLoadAmmo = config.Bind(
+                InRaidSection,
+                "Enable Load Ammo Context Menu",
+                true,
+                new ConfigDescription(
+                    "Allows ammo to be loaded through the magazine context menu",
                     null,
                     new ConfigurationManagerAttributes { })));
 

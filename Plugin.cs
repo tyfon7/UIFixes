@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using Comfort.Common;
 using EFT;
+using UIFixes.Patches;
 
 namespace UIFixes
 {
@@ -48,6 +49,7 @@ namespace UIFixes
             KeepWindowsOnScreenPatches.Enable();
             new ContextMenuShortcutPatch().Enable();
             new OpenSortingTablePatch().Enable();
+            LoadAmmoInRaidPatches.Enable();
         }
 
         public static bool InRaid()
