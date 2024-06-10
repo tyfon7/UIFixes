@@ -4,6 +4,7 @@ using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System.Reflection;
 using TMPro;
+using UnityEngine;
 
 namespace UIFixes
 {
@@ -39,7 +40,7 @@ namespace UIFixes
 
             // BSG loves to implement the same stuff in totally different ways, and this way is bad and also wrong
             [PatchPostfix]
-            public static void Postfix(GridItemView __instance, TextMeshProUGUI ___ItemValue, PointerEventsProxy ____valuePointerEventsProxy)
+            public static void Postfix(GridItemView __instance, TextMeshProUGUI ___ItemValue, PointerEventsProxy ____valuePointerEventsProxy, QuestItemViewPanel ____questsItemViewPanel)
             {
                 // Add hover events to the correct place
                 HoverTrigger trigger = ___ItemValue.GetOrAddComponent<HoverTrigger>();
@@ -50,7 +51,14 @@ namespace UIFixes
                     __instance.ShowTooltip();
                 };
 
-                // Remove them from the wrong place
+                // Need a child component for some reason, copying how the quest item tooltip does it
+                Transform hover = ____questsItemViewPanel?.transform.Find("Hover");
+                if (hover != null)
+                {
+                    UnityEngine.Object.Instantiate(hover, trigger.transform, false);
+                }
+
+                // Remove old hover handler that covered the whole info panel
                 UnityEngine.Object.Destroy(____valuePointerEventsProxy);
             }
         }
