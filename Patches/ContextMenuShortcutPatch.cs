@@ -40,6 +40,20 @@ namespace UIFixes
                 return;
             }
 
+            if (Settings.UseKeyBind.Value.IsDown())
+            {
+                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Use);
+            }
+
+            if (Settings.UseAllKeyBind.Value.IsDown())
+            {
+                var interactions = __instance.GetItemContextInteractions(itemContext, null);
+                if (!interactions.ExecuteInteraction(EItemInfoButton.UseAll))
+                {
+                    interactions.ExecuteInteraction(EItemInfoButton.Use);
+                }
+            }
+
             if (Settings.FilterByKeyBind.Value.IsDown())
             {
                 __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.FilterSearch);

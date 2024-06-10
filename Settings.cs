@@ -45,6 +45,8 @@ namespace UIFixes
         public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
         public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
@@ -191,6 +193,24 @@ namespace UIFixes
                 new KeyboardShortcut(KeyCode.T),
                 new ConfigDescription(
                     "Keybind to top up an ammo stack",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(UseKeyBind = config.Bind(
+                InputSection,
+                "Use Item Shortcut",
+                new KeyboardShortcut(KeyCode.None),
+                new ConfigDescription(
+                    "Keybind to use an item, such a consumable.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(UseAllKeyBind = config.Bind(
+                InputSection,
+                "Use Item (All) Shortcut",
+                new KeyboardShortcut(KeyCode.None),
+                new ConfigDescription(
+                    "Keybind to use all of an item, such a consumable. This will still work on items that don't have 'Use All', just 'Use', in their context menu.",
                     null,
                     new ConfigurationManagerAttributes { })));
 
