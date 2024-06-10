@@ -122,7 +122,7 @@ namespace UIFixes
                 restoreImage.transform.localScale = new Vector3(restoreImage.transform.localScale.x * 0.8f, restoreImage.transform.localScale.y * 0.8f, restoreImage.transform.localScale.z);
 
                 Image restoreImage2 = UnityEngine.Object.Instantiate(restoreImage, restoreImage.transform.parent, false);
-                restoreImage2.transform.Rotate(180f, 180f, 0f);
+                restoreImage2.transform.Rotate(0f, 0f, 180f);
 
                 Vector3 startPosition = restoreImage2.transform.localPosition;
                 restoreImage.transform.localPosition = new Vector3(startPosition.x - 3f, startPosition.y - 3f, startPosition.z);
