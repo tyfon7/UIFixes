@@ -47,6 +47,7 @@ namespace UIFixes
             new LoadMagPresetsPatch().Enable();
             KeepWindowsOnScreenPatches.Enable();
             new ContextMenuShortcutPatch().Enable();
+            new OpenSortingTablePatch().Enable();
         }
 
         public static bool InRaid()
