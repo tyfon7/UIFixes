@@ -43,23 +43,27 @@ namespace UIFixes
             public static void Postfix(GridItemView __instance, TextMeshProUGUI ___ItemValue, PointerEventsProxy ____valuePointerEventsProxy, QuestItemViewPanel ____questsItemViewPanel)
             {
                 // Add hover events to the correct place
-                HoverTrigger trigger = ___ItemValue.GetOrAddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_31();
-                trigger.OnHoverEnd += eventData =>
+                HoverTrigger trigger = ___ItemValue.GetComponent<HoverTrigger>();
+                if (trigger == null)
                 {
-                    __instance.method_32();
-                    __instance.ShowTooltip();
-                };
+                    trigger = ___ItemValue.gameObject.AddComponent<HoverTrigger>();
+                    trigger.OnHoverStart += eventData => __instance.method_31();
+                    trigger.OnHoverEnd += eventData =>
+                    {
+                        __instance.method_32();
+                        __instance.ShowTooltip();
+                    };
 
-                // Need a child component for some reason, copying how the quest item tooltip does it
-                Transform hover = ____questsItemViewPanel?.transform.Find("Hover");
-                if (hover != null)
-                {
-                    UnityEngine.Object.Instantiate(hover, trigger.transform, false);
+                    // Need a child component for some reason, copying how the quest item tooltip does it
+                    Transform hover = ____questsItemViewPanel?.transform.Find("Hover");
+                    if (hover != null)
+                    {
+                        UnityEngine.Object.Instantiate(hover, trigger.transform, false);
+                    }
+
+                    // Remove old hover handler that covered the whole info panel
+                    UnityEngine.Object.Destroy(____valuePointerEventsProxy);
                 }
-
-                // Remove old hover handler that covered the whole info panel
-                UnityEngine.Object.Destroy(____valuePointerEventsProxy);
             }
         }
     }

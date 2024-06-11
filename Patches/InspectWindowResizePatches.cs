@@ -22,7 +22,7 @@ namespace UIFixes
 
         private const float ButtonPadding = 3f;
 
-        public static Image ButtonBackground; // Nice gray background for the new buttons
+        private static Image ButtonBackground; // Nice gray background for the new buttons
 
         public static void Enable()
         {

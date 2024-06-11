@@ -59,6 +59,7 @@ namespace UIFixes
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
+        public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
 
         // Inspect Panels
         public static ConfigEntry<bool> ShowModStats { get; set; }
@@ -303,6 +304,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(AutoOpenSortingTable = config.Bind(
+                InventorySection,
+                "Auto-open Sorting Table",
+                true,
+                new ConfigDescription(
+                    "Automatically open the sorting table if it's closed when you shift-click an item",
                     null,
                     new ConfigurationManagerAttributes { })));
 

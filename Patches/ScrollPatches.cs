@@ -28,10 +28,6 @@ namespace UIFixes
         {
             if (scrollRect != null)
             {
-                Rect contentRect = scrollRect.content.rect;
-                Rect viewRect = scrollRect.RectTransform().rect;
-                float pageSize = viewRect.height / contentRect.height;
-
                 if (Settings.UseHomeEnd.Value)
                 {
                     if (Input.GetKeyDown(KeyCode.Home))
@@ -48,10 +44,23 @@ namespace UIFixes
                 {
                     if (Input.GetKeyDown(KeyCode.PageUp))
                     {
+                        // Duplicate this code to avoid running it every frame
+                        Rect contentRect = scrollRect.content.rect;
+                        Rect viewRect = scrollRect.RectTransform().rect;
+                        float pageSize = viewRect.height / contentRect.height;
+
+
                         scrollRect.verticalNormalizedPosition = Math.Min(1f, scrollRect.verticalNormalizedPosition + pageSize);
                     }
+
                     if (Input.GetKeyDown(KeyCode.PageDown))
                     {
+                        // Duplicate this code to avoid running it every frame
+                        Rect contentRect = scrollRect.content.rect;
+                        Rect viewRect = scrollRect.RectTransform().rect;
+                        float pageSize = viewRect.height / contentRect.height;
+
+
                         scrollRect.verticalNormalizedPosition = Math.Max(0f, scrollRect.verticalNormalizedPosition - pageSize);
                     }
                 }

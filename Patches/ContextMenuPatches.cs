@@ -239,6 +239,8 @@ namespace UIFixes
             public static void Postfix()
             {
                 CurrentInsuranceInteractions = null;
+                CurrentRepairInteractions = null;
+                CreatedButtonInteractionId = null;
             }
         }
     }
