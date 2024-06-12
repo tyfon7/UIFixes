@@ -1,69 +1,97 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using System;
 using System.Reflection;
+using UnityEngine.EventSystems;
 
 namespace UIFixes
 {
-    public class ContextMenuShortcutPatch : ModulePatch
+    public static class ContextMenuShortcutPatches
     {
-        protected override MethodBase GetTargetMethod()
+        public static void Enable()
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
+            new ItemUiContextPatch().Enable();
+            new HideoutItemViewRegisterContextPatch().Enable();
         }
 
-        [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance)
+        public class ItemUiContextPatch : ModulePatch
         {
-            ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-            if (itemContext == null)
+            protected override MethodBase GetTargetMethod()
             {
-                return;
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
             }
 
-            if (Settings.InspectKeyBind.Value.IsDown())
+            [PatchPostfix]
+            public static void Postfix(ItemUiContext __instance)
             {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Inspect);
-                return;
-            }
-
-            if (Settings.OpenKeyBind.Value.IsDown())
-            {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Open);
-                return;
-            }
-
-            if (Settings.TopUpKeyBind.Value.IsDown())
-            {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.TopUp);
-                return;
-            }
-
-            if (Settings.UseKeyBind.Value.IsDown())
-            {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Use);
-            }
-
-            if (Settings.UseAllKeyBind.Value.IsDown())
-            {
-                var interactions = __instance.GetItemContextInteractions(itemContext, null);
-                if (!interactions.ExecuteInteraction(EItemInfoButton.UseAll))
+                // Need an item context to operate on, and ignore these keypresses if there's a focused textbox somewhere
+                ItemContextAbstractClass itemContext = __instance.R().ItemContext;
+                if (itemContext == null || EventSystem.current.currentSelectedGameObject != null)
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.Use);
+                    return;
+                }
+
+                if (Settings.InspectKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Inspect);
+                    return;
+                }
+
+                if (Settings.OpenKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Open);
+                    return;
+                }
+
+                if (Settings.TopUpKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.TopUp);
+                    return;
+                }
+
+                if (Settings.UseKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Use);
+                }
+
+                if (Settings.UseAllKeyBind.Value.IsDown())
+                {
+                    var interactions = __instance.GetItemContextInteractions(itemContext, null);
+                    if (!interactions.ExecuteInteraction(EItemInfoButton.UseAll))
+                    {
+                        interactions.ExecuteInteraction(EItemInfoButton.Use);
+                    }
+                }
+
+                if (Settings.FilterByKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.FilterSearch);
+                    return;
+                }
+
+                if (Settings.LinkedSearchKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.LinkedSearch);
+                    return;
                 }
             }
+        }
 
-            if (Settings.FilterByKeyBind.Value.IsDown())
+        // HideoutItemViews don't register themselves with ItemUiContext for some reason
+        public class HideoutItemViewRegisterContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
             {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.FilterSearch);
-                return;
+                return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerEnter));
             }
 
-            if (Settings.LinkedSearchKeyBind.Value.IsDown())
+            [PatchPostfix]
+            public static void Postfix(HideoutItemView __instance)
             {
-                __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.LinkedSearch);
-                return;
+                ItemUiContext.Instance.RegisterCurrentItemContext(__instance.ItemContext);
             }
         }
     }

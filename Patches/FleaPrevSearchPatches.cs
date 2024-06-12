@@ -269,7 +269,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton, ref PreviousFilterButton __state)
+            public static void Prefix(DefaultUIButton ____addOfferButton, ref PreviousFilterButton __state)
             {
                 // Create previous button
                 if (!Settings.EnableFleaHistory.Value)
@@ -361,7 +361,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static async void Postfix(OfferViewList __instance, Task __result, LightScroller ____scroller, EViewListType ___eviewListType_0)
+            public static async void Postfix(OfferViewList __instance, Task __result, EViewListType ___eviewListType_0)
             {
                 await __result;
 

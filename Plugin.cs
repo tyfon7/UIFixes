@@ -46,7 +46,7 @@ namespace UIFixes
             new GridWindowButtonsPatch().Enable();
             new LoadMagPresetsPatch().Enable();
             KeepWindowsOnScreenPatches.Enable();
-            new ContextMenuShortcutPatch().Enable();
+            ContextMenuShortcutPatches.Enable();
             new OpenSortingTablePatch().Enable();
             LoadAmmoInRaidPatches.Enable();
         }

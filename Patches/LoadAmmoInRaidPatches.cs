@@ -1,8 +1,10 @@
 ﻿using Aki.Reflection.Patching;
+using Aki.Reflection.Utils;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,11 +24,12 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3052), nameof(GClass3052.IsActive));
+                Type type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null);
+                return AccessTools.Method(type, "IsActive");
             }
 
             [PatchPrefix]
-            public static bool Prefix(GClass3052 __instance, EItemInfoButton button, ref bool __result, Item ___item_0)
+            public static bool Prefix(EItemInfoButton button, ref bool __result, Item ___item_0)
             {
                 if (button != EItemInfoButton.LoadAmmo || !Plugin.InRaid() || !Settings.EnableLoadAmmo.Value)
                 {

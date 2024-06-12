@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UIFixes
@@ -14,18 +16,21 @@ namespace UIFixes
     {
         private static readonly Dictionary<string, string> LastSearches = [];
 
+        private static float LastAbsoluteDownScrollPosition = -1f;
+
         public static void Enable()
         {
-            new FixHideoutSearchPatch().Enable();
+            new LazyLoadPatch().Enable();
             new RestoreHideoutSearchPatch().Enable();
             new SaveHideoutSearchPatch().Enable();
             new CloseHideoutSearchPatch().Enable();
             new FastHideoutSearchPatch().Enable();
             new FixHideoutSearchAgainPatch().Enable();
+            new CancelScrollOnMouseWheelPatch().Enable();
         }
 
         // Deactivate ProduceViews as they lazy load if they don't match the search
-        public class FixHideoutSearchPatch : ModulePatch
+        public class LazyLoadPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -42,6 +47,27 @@ namespace UIFixes
                 if (searchField.text.Length > 0 && productScheme.EndProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
                 {
                     view.GameObject.SetActive(false);
+                }
+
+                // As the objects load in, try to restore the old scroll position
+                if (LastAbsoluteDownScrollPosition >= 0f)
+                {
+                    ScrollRect scrollRect = view.GetComponentInParent<ScrollRect>();
+                    if (scrollRect != null)
+                    {
+                        LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.RectTransform());
+                        float currentAbsoluteDownScrollPosition = (1f - scrollRect.verticalNormalizedPosition) * (scrollRect.content.rect.height - scrollRect.viewport.rect.height);
+                        if (LastAbsoluteDownScrollPosition > currentAbsoluteDownScrollPosition + 112f) // 112 is about the height of each item
+                        {
+                            scrollRect.verticalNormalizedPosition = 0f;
+                        }
+                        else
+                        {
+                            // Last one, try to set it exactly
+                            scrollRect.verticalNormalizedPosition = 1f - (LastAbsoluteDownScrollPosition / (scrollRect.content.rect.height - scrollRect.viewport.rect.height));
+                            LastAbsoluteDownScrollPosition = -1f;
+                        }
+                    }
                 }
             }
         }
@@ -130,6 +156,14 @@ namespace UIFixes
             {
                 LastSearches[__instance.AreaData.ToString()] = ____searchInputField.text;
 
+                ScrollRect scrollRect = __instance.GetComponentInParent<ScrollRect>();
+                if (scrollRect != null)
+                {
+                    // Need to save the absolute DOWN position, because that's the direction the scrollbox will grow.
+                    // Subtract the viewport height from content heigh because that's the actual RANGE of the scroll position
+                    LastAbsoluteDownScrollPosition = (1f - scrollRect.verticalNormalizedPosition) * (scrollRect.content.rect.height - scrollRect.viewport.rect.height);
+                }
+
                 // Reset the default behavior
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
                 LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
@@ -149,6 +183,21 @@ namespace UIFixes
             public static void Postfix()
             {
                 LastSearches.Clear();
+                LastAbsoluteDownScrollPosition = -1f;
+            }
+        }
+
+        public class CancelScrollOnMouseWheelPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll));
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                LastAbsoluteDownScrollPosition = -1f;
             }
         }
     }
