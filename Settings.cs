@@ -36,6 +36,7 @@ namespace UIFixes
         public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
         public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
         public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
+        public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
 
         // Input
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
@@ -140,6 +141,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Clicking outside of a popup dialog will close the dialog",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
+                GeneralSection,
+                "Restore Async Scroll Positions",
+                true,
+                new ConfigDescription(
+                    "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
                     null,
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 

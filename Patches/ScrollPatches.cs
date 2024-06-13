@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using EFT.Hideout;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Ragfair;
@@ -8,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -22,9 +24,10 @@ namespace UIFixes
             new EnhanceFleaScrollingPatch().Enable();
             new EnhanceMailScrollingPatch().Enable();
             new MouseScrollingSpeedPatch().Enable();
+            new EnhanceHideoutScrollingPatch().Enable();
         }
 
-        private static void HandleInput(ScrollRect scrollRect)
+        private static bool HandleInput(ScrollRect scrollRect)
         {
             if (scrollRect != null)
             {
@@ -33,10 +36,12 @@ namespace UIFixes
                     if (Input.GetKeyDown(KeyCode.Home))
                     {
                         scrollRect.verticalNormalizedPosition = 1f;
+                        return true;
                     }
                     if (Input.GetKeyDown(KeyCode.End))
                     {
                         scrollRect.verticalNormalizedPosition = 0f;
+                        return true;
                     }
                 }
 
@@ -51,6 +56,7 @@ namespace UIFixes
 
 
                         scrollRect.verticalNormalizedPosition = Math.Min(1f, scrollRect.verticalNormalizedPosition + pageSize);
+                        return true;
                     }
 
                     if (Input.GetKeyDown(KeyCode.PageDown))
@@ -62,13 +68,16 @@ namespace UIFixes
 
 
                         scrollRect.verticalNormalizedPosition = Math.Max(0f, scrollRect.verticalNormalizedPosition - pageSize);
+                        return true;
                     }
                 }
             }
+
+            return false;
         }
 
         // LightScrollers don't expose heights that I can see, so just fudge it with fake OnScroll events
-        private static void HandleInput(LightScroller lightScroller)
+        private static bool HandleInput(LightScroller lightScroller)
         {
             if (lightScroller != null)
             {
@@ -77,10 +86,12 @@ namespace UIFixes
                     if (Input.GetKeyDown(KeyCode.Home))
                     {
                         lightScroller.SetScrollPosition(0f);
+                        return true;
                     }
                     if (Input.GetKeyDown(KeyCode.End))
                     {
                         lightScroller.SetScrollPosition(1f);
+                        return true;
                     }
                 }
 
@@ -93,6 +104,7 @@ namespace UIFixes
                             scrollDelta = new Vector2(0f, 25f)
                         };
                         lightScroller.OnScroll(eventData);
+                        return true;
                     }
                     if (Input.GetKeyDown(KeyCode.PageDown))
                     {
@@ -101,9 +113,12 @@ namespace UIFixes
                             scrollDelta = new Vector2(0f, -25f)
                         };
                         lightScroller.OnScroll(eventData);
+                        return true;
                     }
                 }
             }
+
+            return false;
         }
 
         private static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
@@ -127,6 +142,27 @@ namespace UIFixes
                 else
                 {
                     yield return instruction;
+                }
+            }
+        }
+
+        public class KeyScroller : MonoBehaviour
+        {
+            private ScrollRect scrollRect;
+
+            public UnityEvent OnKeyScroll;
+
+            public void Awake()
+            {
+                scrollRect = GetComponent<ScrollRect>();
+                OnKeyScroll = new();
+            }
+
+            public void Update()
+            {
+                if (HandleInput(scrollRect))
+                {
+                    OnKeyScroll.Invoke();
                 }
             }
         }
@@ -204,6 +240,26 @@ namespace UIFixes
                 }
 
                 return instructions;
+            }
+        }
+
+        public class EnhanceHideoutScrollingPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.Awake));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(AreaScreenSubstrate __instance)
+            {
+                ScrollRect scrollRect = __instance.transform.Find("Content/CurrentLevel/CurrentContainer/Scrollview")?.GetComponent<ScrollRect>();
+                if (scrollRect == null)
+                {
+                    return;
+                }
+
+                scrollRect.GetOrAddComponent<KeyScroller>();
             }
         }
 

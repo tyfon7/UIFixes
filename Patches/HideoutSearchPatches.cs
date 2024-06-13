@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UIFixes
@@ -17,6 +15,8 @@ namespace UIFixes
         private static readonly Dictionary<string, string> LastSearches = [];
 
         private static float LastAbsoluteDownScrollPosition = -1f;
+
+        private static void ClearLastScrollPosition() => LastAbsoluteDownScrollPosition = -1f;
 
         public static void Enable()
         {
@@ -65,7 +65,7 @@ namespace UIFixes
                         {
                             // Last one, try to set it exactly
                             scrollRect.verticalNormalizedPosition = 1f - (LastAbsoluteDownScrollPosition / (scrollRect.content.rect.height - scrollRect.viewport.rect.height));
-                            LastAbsoluteDownScrollPosition = -1f;
+                            ClearLastScrollPosition();
                         }
                     }
                 }
@@ -87,6 +87,9 @@ namespace UIFixes
                 {
                     ____searchInputField.text = lastSearch;
                 }
+
+                ScrollPatches.KeyScroller scroller = __instance.GetComponentInParent<ScrollPatches.KeyScroller>();
+                scroller?.OnKeyScroll.AddListener(ClearLastScrollPosition);
             }
 
             [PatchPostfix]
@@ -159,9 +162,14 @@ namespace UIFixes
                 ScrollRect scrollRect = __instance.GetComponentInParent<ScrollRect>();
                 if (scrollRect != null)
                 {
-                    // Need to save the absolute DOWN position, because that's the direction the scrollbox will grow.
-                    // Subtract the viewport height from content heigh because that's the actual RANGE of the scroll position
-                    LastAbsoluteDownScrollPosition = (1f - scrollRect.verticalNormalizedPosition) * (scrollRect.content.rect.height - scrollRect.viewport.rect.height);
+                    if (Settings.RestoreAsyncScrollPositions.Value)
+                    {
+                        // Need to save the absolute DOWN position, because that's the direction the scrollbox will grow.
+                        // Subtract the viewport height from content heigh because that's the actual RANGE of the scroll position
+                        LastAbsoluteDownScrollPosition = (1f - scrollRect.verticalNormalizedPosition) * (scrollRect.content.rect.height - scrollRect.viewport.rect.height);
+                    }
+
+                    scrollRect.GetComponent<ScrollPatches.KeyScroller>()?.OnKeyScroll.RemoveListener(ClearLastScrollPosition);
                 }
 
                 // Reset the default behavior
@@ -183,7 +191,7 @@ namespace UIFixes
             public static void Postfix()
             {
                 LastSearches.Clear();
-                LastAbsoluteDownScrollPosition = -1f;
+                ClearLastScrollPosition();
             }
         }
 
@@ -197,7 +205,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix()
             {
-                LastAbsoluteDownScrollPosition = -1f;
+                ClearLastScrollPosition();
             }
         }
     }
