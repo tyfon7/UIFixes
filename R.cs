@@ -57,6 +57,7 @@ namespace UIFixes
             GridWindow.InitTypes();
             GridSortPanel.InitTypes();
             RepairStrategy.InitTypes();
+            ContextMenuHelper.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -659,12 +660,26 @@ namespace UIFixes
             public bool BrokenItemError() => (bool)BrokenItemErrorMethod.Invoke(Value, []);
             public bool IsNoCorrespondingArea() => (bool)IsNoCorrespondingAreaMethod.Invoke(Value, []);
         }
+
+        public class ContextMenuHelper(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo InsuranceCompanyField;
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3052
+                InsuranceCompanyField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(InsuranceCompanyClass));
+            }
+
+            public InsuranceCompanyClass InsuranceCompany { get { return (InsuranceCompanyClass)InsuranceCompanyField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
     {
-        public static R.UIElement R(this UIElement value) => new R.UIElement(value);
-        public static R.UIInputNode R(this UIInputNode value) => new R.UIInputNode(value);
+        public static R.UIElement R(this UIElement value) => new(value);
+        public static R.UIInputNode R(this UIInputNode value) => new(value);
         public static R.ProductionPanel R(this ProductionPanel value) => new(value);
         public static R.AreaScreenSubstrate R(this AreaScreenSubstrate value) => new(value);
         public static R.ItemSpecificationPanel R(this ItemSpecificationPanel value) => new(value);

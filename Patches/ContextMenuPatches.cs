@@ -1,5 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
+using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -70,6 +71,8 @@ namespace UIFixes
 
             new SniffInteractionButtonCreationPatch().Enable();
             new ChangeInteractionButtonCreationPatch().Enable();
+
+            new EnableInsureInnerItemsPatch().Enable();
         }
 
         public class DeclareSubInteractionsInventoryPatch : ModulePatch
@@ -241,6 +244,36 @@ namespace UIFixes
                 CurrentInsuranceInteractions = null;
                 CurrentRepairInteractions = null;
                 CreatedButtonInteractionId = null;
+            }
+        }
+
+        public class EnableInsureInnerItemsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(R.ContextMenuHelper.Type, "IsInteractive");
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(object __instance, EItemInfoButton button, ref IResult __result, Item ___item_0)
+            {
+                if (button != EItemInfoButton.Insure)
+                {
+                    return true;
+                }
+
+                InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
+                ItemClass itemClass = ItemClass.FindOrCreate(___item_0);
+                IEnumerable<ItemClass> insurableItems = insurance.GetItemChildren(itemClass).Flatten(insurance.GetItemChildren).Concat([itemClass])
+                    .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
+
+                if (insurableItems.Any())
+                {
+                    __result = SuccessfulResult.New;
+                    return false;
+                }
+
+                return true;
             }
         }
     }
