@@ -41,12 +41,12 @@ namespace UIFixes
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
         public static ConfigEntry<int> MouseScrollMulti { get; set; }
-
         public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> UnloadAmmoKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
         public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
@@ -203,7 +203,7 @@ namespace UIFixes
                 "Use Item Shortcut",
                 new KeyboardShortcut(KeyCode.None),
                 new ConfigDescription(
-                    "Keybind to use an item, such a consumable.",
+                    "Keybind to use an item, such a consumable",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -213,6 +213,15 @@ namespace UIFixes
                 new KeyboardShortcut(KeyCode.None),
                 new ConfigDescription(
                     "Keybind to use all of an item, such a consumable. This will still work on items that don't have 'Use All', just 'Use', in their context menu.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(UnloadAmmoKeyBind = config.Bind(
+                InputSection,
+                "Unload Ammo Shortcut",
+                new KeyboardShortcut(KeyCode.None),
+                new ConfigDescription(
+                    "Keybind to unload the ammo in a magazine",
                     null,
                     new ConfigurationManagerAttributes { })));
 

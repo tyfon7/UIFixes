@@ -66,6 +66,12 @@ namespace UIFixes
                     }
                 }
 
+                if (Settings.UnloadAmmoKeyBind.Value.IsDown())
+                {
+                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.UnloadAmmo);
+                    return;
+                }
+
                 if (Settings.FilterByKeyBind.Value.IsDown())
                 {
                     __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.FilterSearch);
