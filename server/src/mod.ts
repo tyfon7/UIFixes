@@ -1,13 +1,15 @@
 import type { DependencyContainer } from "tsyringe";
 
-import type { IPreAkiLoadMod } from "@spt-aki/models/external/IPreAkiLoadMod";
 import type { InventoryController } from "@spt-aki/controllers/InventoryController";
-import type { ProfileHelper } from "@spt-aki/helpers/ProfileHelper";
 import type { InRaidHelper } from "@spt-aki/helpers/InRaidHelper";
-import type { StaticRouterModService } from "@spt-aki/services/mod/staticRouter/StaticRouterModService";
-import type { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
+import type { ProfileHelper } from "@spt-aki/helpers/ProfileHelper";
+import type { RagfairSortHelper } from "@spt-aki/helpers/RagfairSortHelper";
+import type { IRagfairOffer } from "@spt-aki/models/eft/ragfair/IRagfairOffer";
+import { Money } from "@spt-aki/models/enums/Money";
+import type { IPreAkiLoadMod } from "@spt-aki/models/external/IPreAkiLoadMod";
 import type { ILogger } from "@spt-aki/models/spt/utils/ILogger";
-import type { IPmcData } from "@spt-aki/models/eft/common/IPmcData";
+import type { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
+import type { StaticRouterModService } from "@spt-aki/services/mod/staticRouter/StaticRouterModService";
 import type { JsonUtil } from "@spt-aki/utils/JsonUtil";
 
 class UIFixes implements IPreAkiLoadMod {
@@ -37,7 +39,7 @@ class UIFixes implements IPreAkiLoadMod {
                     return original.call(inventoryController, playerData, request, sessionID);
                 };
             },
-            { frequency: "Once" }
+            { frequency: "Always" }
         );
 
         // Keep quickbinds for items that aren't actually lost on death
@@ -46,7 +48,7 @@ class UIFixes implements IPreAkiLoadMod {
             (_, inRaidHelper: InRaidHelper) => {
                 const original = inRaidHelper.deleteInventory;
 
-                inRaidHelper.deleteInventory = (pmcData: IPmcData, sessionId: string): void => {
+                inRaidHelper.deleteInventory = (pmcData, sessionId) => {
                     // Copy the existing quickbinds
                     const fastPanel = jsonUtil.clone(pmcData.Inventory.fastPanel);
 
@@ -61,7 +63,24 @@ class UIFixes implements IPreAkiLoadMod {
                     }
                 };
             },
-            { frequency: "Once" }
+            { frequency: "Always" }
+        );
+
+        // Handle barter sort type (fixed in 3.9.0)
+        container.afterResolution(
+            "RagfairSortHelper",
+            (_, ragfairSortHelper: RagfairSortHelper) => {
+                const original = ragfairSortHelper.sortOffers;
+
+                ragfairSortHelper.sortOffers = (offers, type, direction) => {
+                    if (+type == 2) {
+                        offers.sort(this.sortOffersByBarter);
+                    }
+
+                    return original.call(ragfairSortHelper, offers, type, direction);
+                };
+            },
+            { frequency: "Always" }
         );
 
         staticRouterModService.registerStaticRouter(
@@ -110,6 +129,13 @@ class UIFixes implements IPreAkiLoadMod {
         }
 
         return result;
+    }
+
+    private sortOffersByBarter(a: IRagfairOffer, b: IRagfairOffer): number {
+        const moneyTpls = Object.values<string>(Money);
+        const aIsOnlyMoney = a.requirements.length == 1 && moneyTpls.includes(a.requirements[0]._tpl) ? 1 : 0;
+        const bIsOnlyMoney = b.requirements.length == 1 && moneyTpls.includes(b.requirements[0]._tpl) ? 1 : 0;
+        return aIsOnlyMoney - bIsOnlyMoney;
     }
 }
 
