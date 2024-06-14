@@ -49,6 +49,7 @@ namespace UIFixes
             ContextMenuShortcutPatches.Enable();
             new OpenSortingTablePatch().Enable();
             LoadAmmoInRaidPatches.Enable();
+            MultiSelectPatches.Enable();
         }
 
         public static bool InRaid()

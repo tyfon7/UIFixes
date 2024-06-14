@@ -58,6 +58,7 @@ namespace UIFixes
             GridSortPanel.InitTypes();
             RepairStrategy.InitTypes();
             ContextMenuHelper.InitTypes();
+            RagfairNewOfferItemView.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -674,6 +675,23 @@ namespace UIFixes
 
             public InsuranceCompanyClass InsuranceCompany { get { return (InsuranceCompanyClass)InsuranceCompanyField.GetValue(Value); } }
         }
+
+        public class RagfairNewOfferItemView(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo SelectedMarkField;
+            private static FieldInfo SelectedBackgroundField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.DragAndDrop.RagfairNewOfferItemView);
+                SelectedMarkField = AccessTools.Field(Type, "_selectedMark");
+                SelectedBackgroundField = AccessTools.Field(Type, "_selectedBackground");
+            }
+
+            public GameObject SelectedMark { get { return (GameObject)SelectedMarkField.GetValue(Value); } }
+            public GameObject SelectedBackground { get { return (GameObject)SelectedBackgroundField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
@@ -700,5 +718,6 @@ namespace UIFixes
         public static R.GridSortPanel R(this GridSortPanel value) => new(value);
         public static R.RepairerParametersPanel R(this RepairerParametersPanel value) => new(value);
         public static R.MessageWindow R(this MessageWindow value) => new(value);
+        public static R.RagfairNewOfferItemView R(this RagfairNewOfferItemView value) => new(value);
     }
 }

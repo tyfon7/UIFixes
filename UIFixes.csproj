@@ -57,6 +57,9 @@
 	<Reference Include="UnityEngine.CoreModule">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
 	</Reference>
+	<Reference Include="UnityEngine.IMGUIModule">
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+	</Reference>
 	<Reference Include="UnityEngine.InputLegacyModule">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
 	</Reference>
