@@ -1,34 +1,68 @@
-﻿using EFT.UI;
+﻿using Comfort.Common;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace UIFixes
 {
     public class DrawMultiSelect : MonoBehaviour
     {
-        Texture2D selectTexture;
+        private Texture2D selectTexture;
 
-        Vector3 selectOrigin;
-        Vector3 selectEnd;
+        private Vector3 selectOrigin;
+        private Vector3 selectEnd;
 
-        bool drawing;
+        private GraphicRaycaster preloaderRaycaster;
+
+        private bool drawing;
 
         public void Start()
         {
             selectTexture = new Texture2D(1, 1);
-            selectTexture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.8f));
+            selectTexture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.6f));
             selectTexture.Apply();
+
+            preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
+            if (preloaderRaycaster == null)
+            {
+                throw new InvalidOperationException("DrawMultiSelect couldn't find the PreloaderUI GraphicRayCaster");
+            }
         }
 
         public void Update()
         {
+            if (!Settings.EnableMultiSelect.Value)
+            {
+                return;
+            }
+
             if (Input.GetKeyDown(KeyCode.Mouse0) && ItemUiContext.Instance.R().ItemContext == null)
             {
+                PointerEventData eventData = new(EventSystem.current);
+                eventData.position = Input.mousePosition;
+
+                List<RaycastResult> results = new();
+                var preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
+                preloaderRaycaster.Raycast(eventData, results);
+
+                foreach (GameObject gameObject in results.Select(r => r.gameObject))
+                {
+                    var dragInterfaces = gameObject.GetComponents<MonoBehaviour>()
+                        .Where(c => c is IDragHandler || c is IBeginDragHandler)
+                        .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
+                        .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
+
+                    if (dragInterfaces.Any())
+                    {
+                        return;
+                    }
+                }
+
                 selectOrigin = Input.mousePosition;
                 drawing = true;
             }
@@ -37,20 +71,62 @@ namespace UIFixes
             {
                 selectEnd = Input.mousePosition;
 
-                Rect selectRect = new(selectOrigin.x, selectOrigin.y, selectEnd.x - selectOrigin.x, selectEnd.y - selectOrigin.y);
-                foreach (GridItemView gridItemView in GetComponentsInChildren<GridItemView>())
+                Rect selectRect = new(selectOrigin, selectEnd - selectOrigin);
+                foreach (GridItemView gridItemView in GetComponentsInChildren<GridItemView>().Concat(Singleton<PreloaderUI>.Instance.GetComponentsInChildren<GridItemView>()))
                 {
                     RectTransform itemTransform = gridItemView.GetComponent<RectTransform>();
-                    Rect screenRect = new((Vector2)itemTransform.position + itemTransform.rect.position, itemTransform.rect.size);
+                    Rect itemRect = new((Vector2)itemTransform.position + itemTransform.rect.position * itemTransform.lossyScale, itemTransform.rect.size * itemTransform.lossyScale);
 
-                    if (selectRect.Overlaps(screenRect, true))
+                    if (selectRect.Overlaps(itemRect, true))
                     {
+                        // Otherwise, ensure it's not overlapped by window UI
+                        PointerEventData eventData = new(EventSystem.current);
+
+                        // Non-absolute width/height
+                        float width = itemRect.xMax - itemRect.xMin;
+                        float height = itemRect.yMax - itemRect.yMin;
+
+                        List<RaycastResult> raycastResults = new();
+                        eventData.position = new Vector2(itemRect.xMin + 0.1f * width, itemRect.yMin + 0.1f * height);
+                        preloaderRaycaster.Raycast(eventData, raycastResults);
+                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+                        {
+                            MultiSelect.Deselect(gridItemView);
+                            continue;
+                        }
+
+                        raycastResults.Clear();
+                        eventData.position = new Vector2(itemRect.xMin + 0.1f * width, itemRect.yMax - 0.1f * height);
+                        preloaderRaycaster.Raycast(eventData, raycastResults);
+                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+                        {
+                            MultiSelect.Deselect(gridItemView);
+                            continue;
+                        }
+
+                        raycastResults.Clear();
+                        eventData.position = new Vector2(itemRect.xMax - 0.1f * width, itemRect.yMax - 0.1f * height);
+                        preloaderRaycaster.Raycast(eventData, raycastResults);
+                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+                        {
+                            MultiSelect.Deselect(gridItemView);
+                            continue;
+                        }
+
+                        raycastResults.Clear();
+                        eventData.position = new Vector2(itemRect.xMax - 0.1f * width, itemRect.yMin + 0.1f * height);
+                        preloaderRaycaster.Raycast(eventData, raycastResults);
+                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+                        {
+                            MultiSelect.Deselect(gridItemView);
+                            continue;
+                        }
+
                         MultiSelect.Select(gridItemView);
+                        continue;
                     }
-                    else
-                    {
-                        MultiSelect.Deselect(gridItemView);
-                    }
+
+                    MultiSelect.Deselect(gridItemView);
                 }
             }
 
@@ -82,6 +158,27 @@ namespace UIFixes
                 GUI.DrawTexture(lineArea, selectTexture);
             }
         }
+    }
 
+    public static class TransformExtensions
+    {
+        public static bool IsDescendantOf(this Transform transform, Transform target)
+        {
+            if (transform == target)
+            {
+                return true;
+            }
+
+            while (transform.parent != null)
+            {
+                transform = transform.parent;
+                if (transform == target)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

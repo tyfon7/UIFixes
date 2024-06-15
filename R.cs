@@ -295,7 +295,7 @@ namespace UIFixes
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.GridView);
-                TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass));
+                TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass)); // field gclass2758_0
                 NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
             }
 
@@ -562,7 +562,7 @@ namespace UIFixes
                 TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(TraderAssortmentControllerClass));
             }
 
-            public TraderAssortmentControllerClass TraderAssortmentControler { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+            public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
         }
 
         public class GridWindow(object value) : UIInputNode(value)

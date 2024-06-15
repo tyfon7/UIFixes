@@ -54,6 +54,7 @@ namespace UIFixes
         public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
         // Inventory
+        public static ConfigEntry<bool> EnableMultiSelect { get; set; }
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
         public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -272,6 +273,15 @@ namespace UIFixes
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Inventory
+            configEntries.Add(EnableMultiSelect = config.Bind(
+                InventorySection,
+                "Enable Multiselect",
+                true,
+                new ConfigDescription(
+                    "Enable multiselect via Shift-click and drag-to-select",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
             configEntries.Add(SwapItems = config.Bind(
                 InventorySection,
                 "Enable In-Place Item Swapping",

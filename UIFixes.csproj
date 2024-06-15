@@ -66,6 +66,9 @@
 	<Reference Include="UnityEngine.UI">
 	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
 	</Reference>
+	<Reference Include="UnityEngine.UIModule">
+	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+	</Reference>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />

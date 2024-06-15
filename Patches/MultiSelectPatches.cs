@@ -1,5 +1,5 @@
 ﻿using Aki.Reflection.Patching;
-using Comfort.Common;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -29,6 +28,7 @@ namespace UIFixes
             new EndDragPatch().Enable();
 
             new GridViewCanAcceptPatch().Enable();
+            new GridViewAcceptItemPatch().Enable();
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
         }
@@ -43,11 +43,16 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(CommonUI __instance)
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 MultiSelect.Initialize();
 
                 __instance.InventoryScreen.GetOrAddComponent<DrawMultiSelect>();
-                //__instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>();
-                //__instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
+                __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>();
+                __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
             }
         }
 
@@ -61,13 +66,18 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(GridItemView __instance, PointerEventData.InputButton button)
             {
-                if (button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
+                if (__instance.Item != null && button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
                 {
                     MultiSelect.Toggle(__instance);
                     return;
                 }
 
-                if (button == PointerEventData.InputButton.Left)// && !MultiSelect.IsSelected(__instance))
+                if (button == PointerEventData.InputButton.Left)
                 {
                     MultiSelect.Clear();
                 }
@@ -84,6 +94,11 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemView __instance, PointerEventData eventData)
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 if (eventData.button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
                 {
                     // This will be shift-click, let it cook
@@ -107,6 +122,11 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemView __instance)
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 if (__instance is GridItemView gridItemView)
                 {
                     MultiSelect.Deselect(gridItemView);
@@ -124,12 +144,22 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix()
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 MultiSelect.BeginDrag();
             }
 
             [PatchPostfix]
             public static void Postfix(ItemView __instance)
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 MultiSelect.ShowDragCount(__instance.DraggedItemView);
             }
         }
@@ -144,6 +174,11 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix()
             {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
                 MultiSelect.EndDrag();
             }
         }
@@ -158,27 +193,84 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(GridView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
             {
-                if (InPatch || !MultiSelect.Active)
+                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
 
+                // Reimplementing this in order to control the simulate param. Need to *not* simulate, then rollback myself in order to test
+                // multiple items going in
+                var wrappedInstance = __instance.R();
                 operation = default;
                 __result = false;
-                return false;
 
-               /* InPatch = true;
+                if (__instance.Grid == null || wrappedInstance.NonInteractable)
+                {
+                    return false;
+                }
+
+                if (targetItemContext != null && !targetItemContext.ModificationAvailable)
+                {
+                    operation = new StashGridClass.GClass3291(__instance.Grid);
+                    return false;
+                }
+
+                Item targetItem = __instance.method_8(targetItemContext);
+
+                // baby steps: bail if no targetItem for now
+                if (targetItem == null)
+                {
+                    return false;
+                }
+
+                Stack<GStruct413> operations = new();
                 foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
                 {
-                    __result = __instance.CanAccept(itemContext, targetItemContext, out operation);
-                    if (!__result)
+                    operation = wrappedInstance.TraderController.ExecutePossibleAction(itemContext, targetItem, false /* splitting */, false /* simulate */);
+                    if (__result = operation.Succeeded)
+                    {
+                        operations.Push(operation);
+                    }
+                    else
                     {
                         break;
                     }
                 }
 
-                InPatch = false;
-                return false;*/
+                // We didn't simulate so now we undo
+                while (operations.Any())
+                {
+                    operations.Pop().Value?.RollBack();
+                }
+
+                // result and operation are set to the last one that completed - so success if they all passed, or the first failure
+                return false;
+            }
+        }
+
+        public class GridViewAcceptItemPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridView), nameof(GridView.AcceptItem));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(GridView __instance, ItemContextAbstractClass targetItemContext, ref Task __result)
+            {
+                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                InPatch = true;
+
+                var serializer = __instance.GetOrAddComponent<TaskSerializer>();
+                __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
+
+                __result.ContinueWith(_ => { InPatch = false; });
+
+                return false;
             }
         }
 
@@ -190,27 +282,43 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController)
             {
-                if (InPatch || !MultiSelect.Active)
+                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
 
-                operation = default;
-                __result = false;
+                // Reimplementing this in order to control the simulate param. Need to *not* simulate, then rollback myself in order to test
+                // multiple items going in
+                if (targetItemContext != null && !targetItemContext.ModificationAvailable || 
+                    __instance.ParentItemContext != null && !__instance.ParentItemContext.ModificationAvailable)
+                {
+                    operation = new StashGridClass.GClass3291(__instance.Slot);
+                    return false;
+                }
 
-                InPatch = true;
+                Stack<GStruct413> operations = new();
                 foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
                 {
-                    __result = __instance.CanAccept(itemContext, targetItemContext, out operation);
-                    if (!__result)
+                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
+                    if (operation.Succeeded)
+                    {
+                        operations.Push(operation);
+                    }
+                    else
                     {
                         break;
                     }
                 }
 
-                InPatch = false;
+                // We didn't simulate so now we undo
+                while(operations.Any())
+                {
+                    operations.Pop().Value?.RollBack();
+                }
+
+                // result and operation are set to the last one that completed - so success if they all passed, or the first failure
                 return false;
             }
         }
@@ -225,22 +333,18 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
-                if (InPatch || !MultiSelect.Active)
+                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
 
                 InPatch = true;
-                /* __result = Task.CompletedTask;
-                 foreach (ItemContextClass itemContext in MultiSelect.ItemContexts.ToList())
-                 {
-                     __result = __result.ContinueWith(_ => __instance.AcceptItem(itemContext, targetItemContext));
-                 }*/
 
                 var serializer = __instance.GetOrAddComponent<TaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
+
                 return false;
             }
         }
@@ -254,6 +358,7 @@ namespace UIFixes
 
             public Task Initialize(IEnumerable<ItemContextClass> itemContexts, Func<ItemContextClass, Task> func)
             {
+                // Create new contexts because the underlying ones will be disposed when drag ends
                 this.itemContexts = new(itemContexts);
                 this.func = func;
 
@@ -283,31 +388,5 @@ namespace UIFixes
                 }
             }
         }
-
-        /*public class GridViewAcceptItemPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(GridView), nameof(GridView.AcceptItem));
-            }
-
-            [PatchPrefix]
-            public static async bool Prefix(GridView __instance, ItemContextAbstractClass targetItemContext, ref Task __result)
-            {
-                if (InPatch || !MultiSelectContext.Instance.Any())
-                {
-                    return true;
-                }
-
-                InPatch = true;
-                foreach (ItemContextClass itemContext in MultiSelectContext.Instance.SelectedDragContexts)
-                {
-                    await __instance.AcceptItem(itemContext, targetItemContext);
-                }
-
-                InPatch = false;
-                return false;
-            }
-        }*/
     }
 }

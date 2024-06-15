@@ -1,10 +1,6 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI.DragAndDrop;
-using System;
+﻿using EFT.UI.DragAndDrop;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -22,8 +18,13 @@ namespace UIFixes
         {
             // Grab the selection objects from ragfair as templates
             RagfairNewOfferItemView ragfairNewOfferItemView = ItemViewFactory.CreateFromPool<RagfairNewOfferItemView>("ragfair_layout");
+
             SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedMark, null, false);
+            UnityEngine.Object.DontDestroyOnLoad(SelectedMarkTemplate);
+
             SelectedBackgroundTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedBackground, null, false);
+            UnityEngine.Object.DontDestroyOnLoad(SelectedBackgroundTemplate);
+
             ragfairNewOfferItemView.ReturnToPool();
         }
 
@@ -91,7 +92,7 @@ namespace UIFixes
 
         public static bool Active
         {
-            get { return SelectedItemViews.Any(); }
+            get { return SelectedItemViews.Count > 1; }
         }
 
         public static bool IsSelected(GridItemView itemView)

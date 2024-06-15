@@ -78,7 +78,7 @@ namespace UIFixes
                     return true;
                 }
 
-                if (!___bool_8 && ctrlPressed && tradingItemView.TraderAssortmentControler.QuickFindTradingAppropriatePlace(__instance.Item, null))
+                if (!___bool_8 && ctrlPressed && tradingItemView.TraderAssortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
                 {
                     __instance.ItemContext.CloseDependentWindows();
                     __instance.HideTooltip();
@@ -91,7 +91,7 @@ namespace UIFixes
 
                 if (___bool_8)
                 {
-                    tradingItemView.TraderAssortmentControler.SelectItem(__instance.Item);
+                    tradingItemView.TraderAssortmentController.SelectItem(__instance.Item);
 
                     BuyTab.OnPointerClick(null);
 
