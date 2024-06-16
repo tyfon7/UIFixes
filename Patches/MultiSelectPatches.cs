@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -23,14 +24,15 @@ namespace UIFixes
             new InitializePatch().Enable();
             new SelectPatch().Enable();
             new DeselectOnOtherMouseDown().Enable();
-            new DeselectOnMovePatch().Enable();
+            new DeselectOnItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
-            new EndDragPatch().Enable();
 
             new GridViewCanAcceptPatch().Enable();
             new GridViewAcceptItemPatch().Enable();
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
+
+            new InspectWindowHack().Enable();
         }
 
         public class InitializePatch : ModulePatch
@@ -50,9 +52,14 @@ namespace UIFixes
 
                 MultiSelect.Initialize();
 
-                __instance.InventoryScreen.GetOrAddComponent<DrawMultiSelect>();
+                __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>();
                 __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>();
                 __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
+
+                if (Settings.ShowMultiSelectDebug.Value)
+                {
+                    Singleton<PreloaderUI>.Instance.GetOrAddComponent<MultiSelectDebug>();
+                }
             }
         }
 
@@ -112,15 +119,15 @@ namespace UIFixes
             }
         }
 
-        public class DeselectOnMovePatch : ModulePatch
+        public class DeselectOnItemViewKillPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(ItemView), nameof(ItemView.Kill));
             }
 
-            [PatchPostfix]
-            public static void Postfix(ItemView __instance)
+            [PatchPrefix]
+            public static void Prefix(ItemView __instance)
             {
                 if (!Settings.EnableMultiSelect.Value)
                 {
@@ -141,17 +148,6 @@ namespace UIFixes
                 return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnBeginDrag));
             }
 
-            [PatchPrefix]
-            public static void Prefix()
-            {
-                if (!Settings.EnableMultiSelect.Value)
-                {
-                    return;
-                }
-
-                MultiSelect.BeginDrag();
-            }
-
             [PatchPostfix]
             public static void Postfix(ItemView __instance)
             {
@@ -161,25 +157,6 @@ namespace UIFixes
                 }
 
                 MultiSelect.ShowDragCount(__instance.DraggedItemView);
-            }
-        }
-
-        public class EndDragPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnEndDrag));
-            }
-
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                if (!Settings.EnableMultiSelect.Value)
-                {
-                    return;
-                }
-
-                MultiSelect.EndDrag();
             }
         }
 
@@ -291,7 +268,7 @@ namespace UIFixes
 
                 // Reimplementing this in order to control the simulate param. Need to *not* simulate, then rollback myself in order to test
                 // multiple items going in
-                if (targetItemContext != null && !targetItemContext.ModificationAvailable || 
+                if (targetItemContext != null && !targetItemContext.ModificationAvailable ||
                     __instance.ParentItemContext != null && !__instance.ParentItemContext.ModificationAvailable)
                 {
                     operation = new StashGridClass.GClass3291(__instance.Slot);
@@ -313,7 +290,7 @@ namespace UIFixes
                 }
 
                 // We didn't simulate so now we undo
-                while(operations.Any())
+                while (operations.Any())
                 {
                     operations.Pop().Value?.RollBack();
                 }
@@ -349,6 +326,29 @@ namespace UIFixes
             }
         }
 
+        // The inspect window likes to recreate itself entirely when a slot is removed, which destroys all of the gridviews and
+        // borks the multiselect. This patch just stops it from responding until the last one (since by then the selection is down to 1, which
+        // is considered inactive multiselect)
+        public class InspectWindowHack : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.OnRemoveFromSlotEvent));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix()
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                // Just skip it when multiselect is active
+                return false;
+            }
+        }
+
         public class TaskSerializer : MonoBehaviour
         {
             private Func<ItemContextClass, Task> func;
@@ -375,7 +375,7 @@ namespace UIFixes
                 {
                     return;
                 }
-                
+
                 if (itemContexts.Any())
                 {
                     currentTask = func(itemContexts.Dequeue());

@@ -55,6 +55,7 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+        public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
         public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -278,9 +279,18 @@ namespace UIFixes
                 "Enable Multiselect",
                 true,
                 new ConfigDescription(
-                    "Enable multiselect via Shift-click and drag-to-select",
+                    "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
                     null,
                     new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ShowMultiSelectDebug = config.Bind(
+                InventorySection,
+                "Show Multiselect Debug",
+                false,
+                new ConfigDescription(
+                    "Enable multi-select debugging display",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             configEntries.Add(SwapItems = config.Bind(
                 InventorySection,
@@ -339,9 +349,9 @@ namespace UIFixes
             configEntries.Add(AutoOpenSortingTable = config.Bind(
                 InventorySection,
                 "Auto-open Sorting Table",
-                true,
+                false,
                 new ConfigDescription(
-                    "Automatically open the sorting table if it's closed when you shift-click an item",
+                    "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -502,7 +512,10 @@ namespace UIFixes
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             RecalcOrder(configEntries);
+
+            ToggleExclusives();
         }
+
         private static void RecalcOrder(List<ConfigEntryBase> configEntries)
         {
             // Set the Order field for all settings, to avoid unnecessary changes when adding new settings
@@ -516,6 +529,30 @@ namespace UIFixes
 
                 settingOrder--;
             }
+        }
+
+        private static void ToggleExclusives()
+        {
+            if (Settings.EnableMultiSelect.Value)
+            {
+                Settings.AutoOpenSortingTable.Value = false;
+            }
+
+            Settings.EnableMultiSelect.SettingChanged += (_, _) =>
+            {
+                if (Settings.EnableMultiSelect.Value)
+                {
+                    Settings.AutoOpenSortingTable.Value = false;
+                }
+            };
+
+            Settings.AutoOpenSortingTable.SettingChanged += (_, _) =>
+            {
+                if (Settings.AutoOpenSortingTable.Value)
+                {
+                    Settings.EnableMultiSelect.Value = false;
+                }
+            };
         }
     }
 }

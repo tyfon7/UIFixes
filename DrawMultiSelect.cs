@@ -17,6 +17,7 @@ namespace UIFixes
         private Vector3 selectOrigin;
         private Vector3 selectEnd;
 
+        private GraphicRaycaster localRaycaster;
         private GraphicRaycaster preloaderRaycaster;
 
         private bool drawing;
@@ -26,6 +27,12 @@ namespace UIFixes
             selectTexture = new Texture2D(1, 1);
             selectTexture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.6f));
             selectTexture.Apply();
+
+            localRaycaster = GetComponentInParent<GraphicRaycaster>();
+            if (localRaycaster == null)
+            {
+                throw new InvalidOperationException("DrawMultiSelect couldn't find GraphicRayCaster in parents");
+            }
 
             preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
             if (preloaderRaycaster == null)
@@ -41,13 +48,16 @@ namespace UIFixes
                 return;
             }
 
+            // checking ItemUiContext is a quick and easy way to know the mouse is over an item
             if (Input.GetKeyDown(KeyCode.Mouse0) && ItemUiContext.Instance.R().ItemContext == null)
             {
-                PointerEventData eventData = new(EventSystem.current);
-                eventData.position = Input.mousePosition;
+                PointerEventData eventData = new(EventSystem.current)
+                {
+                    position = Input.mousePosition
+                };
 
-                List<RaycastResult> results = new();
-                var preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
+                List<RaycastResult> results = [];
+                localRaycaster.Raycast(eventData, results);
                 preloaderRaycaster.Raycast(eventData, results);
 
                 foreach (GameObject gameObject in results.Select(r => r.gameObject))
@@ -86,7 +96,7 @@ namespace UIFixes
                         float width = itemRect.xMax - itemRect.xMin;
                         float height = itemRect.yMax - itemRect.yMin;
 
-                        List<RaycastResult> raycastResults = new();
+                        List<RaycastResult> raycastResults = [];
                         eventData.position = new Vector2(itemRect.xMin + 0.1f * width, itemRect.yMin + 0.1f * height);
                         preloaderRaycaster.Raycast(eventData, raycastResults);
                         if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))

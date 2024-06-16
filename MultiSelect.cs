@@ -1,4 +1,5 @@
 ﻿using EFT.UI.DragAndDrop;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -11,8 +12,8 @@ namespace UIFixes
         private static GameObject SelectedMarkTemplate;
         private static GameObject SelectedBackgroundTemplate;
 
-        private static readonly HashSet<GridItemView> SelectedItemViews = [];
-        private static readonly List<ItemContextClass> SelectedItemContexts = [];
+        private static readonly Dictionary<GridItemView, ItemContextClass> SelectedItemViews = [];
+        private static readonly List<ItemContextClass> SortedItemContexts = [];
 
         public static void Initialize()
         {
@@ -35,7 +36,7 @@ namespace UIFixes
                 return;
             }
 
-            if (SelectedItemViews.Contains(itemView))
+            if (SelectedItemViews.ContainsKey(itemView))
             {
                 Deselect(itemView);
             }
@@ -48,7 +49,7 @@ namespace UIFixes
         public static void Clear()
         {
             // ToList() because we'll be modifying the collection
-            foreach (GridItemView itemView in SelectedItemViews.ToList())
+            foreach (GridItemView itemView in SelectedItemViews.Keys.ToList())
             {
                 Deselect(itemView);
             }
@@ -56,28 +57,39 @@ namespace UIFixes
 
         public static void Select(GridItemView itemView)
         {
-            if (itemView.IsInteractable && SelectedItemViews.Add(itemView))
+            if (itemView.IsInteractable && !SelectedItemViews.ContainsKey(itemView))
             {
+                ItemContextClass itemContext = new ItemContextClass(itemView.ItemContext, itemView.ItemRotation);
+                itemContext.GClass2813_0.OnDisposed += RugPull;
+                itemContext.OnDisposed += RugPull;
+
+                SelectedItemViews.Add(itemView, itemContext);
+                SortedItemContexts.Add(itemContext);
                 ShowSelection(itemView);
             }
         }
 
         public static void Deselect(GridItemView itemView)
         {
-            if (SelectedItemViews.Remove(itemView))
+            if (SelectedItemViews.TryGetValue(itemView, out ItemContextClass itemContext))
             {
+                itemContext.GClass2813_0.OnDisposed -= RugPull;
+                itemContext.OnDisposed -= RugPull;
+                itemContext.Dispose();
+                SortedItemContexts.Remove(itemContext);
+                SelectedItemViews.Remove(itemView);
                 HideSelection(itemView);
             }
         }
 
-        public static IEnumerable<ItemView> ItemViews
+        public static bool IsSelected(GridItemView itemView)
         {
-            get { return SelectedItemViews; }
+            return SelectedItemViews.ContainsKey(itemView);
         }
 
         public static IEnumerable<ItemContextClass> ItemContexts
         {
-            get { return SelectedItemContexts; }
+            get { return SortedItemContexts; }
         }
 
         public static int Count
@@ -85,37 +97,9 @@ namespace UIFixes
             get { return SelectedItemViews.Count; }
         }
 
-        public static bool Contains(GridItemView itemView)
-        {
-            return SelectedItemViews.Contains(itemView);
-        }
-
         public static bool Active
         {
             get { return SelectedItemViews.Count > 1; }
-        }
-
-        public static bool IsSelected(GridItemView itemView)
-        {
-            return SelectedItemViews.Contains(itemView);
-        }
-
-        public static void BeginDrag()
-        {
-            foreach (ItemView itemView in SelectedItemViews)
-            {
-                SelectedItemContexts.Add(new ItemContextClass(itemView.ItemContext, itemView.ItemRotation));
-            }
-        }
-
-        public static void EndDrag()
-        {
-            foreach(ItemContextClass itemContext in SelectedItemContexts)
-            {
-                itemContext.Dispose();
-            }
-
-            SelectedItemContexts.Clear();
         }
 
         public static void ShowDragCount(DraggedItemView draggedItemView)
@@ -137,6 +121,11 @@ namespace UIFixes
                 text.fontSize = 36;
                 text.alignment = TextAlignmentOptions.Baseline;
             }
+        }
+
+        private static void RugPull()
+        {
+            throw new InvalidOperationException("ItemContext disposed before MultiSelect was done with it!");
         }
 
         private static void ShowSelection(GridItemView itemView)
