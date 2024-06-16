@@ -146,7 +146,7 @@ namespace UIFixes
             }
         }
 
-        public class KeyScroller : MonoBehaviour
+        public class KeyScrollListener : MonoBehaviour
         {
             private ScrollRect scrollRect;
 
@@ -259,7 +259,7 @@ namespace UIFixes
                     return;
                 }
 
-                scrollRect.GetOrAddComponent<KeyScroller>();
+                scrollRect.GetOrAddComponent<KeyScrollListener>();
             }
         }
 

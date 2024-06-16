@@ -88,8 +88,8 @@ namespace UIFixes
                     ____searchInputField.text = lastSearch;
                 }
 
-                ScrollPatches.KeyScroller scroller = __instance.GetComponentInParent<ScrollPatches.KeyScroller>();
-                scroller?.OnKeyScroll.AddListener(ClearLastScrollPosition);
+                ScrollPatches.KeyScrollListener listener = __instance.GetComponentInParent<ScrollPatches.KeyScrollListener>();
+                listener?.OnKeyScroll.AddListener(ClearLastScrollPosition);
             }
 
             [PatchPostfix]
@@ -169,7 +169,7 @@ namespace UIFixes
                         LastAbsoluteDownScrollPosition = (1f - scrollRect.verticalNormalizedPosition) * (scrollRect.content.rect.height - scrollRect.viewport.rect.height);
                     }
 
-                    scrollRect.GetComponent<ScrollPatches.KeyScroller>()?.OnKeyScroll.RemoveListener(ClearLastScrollPosition);
+                    scrollRect.GetComponent<ScrollPatches.KeyScrollListener>()?.OnKeyScroll.RemoveListener(ClearLastScrollPosition);
                 }
 
                 // Reset the default behavior

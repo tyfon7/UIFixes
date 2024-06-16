@@ -194,7 +194,7 @@ namespace UIFixes
 
                 Item targetItem = __instance.method_8(targetItemContext);
 
-                // baby steps: bail if no targetItem for now
+                // TODO: Handle dropping in a grid. Bail if no targetItem for now
                 if (targetItem == null)
                 {
                     return false;
