@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace UIFixes
 {
@@ -19,6 +20,10 @@ namespace UIFixes
         // Used to prevent infinite recursion of CanAccept/AcceptItem
         private static bool InPatch = false;
 
+        // If the can accept method should render highlights
+        private static bool ShowHighlights = false;
+        private static readonly List<Image> HighlightPanels = [];
+
         public static void Enable()
         {
             new InitializePatch().Enable();
@@ -26,13 +31,18 @@ namespace UIFixes
             new DeselectOnOtherMouseDown().Enable();
             new DeselectOnItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
+            new EndDragPatch().Enable();
+            new InspectWindowHack().Enable();
 
             new GridViewCanAcceptPatch().Enable();
             new GridViewAcceptItemPatch().Enable();
+            new GridViewPickTargetPatch().Enable();
+            new GridViewHighlightPatch().Enable();
+            new GridViewDisableHighlightPatch().Enable();
+
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
 
-            new InspectWindowHack().Enable();
         }
 
         public class InitializePatch : ModulePatch
@@ -160,6 +170,25 @@ namespace UIFixes
             }
         }
 
+        public class EndDragPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnEndDrag));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ItemView __instance)
+            {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
+                HideHighlights();
+            }
+        }
+
         public class GridViewCanAcceptPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -168,7 +197,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
             {
                 if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
@@ -192,25 +221,60 @@ namespace UIFixes
                     return false;
                 }
 
+                LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
+                GClass2769 hoveredAddress = new GClass2769(__instance.Grid, hoveredLocation);
                 Item targetItem = __instance.method_8(targetItemContext);
 
-                // TODO: Handle dropping in a grid. Bail if no targetItem for now
-                if (targetItem == null)
-                {
-                    return false;
-                }
-
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
+
+                HideHighlights();
+                bool showHighlights = targetItem == null;
+
+                // Prepend the dragContext as the first one
+                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
+                foreach (ItemContextClass selectedItemContext in itemContexts)
                 {
-                    operation = wrappedInstance.TraderController.ExecutePossibleAction(itemContext, targetItem, false /* splitting */, false /* simulate */);
+                    Item item = selectedItemContext.Item;
+                    ItemAddress itemAddress = itemContext.ItemAddress;
+                    if (itemAddress == null)
+                    {
+                        __result = false;
+                        break;
+                    }
+
+                    if (itemAddress.Container == __instance.Grid && __instance.Grid.GetItemLocation(item) == hoveredLocation)
+                    {
+                        __result = false;
+                        break;
+                    }
+
+                    if (!item.CheckAction(hoveredAddress))
+                    {
+                        __result = false;
+                        break;
+                    }
+
+                    operation = targetItem != null ?
+                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
+                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+
                     if (__result = operation.Succeeded)
                     {
                         operations.Push(operation);
+                        if (targetItem != null && showHighlights) // targetItem was originally null so this is the rest of the items
+                        {
+                            ShowHighlight(__instance, operation);
+                        }
                     }
                     else
                     {
                         break;
+                    }
+
+                    // Set this after the first one
+                    if (targetItem == null)
+                    {
+                        targetItem = __instance.Grid.ParentItem;
                     }
                 }
 
@@ -233,7 +297,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextAbstractClass targetItemContext, ref Task __result)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
                 if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
@@ -242,12 +306,138 @@ namespace UIFixes
 
                 InPatch = true;
 
-                var serializer = __instance.GetOrAddComponent<TaskSerializer>();
-                __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
+                // Prepend the dragContext as the first one
+                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
 
-                __result.ContinueWith(_ => { InPatch = false; });
+                var serializer = __instance.GetOrAddComponent<TaskSerializer>();
+                __result = serializer.Initialize(itemContexts,  ic => __instance.AcceptItem(ic, targetItemContext));
+                
+                // Setting the fallback after initializing means it only applies after the first item is already moved
+                GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
+
+                __result.ContinueWith(_ => {
+                    InPatch = false;
+                    GridViewPickTargetPatch.FallbackResult = null;
+                });
 
                 return false;
+            }
+        }
+
+        public class GridViewPickTargetPatch : ModulePatch
+        {
+            public static Item FallbackResult = null;
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridView), nameof(GridView.method_8));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridView __instance, ref Item __result)
+            {
+                __result ??= FallbackResult;
+            }
+        }
+
+        public class GridViewHighlightPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridView), nameof(GridView.HighlightItemViewPosition));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ItemContextAbstractClass targetItemContext)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
+                {
+                    return;
+                }
+
+                ShowHighlights = true;
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, Image ____highlightPanel)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
+                {
+                    return;
+                }
+
+                ShowHighlights = false;
+            }
+
+        }
+
+        private static void ShowHighlight(GridView gridView, GStruct413 operation)
+        { 
+            if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
+            {
+                return;
+            }
+
+            if (gridAddress.Grid != gridView.Grid)
+            {
+                GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
+                if (otherGridView != null)
+                {
+                    ShowHighlight(otherGridView, operation);
+                }
+
+                return;
+            }
+
+            // duplicate the highlight panel
+            Image highLightPanel = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
+            highLightPanel.gameObject.SetActive(true);
+            HighlightPanels.Add(highLightPanel);
+            highLightPanel.color = gridView.GetHighlightColor(null, operation, null); // 1st and 3rd args aren't even used
+
+            RectTransform rectTransform = highLightPanel.rectTransform;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.pivot = new Vector2(0f, 1f);
+            rectTransform.anchorMin = new Vector2(0f, 1f);
+            rectTransform.anchorMax = new Vector2(0f, 1f);
+            rectTransform.localPosition = Vector3.zero;
+
+            GStruct24 itemSize = moveOperation.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+            LocationInGrid locationInGrid = gridAddress.LocationInGrid;
+            int num = locationInGrid.x;
+            int num2 = locationInGrid.y;
+            int num3 = num + itemSize.X;
+            int num4 = num2 + itemSize.Y;
+            num = Mathf.Clamp(num, 0, gridView.Grid.GridWidth.Value);
+            num2 = Mathf.Clamp(num2, 0, gridView.Grid.GridHeight.Value);
+            num3 = Mathf.Clamp(num3, 0, gridView.Grid.GridWidth.Value);
+            num4 = Mathf.Clamp(num4, 0, gridView.Grid.GridHeight.Value);
+            rectTransform.anchoredPosition = new Vector2((float)(num * 63), (float)(-(float)num2 * 63));
+            rectTransform.sizeDelta = new Vector2((float)((num3 - num) * 63), (float)((num4 - num2) * 63));
+        }
+
+        private static void HideHighlights()
+        {
+            foreach (Image highLightPanel in HighlightPanels)
+            {
+                highLightPanel.gameObject.SetActive(false);
+                UnityEngine.Object.Destroy(highLightPanel);
+            }
+
+            HighlightPanels.Clear();
+        }
+
+        public class GridViewDisableHighlightPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridView), nameof(GridView.DisableHighlight));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridView __instance)
+            {
+                HideHighlights();
             }
         }
 

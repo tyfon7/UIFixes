@@ -51,6 +51,12 @@ namespace UIFixes
                 return false;
             }
 
+            // Haha no
+            if (MultiSelect.Active)
+            {
+                return false;
+            }
+
             var wrappedOperation = new R.GridViewCanAcceptOperation(operation);
 
             if (InHighlight || itemContext == null || targetItemContext == null || wrappedOperation.Succeeded)

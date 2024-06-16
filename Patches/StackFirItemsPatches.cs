@@ -56,7 +56,8 @@ namespace UIFixes
                     ignoreSpawnedInSession = Settings.MergeFIROther.Value;
                 }
 
-                mergeableItem = gridsToPut.SelectMany(x => x.Items).Where(x => MergeableItemType.IsInstanceOfType(x))
+                mergeableItem = gridsToPut.SelectMany(x => x.Items)
+                    .Where(x => MergeableItemType.IsInstanceOfType(x))
                     .Where(x => x != itemToMerge)
                     .Where(x => x.TemplateId == itemToMerge.TemplateId)
                     .Where(x => ignoreSpawnedInSession || x.SpawnedInSession == itemToMerge.SpawnedInSession)

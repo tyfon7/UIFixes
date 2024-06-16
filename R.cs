@@ -291,16 +291,19 @@ namespace UIFixes
             public static Type Type { get; private set; }
             private static FieldInfo TraderControllerField;
             private static FieldInfo NonInteractableField;
+            private static FieldInfo HighlightPanelField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.GridView);
                 TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass)); // field gclass2758_0
                 NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
+                HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
             }
 
             public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
             public bool NonInteractable { get { return (bool)NonInteractableField.GetValue(Value); } }
+            public Image HighlightPanel { get { return (Image)HighlightPanelField.GetValue(Value); } }
         }
 
         public class GridViewCanAcceptOperation(object value) : Wrapper(value)
