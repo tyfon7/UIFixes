@@ -31,11 +31,6 @@ namespace UIFixes
 
         public static void Toggle(GridItemView itemView)
         {
-            if (!itemView.IsInteractable)
-            {
-                return;
-            }
-
             if (SelectedItemViews.ContainsKey(itemView))
             {
                 Deselect(itemView);
@@ -57,9 +52,9 @@ namespace UIFixes
 
         public static void Select(GridItemView itemView)
         {
-            if (itemView.IsInteractable && !SelectedItemViews.ContainsKey(itemView))
+            if (itemView.IsSelectable() && !SelectedItemViews.ContainsKey(itemView))
             {
-                ItemContextClass itemContext = new ItemContextClass(itemView.ItemContext, itemView.ItemRotation);
+                ItemContextClass itemContext = new(itemView.ItemContext, itemView.ItemRotation);
                 itemContext.GClass2813_0.OnDisposed += RugPull;
                 itemContext.OnDisposed += RugPull;
 
@@ -157,6 +152,14 @@ namespace UIFixes
 
             selectedMark?.SetActive(false);
             selectedBackground?.SetActive(false);
+        }
+    }
+
+    public static class MultiSelectExtensions
+    {
+        public static bool IsSelectable(this ItemView itemView)
+        {
+            return itemView.IsInteractable && itemView.IsSearched && itemView.RemoveError.Value == null;
         }
     }
 }

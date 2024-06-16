@@ -6,7 +6,7 @@ namespace UIFixes
     public class MultiSelectDebug : MonoBehaviour
     {
         private GUIStyle guiStyle;
-        private Rect guiRect = new(20, 20, 0, 0);
+        private Rect guiRect = new(20, 70, 0, 0);
 
         GUIContent guiContent;
 

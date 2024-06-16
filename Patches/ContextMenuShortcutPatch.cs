@@ -34,53 +34,60 @@ namespace UIFixes
                     return;
                 }
 
+                var interactions = __instance.GetItemContextInteractions(itemContext, null);
                 if (Settings.InspectKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Inspect);
+                    interactions.ExecuteInteraction(EItemInfoButton.Inspect);
                     return;
                 }
 
                 if (Settings.OpenKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Open);
+                    interactions.ExecuteInteraction(EItemInfoButton.Open);
                     return;
                 }
 
                 if (Settings.TopUpKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.TopUp);
+                    interactions.ExecuteInteraction(EItemInfoButton.TopUp);
                     return;
                 }
 
                 if (Settings.UseKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.Use);
+                    interactions.ExecuteInteraction(EItemInfoButton.Use);
+                    return;
                 }
 
                 if (Settings.UseAllKeyBind.Value.IsDown())
                 {
-                    var interactions = __instance.GetItemContextInteractions(itemContext, null);
                     if (!interactions.ExecuteInteraction(EItemInfoButton.UseAll))
                     {
                         interactions.ExecuteInteraction(EItemInfoButton.Use);
                     }
+
+                    return;
                 }
 
-                if (Settings.UnloadAmmoKeyBind.Value.IsDown())
+                if (Settings.UnloadKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.UnloadAmmo);
+                    if (!interactions.ExecuteInteraction(EItemInfoButton.Unload))
+                    {
+                        interactions.ExecuteInteraction(EItemInfoButton.UnloadAmmo);
+                    }
+
                     return;
                 }
 
                 if (Settings.FilterByKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.FilterSearch);
+                    interactions.ExecuteInteraction(EItemInfoButton.FilterSearch);
                     return;
                 }
 
                 if (Settings.LinkedSearchKeyBind.Value.IsDown())
                 {
-                    __instance.GetItemContextInteractions(itemContext, null).ExecuteInteraction(EItemInfoButton.LinkedSearch);
+                    interactions.ExecuteInteraction(EItemInfoButton.LinkedSearch);
                     return;
                 }
             }

@@ -47,7 +47,7 @@ namespace UIFixes
         public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
-        public static ConfigEntry<KeyboardShortcut> UnloadAmmoKeyBind { get; set; }
+        public static ConfigEntry<KeyboardShortcut> UnloadKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
         public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
@@ -228,12 +228,12 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
-            configEntries.Add(UnloadAmmoKeyBind = config.Bind(
+            configEntries.Add(UnloadKeyBind = config.Bind(
                 InputSection,
-                "Unload Ammo Shortcut",
-                new KeyboardShortcut(KeyCode.None),
+                "Unload Mag/Ammo Shortcut",
+                new KeyboardShortcut(KeyCode.U),
                 new ConfigDescription(
-                    "Keybind to unload the ammo in a magazine",
+                    "Keybind to unload the ammo in a magazine, or a magazine in a gun",
                     null,
                     new ConfigurationManagerAttributes { })));
 
