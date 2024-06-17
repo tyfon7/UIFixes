@@ -16,7 +16,7 @@ namespace UIFixes
             ConfirmDialogKeysPatches.Enable();
             new FixMailRecieveAllPatch().Enable();
             FixTooltipPatches.Enable();
-            new FixWeaponBindsDisplayPatch().Enable();
+            QuickAccessPanelPatches.Enable();
             FocusFleaOfferNumberPatches.Enable();
             HideoutSearchPatches.Enable();
             HideoutLevelPatches.Enable();

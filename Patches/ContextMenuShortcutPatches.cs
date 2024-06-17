@@ -3,7 +3,6 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using System;
 using System.Reflection;
 using UnityEngine.EventSystems;
 
