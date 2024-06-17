@@ -15,6 +15,9 @@ namespace UIFixes
         private static readonly Dictionary<GridItemView, ItemContextClass> SelectedItemViews = [];
         private static readonly List<ItemContextClass> SortedItemContexts = [];
 
+        private static readonly Dictionary<GridItemView, ItemContextClass> SecondaryItemViews = [];
+        private static readonly List<ItemContextClass> SecondaryItemContexts = [];
+
         public static void Initialize()
         {
             // Grab the selection objects from ragfair as templates
@@ -29,15 +32,16 @@ namespace UIFixes
             ragfairNewOfferItemView.ReturnToPool();
         }
 
-        public static void Toggle(GridItemView itemView)
+        public static void Toggle(GridItemView itemView, bool secondary = false)
         {
-            if (SelectedItemViews.ContainsKey(itemView))
+            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
+            if (dictionary.ContainsKey(itemView))
             {
-                Deselect(itemView);
+                Deselect(itemView, secondary);
             }
             else
             {
-                Select(itemView);
+                Select(itemView, secondary);
             }
         }
 
@@ -50,29 +54,38 @@ namespace UIFixes
             }
         }
 
-        public static void Select(GridItemView itemView)
+        public static void Select(GridItemView itemView, bool secondary = false)
         {
-            if (itemView.IsSelectable() && !SelectedItemViews.ContainsKey(itemView))
+            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
+            var list = secondary ? SecondaryItemContexts : SortedItemContexts;
+
+            if (itemView.IsSelectable() && !SelectedItemViews.ContainsKey(itemView) && !SecondaryItemViews.ContainsKey(itemView))
             {
                 ItemContextClass itemContext = new(itemView.ItemContext, itemView.ItemRotation);
                 itemContext.GClass2813_0.OnDisposed += RugPull;
                 itemContext.OnDisposed += RugPull;
 
-                SelectedItemViews.Add(itemView, itemContext);
-                SortedItemContexts.Add(itemContext);
+                // Remove event handlers that no one cares about and cause stack overflows
+                itemContext.method_1();
+
+                dictionary.Add(itemView, itemContext);
+                list.Add(itemContext);
                 ShowSelection(itemView);
             }
         }
 
-        public static void Deselect(GridItemView itemView)
+        public static void Deselect(GridItemView itemView, bool secondary = false)
         {
-            if (SelectedItemViews.TryGetValue(itemView, out ItemContextClass itemContext))
+            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
+            var list = secondary ? SecondaryItemContexts : SortedItemContexts;
+
+            if (dictionary.TryGetValue(itemView, out ItemContextClass itemContext))
             {
                 itemContext.GClass2813_0.OnDisposed -= RugPull;
                 itemContext.OnDisposed -= RugPull;
                 itemContext.Dispose();
-                SortedItemContexts.Remove(itemContext);
-                SelectedItemViews.Remove(itemView);
+                list.Remove(itemContext);
+                dictionary.Remove(itemView);
                 HideSelection(itemView);
             }
         }
@@ -82,14 +95,40 @@ namespace UIFixes
             return SelectedItemViews.ContainsKey(itemView);
         }
 
+        public static void CombineSecondary()
+        {
+            foreach (var entry in SecondaryItemViews)
+            {
+                SelectedItemViews.Add(entry.Key, entry.Value);
+            }
+
+            foreach (ItemContextClass itemContext in SecondaryItemContexts)
+            {
+                SortedItemContexts.Add(itemContext);
+            }
+
+            SecondaryItemViews.Clear();
+            SecondaryItemContexts.Clear();
+        }
+
         public static IEnumerable<ItemContextClass> ItemContexts
         {
             get { return SortedItemContexts; }
         }
 
+        public static IEnumerable<ItemContextClass> SecondaryContexts
+        {
+            get { return SecondaryItemContexts; }
+        }
+
         public static int Count
         {
             get { return SelectedItemViews.Count; }
+        }
+
+        public static int SecondaryCount
+        {
+            get { return SecondaryItemViews.Count; }
         }
 
         public static bool Active
@@ -159,7 +198,22 @@ namespace UIFixes
     {
         public static bool IsSelectable(this ItemView itemView)
         {
-            return itemView.IsInteractable && itemView.IsSearched && itemView.RemoveError.Value == null;
+            // Common non-interactable stuff
+            if (!itemView.IsInteractable || !itemView.IsSearched || itemView.RemoveError.Value != null)
+            {
+                return false;
+            }
+
+            // You can't multi-select trader's items or items being sold
+            if (itemView is TradingItemView tradingItemView)
+            {
+                if (itemView is not TradingPlayerItemView || tradingItemView.R().IsBeingSold)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

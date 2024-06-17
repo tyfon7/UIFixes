@@ -59,6 +59,7 @@ namespace UIFixes
             RepairStrategy.InitTypes();
             ContextMenuHelper.InitTypes();
             RagfairNewOfferItemView.InitTypes();
+            TradingTableGridView.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -292,18 +293,23 @@ namespace UIFixes
             private static FieldInfo TraderControllerField;
             private static FieldInfo NonInteractableField;
             private static FieldInfo HighlightPanelField;
-
+            private static FieldInfo ValidMoveColorField;
+            private static FieldInfo InvalidOperationColorField; 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.GridView);
                 TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass)); // field gclass2758_0
                 NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
                 HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
+                ValidMoveColorField = AccessTools.Field(Type, "ValidMoveColor");
+                InvalidOperationColorField = AccessTools.Field(Type, "InvalidOperationColor");
             }
 
             public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
             public bool NonInteractable { get { return (bool)NonInteractableField.GetValue(Value); } }
             public Image HighlightPanel { get { return (Image)HighlightPanelField.GetValue(Value); } }
+            public static Color ValidMoveColor { get { return (Color)ValidMoveColorField.GetValue(null); } }
+            public static Color InvalidOperationColor { get { return (Color)InvalidOperationColorField.GetValue(null); } }
         }
 
         public class GridViewCanAcceptOperation(object value) : Wrapper(value)
@@ -558,14 +564,17 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo TraderAssortmentControllerField;
+            private static FieldInfo IsBeingSoldField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.TradingItemView);
                 TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(TraderAssortmentControllerClass));
+                IsBeingSoldField = AccessTools.GetDeclaredFields(Type).First(f => f.FieldType == typeof(BindableState<bool>));
             }
 
             public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+            public bool IsBeingSold { get { return ((BindableState<bool>)IsBeingSoldField.GetValue(Value)).Value; } }
         }
 
         public class GridWindow(object value) : UIInputNode(value)
@@ -695,6 +704,20 @@ namespace UIFixes
             public GameObject SelectedMark { get { return (GameObject)SelectedMarkField.GetValue(Value); } }
             public GameObject SelectedBackground { get { return (GameObject)SelectedBackgroundField.GetValue(Value); } }
         }
+
+        public class TradingTableGridView(object value) : GridView(value)
+        {
+            public new static Type Type { get; private set; }
+            private static FieldInfo TraderAssortmentControllerField;
+
+            public new static void InitTypes()
+            {
+                Type = typeof(EFT.UI.DragAndDrop.TradingTableGridView);
+                TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderAssortmentControllerClass));
+            }
+
+            public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
@@ -722,5 +745,6 @@ namespace UIFixes
         public static R.RepairerParametersPanel R(this RepairerParametersPanel value) => new(value);
         public static R.MessageWindow R(this MessageWindow value) => new(value);
         public static R.RagfairNewOfferItemView R(this RagfairNewOfferItemView value) => new(value);
+        public static R.TradingTableGridView R(this TradingTableGridView value) => new(value);
     }
 }

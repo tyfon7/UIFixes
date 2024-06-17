@@ -21,31 +21,36 @@ namespace UIFixes
         private static bool InPatch = false;
 
         // If the can accept method should render highlights
-        private static bool ShowHighlights = false;
         private static readonly List<Image> HighlightPanels = [];
 
         public static void Enable()
         {
-            new InitializePatch().Enable();
-            new SelectPatch().Enable();
-            new DeselectOnOtherMouseDown().Enable();
+            new InitializeCommonUIPatch().Enable();
+            new InitializeMenuUIPatch().Enable();
+            new SelectOnMouseDownPatch().Enable();
+            new DeselectOnGridItemViewClickPatch().Enable();
+            new DeselectOnTradingItemViewClickPatch().Enable();
             new DeselectOnItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
             new EndDragPatch().Enable();
             new InspectWindowHack().Enable();
+            new DisableSplitPatch().Enable();
+            new DisableSplitTargetPatch().Enable();
 
             new GridViewCanAcceptPatch().Enable();
             new GridViewAcceptItemPatch().Enable();
             new GridViewPickTargetPatch().Enable();
-            new GridViewHighlightPatch().Enable();
             new GridViewDisableHighlightPatch().Enable();
 
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
 
+            new TradingTableCanAcceptPatch().Enable();
+            new TradingTableAcceptItemPatch().Enable();
+            new TradingTableGetHighlightColorPatch().Enable();
         }
 
-        public class InitializePatch : ModulePatch
+        public class InitializeCommonUIPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -73,35 +78,26 @@ namespace UIFixes
             }
         }
 
-        public class SelectPatch : ModulePatch
+        public class InitializeMenuUIPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.OnClick));
+                return AccessTools.Method(typeof(MenuUI), nameof(MenuUI.Awake));
             }
 
             [PatchPostfix]
-            public static void Postfix(GridItemView __instance, PointerEventData.InputButton button)
+            public static void Postfix(MenuUI __instance)
             {
                 if (!Settings.EnableMultiSelect.Value)
                 {
                     return;
                 }
 
-                if (__instance.Item != null && button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
-                {
-                    MultiSelect.Toggle(__instance);
-                    return;
-                }
-
-                if (button == PointerEventData.InputButton.Left)
-                {
-                    MultiSelect.Clear();
-                }
+                __instance.TraderScreensGroup.transform.Find("Deal Screen").gameObject.GetOrAddComponent<DrawMultiSelect>();
             }
         }
 
-        public class DeselectOnOtherMouseDown : ModulePatch
+        public class SelectOnMouseDownPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -116,13 +112,60 @@ namespace UIFixes
                     return;
                 }
 
-                if (eventData.button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                if (__instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
                 {
-                    // This will be shift-click, let it cook
+                    MultiSelect.Toggle(gridItemView);
                     return;
                 }
 
-                if (__instance is not GridItemView gridItemView || !MultiSelect.IsSelected(gridItemView))
+                if (__instance is not GridItemView gridItemView2 || !MultiSelect.IsSelected(gridItemView2))
+                {
+                    MultiSelect.Clear();
+                }
+            }
+        }
+
+        public class DeselectOnGridItemViewClickPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.OnClick));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridItemView __instance, PointerEventData.InputButton button)
+            {
+                if (!Settings.EnableMultiSelect.Value)
+                {
+                    return;
+                }
+
+                // Mousedown handles most things, just need to handle the non-shift click of a selected item
+                if (button == PointerEventData.InputButton.Left && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+                {
+                    MultiSelect.Clear();
+                }
+            }
+        }
+
+        // TradingItemView overrides GridItemView.OnClick and doesn't call base
+        public class DeselectOnTradingItemViewClickPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingItemView), nameof(TradingItemView.OnClick));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(TradingItemView __instance, PointerEventData.InputButton button)
+            {
+                if (!Settings.EnableMultiSelect.Value || __instance is not TradingPlayerItemView)
+                {
+                    return;
+                }
+
+                // Mousedown handles most things, just need to handle the non-shift click of a selected item
+                if (button == PointerEventData.InputButton.Left && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
                 {
                     MultiSelect.Clear();
                 }
@@ -263,7 +306,7 @@ namespace UIFixes
                         operations.Push(operation);
                         if (targetItem != null && showHighlights) // targetItem was originally null so this is the rest of the items
                         {
-                            ShowHighlight(__instance, operation);
+                            ShowHighlight(__instance, selectedItemContext, operation);
                         }
                     }
                     else
@@ -310,12 +353,13 @@ namespace UIFixes
                 IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
 
                 var serializer = __instance.GetOrAddComponent<TaskSerializer>();
-                __result = serializer.Initialize(itemContexts,  ic => __instance.AcceptItem(ic, targetItemContext));
-                
+                __result = serializer.Initialize(itemContexts, ic => __instance.AcceptItem(ic, targetItemContext));
+
                 // Setting the fallback after initializing means it only applies after the first item is already moved
                 GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
 
-                __result.ContinueWith(_ => {
+                __result.ContinueWith(_ =>
+                {
                     InPatch = false;
                     GridViewPickTargetPatch.FallbackResult = null;
                 });
@@ -340,39 +384,8 @@ namespace UIFixes
             }
         }
 
-        public class GridViewHighlightPatch : ModulePatch
+        private static void ShowHighlight(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(GridView), nameof(GridView.HighlightItemViewPosition));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(ItemContextAbstractClass targetItemContext)
-            {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
-                {
-                    return;
-                }
-
-                ShowHighlights = true;
-            }
-
-            [PatchPostfix]
-            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, Image ____highlightPanel)
-            {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
-                {
-                    return;
-                }
-
-                ShowHighlights = false;
-            }
-
-        }
-
-        private static void ShowHighlight(GridView gridView, GStruct413 operation)
-        { 
             if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
             {
                 return;
@@ -383,7 +396,7 @@ namespace UIFixes
                 GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
                 if (otherGridView != null)
                 {
-                    ShowHighlight(otherGridView, operation);
+                    ShowHighlight(otherGridView, itemContext, operation);
                 }
 
                 return;
@@ -393,7 +406,7 @@ namespace UIFixes
             Image highLightPanel = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
             highLightPanel.gameObject.SetActive(true);
             HighlightPanels.Add(highLightPanel);
-            highLightPanel.color = gridView.GetHighlightColor(null, operation, null); // 1st and 3rd args aren't even used
+            highLightPanel.color = gridView.GetHighlightColor(itemContext, operation, null);
 
             RectTransform rectTransform = highLightPanel.rectTransform;
             rectTransform.localScale = Vector3.one;
@@ -420,8 +433,7 @@ namespace UIFixes
         {
             foreach (Image highLightPanel in HighlightPanels)
             {
-                highLightPanel.gameObject.SetActive(false);
-                UnityEngine.Object.Destroy(highLightPanel);
+                UnityEngine.Object.Destroy(highLightPanel.gameObject);
             }
 
             HighlightPanels.Clear();
@@ -516,6 +528,144 @@ namespace UIFixes
             }
         }
 
+        public class TradingTableCanAcceptPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingTableGridView), nameof(TradingTableGridView.CanAccept));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                operation = default;
+                __result = false;
+
+                TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
+
+                HideHighlights();
+
+                bool firstItem = true;
+
+                Stack<GStruct413> operations = new();
+                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
+                foreach (ItemContextClass selectedItemContext in itemContexts)
+                {
+                    if (traderAssortmentController.CanPrepareItemToSell(selectedItemContext.Item))
+                    {
+                        operation = firstItem ?
+                            InteractionsHandlerClass.Move(selectedItemContext.Item, new GClass2769(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
+                            InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, false);
+
+                        if (__result = operation.Succeeded)
+                        {
+                            operations.Push(operation);
+                            if (!firstItem) // targetItem was originally null so this is the rest of the items
+                            {
+                                ShowHighlight(__instance, selectedItemContext, operation);
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        operation = default;
+                        __result = false;
+                        break;
+                    }
+
+                    firstItem = false;
+                }
+
+                // We didn't simulate so now we undo
+                while (operations.Any())
+                {
+                    operations.Pop().Value?.RollBack();
+                }
+
+                return false;
+            }
+        }
+
+        public class TradingTableAcceptItemPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingTableGridView), nameof(TradingTableGridView.AcceptItem));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
+
+                LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
+                itemContext.DragCancelled();
+                traderAssortmentController.PrepareToSell(itemContext.Item, locationInGrid);
+                itemContext.CloseDependentWindows();
+
+                // For the rest of the items we still need to use quickfind
+                foreach (ItemContextClass selectedItemContext in MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item))
+                {
+                    GStruct413 operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
+                    if (operation.Failed || operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
+                    {
+                        break;
+                    }
+
+                    traderAssortmentController.PrepareToSell(selectedItemContext.Item, gridAddress.LocationInGrid);
+                }
+
+                MultiSelect.Clear(); // explicitly clear since the items are no longer selectable
+                __result = Task.CompletedTask;
+                return false;
+            }
+        }
+
+        // Reimplement this method because BSG ignores the operation that is passed in and re-does the entire logic, 
+        // like the dumb assholes they are
+        public class TradingTableGetHighlightColorPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingTableGridView), nameof(TradingTableGridView.GetHighlightColor));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Color __result)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
+                {
+                    return true;
+                }
+
+                TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
+                if (MultiSelect.ItemContexts.All(ic => traderAssortmentController.CanPrepareItemToSell(ic.Item)))
+                {
+                    __result = R.GridView.ValidMoveColor;
+                }
+                else
+                {
+                    __result = R.GridView.InvalidOperationColor;
+                }
+
+                return false;
+            }
+        }
+
         // The inspect window likes to recreate itself entirely when a slot is removed, which destroys all of the gridviews and
         // borks the multiselect. This patch just stops it from responding until the last one (since by then the selection is down to 1, which
         // is considered inactive multiselect)
@@ -536,6 +686,40 @@ namespace UIFixes
 
                 // Just skip it when multiselect is active
                 return false;
+            }
+        }
+
+        public class DisableSplitPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(Item), typeof(bool), typeof(bool)]);
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ref bool partialTransferOnly)
+            {
+                if (MultiSelect.Active)
+                {
+                    partialTransferOnly = false;
+                }
+            }
+        }
+
+        public class DisableSplitTargetPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(ItemContextAbstractClass), typeof(ItemAddress), typeof(bool), typeof(bool)]);
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ref bool partialTransferOnly)
+            {
+                if (MultiSelect.Active)
+                {
+                    partialTransferOnly = false;
+                }
             }
         }
 

@@ -21,6 +21,7 @@ namespace UIFixes
         private GraphicRaycaster preloaderRaycaster;
 
         private bool drawing;
+        private bool secondary;
 
         public void Start()
         {
@@ -75,6 +76,7 @@ namespace UIFixes
 
                 selectOrigin = Input.mousePosition;
                 drawing = true;
+                secondary = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             }
 
             if (drawing)
@@ -101,7 +103,7 @@ namespace UIFixes
                         preloaderRaycaster.Raycast(eventData, raycastResults);
                         if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
                         {
-                            MultiSelect.Deselect(gridItemView);
+                            MultiSelect.Deselect(gridItemView, secondary);
                             continue;
                         }
 
@@ -110,7 +112,7 @@ namespace UIFixes
                         preloaderRaycaster.Raycast(eventData, raycastResults);
                         if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
                         {
-                            MultiSelect.Deselect(gridItemView);
+                            MultiSelect.Deselect(gridItemView, secondary);
                             continue;
                         }
 
@@ -119,7 +121,7 @@ namespace UIFixes
                         preloaderRaycaster.Raycast(eventData, raycastResults);
                         if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
                         {
-                            MultiSelect.Deselect(gridItemView);
+                            MultiSelect.Deselect(gridItemView, secondary);
                             continue;
                         }
 
@@ -128,21 +130,26 @@ namespace UIFixes
                         preloaderRaycaster.Raycast(eventData, raycastResults);
                         if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
                         {
-                            MultiSelect.Deselect(gridItemView);
+                            MultiSelect.Deselect(gridItemView, secondary);
                             continue;
                         }
 
-                        MultiSelect.Select(gridItemView);
+                        MultiSelect.Select(gridItemView, secondary);
                         continue;
                     }
 
-                    MultiSelect.Deselect(gridItemView);
+                    MultiSelect.Deselect(gridItemView, secondary);
                 }
             }
 
             if (drawing && !Input.GetKey(KeyCode.Mouse0))
             {
                 drawing = false;
+                if (secondary)
+                {
+                    MultiSelect.CombineSecondary();
+                    secondary = false;
+                }
             }
         }
 

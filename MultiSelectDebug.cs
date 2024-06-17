@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace UIFixes
@@ -31,13 +32,22 @@ namespace UIFixes
 
             builder.Append("<b>MultiSelect</b>\n");
             builder.AppendFormat("Active: <color={0}>{1}</color>\n", MultiSelect.Active ? "green" : "red", MultiSelect.Active);
-            builder.AppendFormat("Count: <color=yellow>{0}</color>\n", MultiSelect.Count);
-            builder.Append("Items:\n");
+            builder.AppendFormat("Items: <color=yellow>{0}</color>\n", MultiSelect.Count);
 
             foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
             {
                 builder.Append(itemContext.Item.ToString());
                 builder.AppendLine();
+            }
+
+            if (MultiSelect.SecondaryContexts.Any())
+            {
+                builder.AppendFormat("Secondary Items: <color=yellow>{0}</color>\n", MultiSelect.SecondaryCount);
+                foreach (ItemContextClass itemContext in MultiSelect.SecondaryContexts)
+                {
+                    builder.Append(itemContext.Item.ToString());
+                    builder.AppendLine();
+                }
             }
 
             guiContent.text = builder.ToString();
