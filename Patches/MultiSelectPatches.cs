@@ -21,7 +21,7 @@ namespace UIFixes
         private static bool InPatch = false;
 
         // If the can accept method should render highlights
-        private static readonly List<Image> HighlightPanels = [];
+        private static readonly List<Image> Previews = [];
 
         public static void Enable()
         {
@@ -228,7 +228,7 @@ namespace UIFixes
                     return;
                 }
 
-                HideHighlights();
+                HidePreviews();
             }
         }
 
@@ -270,7 +270,7 @@ namespace UIFixes
 
                 Stack<GStruct413> operations = new();
 
-                HideHighlights();
+                HidePreviews();
                 bool showHighlights = targetItem == null;
 
                 // Prepend the dragContext as the first one
@@ -306,7 +306,7 @@ namespace UIFixes
                         operations.Push(operation);
                         if (targetItem != null && showHighlights) // targetItem was originally null so this is the rest of the items
                         {
-                            ShowHighlight(__instance, selectedItemContext, operation);
+                            ShowPreview(__instance, selectedItemContext, operation);
                         }
                     }
                     else
@@ -319,6 +319,11 @@ namespace UIFixes
                     {
                         targetItem = __instance.Grid.ParentItem;
                     }
+                }
+
+                if (!__result)
+                {
+                    HidePreviews();
                 }
 
                 // We didn't simulate so now we undo
@@ -384,7 +389,7 @@ namespace UIFixes
             }
         }
 
-        private static void ShowHighlight(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
         {
             if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
             {
@@ -396,47 +401,51 @@ namespace UIFixes
                 GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
                 if (otherGridView != null)
                 {
-                    ShowHighlight(otherGridView, itemContext, operation);
+                    ShowPreview(otherGridView, itemContext, operation);
                 }
 
                 return;
             }
 
-            // duplicate the highlight panel
-            Image highLightPanel = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
-            highLightPanel.gameObject.SetActive(true);
-            HighlightPanels.Add(highLightPanel);
-            highLightPanel.color = gridView.GetHighlightColor(itemContext, operation, null);
+            Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
+            preview.gameObject.SetActive(true);
+            Previews.Add(preview);
 
-            RectTransform rectTransform = highLightPanel.rectTransform;
-            rectTransform.localScale = Vector3.one;
-            rectTransform.pivot = new Vector2(0f, 1f);
-            rectTransform.anchorMin = new Vector2(0f, 1f);
-            rectTransform.anchorMax = new Vector2(0f, 1f);
-            rectTransform.localPosition = Vector3.zero;
+            var itemIcon = ItemViewFactory.LoadItemIcon(itemContext.Item);
+            preview.sprite = itemIcon.Sprite;
+            preview.SetNativeSize();
+            preview.color = gridView.R().TraderController.Examined(itemContext.Item) ? Color.white : new Color(0f, 0f, 0f, 0.85f);
+
+            Quaternion quaternion = (gridAddress.LocationInGrid.r == ItemRotation.Horizontal) ? ItemViewFactory.HorizontalRotation : ItemViewFactory.VerticalRotation;
+            preview.transform.rotation = quaternion;
 
             GStruct24 itemSize = moveOperation.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
             LocationInGrid locationInGrid = gridAddress.LocationInGrid;
-            int num = locationInGrid.x;
-            int num2 = locationInGrid.y;
-            int num3 = num + itemSize.X;
-            int num4 = num2 + itemSize.Y;
-            num = Mathf.Clamp(num, 0, gridView.Grid.GridWidth.Value);
-            num2 = Mathf.Clamp(num2, 0, gridView.Grid.GridHeight.Value);
-            num3 = Mathf.Clamp(num3, 0, gridView.Grid.GridWidth.Value);
-            num4 = Mathf.Clamp(num4, 0, gridView.Grid.GridHeight.Value);
-            rectTransform.anchoredPosition = new Vector2((float)(num * 63), (float)(-(float)num2 * 63));
-            rectTransform.sizeDelta = new Vector2((float)((num3 - num) * 63), (float)((num4 - num2) * 63));
+
+            RectTransform rectTransform = preview.rectTransform;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMin = new Vector2(0f, 1f);
+            rectTransform.anchorMax = new Vector2(0f, 1f);
+            rectTransform.anchoredPosition = new Vector2(locationInGrid.x * 63f, -locationInGrid.y * 63f) + new Vector2(itemSize.X * 63f / 2, -itemSize.Y * 63f / 2);
+
+            Image background = UnityEngine.Object.Instantiate(preview, gridView.transform, false);
+            background.sprite = null;
+            background.color = gridView.GetHighlightColor(itemContext, operation, null);
+            background.gameObject.SetActive(true);
+            Previews.Add(background);
+
+            preview.transform.SetAsLastSibling();
         }
 
-        private static void HideHighlights()
+        private static void HidePreviews()
         {
-            foreach (Image highLightPanel in HighlightPanels)
+            foreach (Image preview in Previews)
             {
-                UnityEngine.Object.Destroy(highLightPanel.gameObject);
+                UnityEngine.Object.Destroy(preview.gameObject);
             }
 
-            HighlightPanels.Clear();
+            Previews.Clear();
         }
 
         public class GridViewDisableHighlightPatch : ModulePatch
@@ -449,7 +458,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(GridView __instance)
             {
-                HideHighlights();
+                HidePreviews();
             }
         }
 
@@ -548,7 +557,7 @@ namespace UIFixes
 
                 TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
 
-                HideHighlights();
+                HidePreviews();
 
                 bool firstItem = true;
 
@@ -567,7 +576,7 @@ namespace UIFixes
                             operations.Push(operation);
                             if (!firstItem) // targetItem was originally null so this is the rest of the items
                             {
-                                ShowHighlight(__instance, selectedItemContext, operation);
+                                ShowPreview(__instance, selectedItemContext, operation);
                             }
                         }
                         else
@@ -583,6 +592,11 @@ namespace UIFixes
                     }
 
                     firstItem = false;
+                }
+
+                if (!__result)
+                {
+                    HidePreviews();
                 }
 
                 // We didn't simulate so now we undo
