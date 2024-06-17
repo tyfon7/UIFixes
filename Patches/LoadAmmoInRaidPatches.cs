@@ -72,7 +72,7 @@ namespace UIFixes
                     inventoryController.LoadMagazine(bullets, magazine, count, false).HandleExceptions();
                 }
 
-                // The calling code in this instance doesn't do anything with the task, but it does await it, so if we don't return a Task it nullrefs
+                // The calling code in this instance doesn't do anything with the task, but it does await it, so if this doesn't return a Task it nullrefs
                 __result = Task.CompletedTask;
                 return false;
             }

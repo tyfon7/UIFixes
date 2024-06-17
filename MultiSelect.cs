@@ -47,7 +47,7 @@ namespace UIFixes
 
         public static void Clear()
         {
-            // ToList() because we'll be modifying the collection
+            // ToList() because modifying the collection
             foreach (GridItemView itemView in SelectedItemViews.Keys.ToList())
             {
                 Deselect(itemView);

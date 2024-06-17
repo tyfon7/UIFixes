@@ -91,31 +91,36 @@ namespace UIFixes
 
         public class CreateSubInteractionsInventoryPatch : ModulePatch
         {
+            private static bool LoadingInsuranceActions = false;
+
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(InventoryRootInteractionsType, "CreateSubInteractions");
             }
 
-            private static int GetPlayerRubles(ItemUiContext itemUiContext)
-            {
-                StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
-                if (stash == null)
-                {
-                    return 0;
-                }
-
-                return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
-            }
-
             [PatchPrefix]
             public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
             {
+                // Clear this, since something else should be active (even a different mouseover of the insurance button) 
+                LoadingInsuranceActions = false;
+
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
                     int playerRubles = GetPlayerRubles(___itemUiContext_1);
 
                     CurrentInsuranceInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
-                    CurrentInsuranceInteractions.LoadAsync(() => subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions));
+
+                    // Because this is async, need to protect against a different subInteractions activating before loading is done
+                    // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
+                    LoadingInsuranceActions = true;
+                    CurrentInsuranceInteractions.LoadAsync(() =>
+                    {
+                        if (LoadingInsuranceActions)
+                        {
+                            subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
+                            LoadingInsuranceActions = false;
+                        }
+                    });
 
                     return false;
                 }
@@ -150,6 +155,8 @@ namespace UIFixes
 
         public class CreateSubInteractionsTradingPatch : ModulePatch
         {
+            private static bool LoadingInsuranceActions = false;
+
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(TradingRootInteractionsType, "CreateSubInteractions");
@@ -158,22 +165,40 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(object __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, ItemUiContext ___itemUiContext_0)
             {
-                Dictionary<ECurrencyType, int> playerCurrencies = R.Money.GetMoneySums(___itemUiContext_0.R().InventoryController.Inventory.Stash.Grid.ContainedItems.Keys);
-                int playerRubles = playerCurrencies[ECurrencyType.RUB];
-
-                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
-                Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+                // Clear this, since something else should be active (even a different mouseover of the insurance button) 
+                LoadingInsuranceActions = false;
 
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
+                    int playerRubles = GetPlayerRubles(___itemUiContext_0);
+
+                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
+                    Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+
                     CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
-                    CurrentInsuranceInteractions.LoadAsync(() => subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions));
+
+                    // Because this is async, need to protect against a different subInteractions activating before loading is done
+                    // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
+                    LoadingInsuranceActions = true;
+                    CurrentInsuranceInteractions.LoadAsync(() =>
+                    {
+                        if (LoadingInsuranceActions)
+                        {
+                            subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
+                            LoadingInsuranceActions = false;
+                        }
+                    });
 
                     return false;
                 }
 
                 if (parentInteraction == EItemInfoButton.Repair)
                 {
+                    int playerRubles = GetPlayerRubles(___itemUiContext_0);
+
+                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
+                    Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+
                     CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
                     subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
@@ -275,6 +300,17 @@ namespace UIFixes
 
                 return true;
             }
+        }
+
+        private static int GetPlayerRubles(ItemUiContext itemUiContext)
+        {
+            StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
+            if (stash == null)
+            {
+                return 0;
+            }
+
+            return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
         }
     }
 }

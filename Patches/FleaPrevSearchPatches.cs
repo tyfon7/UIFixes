@@ -113,7 +113,7 @@ namespace UIFixes
                     return;
                 }
 
-                // Restore scroll position now that the we're loaded
+                // Restore scroll position now that offers are loaded
                 if (History.Any())
                 {
                     offerViewList.R().Scroller.SetScrollPosition(History.Peek().scrollPosition);
@@ -239,7 +239,7 @@ namespace UIFixes
                 newRule.SortType = filterRule.SortType;
                 newRule.SortDirection = filterRule.SortDirection;
 
-                // We can't set handbookId yet - it limits the result set and that in turn limits what categories even display
+                // Can't set handbookId yet - it limits the result set and that in turn limits what categories even display
                 DelayedHandbookId = filterRule.HandbookId;
 
                 ragfair.SetFilterRule(newRule, true, true);
@@ -339,7 +339,7 @@ namespace UIFixes
                 return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.method_10));
             }
 
-            // The firs thing this method does is set scrollposition to 0, so we need to grab it first
+            // The first thing this method does is set scrollposition to 0, so grab it first
             [PatchPrefix]
             public static void Prefix(LightScroller ____scroller)
             {

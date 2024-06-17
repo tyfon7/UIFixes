@@ -15,10 +15,10 @@ namespace UIFixes
 {
     public static class SwapPatches
     {
-        // Source container for the drag - we have to grab this early to check it
+        // Source container for the drag - grab this early to check it
         private static IContainer SourceContainer;
 
-        // Whether we're being called from the "check every slot" loop
+        // Whether it's being called from the "check every slot" loop
         private static bool InHighlight = false;
 
         // The most recent CheckItemFilter result - needed to differentiate "No room" from incompatible
@@ -237,7 +237,7 @@ namespace UIFixes
                 // This is the location you're dragging it, including rotation
                 LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext);
 
-                // Target is a grid because we're in the GridView patch, i.e. you're dragging it over a grid
+                // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
                 var targetGridItemAddress = new R.GridItemAddress(targetItemAddress);
                 ItemAddress itemToAddress = R.GridItemAddress.Create(targetGridItemAddress.Grid, itemToLocation);
 
@@ -276,7 +276,7 @@ namespace UIFixes
                     }
                 }
 
-                // If we're coming from a grid, try rotating the target object 
+                // If coming from a grid, try rotating the target object 
                 if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
                     var targetToLocation = new R.GridItemAddress(targetToAddress).LocationInGrid;
@@ -286,7 +286,7 @@ namespace UIFixes
                         var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                         if (result.Succeeded)
                         {
-                            // Only save this operation result if it succeeded, otherwise we return the non-rotated result from above
+                            // Only save this operation result if it succeeded, otherwise return the non-rotated result from above
                             operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
                             __result = true;
                             return;
@@ -443,7 +443,7 @@ namespace UIFixes
         }
 
         // CanApply, when dealing with containers, eventually calls down into FindPlaceForItem, which calls CheckItemFilter. For reasons,
-        // if an item fails the filters, it returns the error "no space", instead of "no action". Try to detect this, so we can swap.
+        // if an item fails the filters, it returns the error "no space", instead of "no action". Try to detect this in order to swap.
         public class DetectFilterForSwapPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -461,7 +461,7 @@ namespace UIFixes
         }
 
         // When dragging an item around, by default it updates an ItemSpecificationPanel when you drag an item on top of a slot
-        // It doesn't do anything when you drag an item from a slot onto some other item elsewhere. But with swap, we should update the item panel then too.
+        // It doesn't do anything when you drag an item from a slot onto some other item elsewhere. But with swap, update the item panel then too.
         public class InspectWindowUpdateStatsOnSwapPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()

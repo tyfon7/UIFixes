@@ -240,7 +240,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, ItemUiContext ___itemUiContext_0)
             {
                 if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
@@ -311,6 +311,12 @@ namespace UIFixes
                     }
                     else
                     {
+                        // Wrap this error to display it
+                        if (operation.Error is GClass3292 noRoomError)
+                        {
+                            operation = new(new DisplayableErrorWrapper(noRoomError));
+                        }
+
                         break;
                     }
 
@@ -326,7 +332,7 @@ namespace UIFixes
                     HidePreviews();
                 }
 
-                // We didn't simulate so now we undo
+                // Didn't simulate so now undo
                 while (operations.Any())
                 {
                     operations.Pop().Value?.RollBack();
@@ -334,6 +340,21 @@ namespace UIFixes
 
                 // result and operation are set to the last one that completed - so success if they all passed, or the first failure
                 return false;
+            }
+
+            // GridView.HighlightItemViewPosition has a blacklist of errors it won't show, but it shows other types.
+            // Wrapping an error can get past that
+            private class DisplayableErrorWrapper(InventoryError error) : InventoryError
+            {
+                public override string ToString()
+                {
+                    return error.ToString();
+                }
+
+                public override string GetLocalizedDescription()
+                {
+                    return error.GetLocalizedDescription();
+                }
             }
         }
 
@@ -470,7 +491,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController)
+            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController, ItemUiContext ___ItemUiContext)
             {
                 if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
                 {
@@ -500,7 +521,7 @@ namespace UIFixes
                     }
                 }
 
-                // We didn't simulate so now we undo
+                // Didn't simulate so now undo
                 while (operations.Any())
                 {
                     operations.Pop().Value?.RollBack();
@@ -599,7 +620,7 @@ namespace UIFixes
                     HidePreviews();
                 }
 
-                // We didn't simulate so now we undo
+                // Didn't simulate so now undo
                 while (operations.Any())
                 {
                     operations.Pop().Value?.RollBack();
@@ -631,7 +652,7 @@ namespace UIFixes
                 traderAssortmentController.PrepareToSell(itemContext.Item, locationInGrid);
                 itemContext.CloseDependentWindows();
 
-                // For the rest of the items we still need to use quickfind
+                // For the rest of the items, still need to use quickfind
                 foreach (ItemContextClass selectedItemContext in MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item))
                 {
                     GStruct413 operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
