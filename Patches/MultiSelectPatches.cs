@@ -24,8 +24,11 @@ namespace UIFixes
         private static readonly List<Image> Previews = [];
 
         // Point that various QuickFindPlace overrides should start at
-        public static GClass2769 FindOrigin = null;
-        public static bool FindVerticalFirst = false;
+        private static GClass2769 FindOrigin = null;
+        private static bool FindVerticalFirst = false;
+
+        // Prevents QuickFind from attempting a merge
+        private static bool DisableMerge = false;
 
         public static void Enable()
         {
@@ -58,6 +61,7 @@ namespace UIFixes
             new FindSpotKeepRotationPatch().Enable();
             new FindLocationForItemPatch().Enable();
             new FindPlaceToPutPatch().Enable();
+            new AdjustQuickFindFlagsPatch().Enable();
         }
 
         public class InitializeCommonUIPatch : ModulePatch
@@ -259,6 +263,8 @@ namespace UIFixes
                 operation = default;
                 __result = false;
 
+                HidePreviews();
+
                 if (__instance.Grid == null || wrappedInstance.NonInteractable)
                 {
                     return false;
@@ -289,8 +295,8 @@ namespace UIFixes
                     return false;
                 }
 
-                HidePreviews();
                 Item targetItem = __instance.method_8(targetItemContext);
+                DisableMerge = targetItem == null;
                 bool showHighlights = targetItem == null;
 
                 Stack<GStruct413> operations = new();
@@ -328,6 +334,8 @@ namespace UIFixes
                     // Set this after the first one
                     targetItem ??= __instance.Grid.ParentItem;
                 }
+
+                DisableMerge = false;
 
                 if (!__result)
                 {
@@ -376,6 +384,7 @@ namespace UIFixes
                 }
 
                 InPatch = true;
+                DisableMerge = targetItemContext == null;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
                 GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
@@ -396,10 +405,40 @@ namespace UIFixes
                     InPatch = false;
                     FindOrigin = null;
                     FindVerticalFirst = false;
+                    DisableMerge = false;
                     GridViewPickTargetPatch.FallbackResult = null;
                 });
 
                 return false;
+            }
+        }
+
+        public class AdjustQuickFindFlagsPatch : ModulePatch
+        {
+            // For reasons (???), BSG doesn't even define the second bit of this flags enum
+            private static InteractionsHandlerClass.EMoveItemOrder PartialMerge = (InteractionsHandlerClass.EMoveItemOrder)2;
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ref InteractionsHandlerClass.EMoveItemOrder order)
+            {
+                if (!MultiSelect.Active)
+                {
+                    return;
+                }
+
+                // Multiselect always disables "Transfer", which is a partial merge
+                // It leaves things behind and that's not intuitive when multi-selecting
+                order &= ~PartialMerge;
+
+                if (DisableMerge)
+                {
+                    order &= ~InteractionsHandlerClass.EMoveItemOrder.TryMerge;
+                }
             }
         }
 
@@ -525,9 +564,14 @@ namespace UIFixes
         private static IEnumerable<ItemContextClass> SortSelectedContexts(
             IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext, bool prepend = true)
         {
+            static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
+
             var result = selectedContexts
                 .Where(ic => ic.Item != itemContext.Item)
-                .OrderByDescending(ic => itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid);
+                .OrderByDescending(ic => ic.ItemAddress is GClass2769)
+                .ThenByDescending(ic => itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
+                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid : null)
+                .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
 
             return prepend ? result.Prepend(itemContext) : result;
         }

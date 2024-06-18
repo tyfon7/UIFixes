@@ -61,7 +61,7 @@ namespace UIFixes
 
             if (itemView.IsSelectable() && !SelectedItemViews.ContainsKey(itemView) && !SecondaryItemViews.ContainsKey(itemView))
             {
-                ItemContextClass itemContext = new(itemView.ItemContext, itemView.ItemRotation);
+                ItemContextClass itemContext = new MultiSelectItemContext(itemView.ItemContext, itemView.ItemRotation);
                 itemContext.GClass2813_0.OnDisposed += RugPull;
                 itemContext.OnDisposed += RugPull;
 
@@ -192,6 +192,12 @@ namespace UIFixes
             selectedMark?.SetActive(false);
             selectedBackground?.SetActive(false);
         }
+    }
+
+    public class MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : ItemContextClass(itemContext, rotation)
+    {
+        public override bool MergeAvailable => false;
+        public override bool SplitAvailable => false;
     }
 
     public static class MultiSelectExtensions
