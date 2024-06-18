@@ -144,9 +144,9 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(GridItemView __instance, PointerEventData.InputButton button)
+            public static void Postfix(PointerEventData.InputButton button)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!MultiSelect.Active)
                 {
                     return;
                 }
@@ -170,7 +170,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(TradingItemView __instance, PointerEventData.InputButton button)
             {
-                if (!Settings.EnableMultiSelect.Value || __instance is not TradingPlayerItemView)
+                if (__instance is not TradingPlayerItemView)
                 {
                     return;
                 }
@@ -193,7 +193,7 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(ItemView __instance)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!MultiSelect.Active)
                 {
                     return;
                 }
@@ -215,7 +215,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemView __instance)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!MultiSelect.Active)
                 {
                     return;
                 }
@@ -232,13 +232,8 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemView __instance)
+            public static void Postfix()
             {
-                if (!Settings.EnableMultiSelect.Value)
-                {
-                    return;
-                }
-
                 HidePreviews();
             }
         }
@@ -251,9 +246,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, ItemUiContext ___itemUiContext_0)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
             {
-                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
+                if (InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
@@ -288,7 +283,7 @@ namespace UIFixes
                     return false;
                 }
 
-                GClass2769 hoveredAddress = new GClass2769(__instance.Grid, hoveredLocation);
+                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
                 if (!item.CheckAction(hoveredAddress))
                 {
                     return false;
@@ -331,10 +326,7 @@ namespace UIFixes
                     }
 
                     // Set this after the first one
-                    if (targetItem == null)
-                    {
-                        targetItem = __instance.Grid.ParentItem;
-                    }
+                    targetItem ??= __instance.Grid.ParentItem;
                 }
 
                 if (!__result)
@@ -378,7 +370,7 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
-                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
+                if (InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
@@ -421,7 +413,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(GridItemView __instance)
             {
-                if (!Settings.EnableMultiSelect.Value || !InPatch)
+                if (!InPatch)
                 {
                     return;
                 }
@@ -441,7 +433,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(GridView __instance, ref Item __result)
+            public static void Postfix(ref Item __result)
             {
                 __result ??= FallbackResult;
             }
@@ -548,7 +540,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(GridView __instance)
+            public static void Postfix()
             {
                 HidePreviews();
             }
@@ -580,9 +572,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController, ItemUiContext ___ItemUiContext)
+            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController)
             {
-                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
+                if (InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
@@ -631,7 +623,7 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
-                if (!Settings.EnableMultiSelect.Value || InPatch || !MultiSelect.Active)
+                if (InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
@@ -655,9 +647,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ref GStruct413 operation, ref bool __result)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                if (!MultiSelect.Active)
                 {
                     return true;
                 }
@@ -736,9 +728,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ref Task __result)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                if (!MultiSelect.Active)
                 {
                     return true;
                 }
@@ -788,9 +780,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Color __result)
+            public static bool Prefix(TradingTableGridView __instance, ItemContextAbstractClass targetItemContext, ref Color __result)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || targetItemContext != null)
+                if (!MultiSelect.Active || targetItemContext != null)
                 {
                     return true;
                 }
@@ -822,7 +814,7 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix()
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active)
+                if (!MultiSelect.Active)
                 {
                     return true;
                 }
@@ -875,9 +867,9 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(ref IEnumerable<StashGridClass> grids, Item item)
+            public static void Prefix(ref IEnumerable<StashGridClass> grids)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || FindOrigin == null)
+                if (!MultiSelect.Active || FindOrigin == null)
                 {
                     return;
                 }
@@ -919,7 +911,7 @@ namespace UIFixes
                 bool invertDimensions,
                 ref LocationInGrid __result)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || FindOrigin == null || FindOrigin.Grid != __instance)
+                if (!MultiSelect.Active || FindOrigin == null || FindOrigin.Grid != __instance)
                 {
                     return true;
                 }
@@ -983,7 +975,7 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(ref int itemWidth, ref int itemHeight, ref ItemRotation rotation)
             {
-                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || !FindVerticalFirst)
+                if (!MultiSelect.Active || !FindVerticalFirst)
                 {
                     return;
                 }

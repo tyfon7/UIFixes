@@ -513,7 +513,7 @@ namespace UIFixes
 
             RecalcOrder(configEntries);
 
-            ToggleExclusives();
+            MakeExclusive(EnableMultiSelect, AutoOpenSortingTable);
         }
 
         private static void RecalcOrder(List<ConfigEntryBase> configEntries)
@@ -531,26 +531,26 @@ namespace UIFixes
             }
         }
 
-        private static void ToggleExclusives()
+        private static void MakeExclusive(ConfigEntry<bool> priorityConfig, ConfigEntry<bool> secondaryConfig)
         {
-            if (Settings.EnableMultiSelect.Value)
+            if (priorityConfig.Value)
             {
-                Settings.AutoOpenSortingTable.Value = false;
+                secondaryConfig.Value = false;
             }
 
-            Settings.EnableMultiSelect.SettingChanged += (_, _) =>
+            priorityConfig.SettingChanged += (_, _) =>
             {
-                if (Settings.EnableMultiSelect.Value)
+                if (priorityConfig.Value)
                 {
-                    Settings.AutoOpenSortingTable.Value = false;
+                    secondaryConfig.Value = false;
                 }
             };
 
-            Settings.AutoOpenSortingTable.SettingChanged += (_, _) =>
+            secondaryConfig.SettingChanged += (_, _) =>
             {
-                if (Settings.AutoOpenSortingTable.Value)
+                if (secondaryConfig.Value)
                 {
-                    Settings.EnableMultiSelect.Value = false;
+                    priorityConfig.Value = false;
                 }
             };
         }
