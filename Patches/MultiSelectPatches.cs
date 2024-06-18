@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using static UnityEngine.UI.Image;
 
 namespace UIFixes
 {
@@ -22,6 +23,10 @@ namespace UIFixes
 
         // If the can accept method should render highlights
         private static readonly List<Image> Previews = [];
+
+        // Point that various QuickFindPlace overrides should start at
+        public static GClass2769 FindOrigin = null;
+        public static bool FindVerticalFirst = false;
 
         public static void Enable()
         {
@@ -41,6 +46,7 @@ namespace UIFixes
             new GridViewAcceptItemPatch().Enable();
             new GridViewPickTargetPatch().Enable();
             new GridViewDisableHighlightPatch().Enable();
+            new GridViewClearTooltipPatch().Enable();
 
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
@@ -48,6 +54,10 @@ namespace UIFixes
             new TradingTableCanAcceptPatch().Enable();
             new TradingTableAcceptItemPatch().Enable();
             new TradingTableGetHighlightColorPatch().Enable();
+
+            new FindSpotKeepRotationPatch().Enable();
+            new FindLocationForItemPatch().Enable();
+            new FindPlaceToPutPatch().Enable();
         }
 
         public class InitializeCommonUIPatch : ModulePatch
@@ -70,6 +80,7 @@ namespace UIFixes
                 __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>();
                 __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>();
                 __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
+                __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>();
 
                 if (Settings.ShowMultiSelectDebug.Value)
                 {
@@ -264,42 +275,44 @@ namespace UIFixes
                     return false;
                 }
 
+                Item item = itemContext.Item;
+                ItemAddress itemAddress = itemContext.ItemAddress;
+                if (itemAddress == null)
+                {
+                    return false;
+                }
+
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
                 GClass2769 hoveredAddress = new GClass2769(__instance.Grid, hoveredLocation);
-                Item targetItem = __instance.method_8(targetItemContext);
+                if (itemAddress.Container == __instance.Grid && __instance.Grid.GetItemLocation(item) == hoveredLocation)
+                {
+                    return false;
+                }
 
-                Stack<GStruct413> operations = new();
+                if (!item.CheckAction(hoveredAddress))
+                {
+                    return false;
+                }
+
+                Item targetItem = __instance.method_8(targetItemContext);
 
                 HidePreviews();
                 bool showHighlights = targetItem == null;
 
                 // Prepend the dragContext as the first one
                 IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
+                Stack<GStruct413> operations = new();
                 foreach (ItemContextClass selectedItemContext in itemContexts)
                 {
-                    Item item = selectedItemContext.Item;
-                    ItemAddress itemAddress = itemContext.ItemAddress;
-                    if (itemAddress == null)
-                    {
-                        __result = false;
-                        break;
-                    }
-
-                    if (itemAddress.Container == __instance.Grid && __instance.Grid.GetItemLocation(item) == hoveredLocation)
-                    {
-                        __result = false;
-                        break;
-                    }
-
-                    if (!item.CheckAction(hoveredAddress))
-                    {
-                        __result = false;
-                        break;
-                    }
+                    FindOrigin = hoveredAddress;
+                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                     operation = targetItem != null ?
                         wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
                         wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+
+                    FindOrigin = null;
+                    FindVerticalFirst = false;
 
                     if (__result = operation.Succeeded)
                     {
@@ -378,8 +391,16 @@ namespace UIFixes
                 // Prepend the dragContext as the first one
                 IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
 
+                LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
+                FindOrigin = new GClass2769(__instance.Grid, hoveredLocation);
+                FindVerticalFirst = itemContext.ItemRotation == ItemRotation.Vertical;
+
                 var serializer = __instance.GetOrAddComponent<TaskSerializer>();
-                __result = serializer.Initialize(itemContexts, ic => __instance.AcceptItem(ic, targetItemContext));
+                __result = serializer.Initialize(itemContexts, ic =>
+                {
+                    FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
+                    return __instance.AcceptItem(ic, targetItemContext);
+                });
 
                 // Setting the fallback after initializing means it only applies after the first item is already moved
                 GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
@@ -387,6 +408,8 @@ namespace UIFixes
                 __result.ContinueWith(_ =>
                 {
                     InPatch = false;
+                    FindOrigin = null;
+                    FindVerticalFirst = false;
                     GridViewPickTargetPatch.FallbackResult = null;
                 });
 
@@ -452,7 +475,8 @@ namespace UIFixes
 
             Image background = UnityEngine.Object.Instantiate(preview, gridView.transform, false);
             background.sprite = null;
-            background.color = gridView.GetHighlightColor(itemContext, operation, null);
+            Color normalColor = gridView.GetHighlightColor(itemContext, operation, null);
+            background.color = new(normalColor.r, normalColor.g, normalColor.b, 0.3f);
             background.gameObject.SetActive(true);
             Previews.Add(background);
 
@@ -480,6 +504,24 @@ namespace UIFixes
             public static void Postfix(GridView __instance)
             {
                 HidePreviews();
+            }
+        }
+
+        // BSG forgets to clear their own tooltip if there's no error. They only clear it if there IS an error that they don't care about
+        public class GridViewClearTooltipPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridView), nameof(GridView.HighlightItemViewPosition));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ItemUiContext ___itemUiContext_0)
+            {
+                if (___itemUiContext_0.Tooltip.isActiveAndEnabled)
+                {
+                    ___itemUiContext_0.Tooltip.Close();
+                }
             }
         }
 
@@ -582,15 +624,22 @@ namespace UIFixes
 
                 bool firstItem = true;
 
+                LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
+                FindOrigin = new GClass2769(__instance.Grid, hoveredLocation);
+
                 Stack<GStruct413> operations = new();
                 IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
                 foreach (ItemContextClass selectedItemContext in itemContexts)
                 {
                     if (traderAssortmentController.CanPrepareItemToSell(selectedItemContext.Item))
                     {
+                        FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
+
                         operation = firstItem ?
                             InteractionsHandlerClass.Move(selectedItemContext.Item, new GClass2769(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
                             InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, false);
+
+                        FindVerticalFirst = false;
 
                         if (__result = operation.Succeeded)
                         {
@@ -614,6 +663,8 @@ namespace UIFixes
 
                     firstItem = false;
                 }
+
+                FindOrigin = null;
 
                 if (!__result)
                 {
@@ -652,10 +703,17 @@ namespace UIFixes
                 traderAssortmentController.PrepareToSell(itemContext.Item, locationInGrid);
                 itemContext.CloseDependentWindows();
 
+                FindOrigin = new GClass2769(__instance.Grid, locationInGrid);
+
                 // For the rest of the items, still need to use quickfind
                 foreach (ItemContextClass selectedItemContext in MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item))
                 {
+                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
+
                     GStruct413 operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
+
+                    FindVerticalFirst = false;
+
                     if (operation.Failed || operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
                     {
                         break;
@@ -663,6 +721,8 @@ namespace UIFixes
 
                     traderAssortmentController.PrepareToSell(selectedItemContext.Item, gridAddress.LocationInGrid);
                 }
+
+                FindOrigin = null;
 
                 MultiSelect.Clear(); // explicitly clear since the items are no longer selectable
                 __result = Task.CompletedTask;
@@ -755,6 +815,133 @@ namespace UIFixes
                 {
                     partialTransferOnly = false;
                 }
+            }
+        }
+
+        // Reorder the grids to start with the same grid as FindOrigin, then loop around
+        public class FindLocationForItemPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GClass2503), nameof(GClass2503.FindLocationForItem));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ref IEnumerable<StashGridClass> grids, Item item)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || FindOrigin == null)
+                {
+                    return;
+                }
+
+                if (!grids.Any(g => g == FindOrigin.Grid))
+                {
+                    return;
+                }
+
+                var list = grids.ToList();
+                while (list[0] != FindOrigin.Grid)
+                {
+                    list.Add(list[0]);
+                    list.RemoveAt(0);
+                }
+
+                grids = list;
+            }
+        }
+
+        // Finds a spot for an item in a grid. Starts at FindOrigin and goes right/down, then loops around
+        public class FindPlaceToPutPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_11));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(
+                StashGridClass __instance,
+                int itemMainSize,
+                int itemSecondSize,
+                ItemRotation rotation,
+                int firstDimensionSize,
+                int secondDimensionSize,
+                List<int> firstDimensionSpaces, // For each cell (left to right, top to bottom), how many spaces are open in that dimension (including that cell)
+                List<int> secondDimensionSpaces, // For each cell (left to right, top to bottom), how many spaces are open in that dimension
+                bool invertDimensions,
+                ref LocationInGrid __result)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || FindOrigin == null || FindOrigin.Grid != __instance)
+                {
+                    return true;
+                }
+
+                int firstStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.x : FindOrigin.LocationInGrid.y : 0;
+                int secondStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.y : FindOrigin.LocationInGrid.x : 0;
+
+                // Walks the first dimension until it finds a row/column with enough space, then walks down that row
+                // /column until it finds a column/row with enough space
+                // Starts at origin, wraps around
+                for (int i = 0; i < firstDimensionSize; i++)
+                {
+                    int firstDim = (firstStart + i) % firstDimensionSize;
+                    //for (int j = i == firstStart ? secondStart : 0; j + itemSecondSize <= secondDimensionSize; j++)
+                    for (int j = 0; j < secondDimensionSize; j++)
+                    {
+                        int secondDim = firstDim == firstStart ? (secondStart + j) % secondDimensionSize : j;
+                        if (secondDim + itemSecondSize > secondDimensionSize)
+                        {
+                            continue;
+                        }
+
+                        int secondDimOpenSpaces = (invertDimensions ? secondDimensionSpaces[secondDim * firstDimensionSize + firstDim] : secondDimensionSpaces[firstDim * secondDimensionSize + secondDim]);
+                        if (secondDimOpenSpaces >= itemSecondSize || secondDimOpenSpaces == -1) // no idea what -1 means
+                        {
+                            bool enoughSpace = true;
+                            for (int k = secondDim; enoughSpace && k < secondDim + itemSecondSize; k++)
+                            {
+                                int firstDimOpenSpaces = (invertDimensions ? firstDimensionSpaces[k * firstDimensionSize + firstDim] : firstDimensionSpaces[firstDim * secondDimensionSize + k]);
+                                enoughSpace &= firstDimOpenSpaces >= itemMainSize || firstDimOpenSpaces == -1;
+                            }
+
+                            if (enoughSpace)
+                            {
+                                if (!invertDimensions)
+                                {
+                                    __result = new LocationInGrid(secondDim, firstDim, rotation);
+                                    return false;
+                                }
+                                __result = new LocationInGrid(firstDim, secondDim, rotation);
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                __result = null;
+                return false;
+            }
+        }
+
+        // method_10 is called to find a spot, first with horizontal rotation then with vertical
+        // Based on the FindRotation, changing the value can effectively switch the order it searches in
+        public class FindSpotKeepRotationPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_10));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(ref int itemWidth, ref int itemHeight, ref ItemRotation rotation)
+            {
+                if (!Settings.EnableMultiSelect.Value || !MultiSelect.Active || !FindVerticalFirst)
+                {
+                    return;
+                }
+
+                (itemWidth, itemHeight) = (itemHeight, itemWidth);
+                rotation = rotation == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
             }
         }
 

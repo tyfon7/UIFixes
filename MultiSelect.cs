@@ -133,7 +133,7 @@ namespace UIFixes
 
         public static bool Active
         {
-            get { return SelectedItemViews.Count > 1; }
+            get { return SelectedItemViews.Count > 0; }
         }
 
         public static void ShowDragCount(DraggedItemView draggedItemView)
