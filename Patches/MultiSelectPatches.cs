@@ -3,6 +3,7 @@ using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using EFT.UI.Insurance;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -122,7 +123,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemView __instance, PointerEventData eventData)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!Settings.EnableMultiSelect.Value || __instance is RagfairNewOfferItemView || __instance is InsuranceItemView)
                 {
                     return;
                 }
