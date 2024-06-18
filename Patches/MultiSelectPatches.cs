@@ -570,7 +570,7 @@ namespace UIFixes
                 .Where(ic => ic.Item != itemContext.Item)
                 .OrderByDescending(ic => ic.ItemAddress is GClass2769)
                 .ThenByDescending(ic => itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
-                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid : null)
+                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid.Id : null)
                 .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
 
             return prepend ? result.Prepend(itemContext) : result;

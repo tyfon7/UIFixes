@@ -196,7 +196,6 @@ namespace UIFixes
 
     public class MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : ItemContextClass(itemContext, rotation)
     {
-        public override bool MergeAvailable => false;
         public override bool SplitAvailable => false;
     }
 
