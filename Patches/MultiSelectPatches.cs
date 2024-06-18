@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using static UnityEngine.UI.Image;
 
 namespace UIFixes
 {
@@ -33,6 +32,7 @@ namespace UIFixes
             new InitializeCommonUIPatch().Enable();
             new InitializeMenuUIPatch().Enable();
             new SelectOnMouseDownPatch().Enable();
+            new SelectMovedItemViewPatch().Enable();
             new DeselectOnGridItemViewClickPatch().Enable();
             new DeselectOnTradingItemViewClickPatch().Enable();
             new DeselectOnItemViewKillPatch().Enable();
@@ -283,28 +283,25 @@ namespace UIFixes
                 }
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GClass2769 hoveredAddress = new GClass2769(__instance.Grid, hoveredLocation);
                 if (itemAddress.Container == __instance.Grid && __instance.Grid.GetItemLocation(item) == hoveredLocation)
                 {
                     return false;
                 }
 
+                GClass2769 hoveredAddress = new GClass2769(__instance.Grid, hoveredLocation);
                 if (!item.CheckAction(hoveredAddress))
                 {
                     return false;
                 }
 
-                Item targetItem = __instance.method_8(targetItemContext);
-
                 HidePreviews();
+                Item targetItem = __instance.method_8(targetItemContext);
                 bool showHighlights = targetItem == null;
 
-                // Prepend the dragContext as the first one
-                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass selectedItemContext in itemContexts)
+                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext))
                 {
-                    FindOrigin = hoveredAddress;
+                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                     operation = targetItem != null ?
@@ -388,16 +385,13 @@ namespace UIFixes
 
                 InPatch = true;
 
-                // Prepend the dragContext as the first one
-                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
-
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                FindOrigin = new GClass2769(__instance.Grid, hoveredLocation);
-                FindVerticalFirst = itemContext.ItemRotation == ItemRotation.Vertical;
+                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 var serializer = __instance.GetOrAddComponent<TaskSerializer>();
-                __result = serializer.Initialize(itemContexts, ic =>
+                __result = serializer.Initialize(SortSelectedContexts(MultiSelect.ItemContexts, itemContext), ic =>
                 {
+                    FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                     FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
                     return __instance.AcceptItem(ic, targetItemContext);
                 });
@@ -414,6 +408,26 @@ namespace UIFixes
                 });
 
                 return false;
+            }
+        }
+
+        public class SelectMovedItemViewPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.Init));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridItemView __instance)
+            {
+                if (!Settings.EnableMultiSelect.Value || !InPatch)
+                {
+                    return;
+                }
+
+                // the itemview isn't done being initialized
+                __instance.WaitForEndOfFrame(() => MultiSelect.Select(__instance));
             }
         }
 
@@ -491,6 +505,39 @@ namespace UIFixes
             }
 
             Previews.Clear();
+        }
+
+        private static GClass2769 GetTargetGridAddress(
+            ItemContextClass itemContext, ItemContextClass selectedItemContext, GClass2769 hoveredGridAddress)
+        {
+            if (itemContext != selectedItemContext &&
+                itemContext.ItemAddress is GClass2769 itemGridAddress &&
+                selectedItemContext.ItemAddress is GClass2769 selectedGridAddress &&
+                itemGridAddress.Grid == selectedGridAddress.Grid)
+            {
+                // Shared a grid with the dragged item - try to keep position
+                int xDelta = selectedGridAddress.LocationInGrid.x - itemGridAddress.LocationInGrid.x;
+                int yDelta = selectedGridAddress.LocationInGrid.y - itemGridAddress.LocationInGrid.y;
+
+                LocationInGrid newLocation = new(hoveredGridAddress.LocationInGrid.x + xDelta, hoveredGridAddress.LocationInGrid.y + yDelta, selectedGridAddress.LocationInGrid.r);
+                newLocation.x = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridWidth.Value, newLocation.x));
+                newLocation.y = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridHeight.Value, newLocation.y));
+
+                return new GClass2769(hoveredGridAddress.Grid, newLocation);
+            }
+
+            return hoveredGridAddress;
+        }
+
+        // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
+        private static IEnumerable<ItemContextClass> SortSelectedContexts(
+            IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext, bool prepend = true)
+        {
+            var result = selectedContexts
+                .Where(ic => ic.Item != itemContext.Item)
+                .OrderByDescending(ic => itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid);
+
+            return prepend ? result.Prepend(itemContext) : result;
         }
 
         public class GridViewDisableHighlightPatch : ModulePatch
@@ -625,14 +672,14 @@ namespace UIFixes
                 bool firstItem = true;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                FindOrigin = new GClass2769(__instance.Grid, hoveredLocation);
+                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 Stack<GStruct413> operations = new();
-                IEnumerable<ItemContextClass> itemContexts = MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item).Prepend(itemContext);
-                foreach (ItemContextClass selectedItemContext in itemContexts)
+                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext))
                 {
                     if (traderAssortmentController.CanPrepareItemToSell(selectedItemContext.Item))
                     {
+                        FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                         FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                         operation = firstItem ?
@@ -698,16 +745,17 @@ namespace UIFixes
 
                 TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
 
-                LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
+                LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
+                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
+
                 itemContext.DragCancelled();
-                traderAssortmentController.PrepareToSell(itemContext.Item, locationInGrid);
+                traderAssortmentController.PrepareToSell(itemContext.Item, hoveredLocation);
                 itemContext.CloseDependentWindows();
 
-                FindOrigin = new GClass2769(__instance.Grid, locationInGrid);
-
                 // For the rest of the items, still need to use quickfind
-                foreach (ItemContextClass selectedItemContext in MultiSelect.ItemContexts.Where(ic => ic.Item != itemContext.Item))
+                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext, false))
                 {
+                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                     GStruct413 operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
