@@ -45,7 +45,6 @@ namespace UIFixes
             new HandleItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
             new EndDragPatch().Enable();
-            //new InspectWindowHack().Enable();
             new DisableSplitPatch().Enable();
             new DisableSplitTargetPatch().Enable();
 
@@ -834,29 +833,6 @@ namespace UIFixes
                     __result = R.GridView.InvalidOperationColor;
                 }
 
-                return false;
-            }
-        }
-
-        // The inspect window likes to recreate itself entirely when a slot is removed, which destroys all of the gridviews and
-        // borks the multiselect. This patch just stops it from responding until the last one (since by then the selection is down to 1, which
-        // is considered inactive multiselect)
-        public class InspectWindowHack : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.OnRemoveFromSlotEvent));
-            }
-
-            [PatchPrefix]
-            public static bool Prefix()
-            {
-                if (!MultiSelect.Active)
-                {
-                    return true;
-                }
-
-                // Just skip it when multiselect is active
                 return false;
             }
         }
