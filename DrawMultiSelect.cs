@@ -103,6 +103,12 @@ namespace UIFixes
 
                     if (selectRect.Overlaps(itemRect, true))
                     {
+                        // Don't re-raycast already selected items - if there were visible before they still are
+                        if (MultiSelect.IsSelected(gridItemView, secondary))
+                        {
+                            continue;
+                        }
+
                         // Otherwise, ensure it's not overlapped by window UI
                         PointerEventData eventData = new(EventSystem.current);
 

@@ -19,6 +19,16 @@ namespace UIFixes
         Always
     }
 
+    internal enum MultiSelectStrategy
+    {
+        [Description("First Available Space")]
+        FirstOpenSpace,
+        [Description("Same Row or Below (Wrapping)")]
+        SameRowOrLower,
+        [Description("Keep Original Spacing (Best Effort)")]
+        OriginalSpacing
+    }
+
     internal class Settings
     {
         // Categories
@@ -55,6 +65,7 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+        public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
         public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
@@ -280,6 +291,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(MultiSelectStrat = config.Bind(
+                InventorySection,
+                "Multiselect Item Placement",
+                MultiSelectStrategy.OriginalSpacing,
+                new ConfigDescription(
+                    "Controls where multiselected items are placed, relative to the item being dragged. Note that original spacing only refers to items that were in the same grid.",
                     null,
                     new ConfigurationManagerAttributes { })));
 

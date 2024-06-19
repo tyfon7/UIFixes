@@ -1,7 +1,5 @@
 ﻿using EFT.UI;
 using EFT.UI.DragAndDrop;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -124,9 +122,10 @@ namespace UIFixes
             }
         }
 
-        public static bool IsSelected(GridItemView itemView)
+        public static bool IsSelected(GridItemView itemView, bool secondary = false)
         {
-            return SelectedItems.Any(x => x.Key.Item == itemView.Item);
+            var dictionary = secondary ? SecondaryItems : SelectedItems;
+            return dictionary.Any(x => x.Key.Item == itemView.Item);
         }
 
         public static void Prune()

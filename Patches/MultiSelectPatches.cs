@@ -66,6 +66,7 @@ namespace UIFixes
             new FindLocationForItemPatch().Enable();
             new FindPlaceToPutPatch().Enable();
             new AdjustQuickFindFlagsPatch().Enable();
+            new AllowFindSameSpotPatch().Enable();
         }
 
         public class InitializeCommonUIPatch : ModulePatch
@@ -351,11 +352,20 @@ namespace UIFixes
                             ShowPreview(__instance, selectedItemContext, operation);
                         }
                     }
+                    else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                    {
+                        // Moving item to the same place, cool, not a problem
+                        __result = true;
+                        if (showHighlights && selectedItemContext.Item.Parent is GClass2769 gridAddress)
+                        {
+                            ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
+                        }
+                    }
                     else
                     {
-                        // Wrap this error to display it
                         if (operation.Error is GClass3292 noRoomError)
                         {
+                            // Wrap this error to display it
                             operation = new(new DisplayableErrorWrapper(noRoomError));
                         }
 
@@ -409,12 +419,12 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result, ItemUiContext ___itemUiContext_0)
             {
-                // Need to fully implement AcceptItem for the sorting table normally that just uses null targetItemContext
+                // Need to fully implement AcceptItem for the sorting table - normally that just uses null targetItemContext
                 if (InPatch && targetItemContext?.Item is SortingTableClass)
                 {
                     __result = Task.CompletedTask;
                     var itemController = __instance.R().TraderController;
-                    
+
                     GStruct413 operation = ___itemUiContext_0.QuickMoveToSortingTable(itemContext.Item, true);
                     if (operation.Failed || !itemController.CanExecute(operation.Value))
                     {
@@ -445,6 +455,7 @@ namespace UIFixes
 
                 if (__instance.Grid.ParentItem is SortingTableClass)
                 {
+                    // Sorting table will need a targetItemContext. Dunno if this is the right type but all it needs is the .Item property
                     targetItemContext = new GClass2817(__instance.Grid.ParentItem, EItemViewType.Empty);
                 }
 
@@ -498,6 +509,26 @@ namespace UIFixes
                 {
                     order &= ~InteractionsHandlerClass.EMoveItemOrder.TryMerge;
                 }
+            }
+        }
+
+        public class AllowFindSameSpotPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GClass2503), nameof(GClass2503.FindLocationForItem));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(IEnumerable<StashGridClass> grids, Item item, ref GClass2769 __result)
+            {
+                if (!MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                __result = grids.Select(g => g.FindLocationForItem(item)).FirstOrDefault(x => x != null);
+                return false;
             }
         }
 
@@ -597,6 +628,11 @@ namespace UIFixes
                     {
                         operations.Push(operation);
                     }
+                    else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                    {
+                        // Moving item to the same place, cool, not a problem
+                        __result = true;
+                    }
                     else
                     {
                         break;
@@ -631,7 +667,7 @@ namespace UIFixes
 
                 InPatch = true;
 
-                var serializer = __instance.GetOrAddComponent<TaskSerializer<ItemContextClass>>();
+                var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
@@ -1004,6 +1040,13 @@ namespace UIFixes
                 return;
             }
 
+            Color backgroundColor = gridView.GetHighlightColor(itemContext, operation, null);
+
+            ShowPreview(gridView, itemContext, gridAddress, backgroundColor);
+        }
+
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GClass2769 gridAddress, Color backgroundColor)
+        {
             Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
             preview.gameObject.SetActive(true);
             Previews.Add(preview);
@@ -1016,7 +1059,7 @@ namespace UIFixes
             Quaternion quaternion = (gridAddress.LocationInGrid.r == ItemRotation.Horizontal) ? ItemViewFactory.HorizontalRotation : ItemViewFactory.VerticalRotation;
             preview.transform.rotation = quaternion;
 
-            GStruct24 itemSize = moveOperation.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+            GStruct24 itemSize = itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
             LocationInGrid locationInGrid = gridAddress.LocationInGrid;
 
             RectTransform rectTransform = preview.rectTransform;
@@ -1028,8 +1071,7 @@ namespace UIFixes
 
             Image background = UnityEngine.Object.Instantiate(preview, gridView.transform, false);
             background.sprite = null;
-            Color normalColor = gridView.GetHighlightColor(itemContext, operation, null);
-            background.color = new(normalColor.r, normalColor.g, normalColor.b, 0.3f);
+            background.color = backgroundColor;
             background.gameObject.SetActive(true);
             Previews.Add(background);
 
@@ -1049,7 +1091,13 @@ namespace UIFixes
         private static GClass2769 GetTargetGridAddress(
             ItemContextClass itemContext, ItemContextClass selectedItemContext, GClass2769 hoveredGridAddress)
         {
-            if (itemContext != selectedItemContext &&
+            if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.FirstOpenSpace)
+            {
+                return null;
+            }
+
+            if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.OriginalSpacing &&
+                itemContext != selectedItemContext &&
                 itemContext.ItemAddress is GClass2769 itemGridAddress &&
                 selectedItemContext.ItemAddress is GClass2769 selectedGridAddress &&
                 itemGridAddress.Grid == selectedGridAddress.Grid)
