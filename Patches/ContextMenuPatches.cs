@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TMPro;
 
 namespace UIFixes
 {
@@ -63,6 +64,8 @@ namespace UIFixes
             });
             TradingRootInteractionsItemField = AccessTools.Field(TradingRootInteractionsType, "item_0");
 
+            new ContextMenuNamesPatch().Enable();
+
             new DeclareSubInteractionsInventoryPatch().Enable();
             new CreateSubInteractionsInventoryPatch().Enable();
 
@@ -73,6 +76,28 @@ namespace UIFixes
             new ChangeInteractionButtonCreationPatch().Enable();
 
             new EnableInsureInnerItemsPatch().Enable();
+        }
+
+        public class ContextMenuNamesPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ContextMenuButton), nameof(ContextMenuButton.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(string caption, TextMeshProUGUI ____text)
+            {
+                if (caption == EItemInfoButton.Insure.ToString() && MultiSelect.Count > 1)
+                {
+                    InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
+                    int count = MultiSelect.ItemContexts.Select(ic => ItemClass.FindOrCreate(ic.Item))
+                        .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
+                        .Count();
+
+                    ____text.text += " (x" + count + ")";
+                }
+            }
         }
 
         public class DeclareSubInteractionsInventoryPatch : ModulePatch
@@ -108,7 +133,9 @@ namespace UIFixes
                 {
                     int playerRubles = GetPlayerRubles(___itemUiContext_1);
 
-                    CurrentInsuranceInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
+                    CurrentInsuranceInteractions = MultiSelect.Active ? 
+                        new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_1, playerRubles) : 
+                        new(___item_0, ___itemUiContext_1, playerRubles);
 
                     // Because this is async, need to protect against a different subInteractions activating before loading is done
                     // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
@@ -176,6 +203,9 @@ namespace UIFixes
                     Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
 
                     CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
+                    CurrentInsuranceInteractions = MultiSelect.Active ?
+                        new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_0, playerRubles) :
+                        new(item, ___itemUiContext_0, playerRubles);
 
                     // Because this is async, need to protect against a different subInteractions activating before loading is done
                     // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
@@ -288,8 +318,12 @@ namespace UIFixes
                 }
 
                 InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
-                ItemClass itemClass = ItemClass.FindOrCreate(___item_0);
-                IEnumerable<ItemClass> insurableItems = insurance.GetItemChildren(itemClass).Flatten(insurance.GetItemChildren).Concat([itemClass])
+
+                IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [___item_0];
+                IEnumerable<ItemClass> itemClasses = items.Select(ItemClass.FindOrCreate);
+                IEnumerable<ItemClass> insurableItems = itemClasses.SelectMany(insurance.GetItemChildren)
+                    .Flatten(insurance.GetItemChildren)
+                    .Concat(itemClasses)
                     .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
 
                 if (insurableItems.Any())

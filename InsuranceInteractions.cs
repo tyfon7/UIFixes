@@ -4,32 +4,33 @@ using EFT.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static RootMotion.FinalIK.InteractionTrigger.Range;
 
 namespace UIFixes
 {
-    public class InsuranceInteractions(Item item, ItemUiContext uiContext, int playerRubles) : ItemInfoInteractionsAbstractClass<InsuranceInteractions.EInsurers>(uiContext)
+    public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : ItemInfoInteractionsAbstractClass<InsuranceInteractions.EInsurers>(uiContext)
     {
         private readonly InsuranceCompanyClass insurance = uiContext.Session.InsuranceCompany;
-        private readonly Item item = item;
+        private readonly List<Item> items = items.ToList();
         private readonly int playerRubles = playerRubles;
-        private List<ItemClass> items;
+        private List<ItemClass> insurableItems;
         private readonly Dictionary<string, int> prices = [];
+
+        public InsuranceInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
 
         public void LoadAsync(Action callback)
         {
-            ItemClass itemClass = ItemClass.FindOrCreate(item);
-            items = insurance.GetItemChildren(itemClass).Flatten(insurance.GetItemChildren).Concat([itemClass])
+            IEnumerable<ItemClass> itemClasses = items.Select(ItemClass.FindOrCreate);
+            insurableItems = itemClasses.SelectMany(insurance.GetItemChildren)
+                .Flatten(insurance.GetItemChildren)
+                .Concat(itemClasses)
                 .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                 .ToList();
 
-            insurance.GetInsurePriceAsync(items, _ =>
+            insurance.GetInsurePriceAsync(insurableItems, _ =>
             {
                 foreach (var insurer in insurance.Insurers)
                 {
-                    int price = this.items.Select(i => insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
+                    int price = this.insurableItems.Select(i => insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
                     prices[insurer.Id] = price;
 
                     string priceColor = price > playerRubles ? "#FF0000" : "#ADB8BC";
@@ -46,7 +47,7 @@ namespace UIFixes
         private void Insure(string insurerId)
         {
             insurance.SelectedInsurerId = insurerId;
-            insurance.InsureItems(this.items, result => { });
+            insurance.InsureItems(this.insurableItems, result => { });
         }
 
         public IResult GetButtonInteraction(string interactionId)
