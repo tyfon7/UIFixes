@@ -42,6 +42,11 @@ namespace UIFixes
             }
         }
 
+        public void OnDisable()
+        {
+            MultiSelect.Clear();
+        }
+
         public void Update()
         {
             if (!Settings.EnableMultiSelect.Value)
@@ -84,7 +89,14 @@ namespace UIFixes
                 selectEnd = Input.mousePosition;
 
                 Rect selectRect = new(selectOrigin, selectEnd - selectOrigin);
-                foreach (GridItemView gridItemView in GetComponentsInChildren<GridItemView>().Concat(Singleton<PreloaderUI>.Instance.GetComponentsInChildren<GridItemView>()))
+
+                // If not secondary, then we can kick out any non-rendered items, plus they won't be covered by the foreach below
+                if (!secondary)
+                {
+                    MultiSelect.Prune();
+                }
+
+                foreach (GridItemView gridItemView in transform.root.GetComponentsInChildren<GridItemView>().Concat(Singleton<PreloaderUI>.Instance.GetComponentsInChildren<GridItemView>()))
                 {
                     RectTransform itemTransform = gridItemView.GetComponent<RectTransform>();
                     Rect itemRect = new((Vector2)itemTransform.position + itemTransform.rect.position * itemTransform.lossyScale, itemTransform.rect.size * itemTransform.lossyScale);
@@ -94,48 +106,23 @@ namespace UIFixes
                         // Otherwise, ensure it's not overlapped by window UI
                         PointerEventData eventData = new(EventSystem.current);
 
-                        // Non-absolute width/height
-                        float width = itemRect.xMax - itemRect.xMin;
-                        float height = itemRect.yMax - itemRect.yMin;
+                        float widthMargin = 0.1f * (itemRect.xMax - itemRect.xMin);
+                        float heightMargin = 0.1f * (itemRect.yMax - itemRect.yMin);
 
-                        List<RaycastResult> raycastResults = [];
-                        eventData.position = new Vector2(itemRect.xMin + 0.1f * width, itemRect.yMin + 0.1f * height);
-                        preloaderRaycaster.Raycast(eventData, raycastResults);
-                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+                        if (IsOnTop(itemRect, itemTransform, preloaderRaycaster)) // no preloaderUI on top of this?
                         {
-                            MultiSelect.Deselect(gridItemView, secondary);
-                            continue;
-                        }
+                            if (itemTransform.IsDescendantOf(Singleton<PreloaderUI>.Instance.transform))
+                            {
+                                MultiSelect.Select(gridItemView, secondary);
+                                continue;
+                            }
 
-                        raycastResults.Clear();
-                        eventData.position = new Vector2(itemRect.xMin + 0.1f * width, itemRect.yMax - 0.1f * height);
-                        preloaderRaycaster.Raycast(eventData, raycastResults);
-                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
-                        {
-                            MultiSelect.Deselect(gridItemView, secondary);
-                            continue;
+                            if (IsOnTop(itemRect, itemTransform, localRaycaster)) // no local UI on top of this?
+                            {
+                                MultiSelect.Select(gridItemView, secondary);
+                                continue;
+                            }
                         }
-
-                        raycastResults.Clear();
-                        eventData.position = new Vector2(itemRect.xMax - 0.1f * width, itemRect.yMax - 0.1f * height);
-                        preloaderRaycaster.Raycast(eventData, raycastResults);
-                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
-                        {
-                            MultiSelect.Deselect(gridItemView, secondary);
-                            continue;
-                        }
-
-                        raycastResults.Clear();
-                        eventData.position = new Vector2(itemRect.xMax - 0.1f * width, itemRect.yMin + 0.1f * height);
-                        preloaderRaycaster.Raycast(eventData, raycastResults);
-                        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
-                        {
-                            MultiSelect.Deselect(gridItemView, secondary);
-                            continue;
-                        }
-
-                        MultiSelect.Select(gridItemView, secondary);
-                        continue;
                     }
 
                     MultiSelect.Deselect(gridItemView, secondary);
@@ -174,6 +161,54 @@ namespace UIFixes
                 lineArea.x = area.xMax - 1; // Right
                 GUI.DrawTexture(lineArea, selectTexture);
             }
+        }
+
+        private bool IsOnTop(Rect itemRect, Transform itemTransform, GraphicRaycaster raycaster)
+        {
+            // Otherwise, ensure it's not overlapped by window UI
+            PointerEventData eventData = new(EventSystem.current);
+
+            float widthMargin = 0.1f * (itemRect.xMax - itemRect.xMin);
+            float heightMargin = 0.1f * (itemRect.yMax - itemRect.yMin);
+
+            List<RaycastResult> raycastResults = [];
+
+            // Lower left
+            eventData.position = new Vector2(itemRect.xMin + widthMargin, itemRect.yMin + heightMargin);
+            raycaster.Raycast(eventData, raycastResults);
+            if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+            {
+                return false;
+            }
+
+            // Upper left
+            raycastResults.Clear();
+            eventData.position = new Vector2(itemRect.xMin + widthMargin, itemRect.yMax - heightMargin);
+            raycaster.Raycast(eventData, raycastResults);
+            if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+            {
+                return false;
+            }
+
+            // Upper right
+            raycastResults.Clear();
+            eventData.position = new Vector2(itemRect.xMax - widthMargin, itemRect.yMax - heightMargin);
+            raycaster.Raycast(eventData, raycastResults);
+            if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+            {
+                return false;
+            }
+
+            // Lower right
+            raycastResults.Clear();
+            eventData.position = new Vector2(itemRect.xMax - widthMargin, itemRect.yMin + heightMargin);
+            raycaster.Raycast(eventData, raycastResults);
+            if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 

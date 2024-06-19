@@ -1,5 +1,7 @@
-﻿using EFT.UI.DragAndDrop;
+﻿using EFT.UI;
+using EFT.UI.DragAndDrop;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -12,11 +14,8 @@ namespace UIFixes
         private static GameObject SelectedMarkTemplate;
         private static GameObject SelectedBackgroundTemplate;
 
-        private static readonly Dictionary<GridItemView, ItemContextClass> SelectedItemViews = [];
-        private static readonly List<ItemContextClass> SortedItemContexts = [];
-
-        private static readonly Dictionary<GridItemView, ItemContextClass> SecondaryItemViews = [];
-        private static readonly List<ItemContextClass> SecondaryItemContexts = [];
+        private static readonly Dictionary<ItemContextClass, GridItemView> SelectedItems = [];
+        private static readonly Dictionary<ItemContextClass, GridItemView> SecondaryItems = [];
 
         public static void Initialize()
         {
@@ -34,10 +33,11 @@ namespace UIFixes
 
         public static void Toggle(GridItemView itemView, bool secondary = false)
         {
-            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
-            if (dictionary.ContainsKey(itemView))
+            var dictionary = secondary ? SecondaryItems : SelectedItems;
+            ItemContextClass itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
+            if (itemContext != null)
             {
-                Deselect(itemView, secondary);
+                Deselect(itemContext, secondary);
             }
             else
             {
@@ -48,92 +48,131 @@ namespace UIFixes
         public static void Clear()
         {
             // ToList() because modifying the collection
-            foreach (GridItemView itemView in SelectedItemViews.Keys.ToList())
+            foreach (ItemContextClass itemContext in SelectedItems.Keys.ToList())
             {
-                Deselect(itemView);
+                Deselect(itemContext);
             }
         }
 
         public static void Select(GridItemView itemView, bool secondary = false)
         {
-            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
-            var list = secondary ? SecondaryItemContexts : SortedItemContexts;
+            var dictionary = secondary ? SecondaryItems : SelectedItems;
 
-            if (itemView.IsSelectable() && !SelectedItemViews.ContainsKey(itemView) && !SecondaryItemViews.ContainsKey(itemView))
+            if (itemView.IsSelectable() && !SelectedItems.Any(x => x.Key.Item == itemView.Item) && !SecondaryItems.Any(x => x.Key.Item == itemView.Item))
             {
                 ItemContextClass itemContext = new MultiSelectItemContext(itemView.ItemContext, itemView.ItemRotation);
-                itemContext.GClass2813_0.OnDisposed += RugPull;
-                itemContext.OnDisposed += RugPull;
 
                 // Remove event handlers that no one cares about and cause stack overflows
                 itemContext.method_1();
 
-                dictionary.Add(itemView, itemContext);
-                list.Add(itemContext);
+                // Subscribe to window closures to deselect
+                GClass3085 windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
+                if (windowContext != null)
+                {
+                    windowContext.OnClose += () => Deselect(itemContext);
+                }
+
+                dictionary.Add(itemContext, itemView);
                 ShowSelection(itemView);
             }
         }
 
+        public static void Deselect(ItemContextClass itemContext, bool secondary = false)
+        {
+            var dictionary = secondary ? SecondaryItems : SelectedItems;
+
+            if (dictionary.TryGetValue(itemContext, out GridItemView itemView))
+            {
+                HideSelection(itemView);
+            }
+
+            dictionary.Remove(itemContext);
+            itemContext.Dispose();
+        }
+
         public static void Deselect(GridItemView itemView, bool secondary = false)
         {
-            var dictionary = secondary ? SecondaryItemViews : SelectedItemViews;
-            var list = secondary ? SecondaryItemContexts : SortedItemContexts;
+            var dictionary = secondary ? SecondaryItems : SelectedItems;
 
-            if (dictionary.TryGetValue(itemView, out ItemContextClass itemContext))
+            ItemContextClass itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
+            if (itemContext != null)
             {
-                itemContext.GClass2813_0.OnDisposed -= RugPull;
-                itemContext.OnDisposed -= RugPull;
+                dictionary.Remove(itemContext);
                 itemContext.Dispose();
-                list.Remove(itemContext);
-                dictionary.Remove(itemView);
                 HideSelection(itemView);
+            }
+        }
+
+        public static void OnKillItemView(GridItemView itemView)
+        {
+            ItemContextClass itemContext = SelectedItems.FirstOrDefault(x => x.Value == itemView).Key;
+            if (itemContext != null)
+            {
+                SelectedItems[itemContext] = null;
+                HideSelection(itemView);
+            }
+        }
+
+        public static void OnNewItemView(GridItemView itemView)
+        {
+            ItemContextClass itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
+            if (itemContext != null)
+            {
+                // We need to refresh the context because if the item moved, it has a new address
+                Deselect(itemContext);
+                Select(itemView);
             }
         }
 
         public static bool IsSelected(GridItemView itemView)
         {
-            return SelectedItemViews.ContainsKey(itemView);
+            return SelectedItems.Any(x => x.Key.Item == itemView.Item);
+        }
+
+        public static void Prune()
+        {
+            foreach (var entry in SelectedItems.ToList())
+            {
+                if (entry.Value == null)
+                {
+                    Deselect(entry.Key);
+                }
+            }
         }
 
         public static void CombineSecondary()
         {
-            foreach (var entry in SecondaryItemViews)
+            foreach (var entry in SecondaryItems)
             {
-                SelectedItemViews.Add(entry.Key, entry.Value);
+                SelectedItems.Add(entry.Key, entry.Value);
             }
 
-            foreach (ItemContextClass itemContext in SecondaryItemContexts)
-            {
-                SortedItemContexts.Add(itemContext);
-            }
-
-            SecondaryItemViews.Clear();
-            SecondaryItemContexts.Clear();
+            SecondaryItems.Clear();
         }
 
         public static IEnumerable<ItemContextClass> ItemContexts
         {
-            get { return SortedItemContexts; }
+            get { return SelectedItems.Keys; }
         }
 
         public static IEnumerable<ItemContextClass> SecondaryContexts
         {
-            get { return SecondaryItemContexts; }
+            get { return SecondaryItems.Keys; }
         }
 
         public static int Count
         {
-            get { return SelectedItemViews.Count; }
+            get { return SelectedItems.Count; }
         }
 
         public static int SecondaryCount
         {
-            get { return SecondaryItemViews.Count; }
+            get { return SecondaryItems.Count; }
         }
 
         public static bool Active
         {
-            get { return SelectedItemViews.Count > 0; }
+            get { return SelectedItems.Count > 0; }
         }
 
         public static void ShowDragCount(DraggedItemView draggedItemView)
@@ -155,11 +194,6 @@ namespace UIFixes
                 text.fontSize = 36;
                 text.alignment = TextAlignmentOptions.Baseline;
             }
-        }
-
-        private static void RugPull()
-        {
-            throw new InvalidOperationException("ItemContext disposed before MultiSelect was done with it!");
         }
 
         private static void ShowSelection(GridItemView itemView)
@@ -186,6 +220,11 @@ namespace UIFixes
 
         private static void HideSelection(GridItemView itemView)
         {
+            if (itemView == null)
+            {
+                return;
+            }
+
             GameObject selectedMark = itemView.transform.Find("SelectedMark")?.gameObject;
             GameObject selectedBackground = itemView.transform.Find("SelectedBackground")?.gameObject;
 
@@ -222,3 +261,4 @@ namespace UIFixes
         }
     }
 }
+

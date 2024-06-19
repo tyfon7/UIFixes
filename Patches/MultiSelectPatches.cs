@@ -31,18 +31,21 @@ namespace UIFixes
         // Prevents QuickFind from attempting a merge
         private static bool DisableMerge = false;
 
+        // Specific type of TaskSerializer because Unity can't understand generics
+        public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
+
         public static void Enable()
         {
             new InitializeCommonUIPatch().Enable();
             new InitializeMenuUIPatch().Enable();
             new SelectOnMouseDownPatch().Enable();
-            new SelectMovedItemViewPatch().Enable();
             new DeselectOnGridItemViewClickPatch().Enable();
             new DeselectOnTradingItemViewClickPatch().Enable();
-            new DeselectOnItemViewKillPatch().Enable();
+            new HandleItemViewInitPatch().Enable();
+            new HandleItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
             new EndDragPatch().Enable();
-            new InspectWindowHack().Enable();
+            //new InspectWindowHack().Enable();
             new DisableSplitPatch().Enable();
             new DisableSplitTargetPatch().Enable();
 
@@ -188,7 +191,27 @@ namespace UIFixes
             }
         }
 
-        public class DeselectOnItemViewKillPatch : ModulePatch
+        public class HandleItemViewInitPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.Init));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(GridItemView __instance)
+            {
+                if (!MultiSelect.Active)
+                {
+                    return;
+                }
+
+                // the itemview isn't done being initialized
+                __instance.WaitForEndOfFrame(() => MultiSelect.OnNewItemView(__instance));
+            }
+        }
+
+        public class HandleItemViewKillPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -205,7 +228,7 @@ namespace UIFixes
 
                 if (__instance is GridItemView gridItemView)
                 {
-                    MultiSelect.Deselect(gridItemView);
+                    MultiSelect.OnKillItemView(gridItemView);
                 }
             }
         }
@@ -251,7 +274,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, ItemUiContext ___itemUiContext_0)
             {
                 if (InPatch || !MultiSelect.Active)
                 {
@@ -306,9 +329,16 @@ namespace UIFixes
                     FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
-                    operation = targetItem != null ?
-                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                    if (targetItem is SortingTableClass)
+                    {
+                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
+                    }
+                    else
+                    {
+                        operation = targetItem != null ?
+                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
+                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                    }
 
                     FindOrigin = null;
                     FindVerticalFirst = false;
@@ -377,8 +407,31 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result, ItemUiContext ___itemUiContext_0)
             {
+                // Need to fully implement AcceptItem for the sorting table normally that just uses null targetItemContext
+                if (InPatch && targetItemContext?.Item is SortingTableClass)
+                {
+                    __result = Task.CompletedTask;
+                    var itemController = __instance.R().TraderController;
+                    
+                    GStruct413 operation = ___itemUiContext_0.QuickMoveToSortingTable(itemContext.Item, true);
+                    if (operation.Failed || !itemController.CanExecute(operation.Value))
+                    {
+                        return false;
+                    }
+
+                    itemController.RunNetworkTransaction(operation.Value, null);
+
+                    if (___itemUiContext_0.Tooltip != null)
+                    {
+                        ___itemUiContext_0.Tooltip.Close();
+                    }
+
+                    Singleton<GUISounds>.Instance.PlayItemSound(itemContext.Item.ItemSound, EInventorySoundType.pickup, false);
+                    return false;
+                }
+
                 if (InPatch || !MultiSelect.Active)
                 {
                     return true;
@@ -390,7 +443,12 @@ namespace UIFixes
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
                 GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
 
-                var serializer = __instance.GetOrAddComponent<TaskSerializer>();
+                if (__instance.Grid.ParentItem is SortingTableClass)
+                {
+                    targetItemContext = new GClass2817(__instance.Grid.ParentItem, EItemViewType.Empty);
+                }
+
+                var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
                 __result = serializer.Initialize(SortSelectedContexts(MultiSelect.ItemContexts, itemContext), ic =>
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
@@ -417,7 +475,7 @@ namespace UIFixes
         public class AdjustQuickFindFlagsPatch : ModulePatch
         {
             // For reasons (???), BSG doesn't even define the second bit of this flags enum
-            private static InteractionsHandlerClass.EMoveItemOrder PartialMerge = (InteractionsHandlerClass.EMoveItemOrder)2;
+            private static readonly InteractionsHandlerClass.EMoveItemOrder PartialMerge = (InteractionsHandlerClass.EMoveItemOrder)2;
 
             protected override MethodBase GetTargetMethod()
             {
@@ -443,26 +501,6 @@ namespace UIFixes
             }
         }
 
-        public class SelectMovedItemViewPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.Init));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(GridItemView __instance)
-            {
-                if (!InPatch)
-                {
-                    return;
-                }
-
-                // the itemview isn't done being initialized
-                __instance.WaitForEndOfFrame(() => MultiSelect.Select(__instance));
-            }
-        }
-
         public class GridViewPickTargetPatch : ModulePatch
         {
             public static Item FallbackResult = null;
@@ -477,88 +515,6 @@ namespace UIFixes
             {
                 __result ??= FallbackResult;
             }
-        }
-
-        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
-        {
-            if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
-            {
-                return;
-            }
-
-            if (gridAddress.Grid != gridView.Grid)
-            {
-                GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
-                if (otherGridView != null)
-                {
-                    ShowPreview(otherGridView, itemContext, operation);
-                }
-
-                return;
-            }
-
-            Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
-            preview.gameObject.SetActive(true);
-            Previews.Add(preview);
-
-            var itemIcon = ItemViewFactory.LoadItemIcon(itemContext.Item);
-            preview.sprite = itemIcon.Sprite;
-            preview.SetNativeSize();
-            preview.color = gridView.R().TraderController.Examined(itemContext.Item) ? Color.white : new Color(0f, 0f, 0f, 0.85f);
-
-            Quaternion quaternion = (gridAddress.LocationInGrid.r == ItemRotation.Horizontal) ? ItemViewFactory.HorizontalRotation : ItemViewFactory.VerticalRotation;
-            preview.transform.rotation = quaternion;
-
-            GStruct24 itemSize = moveOperation.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
-            LocationInGrid locationInGrid = gridAddress.LocationInGrid;
-
-            RectTransform rectTransform = preview.rectTransform;
-            rectTransform.localScale = Vector3.one;
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMin = new Vector2(0f, 1f);
-            rectTransform.anchorMax = new Vector2(0f, 1f);
-            rectTransform.anchoredPosition = new Vector2(locationInGrid.x * 63f, -locationInGrid.y * 63f) + new Vector2(itemSize.X * 63f / 2, -itemSize.Y * 63f / 2);
-
-            Image background = UnityEngine.Object.Instantiate(preview, gridView.transform, false);
-            background.sprite = null;
-            Color normalColor = gridView.GetHighlightColor(itemContext, operation, null);
-            background.color = new(normalColor.r, normalColor.g, normalColor.b, 0.3f);
-            background.gameObject.SetActive(true);
-            Previews.Add(background);
-
-            preview.transform.SetAsLastSibling();
-        }
-
-        private static void HidePreviews()
-        {
-            foreach (Image preview in Previews)
-            {
-                UnityEngine.Object.Destroy(preview.gameObject);
-            }
-
-            Previews.Clear();
-        }
-
-        private static GClass2769 GetTargetGridAddress(
-            ItemContextClass itemContext, ItemContextClass selectedItemContext, GClass2769 hoveredGridAddress)
-        {
-            if (itemContext != selectedItemContext &&
-                itemContext.ItemAddress is GClass2769 itemGridAddress &&
-                selectedItemContext.ItemAddress is GClass2769 selectedGridAddress &&
-                itemGridAddress.Grid == selectedGridAddress.Grid)
-            {
-                // Shared a grid with the dragged item - try to keep position
-                int xDelta = selectedGridAddress.LocationInGrid.x - itemGridAddress.LocationInGrid.x;
-                int yDelta = selectedGridAddress.LocationInGrid.y - itemGridAddress.LocationInGrid.y;
-
-                LocationInGrid newLocation = new(hoveredGridAddress.LocationInGrid.x + xDelta, hoveredGridAddress.LocationInGrid.y + yDelta, selectedGridAddress.LocationInGrid.r);
-                newLocation.x = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridWidth.Value, newLocation.x));
-                newLocation.y = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridHeight.Value, newLocation.y));
-
-                return new GClass2769(hoveredGridAddress.Grid, newLocation);
-            }
-
-            return hoveredGridAddress;
         }
 
         // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
@@ -675,7 +631,7 @@ namespace UIFixes
 
                 InPatch = true;
 
-                var serializer = __instance.GetOrAddComponent<TaskSerializer>();
+                var serializer = __instance.GetOrAddComponent<TaskSerializer<ItemContextClass>>();
                 __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
@@ -1030,44 +986,86 @@ namespace UIFixes
             }
         }
 
-        public class TaskSerializer : MonoBehaviour
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
         {
-            private Func<ItemContextClass, Task> func;
-            private Queue<ItemContextClass> itemContexts;
-            private Task currentTask;
-            private TaskCompletionSource totalTask;
-
-            public Task Initialize(IEnumerable<ItemContextClass> itemContexts, Func<ItemContextClass, Task> func)
+            if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
             {
-                // Create new contexts because the underlying ones will be disposed when drag ends
-                this.itemContexts = new(itemContexts);
-                this.func = func;
-
-                currentTask = Task.CompletedTask;
-                Update();
-
-                totalTask = new TaskCompletionSource();
-                return totalTask.Task;
+                return;
             }
 
-            public void Update()
+            if (gridAddress.Grid != gridView.Grid)
             {
-                if (!currentTask.IsCompleted)
+                GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
+                if (otherGridView != null)
                 {
-                    return;
+                    ShowPreview(otherGridView, itemContext, operation);
                 }
 
-                if (itemContexts.Any())
-                {
-                    currentTask = func(itemContexts.Dequeue());
-                }
-                else
-                {
-                    totalTask.Complete();
-                    func = null;
-                    Destroy(this);
-                }
+                return;
             }
+
+            Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
+            preview.gameObject.SetActive(true);
+            Previews.Add(preview);
+
+            var itemIcon = ItemViewFactory.LoadItemIcon(itemContext.Item);
+            preview.sprite = itemIcon.Sprite;
+            preview.SetNativeSize();
+            preview.color = gridView.R().TraderController.Examined(itemContext.Item) ? Color.white : new Color(0f, 0f, 0f, 0.85f);
+
+            Quaternion quaternion = (gridAddress.LocationInGrid.r == ItemRotation.Horizontal) ? ItemViewFactory.HorizontalRotation : ItemViewFactory.VerticalRotation;
+            preview.transform.rotation = quaternion;
+
+            GStruct24 itemSize = moveOperation.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+            LocationInGrid locationInGrid = gridAddress.LocationInGrid;
+
+            RectTransform rectTransform = preview.rectTransform;
+            rectTransform.localScale = Vector3.one;
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMin = new Vector2(0f, 1f);
+            rectTransform.anchorMax = new Vector2(0f, 1f);
+            rectTransform.anchoredPosition = new Vector2(locationInGrid.x * 63f, -locationInGrid.y * 63f) + new Vector2(itemSize.X * 63f / 2, -itemSize.Y * 63f / 2);
+
+            Image background = UnityEngine.Object.Instantiate(preview, gridView.transform, false);
+            background.sprite = null;
+            Color normalColor = gridView.GetHighlightColor(itemContext, operation, null);
+            background.color = new(normalColor.r, normalColor.g, normalColor.b, 0.3f);
+            background.gameObject.SetActive(true);
+            Previews.Add(background);
+
+            preview.transform.SetAsLastSibling();
+        }
+
+        private static void HidePreviews()
+        {
+            foreach (Image preview in Previews)
+            {
+                UnityEngine.Object.Destroy(preview.gameObject);
+            }
+
+            Previews.Clear();
+        }
+
+        private static GClass2769 GetTargetGridAddress(
+            ItemContextClass itemContext, ItemContextClass selectedItemContext, GClass2769 hoveredGridAddress)
+        {
+            if (itemContext != selectedItemContext &&
+                itemContext.ItemAddress is GClass2769 itemGridAddress &&
+                selectedItemContext.ItemAddress is GClass2769 selectedGridAddress &&
+                itemGridAddress.Grid == selectedGridAddress.Grid)
+            {
+                // Shared a grid with the dragged item - try to keep position
+                int xDelta = selectedGridAddress.LocationInGrid.x - itemGridAddress.LocationInGrid.x;
+                int yDelta = selectedGridAddress.LocationInGrid.y - itemGridAddress.LocationInGrid.y;
+
+                LocationInGrid newLocation = new(hoveredGridAddress.LocationInGrid.x + xDelta, hoveredGridAddress.LocationInGrid.y + yDelta, selectedGridAddress.LocationInGrid.r);
+                newLocation.x = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridWidth.Value, newLocation.x));
+                newLocation.y = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridHeight.Value, newLocation.y));
+
+                return new GClass2769(hoveredGridAddress.Grid, newLocation);
+            }
+
+            return hoveredGridAddress;
         }
     }
 }
