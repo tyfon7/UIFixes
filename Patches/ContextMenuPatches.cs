@@ -95,7 +95,10 @@ namespace UIFixes
                         .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                         .Count();
 
-                    ____text.text += " (x" + count + ")";
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using Comfort.Common;
+using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -30,6 +31,7 @@ namespace UIFixes
 
         // Prevents QuickFind from attempting a merge
         private static bool DisableMerge = false;
+        private static bool IgnoreItemParent = false;
 
         // Specific type of TaskSerializer because Unity can't understand generics
         public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
@@ -39,7 +41,7 @@ namespace UIFixes
             new InitializeCommonUIPatch().Enable();
             new InitializeMenuUIPatch().Enable();
             new SelectOnMouseDownPatch().Enable();
-            new DeselectOnGridItemViewClickPatch().Enable();
+            new ItemViewClickPatch().Enable();
             new DeselectOnTradingItemViewClickPatch().Enable();
             new HandleItemViewInitPatch().Enable();
             new HandleItemViewKillPatch().Enable();
@@ -144,26 +146,101 @@ namespace UIFixes
             }
         }
 
-        public class DeselectOnGridItemViewClickPatch : ModulePatch
+        public class ItemViewClickPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.OnClick));
             }
 
-            [PatchPostfix]
-            public static void Postfix(PointerEventData.InputButton button)
+            [PatchPrefix]
+            public static bool Prefix(GridItemView __instance, PointerEventData.InputButton button, ItemUiContext ___ItemUiContext, TraderControllerClass ___ItemController)
             {
-                if (!MultiSelect.Active)
+                if (!MultiSelect.Active || button != PointerEventData.InputButton.Left || ___ItemUiContext == null || !__instance.IsSearched)
                 {
-                    return;
+                    return true;
                 }
 
-                // Mousedown handles most things, just need to handle the non-shift click of a selected item
-                if (button == PointerEventData.InputButton.Left && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+                bool ctrlDown = Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl);
+                bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
+                bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
+
+                if (ctrlDown && !shiftDown && !altDown)
                 {
-                    MultiSelect.Clear();
+                    bool succeeded = true;
+                    DisableMerge = true;
+                    IgnoreItemParent = true;
+                    Stack<GStruct413> operations = new();
+                    foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, null, false))
+                    {
+                        GStruct413 operation = ___ItemUiContext.QuickFindAppropriatePlace(selectedItemContext, ___ItemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                        if (operation.Succeeded && ___ItemController.CanExecute(operation.Value))
+                        {
+                            operations.Push(operation);
+                        }
+                        else
+                        {
+                            succeeded = false;
+                            break;
+                        }
+
+                        IDestroyResult destroyResult;
+                        if ((destroyResult = operation.Value as IDestroyResult) != null && destroyResult.ItemsDestroyRequired)
+                        {
+                            NotificationManagerClass.DisplayWarningNotification(new GClass3320(__instance.Item, destroyResult.ItemsToDestroy).GetLocalizedDescription(), ENotificationDurationType.Default);
+                            succeeded = false;
+                            break;
+                        }
+                    }
+
+                    DisableMerge = false;
+                    IgnoreItemParent = true;
+
+                    if (succeeded)
+                    {
+                        string itemSound = __instance.Item.ItemSound;
+
+                        // We didn't simulate because we needed each result to depend on the last, but we have to undo before we actually do :S
+                        Stack<GStruct413> networkOps = new();
+                        while (operations.Any())
+                        {
+                            GStruct413 operation = operations.Pop();
+                            operation.Value.RollBack();
+                            networkOps.Push(operation);
+                        }
+
+                        while (networkOps.Any())
+                        {
+                            ___ItemController.RunNetworkTransaction(networkOps.Pop().Value, null);
+                        }
+
+                        if (___ItemUiContext.Tooltip != null)
+                        {
+                            ___ItemUiContext.Tooltip.Close();
+                        }
+
+                        Singleton<GUISounds>.Instance.PlayItemSound(itemSound, EInventorySoundType.pickup, false);
+                    }
+                    else
+                    {
+                        while (operations.Any())
+                        {
+                            operations.Pop().Value?.RollBack();
+                        }
+                    }
+
+                    return false;
                 }
+
+                if (shiftDown)
+                {
+                    // Nothing to do, mousedown handled it. 
+                    return true;
+                }
+
+                // if neither ctrl or shift is down, this is a click to clear
+                MultiSelect.Clear();
+                return true;
             }
         }
 
@@ -300,6 +377,13 @@ namespace UIFixes
                     return false;
                 }
 
+                // BSG BUG - if the targetItem is a magazine, and the multiselect is bullets, it will NOT be able to rollback correctly!!
+                // To prevent inventory corruption, reject magazines outright. Sorry, no multiple bullet stacks into one magazine
+                if (targetItemContext != null && targetItemContext.Item is MagazineClass)
+                {
+                    return false;
+                }
+
                 Item item = itemContext.Item;
                 ItemAddress itemAddress = itemContext.ItemAddress;
                 if (itemAddress == null)
@@ -421,23 +505,8 @@ namespace UIFixes
                 // Need to fully implement AcceptItem for the sorting table - normally that just uses null targetItemContext
                 if (InPatch && targetItemContext?.Item is SortingTableClass)
                 {
+                    MoveToSortingTable(__instance, itemContext, ___itemUiContext_0);
                     __result = Task.CompletedTask;
-                    var itemController = __instance.R().TraderController;
-
-                    GStruct413 operation = ___itemUiContext_0.QuickMoveToSortingTable(itemContext.Item, true);
-                    if (operation.Failed || !itemController.CanExecute(operation.Value))
-                    {
-                        return false;
-                    }
-
-                    itemController.RunNetworkTransaction(operation.Value, null);
-
-                    if (___itemUiContext_0.Tooltip != null)
-                    {
-                        ___itemUiContext_0.Tooltip.Close();
-                    }
-
-                    Singleton<GUISounds>.Instance.PlayItemSound(itemContext.Item.ItemSound, EInventorySoundType.pickup, false);
                     return false;
                 }
 
@@ -480,6 +549,26 @@ namespace UIFixes
 
                 return false;
             }
+
+            private static void MoveToSortingTable(GridView gridView, ItemContextClass itemContext, ItemUiContext itemUiContext)
+            {
+                var itemController = gridView.R().TraderController;
+
+                GStruct413 operation = itemUiContext.QuickMoveToSortingTable(itemContext.Item, true);
+                if (operation.Failed || !itemController.CanExecute(operation.Value))
+                {
+                    return;
+                }
+
+                itemController.RunNetworkTransaction(operation.Value, null);
+
+                if (itemUiContext.Tooltip != null)
+                {
+                    itemUiContext.Tooltip.Close();
+                }
+
+                Singleton<GUISounds>.Instance.PlayItemSound(itemContext.Item.ItemSound, EInventorySoundType.pickup, false);
+            }
         }
 
         public class AdjustQuickFindFlagsPatch : ModulePatch
@@ -507,6 +596,11 @@ namespace UIFixes
                 if (DisableMerge)
                 {
                     order &= ~InteractionsHandlerClass.EMoveItemOrder.TryMerge;
+                }
+
+                if (IgnoreItemParent)
+                {
+                    order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
                 }
             }
         }
@@ -548,19 +642,20 @@ namespace UIFixes
         }
 
         // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
+        // Can pass no itemContext, and it just sorts items by their grid order
         private static IEnumerable<ItemContextClass> SortSelectedContexts(
             IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext, bool prepend = true)
         {
             static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
 
             var result = selectedContexts
-                .Where(ic => ic.Item != itemContext.Item)
+                .Where(ic => itemContext == null || ic.Item != itemContext.Item)
                 .OrderByDescending(ic => ic.ItemAddress is GClass2769)
-                .ThenByDescending(ic => itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
+                .ThenByDescending(ic => itemContext != null && itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
                 .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid.Id : null)
                 .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
 
-            return prepend ? result.Prepend(itemContext) : result;
+            return itemContext != null && prepend ? result.Prepend(itemContext) : result;
         }
 
         public class GridViewDisableHighlightPatch : ModulePatch
@@ -620,7 +715,7 @@ namespace UIFixes
                 }
 
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
+                foreach (ItemContextClass itemContext in SortSelectedContexts(MultiSelect.ItemContexts, null, false))
                 {
                     __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
                     if (operation.Succeeded)
@@ -667,7 +762,7 @@ namespace UIFixes
                 InPatch = true;
 
                 var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
-                __result = serializer.Initialize(MultiSelect.ItemContexts, itemContext => __instance.AcceptItem(itemContext, targetItemContext));
+                __result = serializer.Initialize(SortSelectedContexts(MultiSelect.ItemContexts, null, false), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
 

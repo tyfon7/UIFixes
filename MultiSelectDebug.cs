@@ -36,7 +36,7 @@ namespace UIFixes
 
             foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
             {
-                builder.Append(itemContext.Item.ToString());
+                builder.AppendFormat("x{0} {1}", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
                 builder.AppendLine();
             }
 

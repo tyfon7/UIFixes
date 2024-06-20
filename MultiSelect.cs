@@ -1,4 +1,5 @@
-﻿using EFT.UI;
+﻿using EFT.InventoryLogic;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using System.Collections.Generic;
 using System.Linq;
@@ -235,6 +236,18 @@ namespace UIFixes
     public class MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : ItemContextClass(itemContext, rotation)
     {
         public override bool SplitAvailable => false;
+
+        // used by ItemUiContext.QuickFindAppropriatePlace, the one that picks a container, i.e. ctrl-click
+        // ItemContextClass (drag) defaults to None, but we want what the underlying item allows
+        public override bool CanQuickMoveTo(ETargetContainer targetContainer)
+        {
+            if (this.GClass2813_0 != null)
+            {
+                return this.GClass2813_0.CanQuickMoveTo(targetContainer);
+            }
+
+            return base.CanQuickMoveTo(targetContainer);
+        }
     }
 
     public static class MultiSelectExtensions
