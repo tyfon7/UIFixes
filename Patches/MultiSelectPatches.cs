@@ -167,68 +167,13 @@ namespace UIFixes
 
                 if (ctrlDown && !shiftDown && !altDown)
                 {
-                    bool succeeded = true;
-                    DisableMerge = true;
-                    IgnoreItemParent = true;
-                    Stack<GStruct413> operations = new();
-                    foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, null, false))
-                    {
-                        GStruct413 operation = ___ItemUiContext.QuickFindAppropriatePlace(selectedItemContext, ___ItemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
-                        if (operation.Succeeded && ___ItemController.CanExecute(operation.Value))
-                        {
-                            operations.Push(operation);
-                        }
-                        else
-                        {
-                            succeeded = false;
-                            break;
-                        }
+                    QuickMove(__instance, ___ItemUiContext, ___ItemController);
+                    return false;
+                }
 
-                        IDestroyResult destroyResult;
-                        if ((destroyResult = operation.Value as IDestroyResult) != null && destroyResult.ItemsDestroyRequired)
-                        {
-                            NotificationManagerClass.DisplayWarningNotification(new GClass3320(__instance.Item, destroyResult.ItemsToDestroy).GetLocalizedDescription(), ENotificationDurationType.Default);
-                            succeeded = false;
-                            break;
-                        }
-                    }
-
-                    DisableMerge = false;
-                    IgnoreItemParent = true;
-
-                    if (succeeded)
-                    {
-                        string itemSound = __instance.Item.ItemSound;
-
-                        // We didn't simulate because we needed each result to depend on the last, but we have to undo before we actually do :S
-                        Stack<GStruct413> networkOps = new();
-                        while (operations.Any())
-                        {
-                            GStruct413 operation = operations.Pop();
-                            operation.Value.RollBack();
-                            networkOps.Push(operation);
-                        }
-
-                        while (networkOps.Any())
-                        {
-                            ___ItemController.RunNetworkTransaction(networkOps.Pop().Value, null);
-                        }
-
-                        if (___ItemUiContext.Tooltip != null)
-                        {
-                            ___ItemUiContext.Tooltip.Close();
-                        }
-
-                        Singleton<GUISounds>.Instance.PlayItemSound(itemSound, EInventorySoundType.pickup, false);
-                    }
-                    else
-                    {
-                        while (operations.Any())
-                        {
-                            operations.Pop().Value?.RollBack();
-                        }
-                    }
-
+                if (altDown && !shiftDown && !ctrlDown)
+                {
+                    QuickEquip(___ItemUiContext);
                     return false;
                 }
 
@@ -241,6 +186,99 @@ namespace UIFixes
                 // if neither ctrl or shift is down, this is a click to clear
                 MultiSelect.Clear();
                 return true;
+            }
+
+            private static void QuickEquip(ItemUiContext itemUiContext)
+            {
+                bool allowed = true;
+                var selectedItemContexts = SortSelectedContexts(MultiSelect.ItemContexts);
+                foreach (ItemContextClass selectedItemContext in selectedItemContexts)
+                {
+                    ItemContextAbstractClass innerContext = selectedItemContext.GClass2813_0;
+                    if (innerContext == null)
+                    {
+                        allowed = false;
+                        break;
+                    }
+
+                    var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
+                    if (!contextInteractions.IsInteractionAvailable(EItemInfoButton.Equip))
+                    {
+                        allowed = false;
+                        break;
+                    }
+                }
+
+                if (allowed)
+                {
+                    foreach (ItemContextClass selectedItemContext in selectedItemContexts)
+                    {
+                        itemUiContext.QuickEquip(selectedItemContext.Item).HandleExceptions();
+                    }
+
+                    itemUiContext.Tooltip?.Close();
+                }
+            }
+
+            private static void QuickMove(GridItemView gridItemView, ItemUiContext itemUiContext, TraderControllerClass itemController)
+            {
+                bool succeeded = true;
+                DisableMerge = true;
+                IgnoreItemParent = true;
+                Stack<GStruct413> operations = new();
+                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts))
+                {
+                    GStruct413 operation = itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                    if (operation.Succeeded && itemController.CanExecute(operation.Value))
+                    {
+                        operations.Push(operation);
+                    }
+                    else
+                    {
+                        succeeded = false;
+                        break;
+                    }
+
+                    if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)
+                    {
+                        NotificationManagerClass.DisplayWarningNotification(new GClass3320(gridItemView.Item, destroyResult.ItemsToDestroy).GetLocalizedDescription(), ENotificationDurationType.Default);
+                        succeeded = false;
+                        break;
+                    }
+                }
+
+                DisableMerge = false;
+                IgnoreItemParent = true;
+
+                if (succeeded)
+                {
+                    string itemSound = gridItemView.Item.ItemSound;
+
+                    // We didn't simulate because we needed each result to depend on the last, but we have to undo before we actually do :S
+                    Stack<GStruct413> networkOps = new();
+                    while (operations.Any())
+                    {
+                        GStruct413 operation = operations.Pop();
+                        operation.Value.RollBack();
+                        networkOps.Push(operation);
+                    }
+
+                    while (networkOps.Any())
+                    {
+                        itemController.RunNetworkTransaction(networkOps.Pop().Value, null);
+                    }
+
+                    itemUiContext.Tooltip?.Close();
+
+                    Singleton<GUISounds>.Instance.PlayItemSound(itemSound, EInventorySoundType.pickup, false);
+                }
+                else
+                {
+                    while (operations.Any())
+                    {
+                        operations.Pop().Value?.RollBack();
+                    }
+                }
             }
         }
 
@@ -562,10 +600,7 @@ namespace UIFixes
 
                 itemController.RunNetworkTransaction(operation.Value, null);
 
-                if (itemUiContext.Tooltip != null)
-                {
-                    itemUiContext.Tooltip.Close();
-                }
+                itemUiContext.Tooltip?.Close();
 
                 Singleton<GUISounds>.Instance.PlayItemSound(itemContext.Item.ItemSound, EInventorySoundType.pickup, false);
             }
@@ -644,7 +679,7 @@ namespace UIFixes
         // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
         // Can pass no itemContext, and it just sorts items by their grid order
         private static IEnumerable<ItemContextClass> SortSelectedContexts(
-            IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext, bool prepend = true)
+            IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext = null, bool prepend = true)
         {
             static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
 
