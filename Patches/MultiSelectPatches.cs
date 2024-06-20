@@ -617,6 +617,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
+            [HarmonyPriority(Priority.Last)] // Run after QuickMoveToContainer, which makes assumptions based on the order field
             public static void Prefix(ref InteractionsHandlerClass.EMoveItemOrder order)
             {
                 if (!MultiSelect.Active)
