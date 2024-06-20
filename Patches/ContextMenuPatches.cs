@@ -88,13 +88,42 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(string caption, TextMeshProUGUI ____text)
             {
-                if (caption == EItemInfoButton.Insure.ToString() && MultiSelect.Count > 1)
+                if (MultiSelect.Count < 1)
+                {
+                    return;
+                }
+
+                if (caption == EItemInfoButton.Insure.ToString())
                 {
                     InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
                     int count = MultiSelect.ItemContexts.Select(ic => ItemClass.FindOrCreate(ic.Item))
                         .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                         .Count();
 
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
+                } 
+                else if (caption == EItemInfoButton.Equip.ToString())
+                {
+                    int count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
+                }
+                else if (caption == EItemInfoButton.Unequip.ToString())
+                {
+                    int count = MultiSelect.InteractionCount(EItemInfoButton.Unequip, ItemUiContext.Instance);
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
+                }
+                else if (caption == EItemInfoButton.UnloadAmmo.ToString())
+                {
+                    int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
                     if (count > 0)
                     {
                         ____text.text += " (x" + count + ")";

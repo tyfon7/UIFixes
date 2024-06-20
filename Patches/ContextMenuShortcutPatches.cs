@@ -78,6 +78,12 @@ namespace UIFixes
                     return;
                 }
 
+                if (Settings.UnpackKeyBind.Value.IsDown())
+                {
+                    interactions.ExecuteInteraction(EItemInfoButton.Unpack);
+                    return;
+                }
+
                 if (Settings.FilterByKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.FilterSearch);

@@ -1,4 +1,5 @@
 ﻿using Aki.Reflection.Patching;
+using Aki.Reflection.Utils;
 using Comfort.Common;
 using EFT.Communications;
 using EFT.InventoryLogic;
@@ -38,31 +39,43 @@ namespace UIFixes
 
         public static void Enable()
         {
+            // Initialization
             new InitializeCommonUIPatch().Enable();
             new InitializeMenuUIPatch().Enable();
+
+            // Selection
             new SelectOnMouseDownPatch().Enable();
-            new ItemViewClickPatch().Enable();
             new DeselectOnTradingItemViewClickPatch().Enable();
             new HandleItemViewInitPatch().Enable();
             new HandleItemViewKillPatch().Enable();
             new BeginDragPatch().Enable();
             new EndDragPatch().Enable();
+
+            // Workarounds
             new DisableSplitPatch().Enable();
             new DisableSplitTargetPatch().Enable();
 
+            // Actions
+            new ItemViewClickPatch().Enable();
+            new ContextActionsPatch().Enable();
+
+            // GridView
             new GridViewCanAcceptPatch().Enable();
             new GridViewAcceptItemPatch().Enable();
             new GridViewPickTargetPatch().Enable();
             new GridViewDisableHighlightPatch().Enable();
             new GridViewClearTooltipPatch().Enable();
 
+            // SlotView
             new SlotViewCanAcceptPatch().Enable();
             new SlotViewAcceptItemPatch().Enable();
 
+            // TradingTableGridView
             new TradingTableCanAcceptPatch().Enable();
             new TradingTableAcceptItemPatch().Enable();
             new TradingTableGetHighlightColorPatch().Enable();
 
+            // Various location finding
             new FindSpotKeepRotationPatch().Enable();
             new FindLocationForItemPatch().Enable();
             new FindPlaceToPutPatch().Enable();
@@ -173,7 +186,7 @@ namespace UIFixes
 
                 if (altDown && !shiftDown && !ctrlDown)
                 {
-                    QuickEquip(___ItemUiContext);
+                    MultiSelect.EquipAll(___ItemUiContext, true);
                     return false;
                 }
 
@@ -188,45 +201,13 @@ namespace UIFixes
                 return true;
             }
 
-            private static void QuickEquip(ItemUiContext itemUiContext)
-            {
-                bool allowed = true;
-                var selectedItemContexts = SortSelectedContexts(MultiSelect.ItemContexts);
-                foreach (ItemContextClass selectedItemContext in selectedItemContexts)
-                {
-                    ItemContextAbstractClass innerContext = selectedItemContext.GClass2813_0;
-                    if (innerContext == null)
-                    {
-                        allowed = false;
-                        break;
-                    }
-
-                    var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
-                    if (!contextInteractions.IsInteractionAvailable(EItemInfoButton.Equip))
-                    {
-                        allowed = false;
-                        break;
-                    }
-                }
-
-                if (allowed)
-                {
-                    foreach (ItemContextClass selectedItemContext in selectedItemContexts)
-                    {
-                        itemUiContext.QuickEquip(selectedItemContext.Item).HandleExceptions();
-                    }
-
-                    itemUiContext.Tooltip?.Close();
-                }
-            }
-
             private static void QuickMove(GridItemView gridItemView, ItemUiContext itemUiContext, TraderControllerClass itemController)
             {
                 bool succeeded = true;
                 DisableMerge = true;
                 IgnoreItemParent = true;
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts))
+                foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts())
                 {
                     GStruct413 operation = itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                     if (operation.Succeeded && itemController.CanExecute(operation.Value))
@@ -278,6 +259,38 @@ namespace UIFixes
                     {
                         operations.Pop().Value?.RollBack();
                     }
+                }
+            }
+        }
+
+        public class ContextActionsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GClass3021), nameof(GClass3021.ExecuteInteractionInternal));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(GClass3021 __instance, EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
+            {
+                if (!MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                switch (interaction)
+                {
+                    case EItemInfoButton.Equip:
+                        MultiSelect.EquipAll(___itemUiContext_1, false);
+                        return false;
+                    case EItemInfoButton.Unequip:
+                        MultiSelect.UnequipAll(___itemUiContext_1, false);
+                        return false;
+                    case EItemInfoButton.UnloadAmmo:
+                        MultiSelect.UnloadAmmoAll(___itemUiContext_1, false);
+                        return false;
+                    default:
+                        return true;
                 }
             }
         }
@@ -446,7 +459,7 @@ namespace UIFixes
                 bool showHighlights = targetItem == null;
 
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext))
+                foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
@@ -566,7 +579,7 @@ namespace UIFixes
                 }
 
                 var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
-                __result = serializer.Initialize(SortSelectedContexts(MultiSelect.ItemContexts, itemContext), ic =>
+                __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), ic =>
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                     FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
@@ -677,23 +690,6 @@ namespace UIFixes
             }
         }
 
-        // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
-        // Can pass no itemContext, and it just sorts items by their grid order
-        private static IEnumerable<ItemContextClass> SortSelectedContexts(
-            IEnumerable<ItemContextClass> selectedContexts, ItemContextClass itemContext = null, bool prepend = true)
-        {
-            static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
-
-            var result = selectedContexts
-                .Where(ic => itemContext == null || ic.Item != itemContext.Item)
-                .OrderByDescending(ic => ic.ItemAddress is GClass2769)
-                .ThenByDescending(ic => itemContext != null && itemContext.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
-                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid.Id : null)
-                .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
-
-            return itemContext != null && prepend ? result.Prepend(itemContext) : result;
-        }
-
         public class GridViewDisableHighlightPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
@@ -751,7 +747,7 @@ namespace UIFixes
                 }
 
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass itemContext in SortSelectedContexts(MultiSelect.ItemContexts, null, false))
+                foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
                 {
                     __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
                     if (operation.Succeeded)
@@ -798,7 +794,7 @@ namespace UIFixes
                 InPatch = true;
 
                 var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
-                __result = serializer.Initialize(SortSelectedContexts(MultiSelect.ItemContexts, null, false), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
+                __result = serializer.Initialize(MultiSelect.SortedItemContexts(), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
 
@@ -834,7 +830,7 @@ namespace UIFixes
                 GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 Stack<GStruct413> operations = new();
-                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext))
+                foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
                     if (traderAssortmentController.CanPrepareItemToSell(selectedItemContext.Item))
                     {
@@ -912,7 +908,7 @@ namespace UIFixes
                 itemContext.CloseDependentWindows();
 
                 // For the rest of the items, still need to use quickfind
-                foreach (ItemContextClass selectedItemContext in SortSelectedContexts(MultiSelect.ItemContexts, itemContext, false))
+                foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext, false))
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;

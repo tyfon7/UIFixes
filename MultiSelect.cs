@@ -175,6 +175,22 @@ namespace UIFixes
             get { return SelectedItems.Count > 0; }
         }
 
+        // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
+        // Can pass no itemContext, and it just sorts items by their grid order
+        public static IEnumerable<ItemContextClass> SortedItemContexts(ItemContextClass first = null, bool prepend = true)
+        {
+            static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
+
+            var result = ItemContexts
+                .Where(ic => first == null || ic.Item != first.Item)
+                .OrderByDescending(ic => ic.ItemAddress is GClass2769)
+                .ThenByDescending(ic => first != null && first.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
+                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid.Id : null)
+                .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
+
+            return first != null && prepend ? result.Prepend(first) : result;
+        }
+
         public static void ShowDragCount(DraggedItemView draggedItemView)
         {
             if (draggedItemView != null && Count > 1)
@@ -193,6 +209,68 @@ namespace UIFixes
                 text.text = MultiSelect.Count.ToString();
                 text.fontSize = 36;
                 text.alignment = TextAlignmentOptions.Baseline;
+            }
+        }
+
+        public static int InteractionCount(EItemInfoButton interaction, ItemUiContext itemUiContext)
+        {
+            int count = 0;
+            foreach (ItemContextClass selectedItemContext in SortedItemContexts())
+            {
+                ItemContextAbstractClass innerContext = selectedItemContext.GClass2813_0;
+                if (innerContext == null)
+                {
+                    continue;
+                }
+
+                var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
+                if (!contextInteractions.IsInteractionAvailable(interaction))
+                {
+                    continue;
+                }
+
+                ++count;
+            }
+
+            return count;
+        }
+
+        public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
+        {
+            if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
+            {
+                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
+                {
+                    itemUiContext.QuickEquip(selectedItemContext.Item).HandleExceptions();
+                }
+
+                itemUiContext.Tooltip?.Close();
+            }
+        }
+
+        public static void UnequipAll(ItemUiContext itemUiContext, bool allOrNothing)
+        {
+            if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
+            {
+                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
+                {
+                    itemUiContext.Uninstall(selectedItemContext.GClass2813_0).HandleExceptions();
+                }
+
+                itemUiContext.Tooltip?.Close();
+            }
+        }
+
+        public static void UnloadAmmoAll(ItemUiContext itemUiContext, bool allOrNothing)
+        {
+            if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
+            {
+                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
+                {
+                    itemUiContext.UnloadAmmo(selectedItemContext.Item).HandleExceptions();
+                }
+
+                itemUiContext.Tooltip?.Close();
             }
         }
 
