@@ -146,7 +146,11 @@ namespace UIFixes
                     return;
                 }
 
-                if (__instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+                bool ctrlDown = Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl);
+                bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
+                bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
+
+                if (__instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && shiftDown && !ctrlDown && !altDown)
                 {
                     MultiSelect.Toggle(gridItemView);
                     return;
@@ -271,7 +275,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GClass3021 __instance, EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
+            public static bool Prefix(EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
             {
                 if (!MultiSelect.Active)
                 {
