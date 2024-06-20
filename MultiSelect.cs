@@ -239,11 +239,8 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
             {
-                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
-                {
-                    itemUiContext.QuickEquip(selectedItemContext.Item).HandleExceptions();
-                }
-
+                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.QuickEquip(itemContext.Item));
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -252,11 +249,8 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
             {
-                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
-                {
-                    itemUiContext.Uninstall(selectedItemContext.GClass2813_0).HandleExceptions();
-                }
-
+                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -265,11 +259,8 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
-                foreach (ItemContextClass selectedItemContext in SortedItemContexts())
-                {
-                    itemUiContext.UnloadAmmo(selectedItemContext.Item).HandleExceptions();
-                }
-
+                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -327,6 +318,9 @@ namespace UIFixes
             return base.CanQuickMoveTo(targetContainer);
         }
     }
+
+    // Specific type of TaskSerializer because Unity can't understand generics
+    public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
 
     public static class MultiSelectExtensions
     {

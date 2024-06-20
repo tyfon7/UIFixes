@@ -34,9 +34,6 @@ namespace UIFixes
         private static bool DisableMerge = false;
         private static bool IgnoreItemParent = false;
 
-        // Specific type of TaskSerializer because Unity can't understand generics
-        public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
-
         public static void Enable()
         {
             // Initialization
