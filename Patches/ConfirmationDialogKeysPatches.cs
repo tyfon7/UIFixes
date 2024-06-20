@@ -13,9 +13,13 @@ namespace UIFixes
         public static void Enable()
         {
             new DialogWindowPatch().Enable();
-            new SplitDialogPatch().Enable();
+            new ItemUiContextWindowPatch().Enable();
+            new ErrorScreenPatch().Enable();
+
             new ClickOutPatch().Enable();
             new ClickOutSplitDialogPatch().Enable();
+            new ClickOutItemsListPatch().Enable();
+            new ClickOutErrorScreenPatch().Enable();
         }
 
         public class DialogWindowPatch : ModulePatch
@@ -43,8 +47,7 @@ namespace UIFixes
             }
         }
 
-        // Of course SplitDialogs are a *completely different dialog impelementation*
-        public class SplitDialogPatch : ModulePatch
+        public class ItemUiContextWindowPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
@@ -52,16 +55,38 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(SplitDialog ___splitDialog_0)
+            public static void Postfix(SplitDialog ___splitDialog_0, ItemsListWindow ____itemsListWindow)
             {
-                if (___splitDialog_0 == null || !___splitDialog_0.gameObject.activeSelf)
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
                 {
-                    return;
-                }
+                    if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf)
+                    {
+                        ___splitDialog_0.Accept();
+                        return;
+                    }
 
-                if (Input.GetKeyDown(KeyCode.Space))
+                    if (____itemsListWindow.isActiveAndEnabled)
+                    {
+                        ____itemsListWindow.Close();
+                        return;
+                    }
+                }
+            }
+        }
+
+        public class ErrorScreenPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ErrorScreen), nameof(ErrorScreen.Update));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ErrorScreen __instance)
+            {
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
                 {
-                    ___splitDialog_0.Accept();
+                    __instance.method_4();
                 }
             }
         }
@@ -110,13 +135,66 @@ namespace UIFixes
                     return;
                 }
 
-                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
                 Button button = __instance.transform.Find("Background")?.gameObject.GetOrAddComponent<Button>();
                 if (button != null)
                 {
                     button.transition = Selectable.Transition.None;
                     button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
                     button.onClick.AddListener(__instance.method_2);
+                }
+            }
+        }
+
+        public class ClickOutItemsListPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemsListWindow), nameof(ItemsListWindow.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ItemsListWindow __instance)
+            {
+                if (!Settings.ClickOutOfDialogs.Value)
+                {
+                    return;
+                }
+
+                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+                Transform firewall = __instance.transform.Find("Firewall ");
+                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
+                if (button != null)
+                {
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.AddListener(__instance.Close);
+                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+                }
+            }
+        }
+
+        public class ClickOutErrorScreenPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(ErrorScreen), nameof(ErrorScreen.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ErrorScreen __instance)
+            {
+                if (!Settings.ClickOutOfDialogs.Value)
+                {
+                    return;
+                }
+
+                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+                Transform firewall = __instance.transform.Find("Firewall ");
+                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
+                if (button != null)
+                {
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.AddListener(__instance.method_4);
+                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
                 }
             }
         }
