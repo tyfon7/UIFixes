@@ -50,6 +50,7 @@ namespace UIFixes
             new OpenSortingTablePatch().Enable();
             LoadAmmoInRaidPatches.Enable();
             MultiSelectPatches.Enable();
+            new FixUnloadLastBulletPatch().Enable();
         }
 
         public static bool InRaid()
