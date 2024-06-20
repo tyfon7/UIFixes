@@ -1,58 +1,96 @@
-# UIFixes
-Minor QOL fixes for SPTarkov
+# UI Fixes
+
+Quality of life improvments and fixes for SPT
 
 Tarkov is full of annoyances but we can fix them! Sometimes.
 
 ✨ New in the latest version!
 
-## Inventory
-- Swap items in place! Drag an item over another one and they'll swap positions if possible. Items that already have an interaction with each other (e.g. bullets and magazines) are unaffected.
-- Rebind Home/End, PageUp/PageDown to work like they do in every other app ever released in the history of the world.
-- Customizable mouse scrolling speed
-- Fix item tooltips if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
-- Allow found in raid money and ammo automatically stack with non-found-in-raid items (stops containers making extra stacks!). ✨ Top-up too!
-- Option to synchronize stash scroll position everywhere your stash is visible
+## Added features
 
-## Traders
-- ✨ Autoswitch between buy and sell when you click trader items or control-click your own items
-- ✨ Insure items directly from the context menu
-- ✨ Autoselect quest items when turning in
+New UI features enabled by this mod
 
-## Flea market 
-- Filter history remembers previous searches and filters, and adds a new BACK button to return to the previous results.
-- Auto-expand categories when there's space to do so
-- ✨ Locked trader item tooltip reveals which specific quest will unlock it
-- Option to keep the Add Offer window open after placing your offer
-- Set prices in the Add Offer window by clicking the min/avg/max market prices
-- ✨ Autoselect Similar checkbox is remembered across sessions and application restarts
+-   ✨ Multiselect - select multiple items at once with shift-click or dragging a selection box
+    -   Move items around as a group, drop them into containers, place them in grids
+    -   Ctrl-click and Alt-click to quick move or equip them all. Compatible with Quick Move to Containers!
+    -   Context menu to insure all, equip all, unequip all, unload ammo from all
+-   Swap items in place - drag one item over another to swap their locations!
+-   Flea market history - press the new back button to go back to the previous search
+-   Keybinds for most context menu actions
 
-## Doors
-- Remove the unimplemented actions like "Bang & clear" that, lets face it, are never going to happen anyway.
+## Improved features
 
-## Item bar
-- Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot.
+Existing SPT features made better
 
-## Weapon presets/modding
-- Enable zooming with mousewheel
-- Skips needless unsaved changes warnings when navigating to another screen from a weapon preset (optional, defaults ON)
-- Skip all unsaved changes warnings when closing a weapon preset (optional, defaults OFF)
+#### Inventory
 
-## Inspect windows
-- Show the total stats (including sub-mods) when inspecting mods (optional, toggleable *in* the inspect pane with a new button!)
-- See stats change as you add/remove mods, with color-coded deltas!
-- Remember last window size when you change it, with restore button to resize to default
-- Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons. ✨ Now with keybinds
-- Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
+-   Rebind Home/End, PageUp/PageDown to work like you would expect
+-   Customizable mouse scrolling speed
+-   Allow found in raid money and ammo automatically stack with non-found-in-raid items
+-   Synchronize stash scroll position everywhere your stash is visible
+-   Insure and repair items directly from the context menu
+-   Load ammo via context menu _in raid_
+-   Load ammo preset will pull ammo from inventory, not just stash
 
-## Hideout
-- Remember window state when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+#### Inspect windows
 
-## Mail
-- Skips "You can return to this later" warnings when not transferring all items (optional, defaults ON)
-- "Receive All" button no longer shows up when there is nothing to receive.
+-   Show the total stats (including sub-mods) when inspecting mods (optional, toggleable _in_ the inspect pane with a new button)
+-   See stats change as you add/remove mods, with color-coded deltas
+-   Remember last window size when you change it, with restore button to resize to default
+-   Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons. ✨ Now with keybinds
+-   Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
+-   Quickbinds will not be removed from items you keep when you die
 
-## Misc
-- Confirm dialogs with Return/Enter/Space instead of just Y
-- Many little UI tweaks to tighten up the graphics
+#### Traders
 
-## More to come... ?
+-   Autoswitch between buy and sell when you click trader items or control-click your own items
+-   Autoselect quest items when turning in
+-   Repair window remembers last used repairer, and actually updates the repair amount when you switch repairers
+
+#### Flea market
+
+-   Auto-expand categories when there's space to do so
+-   Locked trader item tooltip reveals which specific quest will unlock it
+-   Option to keep the Add Offer window open after placing your offer
+-   Set prices in the Add Offer window by clicking the min/avg/max market prices (multiplies for bulk orders)
+-   Autoselect Similar checkbox is remembered across sessions and application restarts
+
+#### Weapon modding/presets
+
+-   Enable zooming with mousewheel
+-   Skip needless unsaved changes warnings when not actually closing the screen
+
+#### Hideout
+
+-   Remember window state when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+
+#### Mail
+
+-   The messages window stays open when you return from transfering items
+
+#### Misc
+
+-   Confirm dialogs with Return/Enter/Space instead of just Y
+-   Close modal dialogs by clicking outside of them
+-   Sensible autofocus of textboxes in various dialogs
+-   Many little UI tweaks to tighten up the graphics
+
+## Fixes
+
+Fixing bugs that BSG won't or can't
+
+#### Inventory
+
+-   Fix item tooltips disapparing if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
+-   Fix windows appearing partially offscreen
+
+#### In raid
+
+-   Remove the unimplemented door actions like "Bang & clear" that are never going to happen
+-   Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot
+-   Fix the quick item bar not respecting "Autohide" and "Never show" setting
+
+#### Mail
+
+-   Skips "You can return to this later" warnings when not transferring all items
+-   "Receive All" button no longer shows up when there is nothing to receive
