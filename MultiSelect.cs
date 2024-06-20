@@ -177,7 +177,7 @@ namespace UIFixes
 
         public static void ShowDragCount(DraggedItemView draggedItemView)
         {
-            if (Count > 1)
+            if (draggedItemView != null && Count > 1)
             {
                 GameObject textOverlay = new("MultiSelectText", [typeof(RectTransform), typeof(TextMeshProUGUI)]);
                 textOverlay.transform.parent = draggedItemView.transform;

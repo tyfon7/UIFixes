@@ -68,12 +68,15 @@ namespace UIFixes
 
                 foreach (GameObject gameObject in results.Select(r => r.gameObject))
                 {
-                    var dragInterfaces = gameObject.GetComponents<MonoBehaviour>()
+                    var draggables = gameObject.GetComponents<MonoBehaviour>()
                         .Where(c => c is IDragHandler || c is IBeginDragHandler)
                         .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
                         .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
 
-                    if (dragInterfaces.Any())
+                    var clickables = gameObject.GetComponents<MonoBehaviour>()
+                        .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler);
+
+                    if (draggables.Any() || clickables.Any())
                     {
                         return;
                     }
