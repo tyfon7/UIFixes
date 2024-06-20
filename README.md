@@ -1,6 +1,6 @@
 # UI Fixes
 
-Quality of life improvments and fixes for SPT
+Quality of life improvements and fixes for SPT
 
 Tarkov is full of annoyances but we can fix them! Sometimes.
 
@@ -37,7 +37,7 @@ Existing SPT features made better
 -   Show the total stats (including sub-mods) when inspecting mods (optional, toggleable _in_ the inspect pane with a new button)
 -   See stats change as you add/remove mods, with color-coded deltas
 -   Remember last window size when you change it, with restore button to resize to default
--   Move left and move right buttons to quickly snap inspect windows to the left or right half of the screen, for easy comparisons. ✨ Now with keybinds
+-   Move left and move right buttons + keybinds to quickly snap inspect windows to the left or right half of the screen, for easy comparisons.
 -   Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 -   Quickbinds will not be removed from items you keep when you die
 
@@ -88,7 +88,7 @@ Fixing bugs that BSG won't or can't
 
 -   Remove the unimplemented door actions like "Bang & clear" that are never going to happen
 -   Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot
--   Fix the quick item bar not respecting "Autohide" and "Never show" setting
+-   ✨ Fix the quick item bar not respecting "Autohide" and "Never show" setting
 
 #### Mail
 
