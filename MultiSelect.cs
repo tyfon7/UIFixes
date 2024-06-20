@@ -338,6 +338,12 @@ namespace UIFixes
                 return false;
             }
 
+            // Ironically, SelectableSlotItemView is not selectable. Those are for picking as a choice
+            if (itemView is SelectableSlotItemView)
+            {
+                return false;
+            }
+
             // You can't multi-select trader's items or items being sold
             if (itemView is TradingItemView tradingItemView)
             {
