@@ -103,10 +103,20 @@ namespace UIFixes
                 __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
                 __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>();
 
-                if (Settings.ShowMultiSelectDebug.Value)
+                void ToggleDebug()
                 {
-                    Singleton<PreloaderUI>.Instance.GetOrAddComponent<MultiSelectDebug>();
-                }
+                    if (Settings.ShowMultiSelectDebug.Value)
+                    {
+                        Singleton<PreloaderUI>.Instance.GetOrAddComponent<MultiSelectDebug>();
+                    }
+                    else
+                    {
+                        var debug = Singleton<PreloaderUI>.Instance.GetComponent<MultiSelectDebug>();
+                        UnityEngine.Object.Destroy(debug);
+                    }
+                };
+                ToggleDebug();
+                Settings.ShowMultiSelectDebug.SettingChanged += (s, a) => ToggleDebug();
             }
         }
 

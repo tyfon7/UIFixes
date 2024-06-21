@@ -63,9 +63,6 @@ namespace UIFixes
             {
                 ItemContextClass itemContext = new MultiSelectItemContext(itemView.ItemContext, itemView.ItemRotation);
 
-                // Remove event handlers that no one cares about and cause stack overflows
-                itemContext.method_1();
-
                 // Subscribe to window closures to deselect
                 GClass3085 windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
                 if (windowContext != null)
@@ -319,17 +316,47 @@ namespace UIFixes
         }
     }
 
-    public class MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : ItemContextClass(itemContext, rotation)
+    public class MultiSelectItemContext : ItemContextClass
     {
+        public MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : base(itemContext, rotation)
+        {
+            // Adjust event handlers
+            if (GClass2813_0 != null)
+            {
+                // Listen for underlying context being disposed, it might mean the item is gone (merged, destroyed, etc)
+                GClass2813_0.OnDisposed += OnParentDispose;
+                // This serves no purpose and causes stack overflows
+                GClass2813_0.OnCloseWindow -= CloseDependentWindows;
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (GClass2813_0 != null)
+            {
+                GClass2813_0.OnDisposed -= OnParentDispose;
+            }
+        }
+
+        private void OnParentDispose()
+        {
+            if (Item.CurrentAddress == null)
+            {
+                // This item is gone!
+                MultiSelect.Deselect(this);
+            }
+        }
+
         public override bool SplitAvailable => false;
 
         // used by ItemUiContext.QuickFindAppropriatePlace, the one that picks a container, i.e. ctrl-click
         // ItemContextClass (drag) defaults to None, but we want what the underlying item allows
         public override bool CanQuickMoveTo(ETargetContainer targetContainer)
         {
-            if (this.GClass2813_0 != null)
+            if (GClass2813_0 != null)
             {
-                return this.GClass2813_0.CanQuickMoveTo(targetContainer);
+                return GClass2813_0.CanQuickMoveTo(targetContainer);
             }
 
             return base.CanQuickMoveTo(targetContainer);
