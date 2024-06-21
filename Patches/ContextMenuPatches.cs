@@ -121,7 +121,7 @@ namespace UIFixes
                         ____text.text += " (x" + count + ")";
                     }
                 }
-                else if (caption == EItemInfoButton.UnloadAmmo.ToString()))
+                else if (caption == EItemInfoButton.UnloadAmmo.ToString())
                 {
                     int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
                     if (count > 0)

@@ -55,7 +55,7 @@ namespace UIFixes
             }
 
             // checking ItemUiContext is a quick and easy way to know the mouse is over an item
-            if (Input.GetKeyDown(KeyCode.Mouse0) && ItemUiContext.Instance.R().ItemContext == null)
+            if (Settings.SelectionBoxKey.Value.IsDown() && ItemUiContext.Instance.R().ItemContext == null)
             {
                 PointerEventData eventData = new(EventSystem.current)
                 {
@@ -138,7 +138,7 @@ namespace UIFixes
                 }
             }
 
-            if (drawing && !Input.GetKey(KeyCode.Mouse0))
+            if (drawing && !Settings.SelectionBoxKey.Value.IsPressed())
             {
                 drawing = false;
                 if (secondary)

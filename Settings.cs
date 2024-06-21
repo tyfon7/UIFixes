@@ -66,6 +66,7 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+        public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
         public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
         public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
         public static ConfigEntry<bool> SwapItems { get; set; }
@@ -301,6 +302,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(SelectionBoxKey = config.Bind(
+                InventorySection,
+                "Selection Box Key",
+                new KeyboardShortcut(KeyCode.Mouse0),
+                new ConfigDescription(
+                    "Mouse button or keyboard key to hold while dragging to create a selection box. Press Reset to use Mouse0 (left mouse button)",
                     null,
                     new ConfigurationManagerAttributes { })));
 

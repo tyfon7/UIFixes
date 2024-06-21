@@ -4,6 +4,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using System.Reflection;
+using TMPro;
 using UnityEngine.EventSystems;
 
 namespace UIFixes
@@ -28,7 +29,7 @@ namespace UIFixes
             {
                 // Need an item context to operate on, and ignore these keypresses if there's a focused textbox somewhere
                 ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-                if (itemContext == null || EventSystem.current.currentSelectedGameObject != null)
+                if (itemContext == null || EventSystem.current.currentSelectedGameObject?.GetComponent<TMP_InputField>() != null)
                 {
                     return;
                 }
@@ -37,25 +38,21 @@ namespace UIFixes
                 if (Settings.InspectKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.Inspect);
-                    return;
                 }
 
                 if (Settings.OpenKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.Open);
-                    return;
                 }
 
                 if (Settings.TopUpKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.TopUp);
-                    return;
                 }
 
                 if (Settings.UseKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.Use);
-                    return;
                 }
 
                 if (Settings.UseAllKeyBind.Value.IsDown())
@@ -64,8 +61,6 @@ namespace UIFixes
                     {
                         interactions.ExecuteInteraction(EItemInfoButton.Use);
                     }
-
-                    return;
                 }
 
                 if (Settings.UnloadKeyBind.Value.IsDown())
@@ -74,26 +69,21 @@ namespace UIFixes
                     {
                         interactions.ExecuteInteraction(EItemInfoButton.UnloadAmmo);
                     }
-
-                    return;
                 }
 
                 if (Settings.UnpackKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.Unpack);
-                    return;
                 }
 
                 if (Settings.FilterByKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.FilterSearch);
-                    return;
                 }
 
                 if (Settings.LinkedSearchKeyBind.Value.IsDown())
                 {
                     interactions.ExecuteInteraction(EItemInfoButton.LinkedSearch);
-                    return;
                 }
             }
         }
