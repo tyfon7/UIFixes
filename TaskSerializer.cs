@@ -26,9 +26,20 @@ namespace UIFixes
             return totalTask.Task;
         }
 
+        public void Cancel()
+        {
+            totalTask.TrySetCanceled();
+        }
+
         public void Update()
         {
-            if (!currentTask.IsCompleted)
+            if (currentTask.IsCanceled)
+            {
+                Complete();
+                return;
+            }
+
+            if (totalTask.Task.IsCompleted || !currentTask.IsCompleted)
             {
                 return;
             }
@@ -39,10 +50,15 @@ namespace UIFixes
             }
             else
             {
-                totalTask.Complete();
-                func = null;
-                Destroy(this);
+                Complete();
             }
+        }
+
+        private void Complete()
+        {
+            totalTask.Complete();
+            func = null;
+            Destroy(this);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
 using Comfort.Common;
+using EFT;
 using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -55,6 +55,7 @@ namespace UIFixes
             // Actions
             new ItemViewClickPatch().Enable();
             new ContextActionsPatch().Enable();
+            new StopProcessesPatch().Enable();
 
             // GridView
             new GridViewCanAcceptPatch().Enable();
@@ -293,6 +294,20 @@ namespace UIFixes
                     default:
                         return true;
                 }
+            }
+        }
+
+        public class StopProcessesPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(Player.PlayerInventoryController), nameof(Player.PlayerInventoryController.StopProcesses));
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                MultiSelect.StopUnloading();
             }
         }
 

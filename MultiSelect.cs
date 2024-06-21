@@ -16,6 +16,8 @@ namespace UIFixes
         private static readonly Dictionary<ItemContextClass, GridItemView> SelectedItems = [];
         private static readonly Dictionary<ItemContextClass, GridItemView> SecondaryItems = [];
 
+        private static ItemContextTaskSerializer UnloadSerializer = null;
+
         public static void Initialize()
         {
             // Grab the selection objects from ragfair as templates
@@ -257,12 +259,27 @@ namespace UIFixes
 
         public static void UnloadAmmoAll(ItemUiContext itemUiContext, bool allOrNothing)
         {
+            StopUnloading();
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
+                // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
                 var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
+
+                UnloadSerializer = taskSerializer;
                 itemUiContext.Tooltip?.Close();
             }
+        }
+
+        public static void StopUnloading()
+        {
+            if (UnloadSerializer == null)
+            {
+                return;
+            }
+
+            UnloadSerializer.Cancel();
+            UnloadSerializer = null;
         }
 
         private static void ShowSelection(GridItemView itemView)
