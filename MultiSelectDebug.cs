@@ -36,8 +36,7 @@ namespace UIFixes
 
             foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
             {
-                builder.AppendFormat("x{0} {1}", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
-                builder.AppendLine();
+                builder.AppendFormat("x{0} {1}\n", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
             }
 
             if (MultiSelect.SecondaryContexts.Any())
@@ -45,8 +44,7 @@ namespace UIFixes
                 builder.AppendFormat("Secondary Items: <color=yellow>{0}</color>\n", MultiSelect.SecondaryCount);
                 foreach (ItemContextClass itemContext in MultiSelect.SecondaryContexts)
                 {
-                    builder.Append(itemContext.Item.ToString());
-                    builder.AppendLine();
+                    builder.AppendFormat("x{0} {1}\n", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
                 }
             }
 

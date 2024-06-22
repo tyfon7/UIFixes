@@ -29,7 +29,7 @@ namespace UIFixes
             {
                 // Need an item context to operate on, and ignore these keypresses if there's a focused textbox somewhere
                 ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-                if (itemContext == null || EventSystem.current.currentSelectedGameObject?.GetComponent<TMP_InputField>() != null)
+                if (itemContext == null || EventSystem.current?.currentSelectedGameObject?.GetComponent<TMP_InputField>() != null)
                 {
                     return;
                 }
