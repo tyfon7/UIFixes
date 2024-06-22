@@ -72,6 +72,7 @@ namespace UIFixes
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
         public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
+        public static ConfigEntry<bool> GreedyStackMove { get; set; }
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
@@ -356,6 +357,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Remember your scroll position all the places you see your stash - inventory, trading screen, mail screen, etc.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(GreedyStackMove = config.Bind(
+                InventorySection,
+                "Always Move Entire Stacks",
+                false,
+                new ConfigDescription(
+                    "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
                     null,
                     new ConfigurationManagerAttributes { })));
 

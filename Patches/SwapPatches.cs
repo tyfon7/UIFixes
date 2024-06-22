@@ -30,6 +30,8 @@ namespace UIFixes
 
         private static readonly EOwnerType[] BannedOwnerTypes = [EOwnerType.Mail, EOwnerType.Trader];
 
+        public static bool BlockSwaps = false;
+
         public static void Enable()
         {
             new DetectSwapSourceContainerPatch().Enable();
@@ -53,6 +55,11 @@ namespace UIFixes
 
             // Haha no
             if (MultiSelect.Active)
+            {
+                return false;
+            }
+
+            if (BlockSwaps)
             {
                 return false;
             }

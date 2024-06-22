@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -103,7 +104,7 @@ namespace UIFixes
                 __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
                 __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>();
 
-                void ToggleDebug()
+                static void ToggleDebug()
                 {
                     if (Settings.ShowMultiSelectDebug.Value)
                     {
@@ -475,55 +476,97 @@ namespace UIFixes
 
                 Item targetItem = __instance.method_8(targetItemContext);
                 DisableMerge = targetItem == null;
-                bool showHighlights = targetItem == null;
+                bool isGridPlacement = targetItem == null;
 
                 Stack<GStruct413> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
-                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
-                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
-
-                    if (targetItem is SortingTableClass)
+                    if (Settings.GreedyStackMove.Value && !isGridPlacement && selectedItemContext.Item.StackObjectsCount > 1)
                     {
-                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
+                        int stackCount = int.MaxValue;
+                        bool failed = false;
+                        while (selectedItemContext.Item.StackObjectsCount > 0)
+                        {
+                            if (selectedItemContext.Item.StackObjectsCount >= stackCount)
+                            {
+                                break;
+                            }
+
+                            stackCount = selectedItemContext.Item.StackObjectsCount;
+                            operation = wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */);
+                            if (__result = operation.Succeeded)
+                            {
+                                operations.Push(operation);
+                            }
+                            else
+                            {
+                                if (operation.Error is GClass3292 noRoomError)
+                                {
+                                    // Wrap this error to display it
+                                    operation = new(new DisplayableErrorWrapper(noRoomError));
+                                }
+
+                                // Need to double-break
+                                failed = true;
+                                break;
+                            }
+                        }
+
+                        if (failed)
+                        {
+                            break;
+                        }
                     }
                     else
                     {
-                        operation = targetItem != null ?
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
-                    }
-
-                    FindOrigin = null;
-                    FindVerticalFirst = false;
-
-                    if (__result = operation.Succeeded)
-                    {
-                        operations.Push(operation);
-                        if (targetItem != null && showHighlights) // targetItem was originally null so this is the rest of the items
+                        if (isGridPlacement)
                         {
-                            ShowPreview(__instance, selectedItemContext, operation);
-                        }
-                    }
-                    else if (operation.Error is InteractionsHandlerClass.GClass3329)
-                    {
-                        // Moving item to the same place, cool, not a problem
-                        __result = true;
-                        operation = default;
-                        if (showHighlights && selectedItemContext.Item.Parent is GClass2769 gridAddress)
-                        {
-                            ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
-                        }
-                    }
-                    else
-                    {
-                        if (operation.Error is GClass3292 noRoomError)
-                        {
-                            // Wrap this error to display it
-                            operation = new(new DisplayableErrorWrapper(noRoomError));
+                            FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
+                            FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
                         }
 
-                        break;
+                        if (targetItem is SortingTableClass)
+                        {
+                            operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
+                        }
+                        else
+                        {
+                            operation = targetItem != null ?
+                                wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
+                                wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                        }
+
+                        FindOrigin = null;
+                        FindVerticalFirst = false;
+
+                        if (__result = operation.Succeeded)
+                        {
+                            operations.Push(operation);
+                            if (targetItem != null && isGridPlacement) // targetItem was originally null so this is the rest of the items
+                            {
+                                ShowPreview(__instance, selectedItemContext, operation);
+                            }
+                        }
+                        else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                        {
+                            // Moving item to the same place, cool, not a problem
+                            __result = true;
+                            operation = default;
+                            if (isGridPlacement && selectedItemContext.Item.Parent is GClass2769 gridAddress)
+                            {
+                                ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
+                            }
+                        }
+                        else
+                        {
+                            if (operation.Error is GClass3292 noRoomError)
+                            {
+                                // Wrap this error to display it
+                                operation = new(new DisplayableErrorWrapper(noRoomError));
+                            }
+
+                            break;
+                        }
                     }
 
                     // Set this after the first one
@@ -603,7 +646,7 @@ namespace UIFixes
                     targetItemContext = new GClass2817(__instance.Grid.ParentItem, EItemViewType.Empty);
                 }
 
-                var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
+                var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), ic =>
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
@@ -665,7 +708,7 @@ namespace UIFixes
 
                 // Multiselect always disables "Transfer", which is a partial merge
                 // It leaves things behind and that's not intuitive when multi-selecting
-                order &= ~PartialMerge;
+                // order &= ~PartialMerge;
 
                 if (DisableMerge)
                 {
@@ -774,19 +817,53 @@ namespace UIFixes
                 Stack<GStruct413> operations = new();
                 foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
                 {
-                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
-                    if (operation.Succeeded)
+                    if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
                     {
-                        operations.Push(operation);
-                    }
-                    else if (operation.Error is InteractionsHandlerClass.GClass3329)
-                    {
-                        // Moving item to the same place, cool, not a problem
-                        __result = true;
+                        __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
+                        if (operation.Succeeded)
+                        {
+                            operations.Push(operation);
+                        }
+                        else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                        {
+                            // Moving item to the same place, cool, not a problem
+                            __result = true;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                     else
                     {
-                        break;
+                        int stackCount = int.MaxValue;
+                        bool failed = false;
+                        while (itemContext.Item.StackObjectsCount > 0)
+                        {
+                            if (itemContext.Item.StackObjectsCount >= stackCount)
+                            {
+                                // The whole stack moved or nothing happened, it's done
+                                break;
+                            }
+
+                            stackCount = itemContext.Item.StackObjectsCount;
+                            __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
+                            if (operation.Succeeded)
+                            {
+                                operations.Push(operation);
+                            }
+                            else
+                            {
+                                // Need to double-break
+                                failed = true;
+                                break;
+                            }
+                        }
+
+                        if (failed)
+                        {
+                            break;
+                        }
                     }
                 }
 
@@ -818,7 +895,7 @@ namespace UIFixes
 
                 InPatch = true;
 
-                var serializer = __instance.GetOrAddComponent<ItemContextTaskSerializer>();
+                var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.SortedItemContexts(), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });

@@ -51,6 +51,7 @@ namespace UIFixes
             LoadAmmoInRaidPatches.Enable();
             MultiSelectPatches.Enable();
             new FixUnloadLastBulletPatch().Enable();
+            StackMoveGreedyPatches.Enable();
         }
 
         public static bool InRaid()

@@ -238,7 +238,7 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
             {
-                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.QuickEquip(itemContext.Item));
                 itemUiContext.Tooltip?.Close();
             }
@@ -248,7 +248,7 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
             {
-                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
                 itemUiContext.Tooltip?.Close();
             }
@@ -260,7 +260,7 @@ namespace UIFixes
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
                 // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
-                var taskSerializer = itemUiContext.GetOrAddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
 
                 UnloadSerializer = taskSerializer;
@@ -391,6 +391,15 @@ namespace UIFixes
 
             return true;
         }
+
+        public static IEnumerable<ItemContextClass> RepeatUntilEmpty(this ItemContextClass itemContext)
+        {
+            while (itemContext.Item.StackObjectsCount > 0)
+            {
+                yield return itemContext;
+            }
+        }
+
     }
 }
 

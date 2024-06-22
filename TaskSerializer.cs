@@ -9,13 +9,13 @@ namespace UIFixes
     public class TaskSerializer<T> : MonoBehaviour
     {
         private Func<T, Task> func;
-        private Queue<T> items;
+        private IEnumerator<T> enumerator;
         private Task currentTask;
         private TaskCompletionSource totalTask;
 
         public Task Initialize(IEnumerable<T> items, Func<T, Task> func)
         {
-            this.items = new(items);
+            this.enumerator = items.GetEnumerator();
             this.func = func;
 
             currentTask = Task.CompletedTask;
@@ -44,9 +44,9 @@ namespace UIFixes
                 return;
             }
 
-            if (items.Any())
+            if (enumerator.MoveNext())
             {
-                currentTask = func(items.Dequeue());
+                currentTask = func(enumerator.Current);
             }
             else
             {
