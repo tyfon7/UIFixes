@@ -943,6 +943,8 @@ namespace UIFixes
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
                 GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
 
+                DisableMerge = true;
+
                 Stack<GStruct413> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
@@ -980,6 +982,7 @@ namespace UIFixes
                     firstItem = false;
                 }
 
+                DisableMerge = false;
                 FindOrigin = null;
 
                 if (!__result)
@@ -1021,6 +1024,8 @@ namespace UIFixes
                 traderAssortmentController.PrepareToSell(itemContext.Item, hoveredLocation);
                 itemContext.CloseDependentWindows();
 
+                DisableMerge = true;
+
                 // For the rest of the items, still need to use quickfind
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext, false))
                 {
@@ -1039,6 +1044,7 @@ namespace UIFixes
                     traderAssortmentController.PrepareToSell(selectedItemContext.Item, gridAddress.LocationInGrid);
                 }
 
+                DisableMerge = false;
                 FindOrigin = null;
 
                 MultiSelect.Clear(); // explicitly clear since the items are no longer selectable
