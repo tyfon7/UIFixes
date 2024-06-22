@@ -454,13 +454,6 @@ namespace UIFixes
                     return false;
                 }
 
-                // BSG BUG - if the targetItem is a magazine, and the multiselect is bullets, it will NOT be able to rollback correctly!!
-                // To prevent inventory corruption, reject magazines outright. Sorry, no multiple bullet stacks into one magazine
-                if (targetItemContext != null && targetItemContext.Item is MagazineClass)
-                {
-                    return false;
-                }
-
                 Item item = itemContext.Item;
                 ItemAddress itemAddress = itemContext.ItemAddress;
                 if (itemAddress == null)
