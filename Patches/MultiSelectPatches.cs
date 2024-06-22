@@ -483,6 +483,7 @@ namespace UIFixes
                 {
                     if (Settings.GreedyStackMove.Value && !isGridPlacement && selectedItemContext.Item.StackObjectsCount > 1)
                     {
+                        int originalStackCount = selectedItemContext.Item.StackObjectsCount;
                         int stackCount = int.MaxValue;
                         bool failed = false;
                         while (selectedItemContext.Item.StackObjectsCount > 0)
@@ -497,6 +498,13 @@ namespace UIFixes
                             if (__result = operation.Succeeded)
                             {
                                 operations.Push(operation);
+                            }
+                            else if (stackCount < originalStackCount)
+                            {
+                                // Some succeeded, so stop but not a failure
+                                __result = true;
+                                operation = default;
+                                break;
                             }
                             else
                             {
@@ -706,10 +714,6 @@ namespace UIFixes
                     return;
                 }
 
-                // Multiselect always disables "Transfer", which is a partial merge
-                // It leaves things behind and that's not intuitive when multi-selecting
-                // order &= ~PartialMerge;
-
                 if (DisableMerge)
                 {
                     order &= ~InteractionsHandlerClass.EMoveItemOrder.TryMerge;
@@ -836,6 +840,7 @@ namespace UIFixes
                     }
                     else
                     {
+                        int originalStackCount = itemContext.Item.StackObjectsCount;
                         int stackCount = int.MaxValue;
                         bool failed = false;
                         while (itemContext.Item.StackObjectsCount > 0)
@@ -851,6 +856,13 @@ namespace UIFixes
                             if (operation.Succeeded)
                             {
                                 operations.Push(operation);
+                            }
+                            else if (stackCount < originalStackCount)
+                            {
+                                // Some succeeded, stop but not failure
+                                __result = true;
+                                operation = default;
+                                break;
                             }
                             else
                             {
