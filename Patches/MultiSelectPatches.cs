@@ -509,6 +509,7 @@ namespace UIFixes
                     {
                         // Moving item to the same place, cool, not a problem
                         __result = true;
+                        operation = default;
                         if (showHighlights && selectedItemContext.Item.Parent is GClass2769 gridAddress)
                         {
                             ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
@@ -534,6 +535,11 @@ namespace UIFixes
                 if (!__result)
                 {
                     HidePreviews();
+                }
+                else
+                {
+                    // In success, we want operation to be the first (last in stack), to represent the item being dragged
+                    operation = operations.Last();
                 }
 
                 // Didn't simulate so now undo
