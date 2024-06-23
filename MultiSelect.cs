@@ -213,25 +213,19 @@ namespace UIFixes
 
         public static int InteractionCount(EItemInfoButton interaction, ItemUiContext itemUiContext)
         {
-            int count = 0;
-            foreach (ItemContextClass selectedItemContext in SortedItemContexts())
+            return ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
+        }
+
+        private static bool InteractionAvailable(ItemContextClass itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
+        {
+            ItemContextAbstractClass innerContext = itemContext.GClass2813_0;
+            if (innerContext == null)
             {
-                ItemContextAbstractClass innerContext = selectedItemContext.GClass2813_0;
-                if (innerContext == null)
-                {
-                    continue;
-                }
-
-                var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
-                if (!contextInteractions.IsInteractionAvailable(interaction))
-                {
-                    continue;
-                }
-
-                ++count;
+                return false;
             }
 
-            return count;
+            var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
+            return contextInteractions.IsInteractionAvailable(interaction);
         }
 
         public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -239,7 +233,9 @@ namespace UIFixes
             if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
             {
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
-                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.QuickEquip(itemContext.Item));
+                taskSerializer.Initialize(
+                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)), 
+                    itemContext => itemUiContext.QuickEquip(itemContext.Item));
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -249,7 +245,9 @@ namespace UIFixes
             if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
             {
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
-                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
+                taskSerializer.Initialize(
+                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unequip, itemUiContext)),
+                    itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -261,7 +259,9 @@ namespace UIFixes
             {
                 // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
-                taskSerializer.Initialize(SortedItemContexts(), itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
+                taskSerializer.Initialize(
+                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
+                    itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
 
                 UnloadSerializer = taskSerializer;
                 itemUiContext.Tooltip?.Close();
@@ -341,9 +341,9 @@ namespace UIFixes
 
         private void OnParentDispose()
         {
-            if (Item.CurrentAddress == null)
+            if (Item.CurrentAddress == null || Item.CurrentAddress.Container.ParentItem is MagazineClass)
             {
-                // This item is gone!
+                // This item was entirely merged away, or went into a magazine
                 MultiSelect.Deselect(this);
             }
         }

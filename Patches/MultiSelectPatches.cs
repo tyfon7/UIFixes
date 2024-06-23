@@ -478,6 +478,9 @@ namespace UIFixes
                 DisableMerge = targetItem == null;
                 bool isGridPlacement = targetItem == null;
 
+                // If everything selected is the same type and is a stackable type, allow partial success
+                bool allowPartialSuccess = targetItem != null && itemContext.Item is GClass2735 && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
+
                 Stack<GStruct413> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
@@ -582,6 +585,11 @@ namespace UIFixes
                 }
 
                 DisableMerge = false;
+
+                if (allowPartialSuccess && operations.Any())
+                {
+                    __result = true;
+                }
 
                 if (!__result)
                 {
