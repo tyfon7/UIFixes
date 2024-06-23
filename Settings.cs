@@ -363,7 +363,7 @@ namespace UIFixes
             configEntries.Add(GreedyStackMove = config.Bind(
                 InventorySection,
                 "Always Move Entire Stacks",
-                false,
+                true,
                 new ConfigDescription(
                     "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
                     null,
