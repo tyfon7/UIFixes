@@ -92,7 +92,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(CommonUI __instance)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!MultiSelect.Enabled)
                 {
                     return;
                 }
@@ -131,7 +131,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(MenuUI __instance)
             {
-                if (!Settings.EnableMultiSelect.Value)
+                if (!MultiSelect.Enabled)
                 {
                     return;
                 }
@@ -150,7 +150,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemView __instance, PointerEventData eventData)
             {
-                if (!Settings.EnableMultiSelect.Value || __instance is RagfairNewOfferItemView || __instance is InsuranceItemView)
+                if (!MultiSelect.Enabled || __instance is RagfairNewOfferItemView || __instance is InsuranceItemView)
                 {
                     return;
                 }

@@ -49,7 +49,7 @@ namespace UIFixes
 
         public void Update()
         {
-            if (!Settings.EnableMultiSelect.Value)
+            if (!MultiSelect.Enabled)
             {
                 return;
             }

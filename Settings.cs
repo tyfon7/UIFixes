@@ -66,6 +66,7 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+        public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; }
         public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
         public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
         public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
@@ -305,6 +306,15 @@ namespace UIFixes
                     "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
                     null,
                     new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(EnableMultiSelectInRaid = config.Bind(
+                InventorySection,
+                "Enable Multiselect In Raid",
+                true,
+                new ConfigDescription(
+                    "Enable multiselect functionality in raid.",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             configEntries.Add(SelectionBoxKey = config.Bind(
                 InventorySection,
@@ -564,6 +574,9 @@ namespace UIFixes
             RecalcOrder(configEntries);
 
             MakeExclusive(EnableMultiSelect, AutoOpenSortingTable);
+
+            MakeDependent(EnableMultiSelect, EnableMultiSelectInRaid);
+            MakeDependent(EnableMultiSelect, ShowMultiSelectDebug, false);
         }
 
         private static void RecalcOrder(List<ConfigEntryBase> configEntries)
@@ -601,6 +614,41 @@ namespace UIFixes
                 if (secondaryConfig.Value)
                 {
                     priorityConfig.Value = false;
+                }
+            };
+        }
+
+        private static void MakeDependent(ConfigEntry<bool> primaryConfig, ConfigEntry<bool> dependentConfig, bool primaryEnablesDependent = true)
+        {
+            if (!primaryConfig.Value)
+            {
+                dependentConfig.Value = false;
+                if (dependentConfig.Description.Tags[0] is ConfigurationManagerAttributes attributes)
+                {
+                    attributes.ReadOnly = true;
+                }
+            }
+
+            primaryConfig.SettingChanged += (_, _) =>
+            {
+                if (primaryConfig.Value)
+                {
+                    if (primaryEnablesDependent)
+                    {
+                        dependentConfig.Value = true;
+                    }
+                }
+                else
+                {
+                    dependentConfig.Value = false;
+                }
+            };
+
+            dependentConfig.SettingChanged += (_, _) =>
+            {
+                if (!primaryConfig.Value)
+                {
+                    dependentConfig.Value = false;
                 }
             };
         }

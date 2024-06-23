@@ -13,7 +13,7 @@ namespace UIFixes
 
         public void OnGUI()
         {
-            if (!Settings.EnableMultiSelect.Value || !Settings.ShowMultiSelectDebug.Value)
+            if (!MultiSelect.Enabled || !Settings.ShowMultiSelectDebug.Value)
             {
                 return;
             }

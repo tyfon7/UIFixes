@@ -18,6 +18,14 @@ namespace UIFixes
 
         private static ItemContextTaskSerializer UnloadSerializer = null;
 
+        public static bool Enabled
+        {
+            get
+            {
+                return Settings.EnableMultiSelect.Value && (!Plugin.InRaid() || Settings.EnableMultiSelectInRaid.Value);
+            }
+        }
+
         public static void Initialize()
         {
             // Grab the selection objects from ragfair as templates
