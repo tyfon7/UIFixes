@@ -53,6 +53,7 @@ namespace UIFixes
             new FixUnloadLastBulletPatch().Enable();
             StackMoveGreedyPatches.Enable();
             UnloadAmmoPatches.Enable();
+            new FixTraderControllerSimulateFalsePatch().Enable();
         }
 
         public static bool InRaid()
