@@ -1,5 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -379,6 +380,17 @@ namespace UIFixes
                 if (slot.ContainedItem == null || __instance.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(__instance.Item))
                 {
                     return;
+                }
+
+                // Swapping items with each other when both are on an equipped gun in raid doesn't work
+                if (itemController is Player.PlayerInventoryController playerInventoryController)
+                {
+                    Item item1 = __instance.Item.GetRootItem();
+                    Item item2 = targetItemContext.Item.GetRootItem();
+                    if (item1 == item2 && playerInventoryController.IsItemEquipped(item1))
+                    {
+                        return;
+                    }
                 }
 
                 if (!ValidPrerequisites(__instance, targetItemContext, operation))
