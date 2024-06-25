@@ -21,66 +21,69 @@
   </PropertyGroup>
 
   <ItemGroup>
-	<Reference Include="Aki.Common">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Common.dll</HintPath>
-	</Reference>
-	<Reference Include="Aki.Reflection">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
-	</Reference>
-	<Reference Include="Assembly-CSharp">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
-	</Reference>
-	<Reference Include="Comfort">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
-	</Reference>
-	<Reference Include="Comfort.Unity">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
-	</Reference>
-	<Reference Include="CommonExtensions">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
-	</Reference>
-	<Reference Include="ItemComponent.Types">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
-	</Reference>
-	<Reference Include="Newtonsoft.Json">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
-	</Reference>
-	<Reference Include="Sirenix.Serialization">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
-	</Reference>
-	<Reference Include="Unity.TextMeshPro">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.CoreModule">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.IMGUIModule">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.InputLegacyModule">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.TextRenderingModule">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.UI">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityEngine.UIModule">
-	  <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-	</Reference>
+    <Reference Include="Aki.Common">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Aki.Reflection">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="AnimationSystem.Types">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Comfort">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+    </Reference>
+    <Reference Include="Comfort.Unity">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="CommonExtensions">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemComponent.Types">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-  </ItemGroup> 
-  
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-  </ItemGroup> 
-  
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;    xcopy /F /Y &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;) &#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;)&#xD;&#xA;if $(Configurationname) == Dist (&#xD;&#xA;    mkdir &quot;$(ProjectDir)\dist\BepInEx\plugins&quot;&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\dist\BepInEx\plugins\&quot;&#xD;&#xA;    7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user&#xD;&#xA;    move /Y Tyfon-UIFixes-$(Version).7z dist\&#xD;&#xA;)" />
   </Target>

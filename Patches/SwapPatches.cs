@@ -1,5 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using Aki.Reflection.Utils;
+using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -45,6 +46,7 @@ namespace UIFixes
             new SwapOperationRaiseEventsPatch().Enable();
             new RememberSwapGridHoverPatch().Enable();
             new InspectWindowUpdateStatsOnSwapPatch().Enable();
+            new FixAddModFirearmOperationPatch().Enable();
         }
 
         private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, object operation)
@@ -382,17 +384,6 @@ namespace UIFixes
                     return;
                 }
 
-                // Swapping items with each other when both are on an equipped gun in raid doesn't work
-                if (itemController is Player.PlayerInventoryController playerInventoryController)
-                {
-                    Item item1 = __instance.Item.GetRootItem();
-                    Item item2 = targetItemContext.Item.GetRootItem();
-                    if (item1 == item2 && playerInventoryController.IsItemEquipped(item1))
-                    {
-                        return;
-                    }
-                }
-
                 if (!ValidPrerequisites(__instance, targetItemContext, operation))
                 {
                     return;
@@ -508,6 +499,55 @@ namespace UIFixes
                         panel.method_15(slot, itemUnderCursorContext);
                     }
                 }
+            }
+        }
+
+        public class FixAddModFirearmOperationPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(Player.FirearmController.Class1015), nameof(Player.FirearmController.Class1015.OnModChanged));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(
+                Player.FirearmController.Class1015 __instance,
+                bool ___bool_0,
+                FirearmsAnimator ___firearmsAnimator_0,
+                Item ___item_0,
+                GClass1668 ___gclass1668_0,
+                Slot ___slot_0,
+                Weapon ___weapon_0,
+                Callback ___callback_0,
+                Player ___player_0,
+                Player.FirearmController ___firearmController_0)
+            {
+                if (___bool_0)
+                {
+                    return false;
+                }
+                ___bool_0 = true;
+                ___firearmsAnimator_0.SetupMod(false);
+                GameObject gameObject = Singleton<PoolManager>.Instance.CreateItem(___item_0, true);
+                ___gclass1668_0.SetupMod(___slot_0, gameObject);
+                ___firearmsAnimator_0.Fold(___weapon_0.Folded);
+                __instance.State = Player.EOperationState.Finished;
+
+                // Moved from bottom
+                ___firearmController_0.InitiateOperation<Player.FirearmController.GClass1608>().Start(null);
+                __instance.method_5(gameObject);
+
+                ___callback_0.Succeed();
+                ___player_0.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, (float)___weapon_0.CalculateCellSize().X);
+                ___player_0.UpdateFirstPersonGrip(GripPose.EGripType.Common, ___firearmController_0.HandsHierarchy);
+                Mod mod;
+                if ((mod = ___item_0 as Mod) != null && mod.HasLightComponent)
+                {
+                    ___player_0.SendWeaponLightPacket();
+                }
+                ___firearmController_0.WeaponModified();
+
+                return false;
             }
         }
     }
