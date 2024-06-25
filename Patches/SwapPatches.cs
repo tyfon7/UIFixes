@@ -509,6 +509,9 @@ namespace UIFixes
                 return AccessTools.Method(typeof(Player.FirearmController.Class1015), nameof(Player.FirearmController.Class1015.OnModChanged));
             }
 
+            // The firearm state machine state Class1015 is the "adding mod" state
+            // Unpatched, it fires off the success callback before returning to ready state (GClass1608)
+            // Patched to not be that stupid
             [PatchPrefix]
             public static bool Prefix(
                 Player.FirearmController.Class1015 __instance,
@@ -533,18 +536,21 @@ namespace UIFixes
                 ___firearmsAnimator_0.Fold(___weapon_0.Folded);
                 __instance.State = Player.EOperationState.Finished;
 
-                // Moved from bottom
+                // Begin change (moved from bottom)
                 ___firearmController_0.InitiateOperation<Player.FirearmController.GClass1608>().Start(null);
                 __instance.method_5(gameObject);
+                // End change
 
                 ___callback_0.Succeed();
+
                 ___player_0.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, (float)___weapon_0.CalculateCellSize().X);
                 ___player_0.UpdateFirstPersonGrip(GripPose.EGripType.Common, ___firearmController_0.HandsHierarchy);
-                Mod mod;
-                if ((mod = ___item_0 as Mod) != null && mod.HasLightComponent)
+
+                if (___item_0 is Mod mod && mod.HasLightComponent)
                 {
                     ___player_0.SendWeaponLightPacket();
                 }
+
                 ___firearmController_0.WeaponModified();
 
                 return false;
