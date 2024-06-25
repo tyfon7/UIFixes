@@ -92,21 +92,22 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(CommonUI __instance)
             {
-                if (!MultiSelect.Enabled)
+                Settings.EnableMultiSelect.Bind(enabled =>
                 {
-                    return;
-                }
+                    if (enabled)
+                    {
+                        MultiSelect.Initialize();
+                    }
 
-                MultiSelect.Initialize();
+                    __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                    __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                    __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                    __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                });
 
-                __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>();
-                __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>();
-                __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>();
-                __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>();
-
-                static void ToggleDebug()
+                Settings.ShowMultiSelectDebug.Bind(enabled =>
                 {
-                    if (Settings.ShowMultiSelectDebug.Value)
+                    if (enabled)
                     {
                         Singleton<PreloaderUI>.Instance.GetOrAddComponent<MultiSelectDebug>();
                     }
@@ -115,9 +116,7 @@ namespace UIFixes
                         var debug = Singleton<PreloaderUI>.Instance.GetComponent<MultiSelectDebug>();
                         UnityEngine.Object.Destroy(debug);
                     }
-                };
-                ToggleDebug();
-                Settings.ShowMultiSelectDebug.SettingChanged += (s, a) => ToggleDebug();
+                });
             }
         }
 
@@ -131,12 +130,10 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(MenuUI __instance)
             {
-                if (!MultiSelect.Enabled)
+                Settings.EnableMultiSelect.Bind(enabled =>
                 {
-                    return;
-                }
-
-                __instance.TraderScreensGroup.transform.Find("Deal Screen").gameObject.GetOrAddComponent<DrawMultiSelect>();
+                    __instance.TraderScreensGroup.transform.Find("Deal Screen").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                });
             }
         }
 

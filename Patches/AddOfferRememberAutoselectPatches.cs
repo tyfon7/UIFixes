@@ -16,13 +16,13 @@ namespace UIFixes
             new RememberAutoselectPatch().Enable();
             new RestoreAutoselectPatch().Enable();
 
-            Settings.RememberAutoselectSimilar.SettingChanged += (sender, args) =>
+            Settings.RememberAutoselectSimilar.Subscribe(enabled => 
             {
-                if (!Settings.RememberAutoselectSimilar.Value)
+                if (!enabled)
                 {
                     PlayerPrefs.DeleteKey(PlayerPrefKey);
                 }
-            };
+            });
         }
 
         public class RememberAutoselectPatch : ModulePatch

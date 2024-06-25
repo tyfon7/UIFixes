@@ -33,15 +33,15 @@ namespace UIFixes
             new OfferViewListDoneLoadingPatch().Enable();
             new ChangedViewListTypePatch().Enable();
 
-            Settings.EnableFleaHistory.SettingChanged += (object sender, EventArgs args) =>
+            Settings.EnableFleaHistory.Subscribe(enabled =>
             {
-                if (!Settings.EnableFleaHistory.Value && PreviousFilterButton.Instance != null)
+                if (!enabled && PreviousFilterButton.Instance != null)
                 {
                     UnityEngine.Object.Destroy(PreviousFilterButton.Instance.gameObject);
                     PreviousFilterButton.Instance = null;
                     History.Clear();
                 }
-            };
+            });
         }
 
         public class PreviousFilterButton : MonoBehaviour

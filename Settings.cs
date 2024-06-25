@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
@@ -623,10 +624,6 @@ namespace UIFixes
             if (!primaryConfig.Value)
             {
                 dependentConfig.Value = false;
-                if (dependentConfig.Description.Tags[0] is ConfigurationManagerAttributes attributes)
-                {
-                    attributes.ReadOnly = true;
-                }
             }
 
             primaryConfig.SettingChanged += (_, _) =>
@@ -651,6 +648,21 @@ namespace UIFixes
                     dependentConfig.Value = false;
                 }
             };
+        }
+    }
+
+    public static class SettingExtensions
+    {
+        public static void Subscribe<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
+        {
+            configEntry.SettingChanged += (_, _) => onChange(configEntry.Value);
+        }
+
+
+        public static void Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
+        {
+            configEntry.Subscribe(onChange);
+            onChange(configEntry.Value);
         }
     }
 }

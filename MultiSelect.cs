@@ -10,8 +10,8 @@ namespace UIFixes
 {
     public class MultiSelect
     {
-        private static GameObject SelectedMarkTemplate;
-        private static GameObject SelectedBackgroundTemplate;
+        private static GameObject SelectedMarkTemplate = null;
+        private static GameObject SelectedBackgroundTemplate = null;
 
         private static readonly Dictionary<ItemContextClass, GridItemView> SelectedItems = [];
         private static readonly Dictionary<ItemContextClass, GridItemView> SecondaryItems = [];
@@ -31,11 +31,18 @@ namespace UIFixes
             // Grab the selection objects from ragfair as templates
             RagfairNewOfferItemView ragfairNewOfferItemView = ItemViewFactory.CreateFromPool<RagfairNewOfferItemView>("ragfair_layout");
 
-            SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedMark, null, false);
-            UnityEngine.Object.DontDestroyOnLoad(SelectedMarkTemplate);
 
-            SelectedBackgroundTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedBackground, null, false);
-            UnityEngine.Object.DontDestroyOnLoad(SelectedBackgroundTemplate);
+            if (SelectedMarkTemplate == null)
+            {
+                SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedMark, null, false);
+                UnityEngine.Object.DontDestroyOnLoad(SelectedMarkTemplate);
+            }
+
+            if (SelectedBackgroundTemplate == null)
+            {
+                SelectedBackgroundTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedBackground, null, false);
+                UnityEngine.Object.DontDestroyOnLoad(SelectedBackgroundTemplate);
+            }
 
             ragfairNewOfferItemView.ReturnToPool();
         }
