@@ -27,12 +27,12 @@ namespace UIFixes
             item.GetAllItemsNonAlloc(___list_2, false, true);
             foreach (Item item2 in ___list_2)
             {
-                foreach (GEventArgs1 geventArgs in __instance.List_0)
+                foreach (var eventArgs in __instance.List_0)
                 {
-                    ItemAddress location = geventArgs.GetLocation();
-                    if (!geventArgs.OwnerId.Equals(anotherOwner.ID) && !geventArgs.OwnerId.Equals(__instance.ID)) // checking against this is what I changed
+                    ItemAddress location = eventArgs.GetLocation();
+                    if (!eventArgs.OwnerId.Equals(anotherOwner.ID) && !eventArgs.OwnerId.Equals(__instance.ID)) // checking against this is what I changed
                     {
-                        if (item2 == geventArgs.Item)
+                        if (item2 == eventArgs.Item)
                         {
                             __result = true;
                             return false;

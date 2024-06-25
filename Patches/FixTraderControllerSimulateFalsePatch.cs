@@ -16,7 +16,7 @@ namespace UIFixes
         // Recreatign this function to add the comment section, so calling this with simulate = false doesn't break everything
         [PatchPrefix]
         [HarmonyPriority(Priority.Last)]
-        public static bool Prefix(TraderControllerClass __instance, ItemContextAbstractClass itemContext, Item targetItem, bool partialTransferOnly, bool simulate, ref GStruct413 __result)
+        public static bool Prefix(TraderControllerClass __instance, ItemContextAbstractClass itemContext, Item targetItem, bool partialTransferOnly, bool simulate, ref object __result)
         {
             TraderControllerClass.Struct754 opStruct;
             opStruct.targetItem = targetItem;
@@ -37,7 +37,7 @@ namespace UIFixes
                     return false;
                 }
 
-                GStruct413 operation = __instance.method_22(ref error, ref opStruct);
+                var operation = __instance.method_22(ref error, ref opStruct);
                 if (operation.Succeeded)
                 {
                     __result = operation;
@@ -47,7 +47,7 @@ namespace UIFixes
 
             if (opStruct.targetItem is GInterface306 applicable)
             {
-                GStruct413 operation = __instance.method_23(applicable, ref error, ref opStruct);
+                var operation = __instance.method_23(applicable, ref error, ref opStruct);
                 if (operation.Succeeded)
                 {
                     if (itemContext.IsOperationAllowed(operation.Value))
@@ -67,7 +67,7 @@ namespace UIFixes
 
             if (mergeAvailable && splitAvailable)
             {
-                GStruct413 operation = __instance.method_24(ref error, ref opStruct);
+                var operation = __instance.method_24(ref error, ref opStruct);
                 if (operation.Succeeded)
                 {
                     __result = operation;
