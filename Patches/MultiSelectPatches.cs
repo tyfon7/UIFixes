@@ -17,6 +17,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+using ItemOperation = GStruct413;
+using MoveOperation = GClass2786;
+using GridItemAddress = GClass2769;
+using GridFindExtensions = GClass2503;
+using BaseItemInfoInteractions = GClass3021;
+using GenericItemContext = GClass2817;
+using Stackable = GClass2735;
+using DestroyError = GClass3320;
+using NoRoomError = GClass3292;
+using GridModificationsUnavailableError = StashGridClass.GClass3291;
+using MoveSameSpaceError = InteractionsHandlerClass.GClass3329;
+
 namespace UIFixes
 {
     public static class MultiSelectPatches
@@ -28,7 +40,7 @@ namespace UIFixes
         private static readonly List<Image> Previews = [];
 
         // Point that various QuickFindPlace overrides should start at
-        private static GClass2769 FindOrigin = null;
+        private static GridItemAddress FindOrigin = null;
         private static bool FindVerticalFirst = false;
 
         // Prevents QuickFind from attempting a merge
@@ -216,10 +228,10 @@ namespace UIFixes
                 bool succeeded = true;
                 DisableMerge = true;
                 IgnoreItemParent = true;
-                Stack<GStruct413> operations = new();
+                Stack<ItemOperation> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts())
                 {
-                    GStruct413 operation = itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                    ItemOperation operation = itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                     if (operation.Succeeded && itemController.CanExecute(operation.Value))
                     {
                         operations.Push(operation);
@@ -232,7 +244,7 @@ namespace UIFixes
 
                     if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)
                     {
-                        NotificationManagerClass.DisplayWarningNotification(new GClass3320(gridItemView.Item, destroyResult.ItemsToDestroy).GetLocalizedDescription(), ENotificationDurationType.Default);
+                        NotificationManagerClass.DisplayWarningNotification(new DestroyError(gridItemView.Item, destroyResult.ItemsToDestroy).GetLocalizedDescription(), ENotificationDurationType.Default);
                         succeeded = false;
                         break;
                     }
@@ -246,10 +258,10 @@ namespace UIFixes
                     string itemSound = gridItemView.Item.ItemSound;
 
                     // We didn't simulate because we needed each result to depend on the last, but we have to undo before we actually do :S
-                    Stack<GStruct413> networkOps = new();
+                    Stack<ItemOperation> networkOps = new();
                     while (operations.Any())
                     {
-                        GStruct413 operation = operations.Pop();
+                        ItemOperation operation = operations.Pop();
                         operation.Value.RollBack();
                         networkOps.Push(operation);
                     }
@@ -277,7 +289,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3021), nameof(GClass3021.ExecuteInteractionInternal));
+                return AccessTools.Method(typeof(BaseItemInfoInteractions), nameof(BaseItemInfoInteractions.ExecuteInteractionInternal));
             }
 
             [PatchPrefix]
@@ -426,12 +438,14 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, ItemUiContext ___itemUiContext_0)
+            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref ItemOperation operation, ref bool __result, ItemUiContext ___itemUiContext_0)
             {
                 if (InPatch || !MultiSelect.Active)
                 {
                     return true;
                 }
+
+                MultiGrid.Cache(__instance);
 
                 // Reimplementing this in order to control the simulate param. Need to *not* simulate, then rollback myself in order to test
                 // multiple items going in
@@ -448,7 +462,7 @@ namespace UIFixes
 
                 if (targetItemContext != null && !targetItemContext.ModificationAvailable)
                 {
-                    operation = new StashGridClass.GClass3291(__instance.Grid);
+                    operation = new GridModificationsUnavailableError(__instance.Grid);
                     return false;
                 }
 
@@ -465,7 +479,7 @@ namespace UIFixes
                     return false;
                 }
 
-                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
+                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
                 if (!item.CheckAction(hoveredAddress))
                 {
                     return false;
@@ -476,9 +490,9 @@ namespace UIFixes
                 bool isGridPlacement = targetItem == null;
 
                 // If everything selected is the same type and is a stackable type, allow partial success
-                bool allowPartialSuccess = targetItem != null && itemContext.Item is GClass2735 && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
+                bool allowPartialSuccess = targetItem != null && itemContext.Item is Stackable && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
 
-                Stack<GStruct413> operations = new();
+                Stack<ItemOperation> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
                     if (Settings.GreedyStackMove.Value && !isGridPlacement && selectedItemContext.Item.StackObjectsCount > 1)
@@ -508,7 +522,7 @@ namespace UIFixes
                             }
                             else
                             {
-                                if (operation.Error is GClass3292 noRoomError)
+                                if (operation.Error is NoRoomError noRoomError)
                                 {
                                     // Wrap this error to display it
                                     operation = new(new DisplayableErrorWrapper(noRoomError));
@@ -555,19 +569,19 @@ namespace UIFixes
                                 ShowPreview(__instance, selectedItemContext, operation);
                             }
                         }
-                        else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                        else if (operation.Error is MoveSameSpaceError)
                         {
                             // Moving item to the same place, cool, not a problem
                             __result = true;
                             operation = default;
-                            if (isGridPlacement && selectedItemContext.Item.Parent is GClass2769 gridAddress)
+                            if (isGridPlacement && selectedItemContext.Item.Parent is GridItemAddress gridAddress)
                             {
                                 ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
                             }
                         }
                         else
                         {
-                            if (operation.Error is GClass3292 noRoomError)
+                            if (operation.Error is NoRoomError noRoomError)
                             {
                                 // Wrap this error to display it
                                 operation = new(new DisplayableErrorWrapper(noRoomError));
@@ -651,12 +665,12 @@ namespace UIFixes
                 DisableMerge = targetItemContext == null;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
+                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 if (__instance.Grid.ParentItem is SortingTableClass)
                 {
                     // Sorting table will need a targetItemContext. Dunno if this is the right type but all it needs is the .Item property
-                    targetItemContext = new GClass2817(__instance.Grid.ParentItem, EItemViewType.Empty);
+                    targetItemContext = new GenericItemContext(__instance.Grid.ParentItem, EItemViewType.Empty);
                 }
 
                 var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
@@ -686,7 +700,7 @@ namespace UIFixes
             {
                 var itemController = gridView.R().TraderController;
 
-                GStruct413 operation = itemUiContext.QuickMoveToSortingTable(itemContext.Item, true);
+                ItemOperation operation = itemUiContext.QuickMoveToSortingTable(itemContext.Item, true);
                 if (operation.Failed || !itemController.CanExecute(operation.Value))
                 {
                     return;
@@ -735,11 +749,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass2503), nameof(GClass2503.FindLocationForItem));
+                return AccessTools.Method(typeof(GridFindExtensions), nameof(GridFindExtensions.FindLocationForItem));
             }
 
             [PatchPrefix]
-            public static bool Prefix(IEnumerable<StashGridClass> grids, Item item, ref GClass2769 __result)
+            public static bool Prefix(IEnumerable<StashGridClass> grids, Item item, ref GridItemAddress __result)
             {
                 if (!MultiSelect.Active)
                 {
@@ -807,7 +821,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref GStruct413 operation, ref bool __result, InventoryControllerClass ___InventoryController)
+            public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref ItemOperation operation, ref bool __result, InventoryControllerClass ___InventoryController)
             {
                 if (InPatch || !MultiSelect.Active)
                 {
@@ -819,11 +833,11 @@ namespace UIFixes
                 if (targetItemContext != null && !targetItemContext.ModificationAvailable ||
                     __instance.ParentItemContext != null && !__instance.ParentItemContext.ModificationAvailable)
                 {
-                    operation = new StashGridClass.GClass3291(__instance.Slot);
+                    operation = new GridModificationsUnavailableError(__instance.Slot);
                     return false;
                 }
 
-                Stack<GStruct413> operations = new();
+                Stack<ItemOperation> operations = new();
                 foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
                 {
                     if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
@@ -833,7 +847,7 @@ namespace UIFixes
                         {
                             operations.Push(operation);
                         }
-                        else if (operation.Error is InteractionsHandlerClass.GClass3329)
+                        else if (operation.Error is MoveSameSpaceError)
                         {
                             // Moving item to the same place, cool, not a problem
                             __result = true;
@@ -929,7 +943,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ref GStruct413 operation, ref bool __result)
+            public static bool Prefix(TradingTableGridView __instance, ItemContextClass itemContext, ref ItemOperation operation, ref bool __result)
             {
                 if (!MultiSelect.Active)
                 {
@@ -946,11 +960,11 @@ namespace UIFixes
                 bool firstItem = true;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
+                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 DisableMerge = true;
 
-                Stack<GStruct413> operations = new();
+                Stack<ItemOperation> operations = new();
                 foreach (ItemContextClass selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
                 {
                     if (traderAssortmentController.CanPrepareItemToSell(selectedItemContext.Item))
@@ -959,7 +973,7 @@ namespace UIFixes
                         FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                         operation = firstItem ?
-                            InteractionsHandlerClass.Move(selectedItemContext.Item, new GClass2769(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
+                            InteractionsHandlerClass.Move(selectedItemContext.Item, new GridItemAddress(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
                             InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, false);
 
                         FindVerticalFirst = false;
@@ -1023,7 +1037,7 @@ namespace UIFixes
                 TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GClass2769 hoveredAddress = new(__instance.Grid, hoveredLocation);
+                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 itemContext.DragCancelled();
                 traderAssortmentController.PrepareToSell(itemContext.Item, hoveredLocation);
@@ -1037,11 +1051,11 @@ namespace UIFixes
                     FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
-                    GStruct413 operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
+                    ItemOperation operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
 
                     FindVerticalFirst = false;
 
-                    if (operation.Failed || operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
+                    if (operation.Failed || operation.Value is not MoveOperation moveOperation || moveOperation.To is not GridItemAddress gridAddress)
                     {
                         break;
                     }
@@ -1128,7 +1142,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass2503), nameof(GClass2503.FindLocationForItem));
+                return AccessTools.Method(typeof(GridFindExtensions), nameof(GridFindExtensions.FindLocationForItem));
             }
 
             [PatchPrefix]
@@ -1250,9 +1264,9 @@ namespace UIFixes
             }
         }
 
-        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GStruct413 operation)
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, ItemOperation operation)
         {
-            if (operation.Value is not GClass2786 moveOperation || moveOperation.To is not GClass2769 gridAddress)
+            if (operation.Value is not MoveOperation moveOperation || moveOperation.To is not GridItemAddress gridAddress)
             {
                 return;
             }
@@ -1273,7 +1287,7 @@ namespace UIFixes
             ShowPreview(gridView, itemContext, gridAddress, backgroundColor);
         }
 
-        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GClass2769 gridAddress, Color backgroundColor)
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GridItemAddress gridAddress, Color backgroundColor)
         {
             Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
             preview.gameObject.SetActive(true);
@@ -1287,7 +1301,7 @@ namespace UIFixes
             Quaternion quaternion = (gridAddress.LocationInGrid.r == ItemRotation.Horizontal) ? ItemViewFactory.HorizontalRotation : ItemViewFactory.VerticalRotation;
             preview.transform.rotation = quaternion;
 
-            GStruct24 itemSize = itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+            var itemSize = itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
             LocationInGrid locationInGrid = gridAddress.LocationInGrid;
 
             RectTransform rectTransform = preview.rectTransform;
@@ -1316,8 +1330,8 @@ namespace UIFixes
             Previews.Clear();
         }
 
-        private static GClass2769 GetTargetGridAddress(
-            ItemContextClass itemContext, ItemContextClass selectedItemContext, GClass2769 hoveredGridAddress)
+        private static GridItemAddress GetTargetGridAddress(
+            ItemContextClass itemContext, ItemContextClass selectedItemContext, GridItemAddress hoveredGridAddress)
         {
             if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.FirstOpenSpace)
             {
@@ -1326,19 +1340,21 @@ namespace UIFixes
 
             if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.OriginalSpacing &&
                 itemContext != selectedItemContext &&
-                itemContext.ItemAddress is GClass2769 itemGridAddress &&
-                selectedItemContext.ItemAddress is GClass2769 selectedGridAddress &&
-                itemGridAddress.Grid == selectedGridAddress.Grid)
+                itemContext.ItemAddress is GridItemAddress itemGridAddress &&
+                selectedItemContext.ItemAddress is GridItemAddress selectedGridAddress &&
+                itemGridAddress.Container.ParentItem == selectedGridAddress.Container.ParentItem)
             {
-                // Shared a grid with the dragged item - try to keep position
-                int xDelta = selectedGridAddress.LocationInGrid.x - itemGridAddress.LocationInGrid.x;
-                int yDelta = selectedGridAddress.LocationInGrid.y - itemGridAddress.LocationInGrid.y;
+                // Shared a parent with the dragged item - try to keep position
+                LocationInGrid itemLocation = MultiGrid.GetGridLocation(itemGridAddress);
+                LocationInGrid selectedLocation = MultiGrid.GetGridLocation(selectedGridAddress);
+                LocationInGrid hoveredLocation = MultiGrid.GetGridLocation(hoveredGridAddress);
 
-                LocationInGrid newLocation = new(hoveredGridAddress.LocationInGrid.x + xDelta, hoveredGridAddress.LocationInGrid.y + yDelta, selectedGridAddress.LocationInGrid.r);
-                newLocation.x = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridWidth.Value, newLocation.x));
-                newLocation.y = Math.Max(0, Math.Min(hoveredGridAddress.Grid.GridHeight.Value, newLocation.y));
+                int xDelta = selectedLocation.x - itemLocation.x;
+                int yDelta = selectedLocation.y - itemLocation.y;
 
-                return new GClass2769(hoveredGridAddress.Grid, newLocation);
+                LocationInGrid newLocation = new(hoveredLocation.x + xDelta, hoveredLocation.y + yDelta, selectedLocation.r);
+
+                return MultiGrid.GetRealAddress(hoveredGridAddress.Grid, newLocation);
             }
 
             return hoveredGridAddress;

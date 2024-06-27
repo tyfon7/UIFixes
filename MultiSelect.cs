@@ -6,6 +6,8 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 
+using GridItemAddress = GClass2769;
+
 namespace UIFixes
 {
     public class MultiSelect
@@ -79,11 +81,14 @@ namespace UIFixes
                 ItemContextClass itemContext = new MultiSelectItemContext(itemView.ItemContext, itemView.ItemRotation);
 
                 // Subscribe to window closures to deselect
-                GClass3085 windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
+                var windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
                 if (windowContext != null)
                 {
                     windowContext.OnClose += () => Deselect(itemContext);
                 }
+
+                // Cache the gridview in case we need it
+                MultiGrid.Cache(itemView.Container as GridView);
 
                 dictionary.Add(itemContext, itemView);
                 ShowSelection(itemView);
@@ -193,14 +198,13 @@ namespace UIFixes
         // Can pass no itemContext, and it just sorts items by their grid order
         public static IEnumerable<ItemContextClass> SortedItemContexts(ItemContextClass first = null, bool prepend = true)
         {
-            static int gridOrder(LocationInGrid loc, StashGridClass grid) => grid.GridWidth.Value * loc.y + loc.x;
+            static int gridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
 
             var result = ItemContexts
                 .Where(ic => first == null || ic.Item != first.Item)
-                .OrderByDescending(ic => ic.ItemAddress is GClass2769)
-                .ThenByDescending(ic => first != null && first.ItemAddress is GClass2769 originalDraggedAddress && ic.ItemAddress is GClass2769 selectedGridAddress && selectedGridAddress.Grid == originalDraggedAddress.Grid)
-                .ThenByDescending(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? selectedGridAddress.Grid.Id : null)
-                .ThenBy(ic => ic.ItemAddress is GClass2769 selectedGridAddress ? gridOrder(selectedGridAddress.LocationInGrid, selectedGridAddress.Grid) : 0);
+                .OrderByDescending(ic => ic.ItemAddress is GridItemAddress)
+                .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
+                .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
             return first != null && prepend ? result.Prepend(first) : result;
         }

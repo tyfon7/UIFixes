@@ -115,9 +115,6 @@ namespace UIFixes
                         // Otherwise, ensure it's not overlapped by window UI
                         PointerEventData eventData = new(EventSystem.current);
 
-                        float widthMargin = 0.1f * (itemRect.xMax - itemRect.xMin);
-                        float heightMargin = 0.1f * (itemRect.yMax - itemRect.yMin);
-
                         if (IsOnTop(itemRect, itemTransform, preloaderRaycaster)) // no preloaderUI on top of this?
                         {
                             if (itemTransform.IsDescendantOf(Singleton<PreloaderUI>.Instance.transform))
