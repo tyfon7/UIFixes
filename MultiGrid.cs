@@ -77,7 +77,6 @@ namespace UIFixes
             RectTransform parentView = initialGridView.transform.parent.RectTransform();
             Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
 
-
             Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
 
             foreach (GridView gridView in parentView.GetComponentsInChildren<GridView>())

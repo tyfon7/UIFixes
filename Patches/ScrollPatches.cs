@@ -25,6 +25,9 @@ namespace UIFixes
             new EnhanceMailScrollingPatch().Enable();
             new MouseScrollingSpeedPatch().Enable();
             new EnhanceHideoutScrollingPatch().Enable();
+            new EnhanceTaskListScrollingPatch().Enable();
+            new RememberTaskListScrollPositionPatch().Enable();
+            new OpenLastTaskPatch().Enable();
         }
 
         private static bool HandleInput(ScrollRect scrollRect)
@@ -300,6 +303,88 @@ namespace UIFixes
             {
                 int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
                 data.scrollDelta *= multi;
+            }
+        }
+
+        public class EnhanceTaskListScrollingPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ScrollRect ____scrollRect)
+            {
+                var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
+                keyScroller.Init(____scrollRect);
+            }
+        }
+
+        public class KeyScroller : MonoBehaviour
+        {
+            ScrollRect scrollRect;
+
+            public void Init(ScrollRect scrollRect)
+            {
+                this.scrollRect = scrollRect;
+            }
+
+            public void Update()
+            {
+                HandleInput(scrollRect);
+            }
+        }
+
+        public class RememberTaskListScrollPositionPatch : ModulePatch
+        {
+            private static float ScrollPosition = 1f;
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(TasksScreen __instance, ScrollRect ____scrollRect)
+            {
+                ____scrollRect.verticalNormalizedPosition = ScrollPosition;
+
+                ____scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
+                __instance.R().UI.AddDisposable(() => ____scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
+            }
+
+            private static void UpdateScrollPosition(Vector2 position)
+            {
+                ScrollPosition = position.y;
+            }
+        }
+
+        public class OpenLastTaskPatch : ModulePatch
+        {
+            private static string LastQuestId = null;
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(NotesTask), nameof(NotesTask.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(NotesTask __instance, GClass1249 quest)
+            {
+                void OnTaskSelected(bool open)
+                {
+                    LastQuestId = open ? quest.Id : null;
+                }
+
+                Toggle toggle = __instance.GetComponent<Toggle>();
+                toggle.onValueChanged.AddListener(OnTaskSelected);
+                __instance.R().UI.AddDisposable(() => toggle.onValueChanged.RemoveListener(OnTaskSelected));
+
+                if (quest.Id == LastQuestId)
+                {
+                    toggle.isOn = true;
+                }
             }
         }
     }
