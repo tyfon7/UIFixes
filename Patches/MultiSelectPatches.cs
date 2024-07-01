@@ -24,6 +24,7 @@ using GridFindExtensions = GClass2503;
 using BaseItemInfoInteractions = GClass3021;
 using GenericItemContext = GClass2817;
 using Stackable = GClass2735;
+using NoOpMove = GClass2779;
 using DestroyError = GClass3320;
 using NoRoomError = GClass3292;
 using GridModificationsUnavailableError = StashGridClass.GClass3291;
@@ -46,6 +47,8 @@ namespace UIFixes
         // Prevents QuickFind from attempting a merge
         private static bool DisableMerge = false;
         private static bool IgnoreItemParent = false;
+
+        private static readonly Color ValidMoveColor = new(0.06f, 0.38f, 0.06f, 0.57f);
 
         public static void Enable()
         {
@@ -168,7 +171,7 @@ namespace UIFixes
                 bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
                 bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
 
-                if (__instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && shiftDown && !ctrlDown && !altDown)
+                if (Settings.EnableMultiClick.Value && __instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && shiftDown && !ctrlDown && !altDown)
                 {
                     MultiSelect.Toggle(gridItemView);
                     return;
@@ -561,22 +564,18 @@ namespace UIFixes
                         FindOrigin = null;
                         FindVerticalFirst = false;
 
+                        // Moving item to the same place, not a problem. Use a no-op move
+                        if (operation.Error is MoveSameSpaceError)
+                        {
+                            operation = new(new NoOpMove());
+                        }
+
                         if (__result = operation.Succeeded)
                         {
                             operations.Push(operation);
                             if (targetItem != null && isGridPlacement) // targetItem was originally null so this is the rest of the items
                             {
                                 ShowPreview(__instance, selectedItemContext, operation);
-                            }
-                        }
-                        else if (operation.Error is MoveSameSpaceError)
-                        {
-                            // Moving item to the same place, cool, not a problem
-                            __result = true;
-                            operation = default;
-                            if (isGridPlacement && selectedItemContext.Item.Parent is GridItemAddress gridAddress)
-                            {
-                                ShowPreview(__instance, selectedItemContext, gridAddress, R.GridView.ValidMoveColor);
                             }
                         }
                         else
@@ -1266,7 +1265,16 @@ namespace UIFixes
 
         private static void ShowPreview(GridView gridView, ItemContextClass itemContext, ItemOperation operation)
         {
-            if (operation.Value is not MoveOperation moveOperation || moveOperation.To is not GridItemAddress gridAddress)
+            GridItemAddress gridAddress = null;
+            if (operation.Value is MoveOperation moveOperation)
+            {
+                gridAddress = moveOperation.To as GridItemAddress;
+            }
+            else if (operation.Value is NoOpMove noopMove)
+            {
+                gridAddress = itemContext.ItemAddress as GridItemAddress;
+            }
+            else
             {
                 return;
             }
@@ -1282,7 +1290,7 @@ namespace UIFixes
                 return;
             }
 
-            Color backgroundColor = gridView.GetHighlightColor(itemContext, operation, null);
+            Color backgroundColor = operation.Value is NoOpMove ? ValidMoveColor : gridView.GetHighlightColor(itemContext, operation, null);
 
             ShowPreview(gridView, itemContext, gridAddress, backgroundColor);
         }

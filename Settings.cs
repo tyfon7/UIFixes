@@ -67,7 +67,8 @@ namespace UIFixes
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
-        public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; }
+        public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
+        public static ConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
         public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
         public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
         public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
@@ -314,6 +315,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Enable multiselect functionality in raid.",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(EnableMultiClick = config.Bind(
+                InventorySection,
+                "Enable Multiselect with Shift-Click",
+                true,
+                new ConfigDescription(
+                    "Add items to the selection by shift-clicking them. If you disable this, the only way to multiselect is with the selection box",
                     null,
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 
@@ -574,10 +584,12 @@ namespace UIFixes
 
             RecalcOrder(configEntries);
 
-            MakeExclusive(EnableMultiSelect, AutoOpenSortingTable);
 
             MakeDependent(EnableMultiSelect, EnableMultiSelectInRaid);
             MakeDependent(EnableMultiSelect, ShowMultiSelectDebug, false);
+            MakeDependent(EnableMultiSelect, EnableMultiClick);
+
+            MakeExclusive(EnableMultiClick, AutoOpenSortingTable, false);
         }
 
         private static void RecalcOrder(List<ConfigEntryBase> configEntries)
@@ -595,7 +607,7 @@ namespace UIFixes
             }
         }
 
-        private static void MakeExclusive(ConfigEntry<bool> priorityConfig, ConfigEntry<bool> secondaryConfig)
+        private static void MakeExclusive(ConfigEntry<bool> priorityConfig, ConfigEntry<bool> secondaryConfig, bool allowSecondaryToDisablePrimary = true)
         {
             if (priorityConfig.Value)
             {
@@ -614,7 +626,14 @@ namespace UIFixes
             {
                 if (secondaryConfig.Value)
                 {
-                    priorityConfig.Value = false;
+                    if (allowSecondaryToDisablePrimary)
+                    {
+                        priorityConfig.Value = false;
+                    } 
+                    else if (priorityConfig.Value)
+                    {
+                        secondaryConfig.Value = false;
+                    }
                 }
             };
         }
