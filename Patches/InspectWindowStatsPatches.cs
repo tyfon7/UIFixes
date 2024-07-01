@@ -11,6 +11,7 @@ using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIFixes
 {
@@ -23,6 +24,7 @@ namespace UIFixes
             new CompareModStatsPatch().Enable();
             new FormatCompactValuesPatch().Enable();
             new FormatFullValuesPatch().Enable();
+            new FixDurabilityBarPatch().Enable();
         }
 
         public class CalculateModStatsPatch : ModulePatch
@@ -289,6 +291,24 @@ namespace UIFixes
                 {
                     yield return currentInstruction;
                 }
+            }
+        }
+
+        public class FixDurabilityBarPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(DurabilityPanel), nameof(DurabilityPanel.SetValues));
+            }
+
+            // Bar width is currently set to durability/100, and that 100 is pretty much hardcoded by the client
+            // Just clamp the bar to keep it from overflowing
+            [PatchPostfix]
+            public static void Postfix(DurabilityPanel __instance, Image ___Current)
+            {
+                ___Current.rectTransform.anchorMax = new Vector2(
+                    Mathf.Min(___Current.rectTransform.anchorMax.x, 1f),
+                    ___Current.rectTransform.anchorMax.y);
             }
         }
 
