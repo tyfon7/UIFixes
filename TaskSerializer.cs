@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -21,7 +20,7 @@ namespace UIFixes
             currentTask = Task.CompletedTask;
             totalTask = new TaskCompletionSource();
 
-            Update();
+            LateUpdate();
 
             return totalTask.Task;
         }
@@ -29,9 +28,10 @@ namespace UIFixes
         public void Cancel()
         {
             totalTask.TrySetCanceled();
+            Complete();
         }
 
-        public void Update()
+        public void LateUpdate()
         {
             if (currentTask.IsCanceled)
             {
@@ -56,7 +56,7 @@ namespace UIFixes
 
         private void Complete()
         {
-            totalTask.Complete();
+            totalTask.TryComplete();
             func = null;
             Destroy(this);
         }

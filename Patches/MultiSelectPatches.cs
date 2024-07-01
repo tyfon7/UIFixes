@@ -314,6 +314,9 @@ namespace UIFixes
                     case EItemInfoButton.UnloadAmmo:
                         MultiSelect.UnloadAmmoAll(___itemUiContext_1, false);
                         return false;
+                    case EItemInfoButton.Unpack:
+                        MultiSelect.UnpackAll(___itemUiContext_1, false);
+                        return false;
                     default:
                         return true;
                 }

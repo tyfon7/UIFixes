@@ -237,14 +237,30 @@ namespace UIFixes
 
         private static bool InteractionAvailable(ItemContextClass itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
         {
+            // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
             ItemContextAbstractClass innerContext = itemContext.GClass2813_0;
             if (innerContext == null)
             {
                 return false;
             }
 
+            bool createdContext = false;
+            if (innerContext.Item != itemContext.Item)
+            {
+                // Actual context went away and we're looking at inventory/stash context
+                innerContext = innerContext.CreateChild(itemContext.Item);
+                createdContext = true;
+            }
+
             var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
-            return contextInteractions.IsInteractionAvailable(interaction);
+            bool result = contextInteractions.IsInteractionAvailable(interaction);
+
+            if (createdContext)
+            {
+                innerContext.Dispose();
+            }
+
+            return result;
         }
 
         public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -296,6 +312,19 @@ namespace UIFixes
 
             UnloadSerializer.Cancel();
             UnloadSerializer = null;
+        }
+
+        public static void UnpackAll(ItemUiContext itemUiContext, bool allOrNothing)
+        {
+            if (!allOrNothing || InteractionCount(EItemInfoButton.Unpack, itemUiContext) == Count)
+            {
+                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                taskSerializer.Initialize(
+                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unpack, itemUiContext)),
+                    itemContext => itemUiContext.UnpackItem(itemContext.Item));
+
+                itemUiContext.Tooltip?.Close();
+            }
         }
 
         private static void ShowSelection(GridItemView itemView)
