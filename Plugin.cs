@@ -54,6 +54,7 @@ namespace UIFixes
             StackMoveGreedyPatches.Enable();
             UnloadAmmoPatches.Enable();
             new FixTraderControllerSimulateFalsePatch().Enable();
+            LoadMultipleMagazinesPatches.Enable();
         }
 
         public static bool InRaid()

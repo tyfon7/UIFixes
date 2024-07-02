@@ -69,11 +69,13 @@ namespace UIFixes
                 if (bullets != null)
                 {
                     int count = GridView.smethod_0(magazine, bullets);
-                    inventoryController.LoadMagazine(bullets, magazine, count, false).HandleExceptions();
+                    __result = inventoryController.LoadMagazine(bullets, magazine, count, false);
+                }
+                else
+                {
+                    __result = Task.CompletedTask;
                 }
 
-                // The calling code in this instance doesn't do anything with the task, but it does await it, so if this doesn't return a Task it nullrefs
-                __result = Task.CompletedTask;
                 return false;
             }
         }

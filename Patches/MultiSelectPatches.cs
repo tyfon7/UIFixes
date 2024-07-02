@@ -333,7 +333,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix()
             {
-                MultiSelect.StopUnloading();
+                MultiSelect.StopLoading();
             }
         }
 

@@ -121,6 +121,14 @@ namespace UIFixes
                         ____text.text += " (x" + count + ")";
                     }
                 }
+                else if (caption == EItemInfoButton.LoadAmmo.ToString())
+                {
+                    int count = MultiSelect.InteractionCount(EItemInfoButton.LoadAmmo, ItemUiContext.Instance);
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
+                }
                 else if (caption == EItemInfoButton.UnloadAmmo.ToString())
                 {
                     int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
@@ -136,7 +144,6 @@ namespace UIFixes
                     {
                         ____text.text += " (x" + count + ")";
                     }
-
                 }
             }
         }

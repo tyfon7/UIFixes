@@ -3,6 +3,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace UIFixes
         private static readonly Dictionary<ItemContextClass, GridItemView> SelectedItems = [];
         private static readonly Dictionary<ItemContextClass, GridItemView> SecondaryItems = [];
 
-        private static ItemContextTaskSerializer UnloadSerializer = null;
+        private static ItemContextTaskSerializer LoadUnloadSerializer = null;
 
         public static bool Enabled
         {
@@ -288,9 +289,29 @@ namespace UIFixes
             }
         }
 
+        public static Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
+        {
+            StopLoading();
+            if (!allOrNothing || InteractionCount(EItemInfoButton.LoadAmmo, itemUiContext) == Count)
+            {
+                // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
+                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                Task result = taskSerializer.Initialize(
+                    SortedItemContexts().Where(ic => ic.Item is MagazineClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext)),
+                    itemContext => itemUiContext.LoadAmmoByType(itemContext.Item as MagazineClass, ammoTemplateId, itemContext.UpdateView));
+
+                LoadUnloadSerializer = taskSerializer;
+                itemUiContext.Tooltip?.Close();
+
+                return result;
+            }
+
+            return Task.CompletedTask;
+        }
+
         public static void UnloadAmmoAll(ItemUiContext itemUiContext, bool allOrNothing)
         {
-            StopUnloading();
+            StopLoading();
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
                 // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
@@ -299,20 +320,20 @@ namespace UIFixes
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
                     itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
 
-                UnloadSerializer = taskSerializer;
+                LoadUnloadSerializer = taskSerializer;
                 itemUiContext.Tooltip?.Close();
             }
         }
 
-        public static void StopUnloading()
+        public static void StopLoading()
         {
-            if (UnloadSerializer == null)
+            if (LoadUnloadSerializer == null)
             {
                 return;
             }
 
-            UnloadSerializer.Cancel();
-            UnloadSerializer = null;
+            LoadUnloadSerializer.Cancel();
+            LoadUnloadSerializer = null;
         }
 
         public static void UnpackAll(ItemUiContext itemUiContext, bool allOrNothing)
