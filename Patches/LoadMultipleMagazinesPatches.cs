@@ -5,6 +5,7 @@ using HarmonyLib;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace UIFixes
 {
@@ -15,8 +16,10 @@ namespace UIFixes
         public static void Enable()
         {
             new FindCompatibleAmmoPatch().Enable();
-            new CheckCompatibilityPatch().Enable();
+            new CheckItemFilterPatch().Enable();
             new LoadAmmoPatch().Enable();
+            new FilterMagPresetsPatch().Enable();
+            new LoadPresetPatch().Enable();
         }
 
         public class FindCompatibleAmmoPatch : ModulePatch
@@ -46,23 +49,22 @@ namespace UIFixes
             }
         }
 
-        public class CheckCompatibilityPatch : ModulePatch
+        public class CheckItemFilterPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(MagazineClass), nameof(MagazineClass.CheckCompatibility));
+                return AccessTools.Method(typeof(GClass2510), nameof(GClass2510.CheckItemFilter));
             }
 
             [PatchPrefix]
-            public static bool Prefix(BulletClass ammo, ref bool __result)
+            public static void Prefix(ref ItemFilter[] filters, Item item)
             {
                 if (CombinedFilters == null)
                 {
-                    return true;
+                    return;
                 }
 
-                __result = CombinedFilters.CheckItemFilter(ammo);
-                return false;
+                filters = CombinedFilters;
             }
         }
 
@@ -82,6 +84,60 @@ namespace UIFixes
                 }
 
                 __result = MultiSelect.LoadAmmoAll(___itemUiContext_0, ammoTemplateId, false);
+                return false;
+            }
+        }
+
+        public class FilterMagPresetsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GClass3044), nameof(GClass3044.method_7));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(MagazineClass magazine)
+            {
+                if (MultiSelect.Active)
+                {
+                    CombinedFilters = MultiSelect.SortedItemContexts()
+                        .Select(itemContext => itemContext.Item)
+                        .OfType<MagazineClass>()
+                        .SelectMany(mag => mag.Cartridges.Filters)
+                        .ToArray();
+                }
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                CombinedFilters = null;
+            }
+        }
+
+        public class LoadPresetPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(GClass3044), nameof(GClass3044.method_6));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(GClass2092 preset, ItemUiContext ___itemUiContext_1)
+            {
+                if (!MultiSelect.Active)
+                {
+                    return true;
+                }
+
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                {
+                    return true;
+                }
+
+                var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineClass>();
+                ___itemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
+
                 return false;
             }
         }

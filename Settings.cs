@@ -80,6 +80,7 @@ namespace UIFixes
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
         public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
+        public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
         // Inspect Panels
         public static ConfigEntry<bool> ShowModStats { get; set; }
@@ -425,6 +426,15 @@ namespace UIFixes
                     "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
                     null,
                     new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(LoadMagPresetOnBullets = config.Bind(
+                InventorySection,
+                "Mag Presets Context Menu on Bullets",
+                false,
+                new ConfigDescription(
+                    "For some reason vanilla EFT shows the Load From Preset context menu on bullets. It serves no purpose",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Inspect
             configEntries.Add(ShowModStats = config.Bind(

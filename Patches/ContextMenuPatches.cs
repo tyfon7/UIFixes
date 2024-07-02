@@ -76,6 +76,8 @@ namespace UIFixes
             new ChangeInteractionButtonCreationPatch().Enable();
 
             new EnableInsureInnerItemsPatch().Enable();
+
+            new DisableLoadPresetOnBulletsPatch().Enable();
         }
 
         public class ContextMenuNamesPatch : ModulePatch
@@ -132,6 +134,14 @@ namespace UIFixes
                 else if (caption == EItemInfoButton.UnloadAmmo.ToString())
                 {
                     int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
+                    if (count > 0)
+                    {
+                        ____text.text += " (x" + count + ")";
+                    }
+                }
+                else if (caption == EItemInfoButton.ApplyMagPreset.ToString())
+                {
+                    int count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);
                     if (count > 0)
                     {
                         ____text.text += " (x" + count + ")";
@@ -377,6 +387,31 @@ namespace UIFixes
                 if (insurableItems.Any())
                 {
                     __result = SuccessfulResult.New;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        public class DisableLoadPresetOnBulletsPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(Item selectedItem, ref GStruct416<Item> __result)
+            {
+                if (Settings.LoadMagPresetOnBullets.Value)
+                {
+                    return true;
+                }
+
+                if (selectedItem is BulletClass)
+                {
+                    __result = new MagazineBuildClass.Class3135(selectedItem);
                     return false;
                 }
 

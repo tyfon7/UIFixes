@@ -4,6 +4,7 @@ using EFT.UI.DragAndDrop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -69,7 +70,7 @@ namespace UIFixes
                 foreach (GameObject gameObject in results.Select(r => r.gameObject))
                 {
                     var draggables = gameObject.GetComponents<MonoBehaviour>()
-                        .Where(c => c is IDragHandler || c is IBeginDragHandler)
+                        .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
                         .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
                         .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
 
