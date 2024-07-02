@@ -31,6 +31,11 @@ namespace UIFixes
             Complete();
         }
 
+        public void OnDisable()
+        {
+            Cancel();
+        }
+
         public void LateUpdate()
         {
             if (currentTask.IsCanceled)

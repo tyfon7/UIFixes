@@ -33,7 +33,6 @@ namespace UIFixes
             // Grab the selection objects from ragfair as templates
             RagfairNewOfferItemView ragfairNewOfferItemView = ItemViewFactory.CreateFromPool<RagfairNewOfferItemView>("ragfair_layout");
 
-
             if (SelectedMarkTemplate == null)
             {
                 SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedMark, null, false);
@@ -271,6 +270,7 @@ namespace UIFixes
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)), 
                     itemContext => itemUiContext.QuickEquip(itemContext.Item));
+
                 itemUiContext.Tooltip?.Close();
             }
         }
@@ -283,6 +283,7 @@ namespace UIFixes
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unequip, itemUiContext)),
                     itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
+
                 itemUiContext.Tooltip?.Close();
             }
         }

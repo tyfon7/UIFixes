@@ -1,7 +1,6 @@
 ﻿using Aki.Reflection.Patching;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,9 +74,9 @@ namespace UIFixes
             // This won't block the first action from swapping, but will prevent follow up swaps
             SwapPatches.BlockSwaps = true;
 
-            __result.ContinueWith(_ => 
-            { 
-                InPatch = false; 
+            __result.ContinueWith(_ =>
+            {
+                InPatch = false;
                 SwapPatches.BlockSwaps = false;
             });
 
