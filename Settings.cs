@@ -64,6 +64,7 @@ namespace UIFixes
         public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
         public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
         public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
+        public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
         // Inventory
         public static ConfigEntry<bool> EnableMultiSelect { get; set; }
@@ -299,6 +300,15 @@ namespace UIFixes
                     "A separate mousewheel scroll speed for in raid.",
                     new AcceptableValueRange<int>(1, 10),
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
+               InputSection,
+               "Block Text Inputs on Item Mouseover",
+               true,
+               new ConfigDescription(
+                   "In order for keybinds to work and not get mixed up with textboxes, key presses while mousing over an item will not be sent to the currently focused textbox",
+                   null,
+                   new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Inventory
             configEntries.Add(EnableMultiSelect = config.Bind(

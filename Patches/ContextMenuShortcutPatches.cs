@@ -44,6 +44,14 @@ namespace UIFixes
                     return;
                 }
 
+                if (!Settings.ItemContextBlocksTextInputs.Value && 
+                    EventSystem.current?.currentSelectedGameObject != null && 
+                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+                {
+                    return;
+                }
+
+
                 var interactions = __instance.GetItemContextInteractions(itemContext, null);
                 if (Settings.InspectKeyBind.Value.IsDown())
                 {
@@ -167,6 +175,11 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix()
             {
+                if (!Settings.ItemContextBlocksTextInputs.Value)
+                {
+                    return;
+                }
+
                 if (EventSystem.current?.currentSelectedGameObject != null)
                 {
                     LastSelectedInput = EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>();
@@ -188,6 +201,11 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix()
             {
+                if (!Settings.ItemContextBlocksTextInputs.Value)
+                {
+                    return;
+                }
+
                 if (LastSelectedInput != null)
                 {
                     LastSelectedInput.readOnly = false;
