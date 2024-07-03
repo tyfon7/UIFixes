@@ -11,13 +11,20 @@ namespace UIFixes
 {
     public static class ContextMenuShortcutPatches
     {
+        private static TMP_InputField LastSelectedInput = null;
+
         public static void Enable()
         {
             new ItemUiContextPatch().Enable();
+
             new HideoutItemViewRegisterContextPatch().Enable();
             new HideoutItemViewUnegisterContextPatch().Enable();
+
             new TradingPanelRegisterContextPatch().Enable();
             new TradingPanelUnregisterContextPatch().Enable();
+
+            new SelectCurrentContextPatch().Enable();
+            new DeselectCurrentContextPatch().Enable();
         }
 
         public class ItemUiContextPatch : ModulePatch
@@ -30,9 +37,9 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(ItemUiContext __instance)
             {
-                // Need an item context to operate on, and ignore these keypresses if there's a focused textbox somewhere
+                // Need an item context to operate on
                 ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-                if (itemContext == null || EventSystem.current?.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+                if (itemContext == null)
                 {
                     return;
                 }
@@ -145,6 +152,48 @@ namespace UIFixes
             public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___gclass2813_0)
             {
                 ___itemUiContext_0.UnregisterCurrentItemContext(___gclass2813_0);
+            }
+        }
+
+        // Keybinds don't work if a textbox has focus - setting the textbox to readonly seems the best way to fix this
+        // without changing selection and causing weird side effects
+        public class SelectCurrentContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.RegisterCurrentItemContext));
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                if (EventSystem.current?.currentSelectedGameObject != null)
+                {
+                    LastSelectedInput = EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>();
+                    if (LastSelectedInput != null)
+                    {
+                        LastSelectedInput.readOnly = true;
+                    }
+                }
+            }
+        }
+
+        public class DeselectCurrentContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnregisterCurrentItemContext));
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                if (LastSelectedInput != null)
+                {
+                    LastSelectedInput.readOnly = false;
+                }
+
+                LastSelectedInput = null;
             }
         }
     }
