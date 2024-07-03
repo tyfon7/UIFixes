@@ -15,6 +15,9 @@ namespace UIFixes
         {
             new ItemUiContextPatch().Enable();
             new HideoutItemViewRegisterContextPatch().Enable();
+            new HideoutItemViewUnegisterContextPatch().Enable();
+            new TradingPanelRegisterContextPatch().Enable();
+            new TradingPanelUnregisterContextPatch().Enable();
         }
 
         public class ItemUiContextPatch : ModulePatch
@@ -97,9 +100,51 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(HideoutItemView __instance)
+            public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
             {
-                ItemUiContext.Instance.RegisterCurrentItemContext(__instance.ItemContext);
+                ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext);
+            }
+        }
+
+        public class HideoutItemViewUnegisterContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerExit));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
+            {
+                ___ItemUiContext.UnregisterCurrentItemContext(__instance.ItemContext);
+            }
+        }
+
+        public class TradingPanelRegisterContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_1)); // OnHoverStart
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___gclass2813_0)
+            {
+                ___itemUiContext_0.RegisterCurrentItemContext(___gclass2813_0);
+            }
+        }
+
+        public class TradingPanelUnregisterContextPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_2)); // OnHoverEnd
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___gclass2813_0)
+            {
+                ___itemUiContext_0.UnregisterCurrentItemContext(___gclass2813_0);
             }
         }
     }
