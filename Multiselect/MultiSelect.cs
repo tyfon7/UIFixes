@@ -318,7 +318,14 @@ namespace UIFixes
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
-                    itemContext => itemUiContext.UnloadAmmo(itemContext.Item));
+                    itemContext =>
+                    {
+                        if (itemContext.Item is AmmoBox)
+                        {
+                            Deselect(itemContext);
+                        }
+                        return itemUiContext.UnloadAmmo(itemContext.Item);
+                    });
 
                 LoadUnloadSerializer = taskSerializer;
                 itemUiContext.Tooltip?.Close();
@@ -343,7 +350,11 @@ namespace UIFixes
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unpack, itemUiContext)),
-                    itemContext => itemUiContext.UnpackItem(itemContext.Item));
+                    itemContext =>
+                    {
+                        Deselect(itemContext);
+                        return itemUiContext.UnpackItem(itemContext.Item);
+                    });
 
                 itemUiContext.Tooltip?.Close();
             }

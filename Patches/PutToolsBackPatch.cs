@@ -2,6 +2,7 @@
 using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,8 +26,9 @@ namespace UIFixes
             StashClass stash = inventory.Stash;
             if (inventory != null && stash != null)
             {
-                var handledContainers = new ContainerCollection[] { inventory.Stash, inventory.Equipment, inventory.QuestRaidItems, inventory.QuestStashItems, inventory.SortingTable };
-                var unhandledItems = newItems.Where(i => !handledContainers.Select(c => c.Id).Contains(i.parentId)).ToArray();
+                // Handled items are either in these top level containers or are nested inside each other (mods, attachments, etc)
+                var handledContainerIds = newItems.Select(i => i._id).Concat([inventory.Stash.Id, inventory.Equipment.Id, inventory.QuestRaidItems.Id, inventory.QuestStashItems.Id, inventory.SortingTable.Id]);
+                var unhandledItems = newItems.Where(i => !String.IsNullOrEmpty(i.parentId) && !handledContainerIds.Contains(i.parentId));
 
                 if (!unhandledItems.Any())
                 {
@@ -38,7 +40,7 @@ namespace UIFixes
 
                 List<Item> stashItems = stash.GetNotMergedItems().ToList();
 
-                ItemFactory.GStruct134 tree = ___gclass1486_0.FlatItemsToTree(unhandledItems, true, null);
+                ItemFactory.GStruct134 tree = ___gclass1486_0.FlatItemsToTree(unhandledItems.ToArray(), true, null);
                 foreach (Item item in tree.Items.Values.Where(i => i.CurrentAddress == null))
                 {
                     GClass1189 newItem = unhandledItems.First(i => i._id == item.Id);

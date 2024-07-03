@@ -718,9 +718,6 @@ namespace UIFixes
 
         public class AdjustQuickFindFlagsPatch : ModulePatch
         {
-            // For reasons (???), BSG doesn't even define the second bit of this flags enum
-            private static readonly InteractionsHandlerClass.EMoveItemOrder PartialMerge = (InteractionsHandlerClass.EMoveItemOrder)2;
-
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));

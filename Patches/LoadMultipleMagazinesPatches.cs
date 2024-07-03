@@ -30,7 +30,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(MagazineClass magazine)
+            public static void Prefix()
             {
                 if (MultiSelect.Active)
                 {
@@ -57,7 +57,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(ref ItemFilter[] filters, Item item)
+            public static void Prefix(ref ItemFilter[] filters)
             {
                 if (CombinedFilters == null)
                 {
@@ -96,7 +96,7 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(MagazineClass magazine)
+            public static void Prefix()
             {
                 if (MultiSelect.Active)
                 {
