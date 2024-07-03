@@ -26,7 +26,6 @@ namespace UIFixes
             new MouseScrollingSpeedPatch().Enable();
             new EnhanceHideoutScrollingPatch().Enable();
             new EnhanceTaskListScrollingPatch().Enable();
-            new RememberTaskListScrollPositionPatch().Enable();
             new OpenLastTaskPatch().Enable();
         }
 
@@ -333,30 +332,6 @@ namespace UIFixes
             public void Update()
             {
                 HandleInput(scrollRect);
-            }
-        }
-
-        public class RememberTaskListScrollPositionPatch : ModulePatch
-        {
-            private static float ScrollPosition = 1f;
-
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Show));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(TasksScreen __instance, ScrollRect ____scrollRect)
-            {
-                ____scrollRect.verticalNormalizedPosition = ScrollPosition;
-
-                ____scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
-                __instance.R().UI.AddDisposable(() => ____scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
-            }
-
-            private static void UpdateScrollPosition(Vector2 position)
-            {
-                ScrollPosition = position.y;
             }
         }
 
