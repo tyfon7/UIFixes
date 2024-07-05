@@ -45,6 +45,7 @@ namespace UIFixes
 
         public void OnDisable()
         {
+            drawing = false;
             MultiSelect.Clear();
         }
 
