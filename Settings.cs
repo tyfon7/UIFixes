@@ -202,6 +202,24 @@ namespace UIFixes
                     new AcceptableValueRange<int>(1, 10),
                     new ConfigurationManagerAttributes { })));
 
+            configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
+                InputSection,
+                "Use Different Scrolling Speed in Raid",
+                false,
+                new ConfigDescription(
+                    "Whether to use a separate mousewheel scroll speed in raid",
+                    null,
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+            configEntries.Add(MouseScrollMultiInRaid = config.Bind(
+                InputSection,
+                "Mousewheel Scrolling Speed in Raid",
+                1,
+                new ConfigDescription(
+                    "A separate mousewheel scroll speed for in raid",
+                    new AcceptableValueRange<int>(1, 10),
+                    new ConfigurationManagerAttributes { IsAdvanced = true })));
+
             configEntries.Add(InspectKeyBind = config.Bind(
                 InputSection,
                 "Inspect Shortcut",
@@ -282,24 +300,6 @@ namespace UIFixes
                     "Keybind to search flea market for items linked to this item",
                     null,
                     new ConfigurationManagerAttributes { })));
-
-            configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
-                InputSection,
-                "Use Different Scrolling Speed in Raid",
-                false,
-                new ConfigDescription(
-                    "Change PageUp and PageDown to scroll up and down one page",
-                    null,
-                    new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-            configEntries.Add(MouseScrollMultiInRaid = config.Bind(
-                InputSection,
-                "Mousewheel Scrolling Speed in Raid",
-                1,
-                new ConfigDescription(
-                    "A separate mousewheel scroll speed for in raid.",
-                    new AcceptableValueRange<int>(1, 10),
-                    new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
                InputSection,
