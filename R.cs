@@ -348,16 +348,22 @@ namespace UIFixes
             public static Type Type { get; private set; }
             private static FieldInfo ButtonTemplateField;
             private static FieldInfo ContainerField;
+            private static FieldInfo ContextMenuField;
+            private static FieldInfo ContextMenuButtonField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.InteractionButtonsContainer);
                 ButtonTemplateField = AccessTools.Field(Type, "_buttonTemplate");
                 ContainerField = AccessTools.Field(Type, "_buttonsContainer");
+                ContextMenuField = AccessTools.Field(Type, "simpleContextMenu_0");
+                ContextMenuButtonField = AccessTools.Field(Type, "simpleContextMenuButton_0");
             }
 
             public SimpleContextMenuButton ButtonTemplate { get { return (SimpleContextMenuButton)ButtonTemplateField.GetValue(Value); } }
             public Transform Container { get { return (Transform)ContainerField.GetValue(Value); } }
+            public SimpleContextMenu ContextMenu { get { return (SimpleContextMenu)ContextMenuField.GetValue(Value); } }
+            public SimpleContextMenuButton ContextMenuButton { get { return (SimpleContextMenuButton)ContextMenuButtonField.GetValue(Value); } }
         }
 
         public class ContextMenuButton(object value) : Wrapper(value)

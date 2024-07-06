@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UnityEngine;
 
 namespace UIFixes
 {
@@ -65,6 +66,8 @@ namespace UIFixes
             TradingRootInteractionsItemField = AccessTools.Field(TradingRootInteractionsType, "item_0");
 
             new ContextMenuNamesPatch().Enable();
+            new PositionSubMenuPatch().Enable();
+            new PositionInsuranceSubMenuPatch().Enable();
 
             new DeclareSubInteractionsInventoryPatch().Enable();
             new CreateSubInteractionsInventoryPatch().Enable();
@@ -416,6 +419,90 @@ namespace UIFixes
                 }
 
                 return true;
+            }
+        }
+
+        public class PositionSubMenuPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(InventoryRootInteractionsType, "CreateSubInteractions");
+            }
+
+            // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
+            [PatchPostfix]
+            public static void Postfix(ISubInteractions subInteractionsWrapper)
+            {
+                if (subInteractionsWrapper is not InteractionButtonsContainer buttonsContainer)
+                {
+                    return;
+                }
+
+                var wrappedContainer = buttonsContainer.R();
+                SimpleContextMenuButton button = wrappedContainer.ContextMenuButton;
+                SimpleContextMenu flyoutMenu = wrappedContainer.ContextMenu;
+
+                if (button == null || flyoutMenu == null)
+                {
+                    return;
+                }
+
+                PositionContextMenuFlyout(button, flyoutMenu);
+            }
+        }
+
+        // Insurance submenu is async, need to postfix the actual set call
+        public class PositionInsuranceSubMenuPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.SetSubInteractions)).MakeGenericMethod([typeof(InsuranceInteractions.EInsurers)]);
+            }
+
+            // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
+            [PatchPostfix]
+            public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
+            {
+                PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
+            }
+        }
+
+        private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
+        {
+            RectTransform buttonTransform = button.RectTransform();
+            RectTransform flyoutTransform = flyoutMenu.RectTransform();
+
+            Vector2 leftPosition = flyoutTransform.position; // BSG's code will always put it on the left
+            leftPosition = new Vector2((float)Math.Round((double)leftPosition.x), (float)Math.Round((double)leftPosition.y));
+
+            Vector2 size = buttonTransform.rect.size;
+            Vector2 rightPosition = size - size * buttonTransform.pivot;
+            rightPosition = buttonTransform.TransformPoint(rightPosition);
+
+            // Round vector the way that CorrectPosition does
+            rightPosition = new Vector2((float)Math.Round((double)rightPosition.x), (float)Math.Round((double)rightPosition.y));
+
+            if (Settings.ContextMenuOnRight.Value)
+            {
+                // Try on the right
+                flyoutTransform.position = rightPosition;
+                flyoutMenu.CorrectPosition();
+
+                // This means CorrectPosition() moved it
+                if (!(flyoutTransform.position.x - rightPosition.x).IsZero())
+                {
+                    flyoutTransform.position = leftPosition;
+                }
+            }
+            else
+            {
+                flyoutTransform.position = leftPosition;
+                flyoutMenu.CorrectPosition();
+
+                if (!(flyoutTransform.position.x - leftPosition.x).IsZero())
+                {
+                    flyoutTransform.position = rightPosition;
+                }
             }
         }
 

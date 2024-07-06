@@ -81,6 +81,7 @@ namespace UIFixes
         public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
         public static ConfigEntry<bool> MergeFIROther { get; set; }
         public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
+        public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
         public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
         // Inspect Panels
@@ -434,6 +435,15 @@ namespace UIFixes
                 false,
                 new ConfigDescription(
                     "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ContextMenuOnRight = config.Bind(
+                InventorySection,
+                "Context Menu Flyout on Right",
+                true,
+                new ConfigDescription(
+                    "Open context menu sub-menu to the right, as BSG intended but failed to do",
                     null,
                     new ConfigurationManagerAttributes { })));
 
