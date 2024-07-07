@@ -1,11 +1,14 @@
-﻿using SPT.Reflection.Patching;
-using EFT.Hideout;
+﻿using EFT.Hideout;
+using EFT.InputSystem;
 using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TMPro;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UIFixes
@@ -27,6 +30,7 @@ namespace UIFixes
             new FastHideoutSearchPatch().Enable();
             new FixHideoutSearchAgainPatch().Enable();
             new CancelScrollOnMouseWheelPatch().Enable();
+            new BlockHideoutEnterPatch().Enable();
         }
 
         // Deactivate ProduceViews as they lazy load if they don't match the search
@@ -206,6 +210,28 @@ namespace UIFixes
             public static void Postfix()
             {
                 ClearLastScrollPosition();
+            }
+        }
+
+        public class BlockHideoutEnterPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(HideoutScreenOverlay), nameof(HideoutScreenOverlay.TranslateCommand));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(ECommand command, ref InputNode.ETranslateResult __result)
+            {
+                if (command == ECommand.Enter && 
+                    EventSystem.current?.currentSelectedGameObject != null &&
+                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+                {
+                    __result = InputNode.ETranslateResult.Block;
+                    return false;
+                }
+
+                return true;
             }
         }
     }
