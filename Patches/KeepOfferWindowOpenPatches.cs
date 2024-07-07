@@ -59,24 +59,33 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(AddOfferWindow __instance, TaskCompletionSource ___taskCompletionSource_0, ref TaskCompletionSource __state)
             {
-                if (Settings.KeepAddOfferOpen.Value)
+                if (!Settings.KeepAddOfferOpen.Value)
                 {
-                    __state = ___taskCompletionSource_0;
+                    return;
+                }
 
-                    // Close the window if you're gonna hit max offers
-                    var ragfair = __instance.R().Ragfair;
-                    if (Settings.KeepAddOfferOpenIgnoreMaxOffers.Value || ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
-                    {
-                        BlockClose = true;
-                    }
+                __state = ___taskCompletionSource_0;
+
+                // Close the window if you're gonna hit max offers
+                var ragfair = __instance.R().Ragfair;
+                if (Settings.KeepAddOfferOpenIgnoreMaxOffers.Value || ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
+                {
+                    BlockClose = true;
                 }
             }
 
             [PatchPostfix]
             public static void Postfix(RequirementView[] ____requirementViews, TaskCompletionSource ___taskCompletionSource_0, ref TaskCompletionSource __state)
             {
-                bool isAddingOffer = __state != ___taskCompletionSource_0; // If the taskCompletionSource member was changed, then it's adding an offer :S
-                if (Settings.KeepAddOfferOpen.Value && isAddingOffer)
+                BlockClose = false;
+
+                if (!Settings.KeepAddOfferOpen.Value)
+                {
+                    return;
+                }
+
+                // If the taskCompletionSource member was changed, then it's adding an offer :S
+                if (__state != ___taskCompletionSource_0)
                 {
                     AddOfferTasks.Add(__state.Task); // This is the task completion source passed into the add offer call
 
@@ -86,8 +95,6 @@ namespace UIFixes
                         requirementView.ResetRequirementInformation();
                     }
                 }
-
-                BlockClose = false;
             }
         }
 
@@ -101,7 +108,12 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix()
             {
-                if (!BlockClose && AddOfferTasks.All(t => t.IsCompleted))
+                if (!Settings.KeepAddOfferOpen.Value)
+                {
+                    return true;
+                }
+
+                if (!BlockClose && CompletionSource != null && AddOfferTasks.All(t => t.IsCompleted))
                 {
                     CompletionSource.Complete();
                     CompletionSource = null;
