@@ -1,5 +1,4 @@
 ﻿using Comfort.Common;
-using Diz.LanguageExtensions;
 using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
@@ -36,10 +35,8 @@ namespace UIFixes
             AreaScreenSubstrate.InitTypes();
             ItemSpecificationPanel.InitTypes();
             CompactCharacteristicPanel.InitTypes();
-            GridItemAddress.InitTypes();
             SlotItemAddress.InitTypes();
             GridView.InitTypes();
-            //GridViewCanAcceptOperation.InitTypes();
             SwapOperation.InitTypes();
             InteractionButtonsContainer.InitTypes();
             ContextMenuButton.InitTypes();
@@ -246,28 +243,6 @@ namespace UIFixes
             public ItemAttributeClass CompareItemAttribute { get { return (ItemAttributeClass)CompareItemAttributeField.GetValue(Value); } }
         }
 
-        public class GridItemAddress(object value) : Wrapper(value)
-        {
-            public static Type Type { get; private set; }
-            private static FieldInfo LocationInGridField;
-            private static PropertyInfo GridProperty;
-
-            public static void InitTypes()
-            {
-                Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetProperty("Grid") != null); // GClass2769
-                LocationInGridField = AccessTools.Field(Type, "LocationInGrid");
-                GridProperty = AccessTools.Property(Type, "Grid");
-            }
-
-            public static ItemAddress Create(StashGridClass grid, LocationInGrid location)
-            {
-                return (ItemAddress)Activator.CreateInstance(Type, [grid, location]);
-            }
-
-            public LocationInGrid LocationInGrid { get { return (LocationInGrid)LocationInGridField.GetValue(Value); } }
-            public StashGridClass Grid { get { return (StashGridClass)GridProperty.GetValue(Value); } }
-        }
-
         public class SlotItemAddress(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }
@@ -275,7 +250,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2767
+                Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2783
                 SlotField = AccessTools.Field(Type, "Slot");
             }
 
@@ -311,23 +286,6 @@ namespace UIFixes
             public static Color ValidMoveColor { get { return (Color)ValidMoveColorField.GetValue(null); } }
             public static Color InvalidOperationColor { get { return (Color)InvalidOperationColorField.GetValue(null); } }
         }
-
-       /* public class GridViewCanAcceptOperation(object value) : Wrapper(value)
-        {
-            public static Type Type { get; private set; }
-            private static PropertyInfo SucceededProperty;
-            private static PropertyInfo ErrorProperty;
-
-            public static void InitTypes()
-            {
-                Type = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct413, parameter is a ref type, get underlying type
-                SucceededProperty = AccessTools.Property(Type, "Succeeded");
-                ErrorProperty = AccessTools.Property(Type, "Error");
-            }
-
-            public bool Succeeded { get { return (bool)SucceededProperty.GetValue(Value); } }
-            public Error Error { get { return (Error)ErrorProperty.GetValue(Value); } }
-        }*/
 
         public class SwapOperation(object value) : Wrapper(value)
         {

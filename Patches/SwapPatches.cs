@@ -1,4 +1,5 @@
 ﻿using Comfort.Common;
+using Diz.LanguageExtensions;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -43,6 +44,7 @@ namespace UIFixes
             new DetectSlotHighlightPrecheckPatch().Enable();
             new SlotCanAcceptSwapPatch().Enable();
             new DetectFilterForSwapPatch().Enable();
+            new FixNoGridErrorPatch().Enable();
             new SwapOperationRaiseEventsPatch().Enable();
             new RememberSwapGridHoverPatch().Enable();
             new InspectWindowUpdateStatsOnSwapPatch().Enable();
@@ -89,7 +91,10 @@ namespace UIFixes
             }
 
             string error = operation.Error.ToString();
-            if (Settings.SwapImpossibleContainers.Value && !Plugin.InRaid() && error.StartsWith("No free room"))
+
+            // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
+            bool isContainer = targetItemContext.Item is LootItemClass compoundItem && compoundItem.Grids.Length > 0;
+            if (Settings.SwapImpossibleContainers.Value && isContainer && !Plugin.InRaid() && error.StartsWith("No free room"))
             {
                 // Check if it isn't allowed in that container, if so try to swap
                 if (LastCheckItemFilterId == itemContext.Item.Id && !LastCheckItemFilterResult)
@@ -179,11 +184,8 @@ namespace UIFixes
                     return false;
                 }
 
-                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddressA) && R.GridItemAddress.Type.IsInstanceOfType(itemAddressB))
+                if (itemAddressA is ItemAddressClass gridItemAddressA && itemAddressB is ItemAddressClass gridItemAddressB)
                 {
-                    var gridItemAddressA = new R.GridItemAddress(itemAddressA);
-                    var gridItemAddressB = new R.GridItemAddress(itemAddressB);
-
                     LocationInGrid locationA = gridItemAddressA.LocationInGrid;
                     LocationInGrid locationB = gridItemAddressB.LocationInGrid;
                     StashGridClass grid = gridItemAddressA.Grid;
@@ -246,18 +248,16 @@ namespace UIFixes
                 LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext);
 
                 // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
-                var targetGridItemAddress = new R.GridItemAddress(targetItemAddress);
-                ItemAddress itemToAddress = R.GridItemAddress.Create(targetGridItemAddress.Grid, itemToLocation);
+                var targetGridItemAddress = targetItemAddress as ItemAddressClass;
+                ItemAddress itemToAddress = new ItemAddressClass(targetGridItemAddress.Grid, itemToLocation);
 
                 ItemAddress targetToAddress;
-                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
+                if (itemAddress is ItemAddressClass gridItemAddress)
                 {
-                    var gridItemAddress = new R.GridItemAddress(itemAddress);
-
                     LocationInGrid targetToLocation = gridItemAddress.LocationInGrid.Clone();
                     targetToLocation.r = targetGridItemAddress.LocationInGrid.r;
 
-                    targetToAddress = R.GridItemAddress.Create(gridItemAddress.Grid, targetToLocation);
+                    targetToAddress = new ItemAddressClass(gridItemAddress.Grid, targetToLocation);
                 }
                 else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
@@ -285,9 +285,9 @@ namespace UIFixes
                 }
 
                 // If coming from a grid, try rotating the target object 
-                if (R.GridItemAddress.Type.IsInstanceOfType(itemAddress))
+                if (itemAddress is ItemAddressClass gridItemAddress2)
                 {
-                    var targetToLocation = new R.GridItemAddress(targetToAddress).LocationInGrid;
+                    var targetToLocation = gridItemAddress2.LocationInGrid;
                     targetToLocation.r = targetToLocation.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                     {
@@ -465,6 +465,25 @@ namespace UIFixes
             {
                 LastCheckItemFilterId = item.Id;
                 LastCheckItemFilterResult = __result;
+            }
+        }
+
+        public class FixNoGridErrorPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null);
+                return AccessTools.Method(type, "method_1");
+            }
+
+            [PatchPostfix]
+            public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct414<GInterface339> __result, Error ___noSpaceError, Error ___noActionsError)
+            {
+                // Since 3.9 EFT handles slots in addition to containers here, they get the wrong error
+                if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
+                {
+                    __result = new(___noActionsError);
+                }
             }
         }
 
