@@ -1,5 +1,4 @@
-﻿using Aki.Reflection.Patching;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT;
 using EFT.Communications;
 using EFT.InventoryLogic;
@@ -7,28 +6,27 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Insurance;
 using HarmonyLib;
+using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+using BaseItemInfoInteractions = GClass3042;
+using DestroyError = GClass3344;
+using GenericItemContext = GClass2833;
+using GridModificationsUnavailableError = StashGridClass.GClass3315;
 using ItemOperation = GStruct413;
-using MoveOperation = GClass2786;
-using GridItemAddress = GClass2769;
-using GridFindExtensions = GClass2503;
-using BaseItemInfoInteractions = GClass3021;
-using GenericItemContext = GClass2817;
-using Stackable = GClass2735;
-using NoOpMove = GClass2779;
-using DestroyError = GClass3320;
-using NoRoomError = GClass3292;
-using GridModificationsUnavailableError = StashGridClass.GClass3291;
-using MoveSameSpaceError = InteractionsHandlerClass.GClass3329;
+using MoveOperation = GClass2802;
+using MoveSameSpaceError = InteractionsHandlerClass.GClass3353;
+using NoOpMove = GClass2795;
+using NoRoomError = GClass3316;
+using Stackable = GClass2751;
 
 namespace UIFixes
 {
@@ -41,7 +39,7 @@ namespace UIFixes
         private static readonly List<Image> Previews = [];
 
         // Point that various QuickFindPlace overrides should start at
-        private static GridItemAddress FindOrigin = null;
+        private static ItemAddressClass FindOrigin = null;
         private static bool FindVerticalFirst = false;
 
         // Prevents QuickFind from attempting a merge
@@ -91,9 +89,9 @@ namespace UIFixes
 
             // Various location finding
             new FindSpotKeepRotationPatch().Enable();
-            new FindLocationForItemPatch().Enable();
             new FindPlaceToPutPatch().Enable();
             new AdjustQuickFindFlagsPatch().Enable();
+            new ReorderContainersPatch().Enable();
             new AllowFindSameSpotPatch().Enable();
         }
 
@@ -331,9 +329,12 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix()
+            public static void Postfix(Player.PlayerInventoryController __instance)
             {
-                MultiSelect.StopLoading();
+                if (__instance.Profile == PatchConstants.BackEndSession.Profile)
+                {
+                    MultiSelect.StopLoading();
+                }   
             }
         }
 
@@ -485,7 +486,7 @@ namespace UIFixes
                     return false;
                 }
 
-                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+                ItemAddressClass hoveredAddress = new(__instance.Grid, hoveredLocation);
                 if (!item.CheckAction(hoveredAddress))
                 {
                     return false;
@@ -667,7 +668,7 @@ namespace UIFixes
                 DisableMerge = targetItemContext == null;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+                ItemAddressClass hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 if (__instance.Grid.ParentItem is SortingTableClass)
                 {
@@ -741,26 +742,6 @@ namespace UIFixes
                 {
                     order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
                 }
-            }
-        }
-
-        public class AllowFindSameSpotPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(GridFindExtensions), nameof(GridFindExtensions.FindLocationForItem));
-            }
-
-            [PatchPrefix]
-            public static bool Prefix(IEnumerable<StashGridClass> grids, Item item, ref GridItemAddress __result)
-            {
-                if (!MultiSelect.Active)
-                {
-                    return true;
-                }
-
-                __result = grids.Select(g => g.FindLocationForItem(item)).FirstOrDefault(x => x != null);
-                return false;
             }
         }
 
@@ -959,7 +940,7 @@ namespace UIFixes
                 bool firstItem = true;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+                ItemAddressClass hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 DisableMerge = true;
 
@@ -972,7 +953,7 @@ namespace UIFixes
                         FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                         operation = firstItem ?
-                            InteractionsHandlerClass.Move(selectedItemContext.Item, new GridItemAddress(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
+                            InteractionsHandlerClass.Move(selectedItemContext.Item, new ItemAddressClass(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
                             InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, false);
 
                         FindVerticalFirst = false;
@@ -1036,7 +1017,7 @@ namespace UIFixes
                 TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
 
                 LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-                GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+                ItemAddressClass hoveredAddress = new(__instance.Grid, hoveredLocation);
 
                 itemContext.DragCancelled();
                 traderAssortmentController.PrepareToSell(itemContext.Item, hoveredLocation);
@@ -1054,7 +1035,7 @@ namespace UIFixes
 
                     FindVerticalFirst = false;
 
-                    if (operation.Failed || operation.Value is not MoveOperation moveOperation || moveOperation.To is not GridItemAddress gridAddress)
+                    if (operation.Failed || operation.Value is not MoveOperation moveOperation || moveOperation.To is not ItemAddressClass gridAddress)
                     {
                         break;
                     }
@@ -1137,34 +1118,68 @@ namespace UIFixes
         }
 
         // Reorder the grids to start with the same grid as FindOrigin, then loop around
-        public class FindLocationForItemPatch : ModulePatch
+        public class ReorderContainersPatch : ModulePatch
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GridFindExtensions), nameof(GridFindExtensions.FindLocationForItem));
+                Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null);
+                return AccessTools.Method(type, "method_1");
             }
 
             [PatchPrefix]
-            public static void Prefix(ref IEnumerable<StashGridClass> grids)
+            public static void Prefix(ref IEnumerable<EFT.InventoryLogic.IContainer> containersToPut)
             {
                 if (!MultiSelect.Active || FindOrigin == null)
                 {
                     return;
                 }
 
-                if (!grids.Any(g => g == FindOrigin.Grid))
+                if (!containersToPut.Any(g => g == FindOrigin.Grid))
                 {
                     return;
                 }
 
-                var list = grids.ToList();
+                AllowFindSameSpotPatch.DisableItemAddressEquals = true;
+
+                var list = containersToPut.ToList();
                 while (list[0] != FindOrigin.Grid)
                 {
                     list.Add(list[0]);
                     list.RemoveAt(0);
                 }
 
-                grids = list;
+                containersToPut = list;
+            }
+
+            [PatchPostfix]
+            public static void Postfix()
+            {
+                AllowFindSameSpotPatch.DisableItemAddressEquals = false;
+            }
+        }
+
+        // This is an insane way of doing this, but inside of the above method, I want ItemAddress.Equals to always return false, to allow
+        // same place moves. 
+        public class AllowFindSameSpotPatch : ModulePatch
+        {
+            public static bool DisableItemAddressEquals = false;
+
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(ItemAddress), nameof(ItemAddress.Equals));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(ref bool __result)
+            {
+                if (!DisableItemAddressEquals)
+                {
+                    return true;
+                }
+
+                DisableItemAddressEquals = false; // Only do it one time (this is so hacky)
+                __result = false;
+                return false;
             }
         }
 
@@ -1265,14 +1280,14 @@ namespace UIFixes
 
         private static void ShowPreview(GridView gridView, ItemContextClass itemContext, ItemOperation operation)
         {
-            GridItemAddress gridAddress = null;
+            ItemAddressClass gridAddress = null;
             if (operation.Value is MoveOperation moveOperation)
             {
-                gridAddress = moveOperation.To as GridItemAddress;
+                gridAddress = moveOperation.To as ItemAddressClass;
             }
             else if (operation.Value is NoOpMove noopMove)
             {
-                gridAddress = itemContext.ItemAddress as GridItemAddress;
+                gridAddress = itemContext.ItemAddress as ItemAddressClass;
             }
             else
             {
@@ -1295,7 +1310,7 @@ namespace UIFixes
             ShowPreview(gridView, itemContext, gridAddress, backgroundColor);
         }
 
-        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, GridItemAddress gridAddress, Color backgroundColor)
+        private static void ShowPreview(GridView gridView, ItemContextClass itemContext, ItemAddressClass gridAddress, Color backgroundColor)
         {
             Image preview = UnityEngine.Object.Instantiate(gridView.R().HighlightPanel, gridView.transform, false);
             preview.gameObject.SetActive(true);
@@ -1338,8 +1353,8 @@ namespace UIFixes
             Previews.Clear();
         }
 
-        private static GridItemAddress GetTargetGridAddress(
-            ItemContextClass itemContext, ItemContextClass selectedItemContext, GridItemAddress hoveredGridAddress)
+        private static ItemAddressClass GetTargetGridAddress(
+            ItemContextClass itemContext, ItemContextClass selectedItemContext, ItemAddressClass hoveredGridAddress)
         {
             if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.FirstOpenSpace)
             {
@@ -1348,8 +1363,8 @@ namespace UIFixes
 
             if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.OriginalSpacing &&
                 itemContext != selectedItemContext &&
-                itemContext.ItemAddress is GridItemAddress itemGridAddress &&
-                selectedItemContext.ItemAddress is GridItemAddress selectedGridAddress &&
+                itemContext.ItemAddress is ItemAddressClass itemGridAddress &&
+                selectedItemContext.ItemAddress is ItemAddressClass selectedGridAddress &&
                 itemGridAddress.Container.ParentItem == selectedGridAddress.Container.ParentItem)
             {
                 // Shared a parent with the dragged item - try to keep position

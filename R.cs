@@ -1,5 +1,4 @@
-﻿using Aki.Reflection.Utils;
-using Comfort.Common;
+﻿using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT.Hideout;
 using EFT.InputSystem;
@@ -9,6 +8,7 @@ using EFT.UI.DragAndDrop;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,7 +39,7 @@ namespace UIFixes
             GridItemAddress.InitTypes();
             SlotItemAddress.InitTypes();
             GridView.InitTypes();
-            GridViewCanAcceptOperation.InitTypes();
+            //GridViewCanAcceptOperation.InitTypes();
             SwapOperation.InitTypes();
             InteractionButtonsContainer.InitTypes();
             ContextMenuButton.InitTypes();
@@ -112,7 +112,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = typeof(EFT.UI.MessageWindow).BaseType;
+                Type = typeof(EFT.UI.MessageWindow).BaseType; // DialogWindow<T>
                 AcceptMethod = AccessTools.Method(Type, "Accept");
             }
 
@@ -126,7 +126,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass960
+                Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass961
                 GetKeyNameMethod = AccessTools.Method(Type, "GetKeyName");
             }
 
@@ -154,7 +154,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().Single(t => t.GetField("availableSearch") != null); // ProductionPanel.Class1631
+                Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().Single(t => t.IsClass && t.GetField("availableSearch") != null); // ProductionPanel.Class1659
                 ProductionPanelField = AccessTools.Field(Type, "productionPanel_0");
             }
 
@@ -312,7 +312,7 @@ namespace UIFixes
             public static Color InvalidOperationColor { get { return (Color)InvalidOperationColorField.GetValue(null); } }
         }
 
-        public class GridViewCanAcceptOperation(object value) : Wrapper(value)
+       /* public class GridViewCanAcceptOperation(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }
             private static PropertyInfo SucceededProperty;
@@ -327,20 +327,22 @@ namespace UIFixes
 
             public bool Succeeded { get { return (bool)SucceededProperty.GetValue(Value); } }
             public Error Error { get { return (Error)ErrorProperty.GetValue(Value); } }
-        }
+        }*/
 
         public class SwapOperation(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }
+            private static Type CanAcceptType;
             private static MethodInfo ImplicitCastToGridViewCanAcceptOperationMethod;
 
             public static void InitTypes()
             {
-                Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2797>
-                ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == GridViewCanAcceptOperation.Type);
+                Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2813>
+                CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct413, parameter is a ref type, get underlying type
+                ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptType);
             }
 
-            public object ToGridViewCanAcceptOperation() => ImplicitCastToGridViewCanAcceptOperationMethod.Invoke(null, [Value]);
+            public IInventoryEventResult ToGridViewCanAcceptOperation() => (IInventoryEventResult)ImplicitCastToGridViewCanAcceptOperationMethod.Invoke(null, [Value]);
         }
 
         public class InteractionButtonsContainer(object value) : UIElement(value)
@@ -687,7 +689,7 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3052
+                Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3074
                 InsuranceCompanyField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(InsuranceCompanyClass));
             }
 

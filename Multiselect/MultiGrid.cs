@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-using GridItemAddress = GClass2769;
-
 namespace UIFixes
 {
     public static class MultiGrid
@@ -14,7 +12,7 @@ namespace UIFixes
         private static readonly Dictionary<Item, Dictionary<StashGridClass, Vector2Int>> GridOffsets = [];
         private static readonly Dictionary<Item, Dictionary<int, Dictionary<int, StashGridClass>>> GridsByLocation = [];
 
-        public static LocationInGrid GetGridLocation(GridItemAddress realAddress)
+        public static LocationInGrid GetGridLocation(ItemAddressClass realAddress)
         {
             if (!IsMultiGrid(realAddress))
             {
@@ -25,7 +23,7 @@ namespace UIFixes
             return new LocationInGrid(realAddress.LocationInGrid.x + gridOffset.x, realAddress.LocationInGrid.y + gridOffset.y, realAddress.LocationInGrid.r);
         }
 
-        public static GridItemAddress GetRealAddress(StashGridClass originGrid, LocationInGrid multigridLocation)
+        public static ItemAddressClass GetRealAddress(StashGridClass originGrid, LocationInGrid multigridLocation)
         {
             if (!IsMultiGrid(originGrid.ParentItem))
             {
@@ -33,7 +31,7 @@ namespace UIFixes
                 multigridLocation.x = Math.Max(0, Math.Min(originGrid.GridWidth.Value, multigridLocation.x));
                 multigridLocation.y = Math.Max(0, Math.Min(originGrid.GridHeight.Value, multigridLocation.y));
 
-                return new GridItemAddress(originGrid, multigridLocation);
+                return new ItemAddressClass(originGrid, multigridLocation);
             }
 
             var gridsByLocation = GridsByLocation[originGrid.ParentItem];
@@ -54,7 +52,7 @@ namespace UIFixes
             Vector2Int offsets = GridOffsets[originGrid.ParentItem][grid];
 
             LocationInGrid location = new(x - offsets.x, y - offsets.y, multigridLocation.r);
-            return new GridItemAddress(grid, location);
+            return new ItemAddressClass(grid, location);
         }
 
         public static void Cache(GridView initialGridView)
@@ -108,25 +106,9 @@ namespace UIFixes
 
             GridOffsets.Add(parent, gridOffsets);
             GridsByLocation.Add(parent, gridsByLocation);
-
-            // Best effort attempt at cleanup
-            IItemOwner owner = parent.Owner;
-            if (owner != null)
-            {
-                void onRemoveItem(GEventArgs3 eventArgs)
-                {
-                    if (GridOffsets.ContainsKey(eventArgs.Item))
-                    {
-                        GridOffsets.Remove(eventArgs.Item);
-                        GridsByLocation.Remove(eventArgs.Item);
-                        owner.RemoveItemEvent -= onRemoveItem;
-                    }
-                };
-                owner.RemoveItemEvent += onRemoveItem;
-            }
         }
 
-        private static bool IsMultiGrid(GridItemAddress itemAddress)
+        private static bool IsMultiGrid(ItemAddressClass itemAddress)
         {
             return IsMultiGrid(itemAddress.Container.ParentItem);
         }

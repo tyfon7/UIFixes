@@ -1,11 +1,11 @@
-﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace UIFixes
             new FixAddModFirearmOperationPatch().Enable();
         }
 
-        private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, object operation)
+        private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, IInventoryEventResult operation)
         {
             if (!Settings.SwapItems.Value)
             {
@@ -67,9 +67,7 @@ namespace UIFixes
                 return false;
             }
 
-            var wrappedOperation = new R.GridViewCanAcceptOperation(operation);
-
-            if (InHighlight || itemContext == null || targetItemContext == null || wrappedOperation.Succeeded)
+            if (InHighlight || itemContext == null || targetItemContext == null || operation.Succeeded)
             {
                 return false;
             }
@@ -90,7 +88,7 @@ namespace UIFixes
                 return false;
             }
 
-            string error = wrappedOperation.Error.ToString();
+            string error = operation.Error.ToString();
             if (Settings.SwapImpossibleContainers.Value && !Plugin.InRaid() && error.StartsWith("No free room"))
             {
                 // Check if it isn't allowed in that container, if so try to swap
@@ -218,7 +216,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref object operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
+            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
             {
                 if (!ValidPrerequisites(itemContext, targetItemContext, operation))
                 {
@@ -313,7 +311,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass2797
+                return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass2813
             }
 
             [PatchPostfix]
@@ -375,7 +373,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref object operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+            public static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
             {
                 // targetItemContext here is not the target item, it's the *parent* context, i.e. the owner of the slot
                 // Do a few more checks
@@ -458,7 +456,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2510
+                Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2524
                 return AccessTools.Method(type, "CheckItemFilter");
             }
 
@@ -506,7 +504,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(Player.FirearmController.Class1015), nameof(Player.FirearmController.Class1015.OnModChanged));
+                return AccessTools.Method(typeof(Player.FirearmController.Class1039), nameof(Player.FirearmController.Class1039.OnModChanged));
             }
 
             // The firearm state machine state Class1015 is the "adding mod" state
@@ -514,11 +512,11 @@ namespace UIFixes
             // Patched to not be that stupid
             [PatchPrefix]
             public static bool Prefix(
-                Player.FirearmController.Class1015 __instance,
+                Player.FirearmController.Class1039 __instance,
                 bool ___bool_0,
                 FirearmsAnimator ___firearmsAnimator_0,
                 Item ___item_0,
-                GClass1668 ___gclass1668_0,
+                WeaponManagerClass ___weaponManagerClass,
                 Slot ___slot_0,
                 Weapon ___weapon_0,
                 Callback ___callback_0,
@@ -532,12 +530,12 @@ namespace UIFixes
                 ___bool_0 = true;
                 ___firearmsAnimator_0.SetupMod(false);
                 GameObject gameObject = Singleton<PoolManager>.Instance.CreateItem(___item_0, true);
-                ___gclass1668_0.SetupMod(___slot_0, gameObject);
+                ___weaponManagerClass.SetupMod(___slot_0, gameObject);
                 ___firearmsAnimator_0.Fold(___weapon_0.Folded);
                 __instance.State = Player.EOperationState.Finished;
 
                 // Begin change (moved from bottom)
-                ___firearmController_0.InitiateOperation<Player.FirearmController.GClass1608>().Start(null);
+                ___firearmController_0.InitiateOperation<Player.FirearmController.GClass1619>().Start(null);
                 __instance.method_5(gameObject);
                 // End change
 

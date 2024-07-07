@@ -1,5 +1,5 @@
-﻿using Aki.Reflection.Patching;
-using HarmonyLib;
+﻿using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Linq;
 using System.Reflection;

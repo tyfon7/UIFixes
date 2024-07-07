@@ -1,6 +1,6 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI.DragAndDrop;
+﻿using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;

@@ -126,7 +126,7 @@ namespace UIFixes
                 "Show Transfer Items Confirmation Dialog",
                 TransferConfirmationOption.Never,
                 new ConfigDescription(
-                    "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
+                    "When to show the confirmation dialog when you close the item transfer screen without tSPTng all the items",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -353,7 +353,7 @@ namespace UIFixes
                 "Multiselect Item Placement",
                 MultiSelectStrategy.OriginalSpacing,
                 new ConfigDescription(
-                    "Controls where multiselected items are placed, relative to the item being dragged. Note that original spacing only refers to items that were in the same grid.",
+                    "Controls where multiselected items are placed, relative to the item being dragged",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -407,7 +407,7 @@ namespace UIFixes
                 "Autostack Money with FiR Money",
                 true,
                 new ConfigDescription(
-                    "Allows automatic stacking of Found In Raid money with other money, making container interaction easier",
+                    "Allows automatic stacking of Found In Raid money with other money, mSPTng container interaction easier",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -416,7 +416,7 @@ namespace UIFixes
                 "Autostack Ammo with FiR Ammo",
                 false,
                 new ConfigDescription(
-                    "Allows automatic stacking of Found In Raid ammo with other money, making container interaction easier",
+                    "Allows automatic stacking of Found In Raid ammo with other money, mSPTng container interaction easier",
                     null,
                     new ConfigurationManagerAttributes { })));
 
@@ -425,7 +425,7 @@ namespace UIFixes
                 "Autostack Items with FiR Items",
                 false,
                 new ConfigDescription(
-                    "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
+                    "Allows automatic stacking of Found In Raid items with other items, mSPTng container interaction easier",
                     null,
                     new ConfigurationManagerAttributes { })));
 

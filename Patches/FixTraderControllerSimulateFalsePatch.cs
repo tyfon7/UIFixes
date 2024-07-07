@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using Diz.LanguageExtensions;
+﻿using Diz.LanguageExtensions;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 
 namespace UIFixes
@@ -13,18 +13,18 @@ namespace UIFixes
             return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(Item), typeof(bool), typeof(bool)]);
         }
 
-        // Recreatign this function to add the comment section, so calling this with simulate = false doesn't break everything
+        // Recreating this function to add the comment section, so calling this with simulate = false doesn't break everything
         [PatchPrefix]
         [HarmonyPriority(Priority.Last)]
         public static bool Prefix(TraderControllerClass __instance, ItemContextAbstractClass itemContext, Item targetItem, bool partialTransferOnly, bool simulate, ref GStruct413 __result)
         {
-            TraderControllerClass.Struct754 opStruct;
+            TraderControllerClass.Struct775 opStruct;
             opStruct.targetItem = targetItem;
-            opStruct.gclass2758_0 = __instance;
+            opStruct.traderControllerClass = __instance;
             opStruct.simulate = simulate;
             opStruct.item = itemContext.Item;
 
-            Error error = new GClass3293(opStruct.item);
+            Error error = new GClass3317(opStruct.item);
             bool mergeAvailable = itemContext.MergeAvailable;
             bool splitAvailable = itemContext.SplitAvailable;
             partialTransferOnly &= splitAvailable;
@@ -45,7 +45,7 @@ namespace UIFixes
                 }
             }
 
-            if (opStruct.targetItem is GInterface306 applicable)
+            if (opStruct.targetItem is GInterface321 applicable)
             {
                 var operation = __instance.method_23(applicable, ref error, ref opStruct);
                 if (operation.Succeeded)

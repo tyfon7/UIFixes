@@ -1,6 +1,6 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,13 +23,13 @@ namespace UIFixes
             protected override MethodBase GetTargetMethod()
             {
                 MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
-                MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type
+                MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type, GClass2751
                 return method;
             }
 
             // Reimplementing this entire method to ignore SpawnedInSession for certain types
             [PatchPrefix]
-            public static bool Prefix(IEnumerable<StashGridClass> gridsToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
+            public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
             {
                 if (!MergeableItemType.IsInstanceOfType(itemToMerge))
                 {
@@ -56,8 +56,8 @@ namespace UIFixes
                     ignoreSpawnedInSession = Settings.MergeFIROther.Value;
                 }
 
-                mergeableItem = gridsToPut.SelectMany(x => x.Items)
-                    .Where(x => MergeableItemType.IsInstanceOfType(x))
+                mergeableItem = containersToPut.SelectMany(x => x.Items)
+                    .Where(MergeableItemType.IsInstanceOfType)
                     .Where(x => x != itemToMerge)
                     .Where(x => x.TemplateId == itemToMerge.TemplateId)
                     .Where(x => ignoreSpawnedInSession || x.SpawnedInSession == itemToMerge.SpawnedInSession)

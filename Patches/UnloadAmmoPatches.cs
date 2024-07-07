@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using Comfort.Common;
 using EFT.HealthSystem;
 using EFT.InventoryLogic;
@@ -25,7 +25,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.DeclaredProperty(typeof(GClass3032), nameof(GClass3032.AvailableInteractions)).GetMethod;
+                return AccessTools.DeclaredProperty(typeof(GClass3054), nameof(GClass3054.AvailableInteractions)).GetMethod;
             }
 
             [PatchPostfix]
@@ -41,7 +41,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.DeclaredProperty(typeof(GClass3035), nameof(GClass3035.AvailableInteractions)).GetMethod;
+                return AccessTools.DeclaredProperty(typeof(GClass3057), nameof(GClass3057.AvailableInteractions)).GetMethod;
             }
 
             [PatchPostfix]
@@ -88,11 +88,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Constructor(typeof(ScavengerInventoryScreen.GClass3131), [typeof(GClass2764), typeof(GClass2764), typeof(IHealthController), typeof(StashClass), typeof(ISession)]);
+                return AccessTools.Constructor(typeof(ScavengerInventoryScreen.GClass3156), [typeof(GClass2780), typeof(GClass2780), typeof(IHealthController), typeof(StashClass), typeof(ISession)]);
             }
 
             [PatchPrefix]
-            public static void Prefix(GClass2764 scavController)
+            public static void Prefix(GClass2780 scavController)
             {
                 scavController.Inventory.Stash = null;
             }

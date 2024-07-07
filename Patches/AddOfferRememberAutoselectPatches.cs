@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using UnityEngine;
 
@@ -29,7 +29,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_8));
+                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_7));
             }
 
             [PatchPostfix]

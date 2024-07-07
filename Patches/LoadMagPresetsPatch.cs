@@ -1,6 +1,6 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,8 +11,7 @@ namespace UIFixes
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = AccessTools.Method(typeof(ISession), nameof(ISession.SaveMagBuild)).GetParameters()[0].ParameterType;
-            return AccessTools.Method(type, "smethod_0");
+            return AccessTools.Method(typeof(MagazineBuildPresetClass), nameof(MagazineBuildPresetClass.smethod_0));
         }
 
         // This method returns a list of places to search for ammo. For whatever reason, it only looks

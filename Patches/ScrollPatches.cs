@@ -1,10 +1,10 @@
-﻿using Aki.Reflection.Patching;
-using EFT.Hideout;
+﻿using EFT.Hideout;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -345,7 +345,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(NotesTask __instance, GClass1249 quest)
+            public static void Postfix(NotesTask __instance, QuestClass quest)
             {
                 void OnTaskSelected(bool open)
                 {

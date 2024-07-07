@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI.Ragfair;
+﻿using EFT.UI.Ragfair;
 using HarmonyLib;
 using JetBrains.Annotations;
+using SPT.Reflection.Patching;
 using System.Linq;
 using System.Reflection;
 using TMPro;

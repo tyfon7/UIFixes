@@ -1,9 +1,9 @@
-﻿using Aki.Reflection.Patching;
-using Aki.Reflection.Utils;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,9 +49,9 @@ namespace UIFixes
         public static void Enable()
         {
             // The context menus in the inventory and the trading screen inventory are *completely different code*
-            InventoryRootInteractionsType = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3023
+            InventoryRootInteractionsType = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3045
 
-            // GClass3032 - this is nuts to find, have to inspect a static enum array
+            // GClass3054 - this is nuts to find, have to inspect a static enum array
             TradingRootInteractionsType = PatchConstants.EftTypes.Single(t =>
             {
                 var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
@@ -414,7 +414,7 @@ namespace UIFixes
 
                 if (selectedItem is BulletClass)
                 {
-                    __result = new MagazineBuildClass.Class3135(selectedItem);
+                    __result = new MagazineBuildClass.Class3183(selectedItem);
                     return false;
                 }
 

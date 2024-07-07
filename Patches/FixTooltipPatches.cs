@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
 using UnityEngine;

@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -304,7 +304,7 @@ namespace UIFixes
             // Bar width is currently set to durability/100, and that 100 is pretty much hardcoded by the client
             // Just clamp the bar to keep it from overflowing
             [PatchPostfix]
-            public static void Postfix(DurabilityPanel __instance, Image ___Current)
+            public static void Postfix(Image ___Current)
             {
                 ___Current.rectTransform.anchorMax = new Vector2(
                     Mathf.Min(___Current.rectTransform.anchorMax.x, 1f),

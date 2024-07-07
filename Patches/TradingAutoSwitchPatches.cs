@@ -1,8 +1,8 @@
-﻿using Aki.Reflection.Patching;
-using Comfort.Common;
+﻿using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;

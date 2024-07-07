@@ -1,13 +1,10 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
-using EFT.UI.Ragfair;
+﻿using EFT.UI.Ragfair;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
-using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UIFixes
 {

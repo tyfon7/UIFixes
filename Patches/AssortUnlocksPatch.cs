@@ -1,12 +1,13 @@
-﻿using Aki.Common.Http;
-using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using Newtonsoft.Json;
+using SPT.Common.Http;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace UIFixes
 {
@@ -32,20 +33,24 @@ namespace UIFixes
             {
                 Loading = true;
 
-                string response = RequestHandler.GetJson("/uifixes/assortUnlocks");
-                if (!String.IsNullOrEmpty(response))
+                Task<string> response = RequestHandler.GetJsonAsync("/uifixes/assortUnlocks");
+                response.ContinueWith(task =>
                 {
-                    try
+                    string json = task.Result;
+                    if (!String.IsNullOrEmpty(json))
                     {
-                        AssortUnlocks = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+                        try
+                        {
+                            AssortUnlocks = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError(ex);
-                    }
-                }
 
-                Loading = false;
+                    Loading = false;
+                });
             }
 
             if (__instance.Offer_0.Locked)

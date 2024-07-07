@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
-using GridItemAddress = GClass2769;
-
 namespace UIFixes
 {
     public class MultiSelect
@@ -202,9 +200,9 @@ namespace UIFixes
 
             var result = ItemContexts
                 .Where(ic => first == null || ic.Item != first.Item)
-                .OrderByDescending(ic => ic.ItemAddress is GridItemAddress)
+                .OrderByDescending(ic => ic.ItemAddress is ItemAddressClass)
                 .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
-                .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
+                .ThenBy(ic => ic.ItemAddress is ItemAddressClass selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
             return first != null && prepend ? result.Prepend(first) : result;
         }
@@ -238,7 +236,7 @@ namespace UIFixes
         private static bool InteractionAvailable(ItemContextClass itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
         {
             // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
-            ItemContextAbstractClass innerContext = itemContext.GClass2813_0;
+            ItemContextAbstractClass innerContext = itemContext.ItemContextAbstractClass;
             if (innerContext == null)
             {
                 return false;
@@ -283,7 +281,7 @@ namespace UIFixes
                 var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unequip, itemUiContext)),
-                    itemContext => itemUiContext.Uninstall(itemContext.GClass2813_0));
+                    itemContext => itemUiContext.Uninstall(itemContext.ItemContextAbstractClass));
 
                 itemUiContext.Tooltip?.Close();
             }
@@ -291,19 +289,23 @@ namespace UIFixes
 
         public static Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
         {
-            StopLoading();
+            StopLoading(true);
             if (!allOrNothing || InteractionCount(EItemInfoButton.LoadAmmo, itemUiContext) == Count)
             {
-                // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
-                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
-                Task result = taskSerializer.Initialize(
-                    SortedItemContexts().Where(ic => ic.Item is MagazineClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext)),
-                    itemContext => itemUiContext.LoadAmmoByType(itemContext.Item as MagazineClass, ammoTemplateId, itemContext.UpdateView));
+                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                Task result = LoadUnloadSerializer.Initialize(
+                    SortedItemContexts()
+                        .Where(ic => ic.Item is MagazineClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
+                        .SelectMany(ic => ic.RepeatUntilFull()),
+                    itemContext =>
+                    {
+                        IgnoreStopLoading = true;
+                        return itemUiContext.LoadAmmoByType(itemContext.Item as MagazineClass, ammoTemplateId, itemContext.UpdateView);
+                    });
 
-                LoadUnloadSerializer = taskSerializer;
                 itemUiContext.Tooltip?.Close();
 
-                return result;
+                return result.ContinueWith(t => LoadUnloadSerializer = null);
             }
 
             return Task.CompletedTask;
@@ -311,12 +313,11 @@ namespace UIFixes
 
         public static void UnloadAmmoAll(ItemUiContext itemUiContext, bool allOrNothing)
         {
-            StopLoading();
+            StopLoading(true);
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
-                // Call Initialize() before setting UnloadSerializer so that the initial synchronous call to StopProcesses()->StopUnloading() doesn't immediately cancel this
-                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
-                taskSerializer.Initialize(
+                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                LoadUnloadSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
                     itemContext =>
                     {
@@ -324,23 +325,33 @@ namespace UIFixes
                         {
                             Deselect(itemContext);
                         }
-                        return itemUiContext.UnloadAmmo(itemContext.Item);
-                    });
 
-                LoadUnloadSerializer = taskSerializer;
+                        IgnoreStopLoading = true;
+                        return itemUiContext.UnloadAmmo(itemContext.Item);
+                    }).ContinueWith(t => LoadUnloadSerializer = null);
+
                 itemUiContext.Tooltip?.Close();
             }
         }
 
-        public static void StopLoading()
+        private static bool IgnoreStopLoading = false;
+
+        public static void StopLoading(bool force = false)
         {
             if (LoadUnloadSerializer == null)
             {
                 return;
             }
 
-            LoadUnloadSerializer.Cancel();
-            LoadUnloadSerializer = null;
+            if (!IgnoreStopLoading || force)
+            {
+                LoadUnloadSerializer.Cancel();
+                LoadUnloadSerializer = null;
+            }
+            else
+            {
+                IgnoreStopLoading = false;
+            }
         }
 
         public static void UnpackAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -402,21 +413,21 @@ namespace UIFixes
         public MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : base(itemContext, rotation)
         {
             // Adjust event handlers
-            if (GClass2813_0 != null)
+            if (ItemContextAbstractClass != null)
             {
                 // Listen for underlying context being disposed, it might mean the item is gone (merged, destroyed, etc)
-                GClass2813_0.OnDisposed += OnParentDispose;
+                ItemContextAbstractClass.OnDisposed += OnParentDispose;
                 // This serves no purpose and causes stack overflows
-                GClass2813_0.OnCloseWindow -= CloseDependentWindows;
+                ItemContextAbstractClass.OnCloseWindow -= CloseDependentWindows;
             }
         }
 
         public override void Dispose()
         {
             base.Dispose();
-            if (GClass2813_0 != null)
+            if (ItemContextAbstractClass != null)
             {
-                GClass2813_0.OnDisposed -= OnParentDispose;
+                ItemContextAbstractClass.OnDisposed -= OnParentDispose;
             }
         }
 
@@ -433,9 +444,9 @@ namespace UIFixes
         // ItemContextClass (drag) defaults to None, but we want what the underlying item allows
         public override bool CanQuickMoveTo(ETargetContainer targetContainer)
         {
-            if (GClass2813_0 != null)
+            if (ItemContextAbstractClass != null)
             {
-                return GClass2813_0.CanQuickMoveTo(targetContainer);
+                return ItemContextAbstractClass.CanQuickMoveTo(targetContainer);
             }
 
             return base.CanQuickMoveTo(targetContainer);
@@ -481,6 +492,18 @@ namespace UIFixes
             }
         }
 
+        public static IEnumerable<ItemContextClass> RepeatUntilFull(this ItemContextClass itemContext)
+        {
+            if (itemContext.Item is MagazineClass magazine)
+            {
+                int ammoCount = -1;
+                while (magazine.Count > ammoCount && magazine.Count < magazine.MaxCount)
+                {
+                    ammoCount = magazine.Count;
+                    yield return itemContext;
+                }
+            }
+        }
     }
 }
 

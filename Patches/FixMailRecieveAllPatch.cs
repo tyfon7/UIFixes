@@ -1,6 +1,6 @@
-using Aki.Reflection.Patching;
 using EFT.UI.Chat;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 
 namespace UIFixes

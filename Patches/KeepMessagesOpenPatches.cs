@@ -1,8 +1,8 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Screens;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 
 namespace UIFixes

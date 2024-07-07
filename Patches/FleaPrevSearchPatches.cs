@@ -1,8 +1,8 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -197,7 +197,7 @@ namespace UIFixes
             private void ApplyFullFilter(FilterRule filterRule)
             {
                 // Order impacts the order the filters show in the UI
-                var searches = new List<GClass3196>();
+                var searches = new List<GClass3219>();
 
                 // This part was tricky to figure out. Adding OR removing any of these ID filters will clear the others, so you can only do one of them.
                 // When going to a state with no id filter, you MUST remove something (or all to be safe)
@@ -322,7 +322,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_7));
+                return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_9));
             }
 
             [PatchPostfix]

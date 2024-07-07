@@ -1,8 +1,8 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
 using UnityEngine.EventSystems;
@@ -143,9 +143,9 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___gclass2813_0)
+            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
             {
-                ___itemUiContext_0.RegisterCurrentItemContext(___gclass2813_0);
+                ___itemUiContext_0.RegisterCurrentItemContext(___itemContextAbstractClass);
             }
         }
 
@@ -157,9 +157,9 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___gclass2813_0)
+            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
             {
-                ___itemUiContext_0.UnregisterCurrentItemContext(___gclass2813_0);
+                ___itemUiContext_0.UnregisterCurrentItemContext(___itemContextAbstractClass);
             }
         }
 

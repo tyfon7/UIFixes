@@ -41,7 +41,7 @@ namespace UIFixes
                 {
                     text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
                 }
-                else if (repairer is GClass802 repairKit)
+                else if (repairer is GClass803 repairKit)
                 {
                     float pointsLeft = repairKit.GetRepairPoints();
                     double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit);
@@ -96,7 +96,7 @@ namespace UIFixes
 
             float repairAmount = GetClampedRepairAmount(repairStrategy);
 
-            if (repairer is GClass802 repairKit)
+            if (repairer is GClass803 repairKit)
             {
                 float pointsLeft = repairKit.GetRepairPoints();
                 double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit);

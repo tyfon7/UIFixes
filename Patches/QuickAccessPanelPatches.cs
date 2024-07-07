@@ -1,11 +1,11 @@
-﻿using Aki.Reflection.Patching;
-using Bsg.GameSettings;
+﻿using Bsg.GameSettings;
 using Comfort.Common;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Settings;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 
 namespace UIFixes

@@ -27,8 +27,11 @@ namespace UIFixes
 
         public void Cancel()
         {
-            totalTask.TrySetCanceled();
-            Complete();
+            if (!totalTask.Task.IsCompleted)
+            {
+                totalTask.TrySetCanceled();
+                Complete();
+            }
         }
 
         public void OnDisable()

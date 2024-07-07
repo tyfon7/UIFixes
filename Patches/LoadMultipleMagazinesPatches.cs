@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -53,7 +53,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass2510), nameof(GClass2510.CheckItemFilter));
+                return AccessTools.Method(typeof(GClass2524), nameof(GClass2524.CheckItemFilter));
             }
 
             [PatchPrefix]
@@ -72,7 +72,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3043), nameof(GClass3043.method_6));
+                return AccessTools.Method(typeof(GClass3065), nameof(GClass3065.method_6));
             }
 
             [PatchPrefix]
@@ -92,7 +92,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3044), nameof(GClass3044.method_7));
+                return AccessTools.Method(typeof(GClass3066), nameof(GClass3066.method_7));
             }
 
             [PatchPrefix]
@@ -119,11 +119,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3044), nameof(GClass3044.method_6));
+                return AccessTools.Method(typeof(GClass3066), nameof(GClass3066.method_6));
             }
 
             [PatchPrefix]
-            public static bool Prefix(GClass2092 preset, ItemUiContext ___itemUiContext_1)
+            public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___itemUiContext_1)
             {
                 if (!MultiSelect.Active)
                 {

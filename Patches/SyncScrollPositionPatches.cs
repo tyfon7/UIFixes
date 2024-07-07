@@ -1,7 +1,7 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,8 +33,9 @@ namespace UIFixes
 
             scrollRect.verticalNormalizedPosition = StashScrollPosition;
 
+            scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition);
             scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
-            element.R().UI.AddDisposable(() => scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
+            //element.R().UI.AddDisposable(() => scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
         }
 
         public class SyncStashScrollPatch : ModulePatch

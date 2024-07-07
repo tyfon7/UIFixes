@@ -1,6 +1,6 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI.Ragfair;
+﻿using EFT.UI.Ragfair;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
 using UnityEngine;

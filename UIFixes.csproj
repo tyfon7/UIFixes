@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>1.7.4</Version>
+    <Version>2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;Dist</Configurations>
@@ -15,17 +15,17 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.8.3-debug</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.8.3</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.8.3</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.9.0-debug</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.9.0</PathToSPT>
+    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.9.0</PathToSPT>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Aki.Common">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Common.dll</HintPath>
+    <Reference Include="spt-common">
+      <HintPath>$(PathToSPT)\BepInEx\plugins\spt\spt-common.dll</HintPath>
     </Reference>
-    <Reference Include="Aki.Reflection">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Aki.Reflection.dll</HintPath>
+    <Reference Include="spt-reflection">
+      <HintPath>$(PathToSPT)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
     </Reference>
     <Reference Include="AnimationSystem.Types">
       <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>

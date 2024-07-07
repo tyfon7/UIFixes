@@ -1,6 +1,6 @@
-﻿using Aki.Reflection.Patching;
-using EFT.UI;
+﻿using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +25,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3126
+                Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3151
                 return AccessTools.Method(type, "CloseScreenInterruption");
             }
 

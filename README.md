@@ -4,13 +4,11 @@ Quality of life improvements and fixes for SPT
 
 Tarkov is full of annoyances but we can fix them! Sometimes.
 
-✨ New in the latest version!
-
 ## Added features
 
 New UI features enabled by this mod
 
--   ✨ Multiselect - select multiple items at once with shift-click or dragging a selection box
+-   Multiselect - select multiple items at once with shift-click or dragging a selection box
     -   Move items around as a group, drop them into containers, place them in grids
     -   Ctrl-click and Alt-click to quick move or equip them all. Compatible with Quick Move to Containers!
     -   Context menu to insure all, equip all, unequip all, unload ammo from all
@@ -63,6 +61,7 @@ Existing SPT features made better
 #### Hideout
 
 -   Remember window state when you leave hideout without closing (e.g. when searching for a recipe item on flea)
+-   Tools used in crafting will be returned to the container they were in
 
 #### Mail
 
@@ -88,7 +87,7 @@ Fixing bugs that BSG won't or can't
 
 -   Remove the unimplemented door actions like "Bang & clear" that are never going to happen
 -   Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot
--   ✨ Fix the quick item bar not respecting "Autohide" and "Never show" setting
+-   Fix the quick item bar not respecting "Autohide" and "Never show" setting
 
 #### Mail
 

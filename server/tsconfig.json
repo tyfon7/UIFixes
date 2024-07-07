@@ -12,11 +12,8 @@
         "outDir": "tmp",
         "baseUrl": ".",
         "paths": {
-            "@spt-aki/*": ["./types/*"]
+            "@spt/*": ["./types/*"]
         }
     },
-    "include": [
-        "src/*",
-        "src/**/*"
-    ]
+    "include": ["src/*", "src/**/*"]
 }
