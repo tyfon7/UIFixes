@@ -18,10 +18,13 @@ export interface IRepeatableTemplates {
 export interface IPmcDataRepeatableQuest {
     id?: string;
     name: string;
+    unavailableTime?: string;
     activeQuests: IRepeatableQuest[];
     inactiveQuests: IRepeatableQuest[];
     endTime: number;
     changeRequirement: Record<string, IChangeRequirement>;
+    freeChanges: number;
+    freeChangesAvailable: number;
 }
 export interface IChangeRequirement {
     changeCost: IChangeCost[];
