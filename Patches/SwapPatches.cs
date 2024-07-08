@@ -284,11 +284,10 @@ namespace UIFixes
                     }
                 }
 
-                // If coming from a grid, try rotating the target object 
-                if (itemAddress is ItemAddressClass gridItemAddress2)
+                // If the target is going to a grid, try rotating it. This address is already a new object, safe to modify
+                if (targetToAddress is ItemAddressClass targetToGridItemAddress)
                 {
-                    var targetToLocation = gridItemAddress2.LocationInGrid;
-                    targetToLocation.r = targetToLocation.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
+                    targetToGridItemAddress.LocationInGrid.r = targetToGridItemAddress.LocationInGrid.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                     {
                         var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
