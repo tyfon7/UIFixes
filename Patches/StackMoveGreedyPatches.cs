@@ -48,6 +48,9 @@ namespace UIFixes
             }
         }
 
+        // Specific type of TaskSerializer because Unity can't understand generics
+        public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
+
         private static bool AcceptStackable<T>(T __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result) where T : MonoBehaviour, IContainer
         {
             if (!Settings.GreedyStackMove.Value || InPatch || itemContext.Item.StackObjectsCount <= 1 || targetItemContext == null)

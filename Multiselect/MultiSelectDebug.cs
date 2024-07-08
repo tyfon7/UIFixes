@@ -34,9 +34,13 @@ namespace UIFixes
             builder.AppendFormat("Active: <color={0}>{1}</color>\n", MultiSelect.Active ? "green" : "red", MultiSelect.Active);
             builder.AppendFormat("Items: <color=yellow>{0}</color>\n", MultiSelect.Count);
 
-            foreach (ItemContextClass itemContext in MultiSelect.ItemContexts)
+            foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
             {
-                builder.AppendFormat("x{0} {1}\n", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
+                LocationInGrid location = itemContext.ItemAddress is ItemAddressClass gridAddress ? MultiGrid.GetGridLocation(gridAddress) : null;
+                builder.AppendFormat("x{0} {1} {2}\n", 
+                    itemContext.Item.StackObjectsCount, 
+                    location != null ? $"({location.x}, {location.y})" : "slot",
+                    itemContext.Item.ToString());
             }
 
             if (MultiSelect.SecondaryContexts.Any())

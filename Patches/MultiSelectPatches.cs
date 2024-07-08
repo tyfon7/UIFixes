@@ -377,8 +377,7 @@ namespace UIFixes
                     return;
                 }
 
-                // the itemview isn't done being initialized
-                __instance.WaitForEndOfFrame(() => MultiSelect.OnNewItemView(__instance));
+                MultiSelect.OnNewItemView(__instance);
             }
         }
 
@@ -676,7 +675,7 @@ namespace UIFixes
                     targetItemContext = new GenericItemContext(__instance.Grid.ParentItem, EItemViewType.Empty);
                 }
 
-                var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
+                var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), ic =>
                 {
                     FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
@@ -906,7 +905,7 @@ namespace UIFixes
 
                 InPatch = true;
 
-                var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
+                var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 __result = serializer.Initialize(MultiSelect.SortedItemContexts(), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
 
                 __result.ContinueWith(_ => { InPatch = false; });
@@ -1362,7 +1361,7 @@ namespace UIFixes
             }
 
             if (Settings.MultiSelectStrat.Value == MultiSelectStrategy.OriginalSpacing &&
-                itemContext != selectedItemContext &&
+                itemContext.Item != selectedItemContext.Item &&
                 itemContext.ItemAddress is ItemAddressClass itemGridAddress &&
                 selectedItemContext.ItemAddress is ItemAddressClass selectedGridAddress &&
                 itemGridAddress.Container.ParentItem == selectedGridAddress.Container.ParentItem)

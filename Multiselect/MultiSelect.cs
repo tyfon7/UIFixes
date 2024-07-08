@@ -14,10 +14,10 @@ namespace UIFixes
         private static GameObject SelectedMarkTemplate = null;
         private static GameObject SelectedBackgroundTemplate = null;
 
-        private static readonly Dictionary<ItemContextClass, GridItemView> SelectedItems = [];
-        private static readonly Dictionary<ItemContextClass, GridItemView> SecondaryItems = [];
+        private static readonly Dictionary<MultiSelectItemContext, GridItemView> SelectedItems = [];
+        private static readonly Dictionary<MultiSelectItemContext, GridItemView> SecondaryItems = [];
 
-        private static ItemContextTaskSerializer LoadUnloadSerializer = null;
+        private static MultiSelectItemContextTaskSerializer LoadUnloadSerializer = null;
 
         public static bool Enabled
         {
@@ -50,7 +50,7 @@ namespace UIFixes
         public static void Toggle(GridItemView itemView, bool secondary = false)
         {
             var dictionary = secondary ? SecondaryItems : SelectedItems;
-            ItemContextClass itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
+            MultiSelectItemContext itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
             if (itemContext != null)
             {
                 Deselect(itemContext, secondary);
@@ -64,7 +64,7 @@ namespace UIFixes
         public static void Clear()
         {
             // ToList() because modifying the collection
-            foreach (ItemContextClass itemContext in SelectedItems.Keys.ToList())
+            foreach (MultiSelectItemContext itemContext in SelectedItems.Keys.ToList())
             {
                 Deselect(itemContext);
             }
@@ -76,7 +76,7 @@ namespace UIFixes
 
             if (itemView.IsSelectable() && !SelectedItems.Any(x => x.Key.Item == itemView.Item) && !SecondaryItems.Any(x => x.Key.Item == itemView.Item))
             {
-                ItemContextClass itemContext = new MultiSelectItemContext(itemView.ItemContext, itemView.ItemRotation);
+                MultiSelectItemContext itemContext = new(itemView.ItemContext, itemView.ItemRotation);
 
                 // Subscribe to window closures to deselect
                 var windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
@@ -84,6 +84,10 @@ namespace UIFixes
                 {
                     windowContext.OnClose += () => Deselect(itemContext);
                 }
+
+                // Thread unsafe way of ensuring we don't multiple subscribe. I'm sure it's fine.
+                itemContext.Item.Owner.AddItemEvent -= OnItemAdded;
+                itemContext.Item.Owner.AddItemEvent += OnItemAdded;
 
                 // Cache the gridview in case we need it
                 MultiGrid.Cache(itemView.Container as GridView);
@@ -93,7 +97,7 @@ namespace UIFixes
             }
         }
 
-        public static void Deselect(ItemContextClass itemContext, bool secondary = false)
+        public static void Deselect(MultiSelectItemContext itemContext, bool secondary = false)
         {
             var dictionary = secondary ? SecondaryItems : SelectedItems;
 
@@ -110,7 +114,7 @@ namespace UIFixes
         {
             var dictionary = secondary ? SecondaryItems : SelectedItems;
 
-            ItemContextClass itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
+            MultiSelectItemContext itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
             if (itemContext != null)
             {
                 dictionary.Remove(itemContext);
@@ -121,7 +125,7 @@ namespace UIFixes
 
         public static void OnKillItemView(GridItemView itemView)
         {
-            ItemContextClass itemContext = SelectedItems.FirstOrDefault(x => x.Value == itemView).Key;
+            MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Value == itemView).Key;
             if (itemContext != null)
             {
                 SelectedItems[itemContext] = null;
@@ -131,12 +135,32 @@ namespace UIFixes
 
         public static void OnNewItemView(GridItemView itemView)
         {
-            ItemContextClass itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
+            MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
             if (itemContext != null)
             {
-                // We need to refresh the context because if the item moved, it has a new address
+                // Refresh the context. Note that the address might still be old
                 Deselect(itemContext);
                 Select(itemView);
+            }
+        }
+
+        // Occurs when an item is added somewhere. If it's from a move, and that item was multiselected,
+        // the context needs to be updated with the new address
+        private static void OnItemAdded(GEventArgs2 eventArgs)
+        {
+            if (eventArgs.Status != CommandStatus.Succeed)
+            {
+                return;
+            }
+
+            MultiSelectItemContext oldItemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == eventArgs.Item).Key;
+            if (oldItemContext != null)
+            {
+                MultiSelectItemContext newContext = oldItemContext.Refresh();
+                SelectedItems.Add(newContext, SelectedItems[oldItemContext]);
+
+                SelectedItems.Remove(oldItemContext);
+                oldItemContext.Dispose();
             }
         }
 
@@ -194,17 +218,27 @@ namespace UIFixes
 
         // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
         // Can pass no itemContext, and it just sorts items by their grid order
-        public static IEnumerable<ItemContextClass> SortedItemContexts(ItemContextClass first = null, bool prepend = true)
+        public static IEnumerable<MultiSelectItemContext> SortedItemContexts(ItemContextClass first = null, bool prepend = true)
         {
             static int gridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
 
-            var result = ItemContexts
+            var result = SelectedItems.Keys
                 .Where(ic => first == null || ic.Item != first.Item)
                 .OrderByDescending(ic => ic.ItemAddress is ItemAddressClass)
                 .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
                 .ThenBy(ic => ic.ItemAddress is ItemAddressClass selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
-            return first != null && prepend ? result.Prepend(first) : result;
+            if (first != null && prepend)
+            {
+                MultiSelectItemContext multiSelectItemContext = SelectedItems.Keys.FirstOrDefault(c => c.Item == first.Item);
+                if (multiSelectItemContext != null)
+                {
+                    multiSelectItemContext.SetPosition(first.CursorPosition, first.ItemPosition);
+                    return result.Prepend(multiSelectItemContext);
+                }
+            }
+
+            return result;
         }
 
         public static void ShowDragCount(DraggedItemView draggedItemView)
@@ -265,9 +299,9 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
             {
-                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 taskSerializer.Initialize(
-                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)), 
+                    SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)),
                     itemContext => itemUiContext.QuickEquip(itemContext.Item));
 
                 itemUiContext.Tooltip?.Close();
@@ -278,7 +312,7 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
             {
-                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unequip, itemUiContext)),
                     itemContext => itemUiContext.Uninstall(itemContext.ItemContextAbstractClass));
@@ -292,7 +326,7 @@ namespace UIFixes
             StopLoading(true);
             if (!allOrNothing || InteractionCount(EItemInfoButton.LoadAmmo, itemUiContext) == Count)
             {
-                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 Task result = LoadUnloadSerializer.Initialize(
                     SortedItemContexts()
                         .Where(ic => ic.Item is MagazineClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
@@ -316,7 +350,7 @@ namespace UIFixes
             StopLoading(true);
             if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
             {
-                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 LoadUnloadSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
                     itemContext =>
@@ -358,7 +392,7 @@ namespace UIFixes
         {
             if (!allOrNothing || InteractionCount(EItemInfoButton.Unpack, itemUiContext) == Count)
             {
-                var taskSerializer = itemUiContext.gameObject.AddComponent<ItemContextTaskSerializer>();
+                var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
                 taskSerializer.Initialize(
                     SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unpack, itemUiContext)),
                     itemContext =>
@@ -422,6 +456,11 @@ namespace UIFixes
             }
         }
 
+        public MultiSelectItemContext Refresh()
+        {
+            return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -454,7 +493,7 @@ namespace UIFixes
     }
 
     // Specific type of TaskSerializer because Unity can't understand generics
-    public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
+    public class MultiSelectItemContextTaskSerializer : TaskSerializer<MultiSelectItemContext> { }
 
     public static class MultiSelectExtensions
     {
@@ -484,7 +523,7 @@ namespace UIFixes
             return true;
         }
 
-        public static IEnumerable<ItemContextClass> RepeatUntilEmpty(this ItemContextClass itemContext)
+        public static IEnumerable<T> RepeatUntilEmpty<T>(this T itemContext) where T : ItemContextAbstractClass
         {
             while (itemContext.Item.StackObjectsCount > 0)
             {
@@ -492,7 +531,7 @@ namespace UIFixes
             }
         }
 
-        public static IEnumerable<ItemContextClass> RepeatUntilFull(this ItemContextClass itemContext)
+        public static IEnumerable<T> RepeatUntilFull<T>(this T itemContext) where T : ItemContextAbstractClass
         {
             if (itemContext.Item is MagazineClass magazine)
             {
