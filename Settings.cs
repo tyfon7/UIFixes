@@ -76,6 +76,7 @@ namespace UIFixes
         public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
         public static ConfigEntry<bool> SwapItems { get; set; }
         public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
+        public static ConfigEntry<bool> ReorderGrids { get; set; }
         public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
         public static ConfigEntry<bool> GreedyStackMove { get; set; }
         public static ConfigEntry<bool> MergeFIRMoney { get; set; }
@@ -98,6 +99,7 @@ namespace UIFixes
         // In Raid
         public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
         public static ConfigEntry<bool> EnableLoadAmmo { get; set; }
+        public static ConfigEntry<bool> DeterministicGrenades { get; set; }
 
         // Flea Market
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
@@ -394,6 +396,15 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
+            configEntries.Add(ReorderGrids = config.Bind(
+                InventorySection,
+                "Standardize Grid Order",
+                true,
+                new ConfigDescription(
+                    "Change internal ordering of grids in rigs/backpacks to be left to right, top to bottom",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
             configEntries.Add(SynchronizeStashScrolling = config.Bind(
                 InventorySection,
                 "Synchronize Stash Scroll Position",
@@ -555,6 +566,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Allows ammo to be loaded through the magazine context menu",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(DeterministicGrenades = config.Bind(
+                InRaidSection,
+                "Nonrandom Grenades",
+                false,
+                new ConfigDescription(
+                    "By default, EFT picks a random grenade when you hit the Grenade key. This removes that behavior",
                     null,
                     new ConfigurationManagerAttributes { })));
 

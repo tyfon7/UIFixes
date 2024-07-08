@@ -58,6 +58,8 @@ namespace UIFixes
             new PutToolsBackPatch().Enable();
             new RebindGrenadesPatch().Enable();
             AimToggleHoldPatches.Enable();
+            new ReorderGridsPatch().Enable();
+            NoRandomGrenadesPatch.Init();
         }
 
         public static bool InRaid()
