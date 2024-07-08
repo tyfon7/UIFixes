@@ -57,6 +57,7 @@ namespace UIFixes
             LoadMultipleMagazinesPatches.Enable();
             new PutToolsBackPatch().Enable();
             new RebindGrenadesPatch().Enable();
+            AimToggleHoldPatches.Enable();
         }
 
         public static bool InRaid()

@@ -50,6 +50,7 @@ namespace UIFixes
         public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
 
         // Input
+        public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
         public static ConfigEntry<bool> UseHomeEnd { get; set; }
         public static ConfigEntry<bool> RebindPageUpDown { get; set; }
         public static ConfigEntry<int> MouseScrollMulti { get; set; }
@@ -176,14 +177,23 @@ namespace UIFixes
                     new ConfigurationManagerAttributes { IsAdvanced = true })));
 
             // Input
+            configEntries.Add(ToggleOrHoldAim = config.Bind(
+                InputSection,
+                "Use Toggle/Hold Aiming",
+                false,
+                new ConfigDescription(
+                    "Tap the aim key to toggle aiming, or hold the aim key for continuous aiming",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
             configEntries.Add(UseHomeEnd = config.Bind(
                 InputSection,
                 "Enable Home/End Keys",
                 true,
                 new ConfigDescription(
                     "Use the Home and End keys to scroll to the top and bottom of inventories",
-                null,
-                new ConfigurationManagerAttributes { })));
+                    null,
+                    new ConfigurationManagerAttributes { })));
 
             configEntries.Add(RebindPageUpDown = config.Bind(
                 InputSection,
