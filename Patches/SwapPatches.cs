@@ -381,9 +381,12 @@ namespace UIFixes
                     return;
                 }
 
-                if (!ValidPrerequisites(__instance, targetItemContext, operation))
+                using (var containedContext = targetItemContext.CreateChild(slot.ContainedItem))
                 {
-                    return;
+                    if (!ValidPrerequisites(__instance, containedContext, operation))
+                    {
+                        return;
+                    }
                 }
 
                 var item = __instance.Item;
