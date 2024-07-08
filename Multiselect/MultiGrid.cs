@@ -9,8 +9,8 @@ namespace UIFixes
 {
     public static class MultiGrid
     {
-        private static readonly Dictionary<string, Dictionary<StashGridClass, Vector2Int>> GridOffsets = [];
-        private static readonly Dictionary<string, Dictionary<int, Dictionary<int, StashGridClass>>> GridsByLocation = [];
+        private static readonly Dictionary<string, Dictionary<string, Vector2Int>> GridOffsets = [];
+        private static readonly Dictionary<string, Dictionary<int, Dictionary<int, string>>> GridsByLocation = [];
 
         public static LocationInGrid GetGridLocation(ItemAddressClass realAddress)
         {
@@ -19,7 +19,7 @@ namespace UIFixes
                 return realAddress.LocationInGrid;
             }
 
-            Vector2Int gridOffset = GridOffsets[realAddress.Container.ParentItem.Id][realAddress.Grid];
+            Vector2Int gridOffset = GridOffsets[realAddress.Container.ParentItem.TemplateId][realAddress.Grid.Id];
             return new LocationInGrid(realAddress.LocationInGrid.x + gridOffset.x, realAddress.LocationInGrid.y + gridOffset.y, realAddress.LocationInGrid.r);
         }
 
@@ -34,7 +34,7 @@ namespace UIFixes
                 return new ItemAddressClass(originGrid, multigridLocation);
             }
 
-            var gridsByLocation = GridsByLocation[originGrid.ParentItem.Id];
+            var gridsByLocation = GridsByLocation[originGrid.ParentItem.TemplateId];
 
             // Clamp to known "meta" grid
             int x = Math.Max(0, Math.Min(gridsByLocation.Keys.Max(), multigridLocation.x));
@@ -48,8 +48,9 @@ namespace UIFixes
                 y = gridsByLocation[x].Keys.First();
             }
 
-            StashGridClass grid = gridsByLocation[x][y];
-            Vector2Int offsets = GridOffsets[originGrid.ParentItem.Id][grid];
+            string gridId = gridsByLocation[x][y];
+            StashGridClass grid = (originGrid.ParentItem as LootItemClass).Grids.Single(g => g.Id == gridId);
+            Vector2Int offsets = GridOffsets[originGrid.ParentItem.TemplateId][gridId];
 
             LocationInGrid location = new(x - offsets.x, y - offsets.y, multigridLocation.r);
             return new ItemAddressClass(grid, location);
@@ -63,13 +64,13 @@ namespace UIFixes
             }
 
             Item parent = initialGridView.Grid.ParentItem;
-            if (GridOffsets.ContainsKey(parent.Id) || !IsMultiGrid(parent))
+            if (GridOffsets.ContainsKey(parent.TemplateId) || !IsMultiGrid(parent))
             {
                 return;
             }
 
-            Dictionary<StashGridClass, Vector2Int> gridOffsets = [];
-            Dictionary<int, Dictionary<int, StashGridClass>> gridsByLocation = [];
+            Dictionary<string, Vector2Int> gridOffsets = [];
+            Dictionary<int, Dictionary<int, string>> gridsByLocation = [];
 
             // Sometimes the parent's pivot is 0,1; sometimes it's 0,0. Thanks BSG
             RectTransform parentView = initialGridView.transform.parent.RectTransform();
@@ -86,7 +87,7 @@ namespace UIFixes
                 int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
                 int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
 
-                gridOffsets.Add(gridView.Grid, new Vector2Int(x, y));
+                gridOffsets.Add(gridView.Grid.Id, new Vector2Int(x, y));
 
                 // Populate reverse lookup
                 for (int i = 0; i < gridView.Grid.GridWidth.Value; i++)
@@ -99,13 +100,13 @@ namespace UIFixes
                     var rowGrids = gridsByLocation[x + i];
                     for (int j = 0; j < gridView.Grid.GridHeight.Value; j++)
                     {
-                        rowGrids.Add(y + j, gridView.Grid);
+                        rowGrids.Add(y + j, gridView.Grid.Id);
                     }
                 }
             }
 
-            GridOffsets.Add(parent.Id, gridOffsets);
-            GridsByLocation.Add(parent.Id, gridsByLocation);
+            GridOffsets.Add(parent.TemplateId, gridOffsets);
+            GridsByLocation.Add(parent.TemplateId, gridsByLocation);
         }
 
         private static bool IsMultiGrid(ItemAddressClass itemAddress)
