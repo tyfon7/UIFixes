@@ -681,7 +681,8 @@ namespace UIFixes
                     FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                     FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
                     return __instance.AcceptItem(ic, targetItemContext);
-                });
+                },
+                itemContext => __instance.Grid.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
                 // Setting the fallback after initializing means it only applies after the first item is already moved
                 GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
@@ -906,7 +907,10 @@ namespace UIFixes
                 InPatch = true;
 
                 var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-                __result = serializer.Initialize(MultiSelect.SortedItemContexts(), itemContext => __instance.AcceptItem(itemContext, targetItemContext));
+                __result = serializer.Initialize(
+                    MultiSelect.SortedItemContexts(),
+                    itemContext => __instance.AcceptItem(itemContext, targetItemContext),
+                    itemContext => __instance.Slot.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
                 __result.ContinueWith(_ => { InPatch = false; });
 

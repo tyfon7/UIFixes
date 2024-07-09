@@ -8,14 +8,16 @@ namespace UIFixes
     public class TaskSerializer<T> : MonoBehaviour
     {
         private Func<T, Task> func;
+        private Func<T, bool> canContinue;
         private IEnumerator<T> enumerator;
         private Task currentTask;
         private TaskCompletionSource totalTask;
 
-        public Task Initialize(IEnumerable<T> items, Func<T, Task> func)
+        public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
         {
             this.enumerator = items.GetEnumerator();
             this.func = func;
+            this.canContinue = canContinue;
 
             currentTask = Task.CompletedTask;
             totalTask = new TaskCompletionSource();
@@ -48,6 +50,11 @@ namespace UIFixes
             }
 
             if (totalTask.Task.IsCompleted || !currentTask.IsCompleted)
+            {
+                return;
+            }
+
+            if (canContinue != null && enumerator.Current != null && !canContinue(enumerator.Current))
             {
                 return;
             }

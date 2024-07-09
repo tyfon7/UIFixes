@@ -37,10 +37,11 @@ namespace UIFixes
             foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
             {
                 LocationInGrid location = itemContext.ItemAddress is ItemAddressClass gridAddress ? MultiGrid.GetGridLocation(gridAddress) : null;
-                builder.AppendFormat("x{0} {1} {2}\n", 
+                builder.AppendFormat("x{0} {1} {2} {3}\n", 
                     itemContext.Item.StackObjectsCount, 
+                    itemContext.ItemAddress.ContainerName,
                     location != null ? $"({location.x}, {location.y})" : "slot",
-                    itemContext.Item.ToString());
+                    itemContext.Item.Name.Localized());
             }
 
             if (MultiSelect.SecondaryContexts.Any())
