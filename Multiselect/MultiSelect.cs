@@ -135,6 +135,11 @@ namespace UIFixes
 
         public static void OnNewItemView(GridItemView itemView)
         {
+            if (!itemView.IsSelectable())
+            {
+                return;
+            }
+
             MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
             if (itemContext != null)
             {
@@ -233,7 +238,7 @@ namespace UIFixes
                 MultiSelectItemContext multiSelectItemContext = SelectedItems.Keys.FirstOrDefault(c => c.Item == first.Item);
                 if (multiSelectItemContext != null)
                 {
-                    multiSelectItemContext.SetPosition(first.CursorPosition, first.ItemPosition);
+                    multiSelectItemContext.UpdateDragContext(first);
                     return result.Prepend(multiSelectItemContext);
                 }
             }
@@ -459,6 +464,12 @@ namespace UIFixes
         public MultiSelectItemContext Refresh()
         {
             return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
+        }
+
+        public void UpdateDragContext(ItemContextClass itemContext)
+        {
+            SetPosition(itemContext.CursorPosition, itemContext.ItemPosition);
+            ItemRotation = itemContext.ItemRotation;
         }
 
         public override void Dispose()

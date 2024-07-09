@@ -38,9 +38,9 @@ namespace UIFixes
             {
                 LocationInGrid location = itemContext.ItemAddress is ItemAddressClass gridAddress ? MultiGrid.GetGridLocation(gridAddress) : null;
                 builder.AppendFormat("x{0} {1} {2} {3}\n", 
-                    itemContext.Item.StackObjectsCount, 
-                    itemContext.ItemAddress.ContainerName,
-                    location != null ? $"({location.x}, {location.y})" : "slot",
+                    itemContext.Item.StackObjectsCount,
+                    itemContext.ItemAddress.Container.ID,
+                    location != null ? $"({location.x}, {location.y})" : "(slot)",
                     itemContext.Item.Name.Localized());
             }
 

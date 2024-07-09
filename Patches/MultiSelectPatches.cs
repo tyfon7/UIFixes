@@ -366,18 +366,18 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.Init));
+                return AccessTools.Method(typeof(ItemView), nameof(ItemView.Init));
             }
 
             [PatchPostfix]
-            public static void Postfix(GridItemView __instance)
+            public static void Postfix(ItemView __instance)
             {
-                if (!MultiSelect.Active)
+                if (!MultiSelect.Active || __instance is not GridItemView gridItemView)
                 {
                     return;
                 }
 
-                MultiSelect.OnNewItemView(__instance);
+                MultiSelect.OnNewItemView(gridItemView);
             }
         }
 
