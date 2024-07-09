@@ -1,4 +1,5 @@
 ﻿using EFT.UI;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
@@ -14,6 +15,7 @@ namespace UIFixes
             new DialogWindowPatch().Enable();
             new ItemUiContextWindowPatch().Enable();
             new ErrorScreenPatch().Enable();
+            new AddOfferPatch().Enable();
 
             new ClickOutPatch().Enable();
             new ClickOutSplitDialogPatch().Enable();
@@ -86,6 +88,28 @@ namespace UIFixes
                 if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
                 {
                     __instance.method_4();
+                }
+            }
+        }
+
+        public class AddOfferPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Update));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(AddOfferWindow __instance, InteractableElement ____addOfferButton)
+            {
+                if (!____addOfferButton.isActiveAndEnabled || !____addOfferButton.Interactable)
+                {
+                    return;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+                {
+                    __instance.method_1();
                 }
             }
         }

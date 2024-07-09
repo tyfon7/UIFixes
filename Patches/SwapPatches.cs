@@ -49,6 +49,7 @@ namespace UIFixes
             new RememberSwapGridHoverPatch().Enable();
             new InspectWindowUpdateStatsOnSwapPatch().Enable();
             new FixAddModFirearmOperationPatch().Enable();
+            new HideScaryTooltipPatch().Enable();
         }
 
         private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, IInventoryEventResult operation)
@@ -518,6 +519,26 @@ namespace UIFixes
                         panel.method_15(slot, itemUnderCursorContext);
                     }
                 }
+            }
+        }
+
+        public class HideScaryTooltipPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.Method(typeof(SimpleTooltip), nameof(SimpleTooltip.ShowInventoryError));
+            }
+
+            [PatchPrefix]
+            public static bool Prefix(SimpleTooltip __instance, InventoryError error)
+            {
+                if (error is StashGridClass.GClass3310 || error is StashGridClass.GClass3311)
+                {
+                    __instance.Close();
+                    return false;
+                }
+
+                return true;
             }
         }
 
