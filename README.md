@@ -4,6 +4,8 @@ Quality of life improvements and fixes for SPT
 
 Tarkov is full of annoyances but we can fix them! Sometimes.
 
+✨ Recently added
+
 ## Added features
 
 New UI features enabled by this mod
@@ -15,6 +17,7 @@ New UI features enabled by this mod
 -   Swap items in place - drag one item over another to swap their locations!
 -   Flea market history - press the new back button to go back to the previous search
 -   Keybinds for most context menu actions
+-   ✨ Toggle/Hold Aiming - tap to toggle ADS, or hold to ADS and stop when you release
 
 ## Improved features
 
@@ -29,6 +32,7 @@ Existing SPT features made better
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
 -   Load ammo preset will pull ammo from inventory, not just stash
+-   ✨ Multi-grid vest and backpack grids reordered to be left to right, top to bottom.
 
 #### Inspect windows
 
@@ -62,6 +66,11 @@ Existing SPT features made better
 
 -   Remember window state when you leave hideout without closing (e.g. when searching for a recipe item on flea)
 -   Tools used in crafting will be returned to the container they were in
+
+#### In raid
+
+-   ✨ Grenade quickbinds will transfer to the next grenade of the same type after throwing.
+-   ✨ Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
 
 #### Mail
 
