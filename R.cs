@@ -54,6 +54,7 @@ namespace UIFixes
             GridWindow.InitTypes();
             GridSortPanel.InitTypes();
             RepairStrategy.InitTypes();
+            RepairKit.InitTypes();
             ContextMenuHelper.InitTypes();
             RagfairNewOfferItemView.InitTypes();
             TradingTableGridView.InitTypes();
@@ -597,9 +598,9 @@ namespace UIFixes
 
             public static void InitTypes()
             {
-                Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null);
-                ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null);
-                DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null);
+                Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface34
+                ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null); // GClass805
+                DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null); // GClass804
                 RepairersProperty = AccessTools.Property(Type, "Repairers");
                 CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
                 HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
@@ -640,6 +641,20 @@ namespace UIFixes
             public bool IsNoCorrespondingArea() => (bool)IsNoCorrespondingAreaMethod.Invoke(Value, []);
         }
 
+        public class RepairKit(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static MethodInfo GetRepairPointsMethod;
+
+            public static void InitTypes()
+            {
+                Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass803
+                GetRepairPointsMethod = AccessTools.Method(Type, "GetRepairPoints");
+            }
+
+            public float GetRepairPoints() => (float)GetRepairPointsMethod.Invoke(Value, []);
+
+        }
         public class ContextMenuHelper(object value) : Wrapper(value)
         {
             public static Type Type { get; private set; }

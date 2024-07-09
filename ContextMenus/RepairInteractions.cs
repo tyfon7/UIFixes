@@ -41,10 +41,11 @@ namespace UIFixes
                 {
                     text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
                 }
-                else if (repairer is GClass803 repairKit)
+                else if (R.RepairKit.Type.IsInstanceOfType(repairer))
                 {
+                    var repairKit = new R.RepairKit(repairer);
                     float pointsLeft = repairKit.GetRepairPoints();
-                    double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit);
+                    double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
 
                     string costColor = amount > pointsLeft ? "#FF0000" : "#ADB8BC";
                     text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} {3})</color></b>", repairer.LocalizedName, costColor, Math.Round(amount, 2).ToString(CultureInfo.InvariantCulture), "RP".Localized());
@@ -96,13 +97,20 @@ namespace UIFixes
 
             float repairAmount = GetClampedRepairAmount(repairStrategy);
 
-            if (repairer is GClass803 repairKit)
+            if (R.RepairKit.Type.IsInstanceOfType(repairer))
             {
+                var repairKit = new R.RepairKit(repairer);
                 float pointsLeft = repairKit.GetRepairPoints();
-                double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit);
+                double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
                 if (amount > pointsLeft)
                 {
                     return new FailedResult(ERepairStatusWarning.NotEnoughRepairPoints.ToString());
+                }
+
+                // This check is only for repair kits
+                if (repairStrategy.IsNoCorrespondingArea())
+                {
+                    return new FailedResult(ERepairStatusWarning.NoCorrespondingArea.ToString());
                 }
             }
             else
@@ -125,11 +133,6 @@ namespace UIFixes
             {
                 return new FailedResult(ERepairStatusWarning.BrokenItem.ToString());
             }*/
-
-            if (repairStrategy.IsNoCorrespondingArea())
-            {
-                return new FailedResult(ERepairStatusWarning.NoCorrespondingArea.ToString());
-            }
 
             return SuccessfulResult.New;
         }
