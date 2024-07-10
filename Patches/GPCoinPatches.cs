@@ -54,7 +54,7 @@ namespace UIFixes
                     {
                         if (!enabled && gpCoinsTransform != null)
                         {
-                            UnityEngine.Object.Destroy(gpCoinsTransform);
+                            UnityEngine.Object.Destroy(gpCoinsTransform.gameObject);
                         }
                     });
                 }
@@ -105,7 +105,7 @@ namespace UIFixes
                     {
                         if (!enabled && gpCoinsTransform != null)
                         {
-                            UnityEngine.Object.Destroy(gpCoinsTransform);
+                            UnityEngine.Object.Destroy(gpCoinsTransform.gameObject);
                         }
                     });
                 }
