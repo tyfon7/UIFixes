@@ -60,6 +60,7 @@ namespace UIFixes
             AimToggleHoldPatches.Enable();
             new ReorderGridsPatch().Enable();
             NoRandomGrenadesPatch.Init();
+            GPCoinPatches.Enable();
         }
 
         public static bool InRaid()

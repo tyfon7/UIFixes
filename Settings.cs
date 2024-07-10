@@ -84,6 +84,7 @@ namespace UIFixes
         public static ConfigEntry<bool> MergeFIROther { get; set; }
         public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
         public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
+        public static ConfigEntry<bool> ShowGPCurrency { get; set; }
         public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
         // Inspect Panels
@@ -465,6 +466,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Open context menu sub-menu to the right, as BSG intended but failed to do",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(ShowGPCurrency = config.Bind(
+                InventorySection,
+                "Show GP Coins in Currency",
+                true,
+                new ConfigDescription(
+                    "Show your GP coins wherever your currency is displayed",
                     null,
                     new ConfigurationManagerAttributes { })));
 
