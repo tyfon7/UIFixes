@@ -1,4 +1,5 @@
-﻿using EFT.UI.DragAndDrop;
+﻿using EFT.InventoryLogic;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
@@ -9,157 +10,181 @@ using UnityEngine;
 
 namespace UIFixes
 {
-    /* There are 3 cases to handle in TemplatedGridsView.Show
-     * 1. An item is shown for the first time
-     *      - It renders on its own, and the UI is correct
-     *      - Use the UI to sort Grids, and update GridViews to match
-     * 2. An item is shown for the 2nd+ time in a new context
-     *      - The GridViews will be recreated, so in the prefix we need to reorder them to match the Grids order
-     * 3. An existing TemplatedGridsView is reshown
-     *      - Everything is already in place, no action needed
-    */
-    public class ReorderGridsPatch : ModulePatch
+    public static class ReorderGridsPatches
     {
         private static readonly HashSet<string> ReorderedItems = [];
-        private static readonly Dictionary<string, int[]> GridMaps = [];
 
-        protected override MethodBase GetTargetMethod()
+        public static void Enable()
         {
-            return AccessTools.DeclaredMethod(typeof(TemplatedGridsView), nameof(TemplatedGridsView.Show));
+            new ReorderGridsPatch().Enable();
+            new ItemCreationPatch().Enable();
         }
 
-        [PatchPrefix]
-        public static void Prefix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
+        /* There are 3 cases to handle in TemplatedGridsView.Show
+         * 1. An item is shown for the first time
+         *      - It renders on its own, and the UI is correct
+         *      - Use the UI to sort Grids, and update GridViews to match
+         * 2. An item is shown for the 2nd+ time in a new context
+         *      - The GridViews will be recreated, so in the prefix we need to reorder them to match the Grids order
+         * 3. An existing TemplatedGridsView is reshown
+         *      - Everything is already in place, no action needed
+        */
+        public class ReorderGridsPatch : ModulePatch
         {
-            if (!Settings.ReorderGrids.Value)
+            private static readonly Dictionary<string, int[]> GridMaps = [];
+
+            protected override MethodBase GetTargetMethod()
             {
-                // To properly support disabling this feature:
-                // 1. Items that sorted their Grids need to return them to original order
-                // 2. If this TemplatedGridsView was sorted, it needs to be unsorted to match
-                if (ReorderedItems.Contains(compoundItem.Id) && GridMaps.TryGetValue(compoundItem.TemplateId, out int[] unwantedMap))
+                return AccessTools.DeclaredMethod(typeof(TemplatedGridsView), nameof(TemplatedGridsView.Show));
+            }
+
+            [PatchPrefix]
+            public static void Prefix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
+            {
+                if (!Settings.ReorderGrids.Value)
                 {
-                    StashGridClass[] orderedGrids = new StashGridClass[compoundItem.Grids.Length];
-                    for (int i = 0; i < compoundItem.Grids.Length; i++)
+                    // To properly support disabling this feature:
+                    // 1. Items that sorted their Grids need to return them to original order
+                    // 2. If this TemplatedGridsView was sorted, it needs to be unsorted to match
+                    if (ReorderedItems.Contains(compoundItem.Id) && GridMaps.TryGetValue(compoundItem.TemplateId, out int[] unwantedMap))
                     {
-                        orderedGrids[i] = compoundItem.Grids[unwantedMap[i]];
+                        StashGridClass[] orderedGrids = new StashGridClass[compoundItem.Grids.Length];
+                        for (int i = 0; i < compoundItem.Grids.Length; i++)
+                        {
+                            orderedGrids[i] = compoundItem.Grids[unwantedMap[i]];
+                        }
+
+                        compoundItem.Grids = orderedGrids;
+                        ReorderedItems.Remove(compoundItem.Id);
+
+                        if (IsSorted(__instance))
+                        {
+                            GridView[] orderedGridView = new GridView[____presetGridViews.Length];
+                            for (int i = 0; i < ____presetGridViews.Length; i++)
+                            {
+                                orderedGridView[i] = ____presetGridViews[unwantedMap[i]];
+                            }
+
+                            ____presetGridViews = orderedGridView;
+                            MarkSorted(__instance, false);
+                        }
                     }
 
-                    compoundItem.Grids = orderedGrids;
-                    ReorderedItems.Remove(compoundItem.Id);
+                    return;
+                }
 
-                    if (IsSorted(__instance))
+                if (ReorderedItems.Contains(compoundItem.Id) && !IsSorted(__instance))
+                {
+                    // This is a new context of a sorted Item, need to presort the GridViews
+                    if (GridMaps.TryGetValue(compoundItem.TemplateId, out int[] map))
                     {
                         GridView[] orderedGridView = new GridView[____presetGridViews.Length];
                         for (int i = 0; i < ____presetGridViews.Length; i++)
                         {
-                            orderedGridView[i] = ____presetGridViews[unwantedMap[i]];
+                            orderedGridView[map[i]] = ____presetGridViews[i];
                         }
 
                         ____presetGridViews = orderedGridView;
-                        MarkSorted(__instance, false);
+                        MarkSorted(__instance);
+                    }
+                    else
+                    {
+                        Logger.LogError($"Item {compoundItem.Id}, tpl: {compoundItem.TemplateId} has sorted Grids but no map to sort GridViews!");
                     }
                 }
-
-                return;
             }
 
-            if (ReorderedItems.Contains(compoundItem.Id) && !IsSorted(__instance))
+            [PatchPostfix]
+            public static void Postfix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
             {
-                // This is a new context of a sorted Item, need to presort the GridViews
-                if (GridMaps.TryGetValue(compoundItem.TemplateId, out int[] map))
+                if (!Settings.ReorderGrids.Value || ReorderedItems.Contains(compoundItem.Id))
                 {
-                    GridView[] orderedGridView = new GridView[____presetGridViews.Length];
+                    return;
+                }
+
+                var pairs = compoundItem.Grids.Zip(____presetGridViews, (g, gv) => new KeyValuePair<StashGridClass, GridView>(g, gv));
+
+                RectTransform parentView = __instance.RectTransform();
+                Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
+                Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
+
+                var sorted = pairs.OrderBy(pair =>
+                {
+                    var grid = pair.Key;
+                    var gridView = pair.Value;
+
+                    float xOffset = gridView.transform.position.x - parentPosition.x;
+                    float yOffset = -(gridView.transform.position.y - parentPosition.y); // invert y since grid coords are upper-left origin
+
+                    int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
+                    int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
+
+                    return y * 100 + x;
+                });
+
+                GridView[] orderedGridViews = sorted.Select(pair => pair.Value).ToArray();
+
+                // Populate the gridmap
+                if (!GridMaps.ContainsKey(compoundItem.TemplateId))
+                {
+                    int[] map = new int[____presetGridViews.Length];
                     for (int i = 0; i < ____presetGridViews.Length; i++)
                     {
-                        orderedGridView[map[i]] = ____presetGridViews[i];
+                        map[i] = orderedGridViews.IndexOf(____presetGridViews[i]);
                     }
 
-                    ____presetGridViews = orderedGridView;
-                    MarkSorted(__instance);
+                    GridMaps.Add(compoundItem.TemplateId, map);
+                }
+
+                compoundItem.Grids = sorted.Select(pair => pair.Key).ToArray();
+                ____presetGridViews = orderedGridViews;
+
+                ReorderedItems.Add(compoundItem.Id);
+                MarkSorted(__instance);
+            }
+
+            private static bool IsSorted(TemplatedGridsView view)
+            {
+                return view != null && view.GetComponent<SortedMarker>() != null;
+            }
+
+            private static void MarkSorted(TemplatedGridsView view, bool marked = true)
+            {
+                if (view == null)
+                {
+                    return;
+                }
+
+
+                if (marked)
+                {
+                    view.GetOrAddComponent<SortedMarker>();
                 }
                 else
                 {
-                    Logger.LogError($"Item {compoundItem.Id}, tpl: {compoundItem.TemplateId} has sorted Grids but no map to sort GridViews!");
+                    SortedMarker marker = view.GetComponent<SortedMarker>();
+                    if (marker != null)
+                    {
+                        UnityEngine.Object.DestroyImmediate(marker);
+                    }
                 }
             }
+
+            public class SortedMarker : MonoBehaviour { }
         }
 
-        [PatchPostfix]
-        public static void Postfix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
+        public class ItemCreationPatch : ModulePatch
         {
-            if (!Settings.ReorderGrids.Value || ReorderedItems.Contains(compoundItem.Id)) 
+            protected override MethodBase GetTargetMethod()
             {
-                return;
+                return AccessTools.Constructor(typeof(Item), [typeof(string), typeof(ItemTemplate)]);
             }
 
-            var pairs = compoundItem.Grids.Zip(____presetGridViews, (g, gv) => new KeyValuePair<StashGridClass, GridView>(g, gv));
-
-            RectTransform parentView = __instance.RectTransform();
-            Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
-            Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
-
-            var sorted = pairs.OrderBy(pair =>
+            [PatchPostfix]
+            public static void Postfix(string id)
             {
-                var grid = pair.Key;
-                var gridView = pair.Value;
-
-                float xOffset = gridView.transform.position.x - parentPosition.x;
-                float yOffset = -(gridView.transform.position.y - parentPosition.y); // invert y since grid coords are upper-left origin
-
-                int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
-                int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
-
-                return y * 100 + x;
-            });
-
-            GridView[] orderedGridViews = sorted.Select(pair => pair.Value).ToArray();
-
-            // Populate the gridmap
-            if (!GridMaps.ContainsKey(compoundItem.TemplateId))
-            {
-                int[] map = new int[____presetGridViews.Length];
-                for (int i = 0; i < ____presetGridViews.Length; i++)
-                {
-                    map[i] = orderedGridViews.IndexOf(____presetGridViews[i]);
-                }
-
-                GridMaps.Add(compoundItem.TemplateId, map);
-            }
-
-            compoundItem.Grids = sorted.Select(pair => pair.Key).ToArray();
-            ____presetGridViews = orderedGridViews;
-
-            ReorderedItems.Add(compoundItem.Id);
-            MarkSorted(__instance);
-        }
-
-        private static bool IsSorted(TemplatedGridsView view)
-        {
-            return view != null && view.GetComponent<SortedMarker>() != null;
-        }
-
-        private static void MarkSorted(TemplatedGridsView view, bool marked = true)
-        {
-            if (view == null)
-            {
-                return;
-            }
-
-
-            if (marked)
-            {
-                view.GetOrAddComponent<SortedMarker>();
-            }
-            else
-            {
-                SortedMarker marker = view.GetComponent<SortedMarker>();
-                if (marker != null)
-                {
-                    UnityEngine.Object.DestroyImmediate(marker);
-                }
+                ReorderedItems.Remove(id);
             }
         }
-
-        public class SortedMarker : MonoBehaviour { }
     }
 }

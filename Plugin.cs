@@ -58,7 +58,7 @@ namespace UIFixes
             new PutToolsBackPatch().Enable();
             new RebindGrenadesPatch().Enable();
             AimToggleHoldPatches.Enable();
-            new ReorderGridsPatch().Enable();
+            ReorderGridsPatches.Enable();
             NoRandomGrenadesPatch.Init();
             GPCoinPatches.Enable();
         }
