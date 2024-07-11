@@ -1,5 +1,4 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI.DragAndDrop;
+﻿using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
@@ -12,12 +11,9 @@ namespace UIFixes
 {
     public static class ReorderGridsPatches
     {
-        private static readonly HashSet<string> ReorderedItems = [];
-
         public static void Enable()
         {
             new ReorderGridsPatch().Enable();
-            new ItemCreationPatch().Enable();
         }
 
         /* There are 3 cases to handle in TemplatedGridsView.Show
@@ -46,7 +42,7 @@ namespace UIFixes
                     // To properly support disabling this feature:
                     // 1. Items that sorted their Grids need to return them to original order
                     // 2. If this TemplatedGridsView was sorted, it needs to be unsorted to match
-                    if (ReorderedItems.Contains(compoundItem.Id) && GridMaps.TryGetValue(compoundItem.TemplateId, out int[] unwantedMap))
+                    if (compoundItem.GetReordered() && GridMaps.TryGetValue(compoundItem.TemplateId, out int[] unwantedMap))
                     {
                         StashGridClass[] orderedGrids = new StashGridClass[compoundItem.Grids.Length];
                         for (int i = 0; i < compoundItem.Grids.Length; i++)
@@ -55,9 +51,9 @@ namespace UIFixes
                         }
 
                         compoundItem.Grids = orderedGrids;
-                        ReorderedItems.Remove(compoundItem.Id);
+                        compoundItem.SetReordered(false);
 
-                        if (IsSorted(__instance))
+                        if (__instance.GetReordered())
                         {
                             GridView[] orderedGridView = new GridView[____presetGridViews.Length];
                             for (int i = 0; i < ____presetGridViews.Length; i++)
@@ -66,14 +62,14 @@ namespace UIFixes
                             }
 
                             ____presetGridViews = orderedGridView;
-                            MarkSorted(__instance, false);
+                            __instance.SetReordered(false);
                         }
                     }
 
                     return;
                 }
 
-                if (ReorderedItems.Contains(compoundItem.Id) && !IsSorted(__instance))
+                if (compoundItem.GetReordered() && !__instance.GetReordered())
                 {
                     // This is a new context of a sorted Item, need to presort the GridViews
                     if (GridMaps.TryGetValue(compoundItem.TemplateId, out int[] map))
@@ -85,7 +81,7 @@ namespace UIFixes
                         }
 
                         ____presetGridViews = orderedGridView;
-                        MarkSorted(__instance);
+                        __instance.SetReordered(true);
                     }
                     else
                     {
@@ -97,7 +93,7 @@ namespace UIFixes
             [PatchPostfix]
             public static void Postfix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
             {
-                if (!Settings.ReorderGrids.Value || ReorderedItems.Contains(compoundItem.Id))
+                if (!Settings.ReorderGrids.Value || compoundItem.GetReordered())
                 {
                     return;
                 }
@@ -139,51 +135,8 @@ namespace UIFixes
                 compoundItem.Grids = sorted.Select(pair => pair.Key).ToArray();
                 ____presetGridViews = orderedGridViews;
 
-                ReorderedItems.Add(compoundItem.Id);
-                MarkSorted(__instance);
-            }
-
-            private static bool IsSorted(TemplatedGridsView view)
-            {
-                return view != null && view.GetComponent<SortedMarker>() != null;
-            }
-
-            private static void MarkSorted(TemplatedGridsView view, bool marked = true)
-            {
-                if (view == null)
-                {
-                    return;
-                }
-
-
-                if (marked)
-                {
-                    view.GetOrAddComponent<SortedMarker>();
-                }
-                else
-                {
-                    SortedMarker marker = view.GetComponent<SortedMarker>();
-                    if (marker != null)
-                    {
-                        UnityEngine.Object.DestroyImmediate(marker);
-                    }
-                }
-            }
-
-            public class SortedMarker : MonoBehaviour { }
-        }
-
-        public class ItemCreationPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Constructor(typeof(Item), [typeof(string), typeof(ItemTemplate)]);
-            }
-
-            [PatchPostfix]
-            public static void Postfix(string id)
-            {
-                ReorderedItems.Remove(id);
+                compoundItem.SetReordered(true);
+                __instance.SetReordered(true);
             }
         }
     }

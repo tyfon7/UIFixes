@@ -35,7 +35,7 @@ namespace UIFixes
         // Used to prevent infinite recursion of CanAccept/AcceptItem
         private static bool InPatch = false;
 
-        // If the can accept method should render highlights
+        // If the CanAccept method should render highlights
         private static readonly List<Image> Previews = [];
 
         // Point that various QuickFindPlace overrides should start at
