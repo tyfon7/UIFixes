@@ -5,6 +5,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace UIFixes
@@ -29,6 +30,8 @@ namespace UIFixes
 
         public class ItemUiContextPatch : ModulePatch
         {
+            private static ItemInfoInteractionsAbstractClass<EItemInfoButton> Interactions;
+
             protected override MethodBase GetTargetMethod()
             {
                 return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
@@ -51,57 +54,60 @@ namespace UIFixes
                     return;
                 }
 
-
-                var interactions = __instance.GetItemContextInteractions(itemContext, null);
                 if (Settings.InspectKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.Inspect);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.Inspect);
                 }
 
                 if (Settings.OpenKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.Open);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.Open);
                 }
 
                 if (Settings.TopUpKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.TopUp);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.TopUp);
                 }
 
                 if (Settings.UseKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.Use);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.Use);
                 }
 
                 if (Settings.UseAllKeyBind.Value.IsDown())
                 {
-                    if (!interactions.ExecuteInteraction(EItemInfoButton.UseAll))
-                    {
-                        interactions.ExecuteInteraction(EItemInfoButton.Use);
-                    }
+                    TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, EItemInfoButton.Use);
                 }
 
                 if (Settings.UnloadKeyBind.Value.IsDown())
                 {
-                    if (!interactions.ExecuteInteraction(EItemInfoButton.Unload))
-                    {
-                        interactions.ExecuteInteraction(EItemInfoButton.UnloadAmmo);
-                    }
+                    TryInteraction(__instance, itemContext, EItemInfoButton.Unload, EItemInfoButton.UnloadAmmo);
                 }
 
                 if (Settings.UnpackKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.Unpack);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.Unpack);
                 }
 
                 if (Settings.FilterByKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.FilterSearch);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.FilterSearch);
                 }
 
                 if (Settings.LinkedSearchKeyBind.Value.IsDown())
                 {
-                    interactions.ExecuteInteraction(EItemInfoButton.LinkedSearch);
+                    TryInteraction(__instance, itemContext, EItemInfoButton.LinkedSearch);
+                }
+
+                Interactions = null;
+            }
+
+            private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton? fallbackInteraction = null)
+            {
+                Interactions ??= itemUiContext.GetItemContextInteractions(itemContext, null);
+                if (!Interactions.ExecuteInteraction(interaction) && fallbackInteraction.HasValue)
+                {
+                    Interactions.ExecuteInteraction(fallbackInteraction.Value);
                 }
             }
         }

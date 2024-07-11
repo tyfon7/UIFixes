@@ -10,6 +10,7 @@ import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import type { DatabaseService } from "@spt/services/DatabaseService";
 import type { StaticRouterModService } from "@spt/services/mod/staticRouter/StaticRouterModService";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
+import { RagfairLinkedSlotItemService } from "./RagfairLinkedSlotItemService";
 
 import config from "../config/config.json";
 
@@ -142,6 +143,10 @@ class UIFixes implements IPreSptLoadMod {
                 { frequency: "Always" }
             );
         }
+
+        // Register slot-aware linked item service
+        container.register<RagfairLinkedSlotItemService>("RagfairLinkedSlotItemService", RagfairLinkedSlotItemService);
+        container.register("RagfairLinkedItemService", { useToken: "RagfairLinkedSlotItemService" });
 
         staticRouterModService.registerStaticRouter(
             "UIFixesRoutes",

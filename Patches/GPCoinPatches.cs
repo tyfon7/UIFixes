@@ -63,10 +63,7 @@ namespace UIFixes
 
                 var sums = R.Money.GetMoneySums(inventoryItems);
 
-                NumberFormatInfo numberFormatInfo = new NumberFormatInfo
-                {
-                    NumberGroupSeparator = " "
-                };
+                NumberFormatInfo numberFormatInfo = new() { NumberGroupSeparator = " " };
 
                 ____roubles.text = sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
                 ____euros.text = sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
@@ -114,10 +111,7 @@ namespace UIFixes
 
                 var sums = R.Money.GetMoneySums(inventoryItems);
 
-                NumberFormatInfo numberFormatInfo = new NumberFormatInfo
-                {
-                    NumberGroupSeparator = " "
-                };
+                NumberFormatInfo numberFormatInfo = new() { NumberGroupSeparator = " " };
 
                 ____roubles.text = GClass2531.GetCurrencyChar(ECurrencyType.RUB) + " " + sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
                 ____euros.text = GClass2531.GetCurrencyChar(ECurrencyType.EUR) + " " + sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);

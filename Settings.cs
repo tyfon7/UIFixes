@@ -104,6 +104,7 @@ namespace UIFixes
 
         // Flea Market
         public static ConfigEntry<bool> EnableFleaHistory { get; set; }
+        public static ConfigEntry<bool> EnableSlotSearch { get; set; }
         public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
         public static ConfigEntry<bool> AutoExpandCategories { get; set; }
         public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
@@ -595,6 +596,15 @@ namespace UIFixes
                 true,
                 new ConfigDescription(
                     "Keep a history of flea market searches and filters, and show a back button to navigate it",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
+            configEntries.Add(EnableSlotSearch = config.Bind(
+                FleaMarketSection,
+                "Enable Linked Slot Search",
+                true,
+                new ConfigDescription(
+                    "Add a context menu to empty mod slots and allow linked searches for specifically that slot",
                     null,
                     new ConfigurationManagerAttributes { })));
 

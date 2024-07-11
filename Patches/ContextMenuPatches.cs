@@ -1,6 +1,7 @@
 ﻿using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UIFixes.ContextMenus;
 using UnityEngine;
 
 namespace UIFixes
@@ -81,6 +83,9 @@ namespace UIFixes
             new EnableInsureInnerItemsPatch().Enable();
 
             new DisableLoadPresetOnBulletsPatch().Enable();
+
+            new EmptySlotMenuPatch().Enable();
+            new EmptySlotMenuRemovePatch().Enable();
         }
 
         public class ContextMenuNamesPatch : ModulePatch
@@ -419,6 +424,44 @@ namespace UIFixes
                 }
 
                 return true;
+            }
+        }
+
+        public class EmptySlotMenuPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.Show));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ModSlotView __instance, Slot slot, ItemContextAbstractClass parentItemContext, ItemUiContext itemUiContext)
+            {
+                if (!Settings.EnableSlotSearch.Value || slot.ContainedItem != null)
+                {
+                    return;
+                }
+
+                EmptySlotMenuTrigger menuTrigger = __instance.GetOrAddComponent<EmptySlotMenuTrigger>();
+                menuTrigger.Init(slot, parentItemContext, itemUiContext);
+            }
+        }
+
+        public class EmptySlotMenuRemovePatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod()
+            {
+                return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.SetupItemView));
+            }
+
+            [PatchPostfix]
+            public static void Postfix(ModSlotView __instance)
+            {
+                EmptySlotMenuTrigger menuTrigger = __instance.GetComponent<EmptySlotMenuTrigger>();
+                if (menuTrigger != null)
+                {
+                    UnityEngine.Object.Destroy(menuTrigger);
+                }
             }
         }
 
