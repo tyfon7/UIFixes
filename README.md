@@ -16,6 +16,7 @@ New UI features enabled by this mod
     -   Context menu to insure all, equip all, unequip all, unload ammo from all
 -   Swap items in place - drag one item over another to swap their locations!
 -   Flea market history - press the new back button to go back to the previous search
+-   ✨ Linked flea search from empty slots - find mods that fit that specific slot
 -   Keybinds for most context menu actions
 -   ✨ Toggle/Hold Aiming - tap to toggle ADS, or hold to ADS and stop when you release
 
