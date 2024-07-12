@@ -27,19 +27,19 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                StateMachineArray = AccessTools.Field(typeof(GClass1911), "keyCombinationState_1");
-                return AccessTools.Constructor(typeof(GClass1912), [typeof(EGameKey), typeof(ECommand), typeof(ECommand), typeof(int)]);
+                StateMachineArray = AccessTools.Field(typeof(KeyCombination), "keyCombinationState_1");
+                return AccessTools.Constructor(typeof(ToggleKeyCombination), [typeof(EGameKey), typeof(ECommand), typeof(ECommand), typeof(int)]);
             }
 
             [PatchPostfix]
-            public static void Postfix(GClass1912 __instance, EGameKey gameKey, ECommand disableCommand, GClass1911.KeyCombinationState[] ___keyCombinationState_1)
+            public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand disableCommand, KeyCombination.KeyCombinationState[] ___keyCombinationState_1)
             {
                 if (!Settings.ToggleOrHoldAim.Value || gameKey != EGameKey.Aim)
                 {
                     return;
                 }
 
-                List<GClass1911.KeyCombinationState> states = new(___keyCombinationState_1)
+                List<KeyCombination.KeyCombinationState> states = new(___keyCombinationState_1)
                 {
                     new ToggleHoldIdleState(__instance),
                     new ToggleHoldClickOrHoldState(__instance),
@@ -54,18 +54,18 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass1911), nameof(GClass1911.UpdateInput));
+                return AccessTools.Method(typeof(KeyCombination), nameof(KeyCombination.UpdateInput));
             }
 
             [PatchPostfix]
-            public static void Postfix(GClass1911 __instance)
+            public static void Postfix(KeyCombination __instance)
             {
                 if (!Settings.ToggleOrHoldAim.Value || __instance.GameKey !=  EGameKey.Aim)
                 {
                     return;
                 }
 
-                __instance.method_0((GClass1911.EKeyState)ToggleHoldState.Idle);
+                __instance.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
             }
         }
     }

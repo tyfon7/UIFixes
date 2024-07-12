@@ -12,17 +12,17 @@ namespace UIFixes
         private readonly InsuranceCompanyClass insurance = uiContext.Session.InsuranceCompany;
         private readonly List<Item> items = items.ToList();
         private readonly int playerRubles = playerRubles;
-        private List<ItemClass> insurableItems;
+        private List<InsuranceItem> insurableItems;
         private readonly Dictionary<string, int> prices = [];
 
         public InsuranceInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
 
         public void LoadAsync(Action callback)
         {
-            IEnumerable<ItemClass> itemClasses = items.Select(ItemClass.FindOrCreate);
-            insurableItems = itemClasses.SelectMany(insurance.GetItemChildren)
+            IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
+            insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
                 .Flatten(insurance.GetItemChildren)
-                .Concat(itemClasses)
+                .Concat(InsuranceItemes)
                 .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                 .ToList();
 

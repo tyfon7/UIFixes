@@ -196,12 +196,12 @@ namespace UIFixes
             SecondaryItems.Clear();
         }
 
-        public static IEnumerable<ItemContextClass> ItemContexts
+        public static IEnumerable<DragItemContext> ItemContexts
         {
             get { return SelectedItems.Keys; }
         }
 
-        public static IEnumerable<ItemContextClass> SecondaryContexts
+        public static IEnumerable<DragItemContext> SecondaryContexts
         {
             get { return SecondaryItems.Keys; }
         }
@@ -223,15 +223,15 @@ namespace UIFixes
 
         // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
         // Can pass no itemContext, and it just sorts items by their grid order
-        public static IEnumerable<MultiSelectItemContext> SortedItemContexts(ItemContextClass first = null, bool prepend = true)
+        public static IEnumerable<MultiSelectItemContext> SortedItemContexts(DragItemContext first = null, bool prepend = true)
         {
             static int gridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
 
             var result = SelectedItems.Keys
                 .Where(ic => first == null || ic.Item != first.Item)
-                .OrderByDescending(ic => ic.ItemAddress is ItemAddressClass)
+                .OrderByDescending(ic => ic.ItemAddress is GridItemAddress)
                 .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
-                .ThenBy(ic => ic.ItemAddress is ItemAddressClass selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
+                .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
             if (first != null && prepend)
             {
@@ -272,7 +272,7 @@ namespace UIFixes
             return ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
         }
 
-        private static bool InteractionAvailable(ItemContextClass itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
+        private static bool InteractionAvailable(DragItemContext itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
         {
             // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
             ItemContextAbstractClass innerContext = itemContext.ItemContextAbstractClass;
@@ -447,7 +447,7 @@ namespace UIFixes
         }
     }
 
-    public class MultiSelectItemContext : ItemContextClass
+    public class MultiSelectItemContext : DragItemContext
     {
         public MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : base(itemContext, rotation)
         {
@@ -466,7 +466,7 @@ namespace UIFixes
             return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
         }
 
-        public void UpdateDragContext(ItemContextClass itemContext)
+        public void UpdateDragContext(DragItemContext itemContext)
         {
             SetPosition(itemContext.CursorPosition, itemContext.ItemPosition);
             ItemRotation = itemContext.ItemRotation;
@@ -491,7 +491,7 @@ namespace UIFixes
         }
 
         // used by ItemUiContext.QuickFindAppropriatePlace, the one that picks a container, i.e. ctrl-click
-        // ItemContextClass (drag) defaults to None, but we want what the underlying item allows
+        // DragItemContext (drag) defaults to None, but we want what the underlying item allows
         public override bool CanQuickMoveTo(ETargetContainer targetContainer)
         {
             if (ItemContextAbstractClass != null)

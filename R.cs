@@ -26,6 +26,7 @@ namespace UIFixes
             // Order is significant, as some reference each other
             UIElement.InitUITypes();
             UIInputNode.InitUITypes();
+
             UIContext.InitTypes();
             DialogWindow.InitTypes();
             ControlSettings.InitTypes();
@@ -135,14 +136,17 @@ namespace UIFixes
         {
             public static Type Type { get; private set; }
             private static FieldInfo SearchInputFieldField;
+            private static FieldInfo ProductionBuildsField;
 
             public static void InitTypes()
             {
                 Type = typeof(EFT.Hideout.ProductionPanel);
                 SearchInputFieldField = AccessTools.Field(Type, "_searchInputField");
+                ProductionBuildsField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType.GetElementType() == typeof(ProductionBuildAbstractClass));
             }
 
             public ValidationInputField SeachInputField { get { return (ValidationInputField)SearchInputFieldField.GetValue(Value); } }
+            public ProductionBuildAbstractClass[] ProductionBuilds { get { return (ProductionBuildAbstractClass[])ProductionBuildsField.GetValue(Value); } }
         }
 
         public class ProductionPanelShowSubclass(object value) : Wrapper(value)
@@ -270,7 +274,7 @@ namespace UIFixes
             private static FieldInfo NonInteractableField;
             private static FieldInfo HighlightPanelField;
             private static FieldInfo ValidMoveColorField;
-            private static FieldInfo InvalidOperationColorField; 
+            private static FieldInfo InvalidOperationColorField;
             public static void InitTypes()
             {
                 Type = typeof(EFT.UI.DragAndDrop.GridView);

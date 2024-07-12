@@ -121,11 +121,11 @@ namespace UIFixes
                 return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_9));
             }
 
-            // Copied directly from method_9. Working with GClasses directly here, because this would be a nightmare with reflection
+            // Copied directly from method_9
             [PatchPrefix]
-            public static bool Prefix(ref IEnumerable<GClass1939> __result, ProductionPanel __instance, ProductionBuildAbstractClass[] ___gclass1938_0, ValidationInputField ____searchInputField)
+            public static bool Prefix(ProductionPanel __instance, ref IEnumerable<Scheme> __result, ValidationInputField ____searchInputField)
             {
-                __result = ___gclass1938_0.OfType<GClass1939>().Where(scheme => !scheme.locked)
+                __result = __instance.R().ProductionBuilds.OfType<Scheme>().Where(scheme => !scheme.locked)
                     .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
                     .ThenBy(__instance.method_18)
                     .ThenBy(scheme => scheme.FavoriteIndex)

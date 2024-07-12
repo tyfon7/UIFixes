@@ -53,7 +53,7 @@ namespace UIFixes
                             if (containerCollection.GetContainer(newItem.slotId) is StashGridClass grid)
                             {
                                 LocationInGrid location = GClass1496.CreateItemLocation<LocationInGrid>(newItem.location);
-                                ItemAddress itemAddress = new ItemAddressClass(grid, location);
+                                ItemAddress itemAddress = new GridItemAddress(grid, location);
 
                                 GStruct414<GClass2798> operation = InteractionsHandlerClass.Add(item, itemAddress, ___gclass2780_0, false);
                                 if (operation.Succeeded)

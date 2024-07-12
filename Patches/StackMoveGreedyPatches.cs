@@ -27,7 +27,7 @@ namespace UIFixes
 
             [PatchPrefix]
             [HarmonyPriority(Priority.LowerThanNormal)]
-            public static bool Prefix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
+            public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
                 return AcceptStackable(__instance, itemContext, targetItemContext, ref __result);
             }
@@ -42,16 +42,16 @@ namespace UIFixes
 
             [PatchPrefix]
             [HarmonyPriority(Priority.LowerThanNormal)]
-            public static bool Prefix(SlotView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
+            public static bool Prefix(SlotView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
             {
                 return AcceptStackable(__instance, itemContext, targetItemContext, ref __result);
             }
         }
 
         // Specific type of TaskSerializer because Unity can't understand generics
-        public class ItemContextTaskSerializer : TaskSerializer<ItemContextClass> { }
+        public class ItemContextTaskSerializer : TaskSerializer<DragItemContext> { }
 
-        private static bool AcceptStackable<T>(T __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref Task __result) where T : MonoBehaviour, IContainer
+        private static bool AcceptStackable<T>(T __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result) where T : MonoBehaviour, IContainer
         {
             if (!Settings.GreedyStackMove.Value || InPatch || itemContext.Item.StackObjectsCount <= 1 || targetItemContext == null)
             {

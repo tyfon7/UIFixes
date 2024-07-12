@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace UIFixes.ContextMenus
 {
-    public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext, Action closeAction) : GClass3042(itemContext, itemUiContext, closeAction)
+    public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext, Action closeAction) : BaseItemInfoInteractions(itemContext, itemUiContext, closeAction)
     {
         private static readonly List<EItemInfoButton> Actions = [EItemInfoButton.LinkedSearch];
 
@@ -19,7 +19,7 @@ namespace UIFixes.ContextMenus
             switch (interaction)
             {
                 case EItemInfoButton.LinkedSearch:
-                    Search(new GClass3219(EFilterType.LinkedSearch, slot.ParentItem.TemplateId + ":" + slot.Id, true));
+                    Search(new(EFilterType.LinkedSearch, slot.ParentItem.TemplateId + ":" + slot.Id, true));
                     break;
                 default:
                     break;

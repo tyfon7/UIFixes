@@ -21,19 +21,19 @@ namespace UIFixes
             }
 
             [PatchPrefix]
-            public static void Prefix(GClass3219[] searches, ref string __state, HandbookClass ___handbookClass)
+            public static void Prefix(RagfairSearch[] searches, ref string __state, HandbookClass ___handbookClass)
             {
                 if (!Settings.EnableSlotSearch.Value)
                 {
                     return;
                 }
 
-                GClass3219 search = searches.FirstOrDefault(s => s.Type == EFilterType.LinkedSearch && s.StringValue.Contains(":"));
+                var search = searches.FirstOrDefault(s => s.Type == EFilterType.LinkedSearch && s.StringValue.Contains(":"));
                 if (search != null)
                 {
                     __state = search.StringValue.Split(':')[0];
                     ___handbookClass[__state].Data.Id = search.StringValue;
-                    searches[searches.IndexOf(search)] = new GClass3219(EFilterType.LinkedSearch, __state, search.Add);
+                    searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
                 }
             }
 

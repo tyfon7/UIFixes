@@ -9,7 +9,7 @@ namespace UIFixes
         Holding = 15
     }
 
-    public class ToggleHoldIdleState(GClass1911 keyCombination) : GClass1911.KeyCombinationState(keyCombination)
+    public class ToggleHoldIdleState(KeyCombination keyCombination) : KeyCombination.KeyCombinationState(keyCombination)
     {
         public override ECommand GetCommand(float deltaTime)
         {
@@ -19,7 +19,7 @@ namespace UIFixes
             }
 
             HandleKeys(false);
-            KeyCombination.method_0((GClass1911.EKeyState)ToggleHoldState.ClickOrHold);
+            KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.ClickOrHold);
             return GetCommandInternal();
         }
 
@@ -29,7 +29,7 @@ namespace UIFixes
         }
     }
 
-    public class ToggleHoldClickOrHoldState(GClass1911 keyCombination) : GClass1911.KeyCombinationState(keyCombination)
+    public class ToggleHoldClickOrHoldState(KeyCombination keyCombination) : KeyCombination.KeyCombinationState(keyCombination)
     {
         public override void Enter()
         {
@@ -45,7 +45,7 @@ namespace UIFixes
                     HandleKeys(false);
                     if (LongEnough(deltaTime))
                     {
-                        KeyCombination.method_0((GClass1911.EKeyState)ToggleHoldState.Holding);
+                        KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Holding);
                     }
 
                     return ECommand.None;
@@ -53,7 +53,7 @@ namespace UIFixes
             }
 
             UnhandleKeys(null);
-            KeyCombination.method_0((GClass1911.EKeyState)ToggleHoldState.Idle);
+            KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
             return ECommand.None;
         }
 
@@ -66,7 +66,7 @@ namespace UIFixes
         private float timer;
     }
 
-    public class ToggleHoldHoldState(GClass1911 keyCombination, ECommand disableCommand) : GClass1911.KeyCombinationState(keyCombination)
+    public class ToggleHoldHoldState(KeyCombination keyCombination, ECommand disableCommand) : KeyCombination.KeyCombinationState(keyCombination)
     {
         private readonly ECommand disableCommand = disableCommand;
 
@@ -79,7 +79,7 @@ namespace UIFixes
             }
 
             UnhandleKeys(null);
-            KeyCombination.method_0((GClass1911.EKeyState)ToggleHoldState.Idle);
+            KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
             return disableCommand;
         }
     }

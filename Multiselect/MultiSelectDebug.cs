@@ -34,9 +34,9 @@ namespace UIFixes
             builder.AppendFormat("Active: <color={0}>{1}</color>\n", MultiSelect.Active ? "green" : "red", MultiSelect.Active);
             builder.AppendFormat("Items: <color=yellow>{0}</color>\n", MultiSelect.Count);
 
-            foreach (ItemContextClass itemContext in MultiSelect.SortedItemContexts())
+            foreach (DragItemContext itemContext in MultiSelect.SortedItemContexts())
             {
-                LocationInGrid location = itemContext.ItemAddress is ItemAddressClass gridAddress ? MultiGrid.GetGridLocation(gridAddress) : null;
+                LocationInGrid location = itemContext.ItemAddress is GridItemAddress gridAddress ? MultiGrid.GetGridLocation(gridAddress) : null;
                 builder.AppendFormat("x{0} {1} {2} {3}\n", 
                     itemContext.Item.StackObjectsCount,
                     itemContext.ItemAddress.Container.ID,
@@ -47,7 +47,7 @@ namespace UIFixes
             if (MultiSelect.SecondaryContexts.Any())
             {
                 builder.AppendFormat("Secondary Items: <color=yellow>{0}</color>\n", MultiSelect.SecondaryCount);
-                foreach (ItemContextClass itemContext in MultiSelect.SecondaryContexts)
+                foreach (DragItemContext itemContext in MultiSelect.SecondaryContexts)
                 {
                     builder.AppendFormat("x{0} {1}\n", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
                 }

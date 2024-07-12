@@ -113,9 +113,9 @@ namespace UIFixes
 
                 NumberFormatInfo numberFormatInfo = new() { NumberGroupSeparator = " " };
 
-                ____roubles.text = GClass2531.GetCurrencyChar(ECurrencyType.RUB) + " " + sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
-                ____euros.text = GClass2531.GetCurrencyChar(ECurrencyType.EUR) + " " + sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
-                ____dollars.text = GClass2531.GetCurrencyChar(ECurrencyType.USD) + " " + sums[ECurrencyType.USD].ToString("N0", numberFormatInfo);
+                ____roubles.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.RUB) + " " + sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
+                ____euros.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.EUR) + " " + sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
+                ____dollars.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.USD) + " " + sums[ECurrencyType.USD].ToString("N0", numberFormatInfo);
                 gpCoins.text = "GP " + sums[ECurrencyType.GP].ToString("N0", numberFormatInfo);
 
                 return false;

@@ -52,7 +52,7 @@ namespace UIFixes
             new HideScaryTooltipPatch().Enable();
         }
 
-        private static bool ValidPrerequisites(ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, IInventoryEventResult operation)
+        private static bool ValidPrerequisites(DragItemContext itemContext, ItemContextAbstractClass targetItemContext, IInventoryEventResult operation)
         {
             if (!Settings.SwapItems.Value)
             {
@@ -118,7 +118,7 @@ namespace UIFixes
             return true;
         }
 
-        private static bool CouldEverFit(ItemContextClass itemContext, ItemContextAbstractClass containerItemContext)
+        private static bool CouldEverFit(DragItemContext itemContext, ItemContextAbstractClass containerItemContext)
         {
             Item item = itemContext.Item;
             if (containerItemContext.Item is not LootItemClass container)
@@ -185,7 +185,7 @@ namespace UIFixes
                     return false;
                 }
 
-                if (itemAddressA is ItemAddressClass gridItemAddressA && itemAddressB is ItemAddressClass gridItemAddressB)
+                if (itemAddressA is GridItemAddress gridItemAddressA && itemAddressB is GridItemAddress gridItemAddressB)
                 {
                     LocationInGrid locationA = gridItemAddressA.LocationInGrid;
                     LocationInGrid locationB = gridItemAddressB.LocationInGrid;
@@ -219,7 +219,7 @@ namespace UIFixes
             }
 
             [PatchPostfix]
-            public static void Postfix(GridView __instance, ItemContextClass itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
+            public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
             {
                 if (!ValidPrerequisites(itemContext, targetItemContext, operation))
                 {
@@ -249,16 +249,16 @@ namespace UIFixes
                 LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext);
 
                 // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
-                var targetGridItemAddress = targetItemAddress as ItemAddressClass;
-                ItemAddress itemToAddress = new ItemAddressClass(targetGridItemAddress.Grid, itemToLocation);
+                var targetGridItemAddress = targetItemAddress as GridItemAddress;
+                ItemAddress itemToAddress = new GridItemAddress(targetGridItemAddress.Grid, itemToLocation);
 
                 ItemAddress targetToAddress;
-                if (itemAddress is ItemAddressClass gridItemAddress)
+                if (itemAddress is GridItemAddress gridItemAddress)
                 {
                     LocationInGrid targetToLocation = gridItemAddress.LocationInGrid.Clone();
                     targetToLocation.r = targetGridItemAddress.LocationInGrid.r;
 
-                    targetToAddress = new ItemAddressClass(gridItemAddress.Grid, targetToLocation);
+                    targetToAddress = new GridItemAddress(gridItemAddress.Grid, targetToLocation);
                 }
                 else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
                 {
@@ -286,7 +286,7 @@ namespace UIFixes
                 }
 
                 // If the target is going to a grid, try rotating it. This address is already a new object, safe to modify
-                if (targetToAddress is ItemAddressClass targetToGridItemAddress)
+                if (targetToAddress is GridItemAddress targetToGridItemAddress)
                 {
                     targetToGridItemAddress.LocationInGrid.r = targetToGridItemAddress.LocationInGrid.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                     if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
@@ -369,11 +369,11 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(ItemContextClass), nameof(ItemContextClass.CanAccept));
+                return AccessTools.Method(typeof(DragItemContext), nameof(DragItemContext.CanAccept));
             }
 
             [PatchPostfix]
-            public static void Postfix(ItemContextClass __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+            public static void Postfix(DragItemContext __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
             {
                 // targetItemContext here is not the target item, it's the *parent* context, i.e. the owner of the slot
                 // Do a few more checks
@@ -514,8 +514,8 @@ namespace UIFixes
                     {
                         Slot slot = new R.SlotItemAddress(__instance.ItemAddress).Slot;
 
-                        // ItemContextClass must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
-                        using ItemContextClass itemUnderCursorContext = itemUnderCursor != null ? new ItemContextClass(itemUnderCursor, ItemRotation.Horizontal) : null;
+                        // DragItemContext must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
+                        using DragItemContext itemUnderCursorContext = itemUnderCursor != null ? new DragItemContext(itemUnderCursor, ItemRotation.Horizontal) : null;
                         panel.method_15(slot, itemUnderCursorContext);
                     }
                 }

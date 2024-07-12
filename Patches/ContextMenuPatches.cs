@@ -106,7 +106,7 @@ namespace UIFixes
                 if (caption == EItemInfoButton.Insure.ToString())
                 {
                     InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
-                    int count = MultiSelect.ItemContexts.Select(ic => ItemClass.FindOrCreate(ic.Item))
+                    int count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
                         .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                         .Count();
 
@@ -386,10 +386,10 @@ namespace UIFixes
                 InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
 
                 IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [___item_0];
-                IEnumerable<ItemClass> itemClasses = items.Select(ItemClass.FindOrCreate);
-                IEnumerable<ItemClass> insurableItems = itemClasses.SelectMany(insurance.GetItemChildren)
+                IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
+                IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
                     .Flatten(insurance.GetItemChildren)
-                    .Concat(itemClasses)
+                    .Concat(InsuranceItemes)
                     .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
 
                 if (insurableItems.Any())
