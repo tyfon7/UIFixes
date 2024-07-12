@@ -85,6 +85,18 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;    xcopy /F /Y &quot;$(ProjectDir)$(OutDir)$(TargetName).pdb&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;) &#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\&quot;&#xD;&#xA;)&#xD;&#xA;if $(Configurationname) == Dist (&#xD;&#xA;    mkdir &quot;$(ProjectDir)\dist\BepInEx\plugins&quot;&#xD;&#xA;    xcopy /F /Y &quot;$(TargetPath)&quot; &quot;$(ProjectDir)\dist\BepInEx\plugins\&quot;&#xD;&#xA;    7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user&#xD;&#xA;    move /Y Tyfon-UIFixes-$(Version).7z dist\&#xD;&#xA;)" />
+    <Exec Command='if $(ConfigurationName) == Debug (
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
+        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
+      )
+      if $(ConfigurationName) == Release (
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
+      )
+      if $(ConfigurationName) == Dist (
+        mkdir "$(ProjectDir)\dist\BepInEx\plugins"
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\dist\BepInEx\plugins\"
+        7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user
+        move /Y Tyfon-UIFixes-$(Version).7z dist\
+      )' />
   </Target>
 </Project>
