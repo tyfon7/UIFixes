@@ -63,6 +63,8 @@ namespace UIFixes
             InventoryInteractions.InitTypes();
             TradingInteractions.InitTypes();
             TransferInteractions.InitTypes();
+            InventoryScreen.InitTypes();
+            ScavengerInventoryScreen.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -781,7 +783,7 @@ namespace UIFixes
                 ItemField = AccessTools.Field(Type, "item_0");
             }
 
-            public Item Item { get { return (Item) ItemField.GetValue(Value); } }
+            public Item Item { get { return (Item)ItemField.GetValue(Value); } }
         }
 
         public class TransferInteractions(object value) : Wrapper(value)
@@ -817,6 +819,34 @@ namespace UIFixes
                 });
             }
         }
+
+        public class InventoryScreen(object value) : UIInputNode(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo SimpleStashPanelField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.InventoryScreen);
+                SimpleStashPanelField = AccessTools.Field(Type, "_simpleStashPanel");
+            }
+
+            public SimpleStashPanel SimpleStashPanel { get { return (SimpleStashPanel)SimpleStashPanelField.GetValue(Value); } }
+        }
+
+        public class ScavengerInventoryScreen(object value) : UIInputNode(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo SimpleStashPanelField;
+
+            public static void InitTypes()
+            {
+                Type = typeof(EFT.UI.ScavengerInventoryScreen);
+                SimpleStashPanelField = AccessTools.Field(Type, "_simpleStashPanel");
+            }
+
+            public SimpleStashPanel SimpleStashPanel { get { return (SimpleStashPanel)SimpleStashPanelField.GetValue(Value); } }
+        }
     }
 
     public static class RExtentensions
@@ -845,5 +875,7 @@ namespace UIFixes
         public static R.MessageWindow R(this MessageWindow value) => new(value);
         public static R.RagfairNewOfferItemView R(this RagfairNewOfferItemView value) => new(value);
         public static R.TradingTableGridView R(this TradingTableGridView value) => new(value);
+        public static R.InventoryScreen R(this InventoryScreen value) => new(value);
+        public static R.ScavengerInventoryScreen R(this ScavengerInventoryScreen value) => new(value);
     }
 }

@@ -30,6 +30,13 @@ namespace UIFixes
         OriginalSpacing
     }
 
+    internal enum SortingTableDisplay
+    {
+        New,
+        Old,
+        Both
+    }
+
     internal class Settings
     {
         // Categories
@@ -85,6 +92,7 @@ namespace UIFixes
         public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
         public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
         public static ConfigEntry<bool> ShowGPCurrency { get; set; }
+        public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
         public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
         // Inspect Panels
@@ -479,6 +487,15 @@ namespace UIFixes
                     null,
                     new ConfigurationManagerAttributes { })));
 
+            configEntries.Add(SortingTableButton = config.Bind(
+                InventorySection,
+                "Sorting Table Button",
+                SortingTableDisplay.New,
+                new ConfigDescription(
+                    "What position to show the sorting table button",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+
             configEntries.Add(LoadMagPresetOnBullets = config.Bind(
                 InventorySection,
                 "Mag Presets Context Menu on Bullets",
@@ -709,7 +726,7 @@ namespace UIFixes
                     if (allowSecondaryToDisablePrimary)
                     {
                         priorityConfig.Value = false;
-                    } 
+                    }
                     else if (priorityConfig.Value)
                     {
                         secondaryConfig.Value = false;

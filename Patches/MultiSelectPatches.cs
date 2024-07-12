@@ -323,7 +323,7 @@ namespace UIFixes
                 if (__instance.Profile == PatchConstants.BackEndSession.Profile)
                 {
                     MultiSelect.StopLoading();
-                }   
+                }
             }
         }
 

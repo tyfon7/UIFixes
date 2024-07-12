@@ -62,6 +62,7 @@ namespace UIFixes
             NoRandomGrenadesPatch.Init();
             GPCoinPatches.Enable();
             FleaSlotSearchPatches.Enable();
+            MoveSortingTablePatches.Enable();
         }
 
         public static bool InRaid()

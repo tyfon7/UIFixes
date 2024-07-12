@@ -35,7 +35,16 @@ namespace UIFixes
             SortingTableClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
             if (sortingTable != null && !sortingTable.IsVisible)
             {
-                Singleton<CommonUI>.Instance.InventoryScreen.method_6();
+                if (__instance.ContextType == EItemUiContextType.InventoryScreen)
+                {
+                    Singleton<CommonUI>.Instance.InventoryScreen.method_6();
+                    Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
+                }
+                else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
+                {
+                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
+                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
+                }
             }
         }
     }
