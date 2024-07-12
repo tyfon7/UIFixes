@@ -92,7 +92,7 @@ namespace UIFixes
             [PatchPrefix]
             public static void Prefix(ECommand command)
             {
-                FixVisibilityPatch.Ignorable = GClass3032.SlotBySelectCommandDictionary.ContainsKey(command);
+                FixVisibilityPatch.Ignorable = QuickBindCommandMap.SlotBySelectCommandDictionary.ContainsKey(command);
             }
 
             [PatchPostfix]

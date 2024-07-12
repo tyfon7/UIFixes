@@ -4,7 +4,6 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,56 +16,12 @@ namespace UIFixes
 {
     public static class ContextMenuPatches
     {
-        private static Type InventoryRootInteractionsType;
-        private static Type TradingRootInteractionsType;
-        private static FieldInfo TradingRootInteractionsItemField;
-
         private static InsuranceInteractions CurrentInsuranceInteractions = null;
         private static RepairInteractions CurrentRepairInteractions = null;
         private static string CreatedButtonInteractionId = null;
 
-        private static readonly HashSet<EItemInfoButton> TradingRootInteractions =
-        [
-            EItemInfoButton.Inspect,
-            EItemInfoButton.Uninstall,
-            EItemInfoButton.Examine,
-            EItemInfoButton.Open,
-            EItemInfoButton.Insure,
-            EItemInfoButton.Repair,
-            EItemInfoButton.Modding,
-            EItemInfoButton.EditBuild,
-            EItemInfoButton.FilterSearch,
-            EItemInfoButton.LinkedSearch,
-            EItemInfoButton.NeededSearch,
-            EItemInfoButton.Tag,
-            EItemInfoButton.ResetTag,
-            EItemInfoButton.TurnOn,
-            EItemInfoButton.TurnOff,
-            EItemInfoButton.Fold,
-            EItemInfoButton.Unfold,
-            EItemInfoButton.Disassemble,
-            EItemInfoButton.Discard
-        ];
-
         public static void Enable()
         {
-            // The context menus in the inventory and the trading screen inventory are *completely different code*
-            InventoryRootInteractionsType = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3045
-
-            // GClass3054 - this is nuts to find, have to inspect a static enum array
-            TradingRootInteractionsType = PatchConstants.EftTypes.Single(t =>
-            {
-                var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
-                if (enumerableField != null)
-                {
-                    var enumerable = (IEnumerable<EItemInfoButton>)enumerableField.GetValue(null);
-                    return TradingRootInteractions.SetEquals(enumerable);
-                }
-
-                return false;
-            });
-            TradingRootInteractionsItemField = AccessTools.Field(TradingRootInteractionsType, "item_0");
-
             new ContextMenuNamesPatch().Enable();
             new PositionSubMenuPatch().Enable();
             new PositionInsuranceSubMenuPatch().Enable();
@@ -170,7 +125,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(InventoryRootInteractionsType, "get_SubInteractions");
+                return AccessTools.Method(R.InventoryInteractions.Type, "get_SubInteractions");
             }
 
             [PatchPostfix]
@@ -186,7 +141,7 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(InventoryRootInteractionsType, "CreateSubInteractions");
+                return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
             }
 
             [PatchPrefix]
@@ -236,7 +191,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(TradingRootInteractionsType, "get_SubInteractions");
+                return AccessTools.Method(R.TradingInteractions.Type, "get_SubInteractions");
             }
 
             [PatchPostfix]
@@ -252,7 +207,7 @@ namespace UIFixes
 
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(TradingRootInteractionsType, "CreateSubInteractions");
+                return AccessTools.Method(R.TradingInteractions.Type, "CreateSubInteractions");
             }
 
             [PatchPrefix]
@@ -261,12 +216,14 @@ namespace UIFixes
                 // Clear this, since something else should be active (even a different mouseover of the insurance button) 
                 LoadingInsuranceActions = false;
 
+                var wrappedInstance = new R.TradingInteractions(__instance);
+
                 if (parentInteraction == EItemInfoButton.Insure)
                 {
                     int playerRubles = GetPlayerRubles(___itemUiContext_0);
 
-                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
-                    Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                    Item item = wrappedInstance.Item;
 
                     CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
                     CurrentInsuranceInteractions = MultiSelect.Active ?
@@ -292,8 +249,8 @@ namespace UIFixes
                 {
                     int playerRubles = GetPlayerRubles(___itemUiContext_0);
 
-                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3032
-                    Item item = (Item)TradingRootInteractionsItemField.GetValue(__instance);
+                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                    Item item = wrappedInstance.Item;
 
                     CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
                     subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
@@ -469,7 +426,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(InventoryRootInteractionsType, "CreateSubInteractions");
+                return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
             }
 
             // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.

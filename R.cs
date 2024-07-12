@@ -59,6 +59,10 @@ namespace UIFixes
             ContextMenuHelper.InitTypes();
             RagfairNewOfferItemView.InitTypes();
             TradingTableGridView.InitTypes();
+            ItemReceiver.InitTypes();
+            InventoryInteractions.InitTypes();
+            TradingInteractions.InitTypes();
+            TransferInteractions.InitTypes();
         }
 
         public abstract class Wrapper(object value)
@@ -142,7 +146,7 @@ namespace UIFixes
             {
                 Type = typeof(EFT.Hideout.ProductionPanel);
                 SearchInputFieldField = AccessTools.Field(Type, "_searchInputField");
-                ProductionBuildsField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType.GetElementType() == typeof(ProductionBuildAbstractClass));
+                ProductionBuildsField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType.GetElementType() == typeof(ProductionBuildAbstractClass));
             }
 
             public ValidationInputField SeachInputField { get { return (ValidationInputField)SearchInputFieldField.GetValue(Value); } }
@@ -702,6 +706,116 @@ namespace UIFixes
             }
 
             public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
+        }
+
+        public class ItemReceiver(object value) : Wrapper(value) // GClass1855
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo InventoryControllerField;
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.Single(t =>
+                {
+                    FieldInfo field = t.GetField("localQuestControllerClass", BindingFlags.NonPublic | BindingFlags.Instance);
+                    return field != null && field.IsInitOnly;
+                });
+                InventoryControllerField = Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => typeof(InventoryControllerClass).IsAssignableFrom(f.FieldType));
+            }
+
+            public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
+        }
+
+        public class InventoryInteractions(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+
+            public static void InitTypes()
+            {
+                Type = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3045
+            }
+        }
+
+        public class TradingInteractions(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+            private static FieldInfo ItemField;
+
+            private static readonly HashSet<EItemInfoButton> Interactions =
+            [
+                EItemInfoButton.Inspect,
+                EItemInfoButton.Uninstall,
+                EItemInfoButton.Examine,
+                EItemInfoButton.Open,
+                EItemInfoButton.Insure,
+                EItemInfoButton.Repair,
+                EItemInfoButton.Modding,
+                EItemInfoButton.EditBuild,
+                EItemInfoButton.FilterSearch,
+                EItemInfoButton.LinkedSearch,
+                EItemInfoButton.NeededSearch,
+                EItemInfoButton.Tag,
+                EItemInfoButton.ResetTag,
+                EItemInfoButton.TurnOn,
+                EItemInfoButton.TurnOff,
+                EItemInfoButton.Fold,
+                EItemInfoButton.Unfold,
+                EItemInfoButton.Disassemble,
+                EItemInfoButton.Discard
+            ];
+
+            public static void InitTypes()
+            {
+                // GClass3054
+                Type = PatchConstants.EftTypes.Single(t =>
+                {
+                    var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
+                    if (enumerableField != null)
+                    {
+                        var enumerable = (IEnumerable<EItemInfoButton>)enumerableField.GetValue(null);
+                        return Interactions.SetEquals(enumerable);
+                    }
+
+                    return false;
+                });
+                ItemField = AccessTools.Field(Type, "item_0");
+            }
+
+            public Item Item { get { return (Item) ItemField.GetValue(Value); } }
+        }
+
+        public class TransferInteractions(object value) : Wrapper(value)
+        {
+            public static Type Type { get; private set; }
+
+            private static readonly HashSet<EItemInfoButton> Interactions =
+            [
+                EItemInfoButton.Inspect,
+                EItemInfoButton.Uninstall,
+                EItemInfoButton.Examine,
+                EItemInfoButton.Equip,
+                EItemInfoButton.Open,
+                EItemInfoButton.Fold,
+                EItemInfoButton.Unfold,
+                EItemInfoButton.Disassemble,
+                EItemInfoButton.Discard
+            ];
+
+            public static void InitTypes()
+            {
+                // GClass3057
+                Type = PatchConstants.EftTypes.Single(t =>
+                {
+                    var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
+                    if (enumerableField != null)
+                    {
+                        var enumerable = (IEnumerable<EItemInfoButton>)enumerableField.GetValue(null);
+                        return Interactions.SetEquals(enumerable);
+                    }
+
+                    return false;
+                });
+            }
         }
     }
 

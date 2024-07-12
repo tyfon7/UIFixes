@@ -21,7 +21,7 @@ namespace UIFixes
 
         // This is a grenade specific event emitter that has all the info needed to do this
         [PatchPostfix]
-        public static void Postfix(CommandStatus status, GClass2799 ___DiscardResult)
+        public static void Postfix(CommandStatus status, DiscardResult ___DiscardResult)
         {
             if (status != CommandStatus.Succeed)
             {
@@ -40,7 +40,7 @@ namespace UIFixes
                 var nextGrenade = matchingGrenades.FirstOrDefault(g => controller.IsAtBindablePlace(g));
                 if (nextGrenade != null)
                 {
-                    controller.TryRunNetworkTransaction(GClass2818.Run(controller, nextGrenade, index, true), null);
+                    controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextGrenade, index, true), null);
                 }
             }
         }

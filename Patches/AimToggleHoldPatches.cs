@@ -3,6 +3,7 @@ using EFT.InputSystem;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace UIFixes
@@ -28,7 +29,7 @@ namespace UIFixes
             protected override MethodBase GetTargetMethod()
             {
                 StateMachineArray = AccessTools.Field(typeof(KeyCombination), "keyCombinationState_1");
-                return AccessTools.Constructor(typeof(ToggleKeyCombination), [typeof(EGameKey), typeof(ECommand), typeof(ECommand), typeof(int)]);
+                return AccessTools.GetDeclaredConstructors(typeof(ToggleKeyCombination)).Single();
             }
 
             [PatchPostfix]

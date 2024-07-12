@@ -1,9 +1,9 @@
-﻿using SPT.Reflection.Patching;
-using Comfort.Common;
-using EFT.HealthSystem;
+﻿using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
+using SPT.Reflection.Patching;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +25,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.DeclaredProperty(typeof(GClass3054), nameof(GClass3054.AvailableInteractions)).GetMethod;
+                return AccessTools.DeclaredProperty(R.TradingInteractions.Type, "AvailableInteractions").GetMethod;
             }
 
             [PatchPostfix]
@@ -41,7 +41,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.DeclaredProperty(typeof(GClass3057), nameof(GClass3057.AvailableInteractions)).GetMethod;
+                return AccessTools.DeclaredProperty(R.TransferInteractions.Type, "AvailableInteractions").GetMethod;
             }
 
             [PatchPostfix]
@@ -88,11 +88,12 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Constructor(typeof(ScavengerInventoryScreen.GClass3156), [typeof(GClass2780), typeof(GClass2780), typeof(IHealthController), typeof(StashClass), typeof(ISession)]);
+                Type type = typeof(ScavengerInventoryScreen).GetNestedTypes().Single(t => t.GetField("ScavController") != null); // ScavengerInventoryScreen.GClass3156
+                return AccessTools.GetDeclaredConstructors(type).Single();
             }
 
             [PatchPrefix]
-            public static void Prefix(GClass2780 scavController)
+            public static void Prefix(InventoryContainerClass scavController)
             {
                 scavController.Inventory.Stash = null;
             }

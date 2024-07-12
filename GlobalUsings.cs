@@ -12,9 +12,23 @@ global using Stackable = GClass2751;
 global using RagfairSearch = GClass3219;
 global using CurrencyInfo = GClass2531;
 global using Scheme = GClass1939;
+global using ItemFilterExtensions = GClass2524;
+global using QuickBindCommandMap = GClass3032;
+global using DiscardResult = GClass2799;
+global using BindOperation = GClass2818;
+
+// State machine states
+global using FirearmReadyState = EFT.Player.FirearmController.GClass1619;
+global using FirearmAddingModState = EFT.Player.FirearmController.Class1039;
+
+// JSON
+global using LocationJsonParser = GClass1496;
+global using JsonItem = GClass1198;
 
 // Errors
 global using DestroyError = GClass3344;
+global using GridNoRoomError = StashGridClass.GClass3310;
+global using GridSpaceTakenError = StashGridClass.GClass3311;
 global using GridModificationsUnavailableError = StashGridClass.GClass3315;
 global using NoRoomError = GClass3316;
 global using NoPossibleActionsError = GClass3317;

@@ -2,6 +2,8 @@
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -53,7 +55,7 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass2524), nameof(GClass2524.CheckItemFilter));
+                return AccessTools.Method(typeof(ItemFilterExtensions), nameof(ItemFilterExtensions.CheckItemFilter));
             }
 
             [PatchPrefix]
@@ -72,7 +74,8 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3065), nameof(GClass3065.method_6));
+                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagInteraction") != null);
+                return AccessTools.Method(type, "method_6");
             }
 
             [PatchPrefix]
@@ -92,7 +95,8 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3066), nameof(GClass3066.method_7));
+                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
+                return AccessTools.Method(type, "method_7");
             }
 
             [PatchPrefix]
@@ -119,7 +123,8 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(GClass3066), nameof(GClass3066.method_6));
+                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
+                return AccessTools.Method(type, "method_6");
             }
 
             [PatchPrefix]

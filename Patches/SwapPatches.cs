@@ -532,7 +532,7 @@ namespace UIFixes
             [PatchPrefix]
             public static bool Prefix(SimpleTooltip __instance, InventoryError error)
             {
-                if (error is StashGridClass.GClass3310 || error is StashGridClass.GClass3311)
+                if (error is GridNoRoomError || error is GridSpaceTakenError)
                 {
                     __instance.Close();
                     return false;
@@ -546,15 +546,15 @@ namespace UIFixes
         {
             protected override MethodBase GetTargetMethod()
             {
-                return AccessTools.Method(typeof(Player.FirearmController.Class1039), nameof(Player.FirearmController.Class1039.OnModChanged));
+                return AccessTools.Method(typeof(FirearmAddingModState), nameof(FirearmAddingModState.OnModChanged));
             }
 
-            // The firearm state machine state Class1015 is the "adding mod" state
-            // Unpatched, it fires off the success callback before returning to ready state (GClass1608)
+            // This is the state machine's "adding mod" state
+            // Unpatched, it fires off the success callback before returning to ready state
             // Patched to not be that stupid
             [PatchPrefix]
             public static bool Prefix(
-                Player.FirearmController.Class1039 __instance,
+                FirearmAddingModState __instance,
                 bool ___bool_0,
                 FirearmsAnimator ___firearmsAnimator_0,
                 Item ___item_0,
@@ -577,7 +577,7 @@ namespace UIFixes
                 __instance.State = Player.EOperationState.Finished;
 
                 // Begin change (moved from bottom)
-                ___firearmController_0.InitiateOperation<Player.FirearmController.GClass1619>().Start(null);
+                ___firearmController_0.InitiateOperation<FirearmReadyState>().Start(null);
                 __instance.method_5(gameObject);
                 // End change
 
