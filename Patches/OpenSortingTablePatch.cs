@@ -6,45 +6,44 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public class OpenSortingTablePatch : ModulePatch
 {
-    public class OpenSortingTablePatch : ModulePatch
+    private static readonly EItemUiContextType[] AllowedScreens = [EItemUiContextType.InventoryScreen, EItemUiContextType.ScavengerInventoryScreen];
+
+
+    protected override MethodBase GetTargetMethod()
     {
-        private static readonly EItemUiContextType[] AllowedScreens = [EItemUiContextType.InventoryScreen, EItemUiContextType.ScavengerInventoryScreen];
+        return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.QuickMoveToSortingTable));
+    }
 
-
-        protected override MethodBase GetTargetMethod()
+    [PatchPrefix]
+    public static void Prefix(ItemUiContext __instance)
+    {
+        if (!Settings.AutoOpenSortingTable.Value || !AllowedScreens.Contains(__instance.ContextType) || Plugin.InRaid())
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.QuickMoveToSortingTable));
+            return;
         }
 
-        [PatchPrefix]
-        public static void Prefix(ItemUiContext __instance)
+        // Temporary work-around for LootValue bug - bail out if the ALT key is down
+        if (Input.GetKey(KeyCode.LeftAlt))
         {
-            if (!Settings.AutoOpenSortingTable.Value || !AllowedScreens.Contains(__instance.ContextType) || Plugin.InRaid())
-            {
-                return;
-            }
+            return;
+        }
 
-            // Temporary work-around for LootValue bug - bail out if the ALT key is down
-            if (Input.GetKey(KeyCode.LeftAlt))
+        SortingTableClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
+        if (sortingTable != null && !sortingTable.IsVisible)
+        {
+            if (__instance.ContextType == EItemUiContextType.InventoryScreen)
             {
-                return;
+                Singleton<CommonUI>.Instance.InventoryScreen.method_6();
+                Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
             }
-
-            SortingTableClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
-            if (sortingTable != null && !sortingTable.IsVisible)
+            else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
             {
-                if (__instance.ContextType == EItemUiContextType.InventoryScreen)
-                {
-                    Singleton<CommonUI>.Instance.InventoryScreen.method_6();
-                    Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
-                }
-                else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
-                {
-                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
-                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
-                }
+                Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
+                Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
             }
         }
     }

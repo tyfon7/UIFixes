@@ -9,56 +9,55 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace UIFixes
-{
-    public class AssortUnlocksPatch : ModulePatch
-    {
-        private static bool Loading = false;
-        private static Dictionary<string, string> AssortUnlocks = null;
+namespace UIFixes;
 
-        protected override MethodBase GetTargetMethod()
+public class AssortUnlocksPatch : ModulePatch
+{
+    private static bool Loading = false;
+    private static Dictionary<string, string> AssortUnlocks = null;
+
+    protected override MethodBase GetTargetMethod()
+    {
+        return AccessTools.Method(typeof(OfferView), nameof(OfferView.method_10));
+    }
+
+    [PatchPostfix]
+    public static void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
+    {
+        if (!Settings.ShowRequiredQuest.Value)
         {
-            return AccessTools.Method(typeof(OfferView), nameof(OfferView.method_10));
+            return;
         }
 
-        [PatchPostfix]
-        public static void Postfix(OfferView __instance, HoverTooltipArea ____hoverTooltipArea)
+        if (AssortUnlocks == null && !Loading)
         {
-            if (!Settings.ShowRequiredQuest.Value)
-            {
-                return;
-            }
+            Loading = true;
 
-            if (AssortUnlocks == null && !Loading)
+            Task<string> response = RequestHandler.GetJsonAsync("/uifixes/assortUnlocks");
+            response.ContinueWith(task =>
             {
-                Loading = true;
-
-                Task<string> response = RequestHandler.GetJsonAsync("/uifixes/assortUnlocks");
-                response.ContinueWith(task =>
+                string json = task.Result;
+                if (!String.IsNullOrEmpty(json))
                 {
-                    string json = task.Result;
-                    if (!String.IsNullOrEmpty(json))
+                    try
                     {
-                        try
-                        {
-                            AssortUnlocks = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex);
-                        }
+                        AssortUnlocks = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
                     }
-
-                    Loading = false;
-                });
-            }
-
-            if (__instance.Offer_0.Locked)
-            {
-                if (AssortUnlocks != null && AssortUnlocks.TryGetValue(__instance.Offer_0.Item.Id, out string questName))
-                {
-                    ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + questName.Localized() + ")", true);
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex);
+                    }
                 }
+
+                Loading = false;
+            });
+        }
+
+        if (__instance.Offer_0.Locked)
+        {
+            if (AssortUnlocks != null && AssortUnlocks.TryGetValue(__instance.Offer_0.Item.Id, out string questName))
+            {
+                ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + questName.Localized() + ")", true);
             }
         }
     }

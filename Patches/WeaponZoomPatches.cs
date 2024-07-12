@@ -5,58 +5,57 @@ using SPT.Reflection.Patching;
 using System.Reflection;
 using UnityEngine.EventSystems;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class WeaponZoomPatches
 {
-    public static class WeaponZoomPatches
+    public static void Enable()
     {
-        public static void Enable()
+        new EditBuildScreenZoomPatch().Enable();
+        new WeaponModdingScreenZoomPatch().Enable();
+    }
+
+    public class EditBuildScreenZoomPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new EditBuildScreenZoomPatch().Enable();
-            new WeaponModdingScreenZoomPatch().Enable();
+            return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.Awake));
         }
 
-        public class EditBuildScreenZoomPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
         {
-            protected override MethodBase GetTargetMethod()
+            var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
+            scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
             {
-                return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.Awake));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
-            {
-                var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-                scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+                if (____weaponPreview != null && __instance != null)
                 {
-                    if (____weaponPreview != null && __instance != null)
-                    {
-                        ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
-                        __instance.UpdatePositions();
-                    }
-                };
-            }
+                    ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                    __instance.UpdatePositions();
+                }
+            };
+        }
+    }
+
+    public class WeaponModdingScreenZoomPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.Awake));
         }
 
-        public class WeaponModdingScreenZoomPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
         {
-            protected override MethodBase GetTargetMethod()
+            var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
+            scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
             {
-                return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.Awake));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
-            {
-                var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-                scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+                if (____weaponPreview != null && __instance != null)
                 {
-                    if (____weaponPreview != null && __instance != null)
-                    {
-                        ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
-                        __instance.UpdatePositions();
-                    }
-                };
-            }
+                    ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                    __instance.UpdatePositions();
+                }
+            };
         }
     }
 }

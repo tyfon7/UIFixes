@@ -6,219 +6,218 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class ConfirmDialogKeysPatches
 {
-    public static class ConfirmDialogKeysPatches
+    public static void Enable()
     {
-        public static void Enable()
-        {
-            new DialogWindowPatch().Enable();
-            new ItemUiContextWindowPatch().Enable();
-            new ErrorScreenPatch().Enable();
-            new AddOfferPatch().Enable();
+        new DialogWindowPatch().Enable();
+        new ItemUiContextWindowPatch().Enable();
+        new ErrorScreenPatch().Enable();
+        new AddOfferPatch().Enable();
 
-            new ClickOutPatch().Enable();
-            new ClickOutSplitDialogPatch().Enable();
-            new ClickOutItemsListPatch().Enable();
-            new ClickOutErrorScreenPatch().Enable();
+        new ClickOutPatch().Enable();
+        new ClickOutSplitDialogPatch().Enable();
+        new ClickOutItemsListPatch().Enable();
+        new ClickOutErrorScreenPatch().Enable();
+    }
+
+    public class DialogWindowPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.DialogWindow.Type, "Update");
         }
 
-        public class DialogWindowPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(object __instance, bool ___bool_0)
         {
-            protected override MethodBase GetTargetMethod()
+            var instance = new R.DialogWindow(__instance);
+
+            if (!___bool_0)
             {
-                return AccessTools.Method(R.DialogWindow.Type, "Update");
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(object __instance, bool ___bool_0)
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                var instance = new R.DialogWindow(__instance);
+                instance.Accept();
+                return;
+            }
+        }
+    }
 
-                if (!___bool_0)
+    public class ItemUiContextWindowPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SplitDialog ___splitDialog_0, ItemsListWindow ____itemsListWindow)
+        {
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+            {
+                if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf)
                 {
+                    ___splitDialog_0.Accept();
                     return;
                 }
 
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
+                if (____itemsListWindow.isActiveAndEnabled)
                 {
-                    instance.Accept();
+                    ____itemsListWindow.Close();
                     return;
                 }
             }
         }
+    }
 
-        public class ItemUiContextWindowPatch : ModulePatch
+    public class ErrorScreenPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(SplitDialog ___splitDialog_0, ItemsListWindow ____itemsListWindow)
-            {
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
-                {
-                    if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf)
-                    {
-                        ___splitDialog_0.Accept();
-                        return;
-                    }
-
-                    if (____itemsListWindow.isActiveAndEnabled)
-                    {
-                        ____itemsListWindow.Close();
-                        return;
-                    }
-                }
-            }
+            return AccessTools.Method(typeof(ErrorScreen), nameof(ErrorScreen.Update));
         }
 
-        public class ErrorScreenPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ErrorScreen __instance)
         {
-            protected override MethodBase GetTargetMethod()
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                return AccessTools.Method(typeof(ErrorScreen), nameof(ErrorScreen.Update));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(ErrorScreen __instance)
-            {
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
-                {
-                    __instance.method_4();
-                }
+                __instance.method_4();
             }
         }
+    }
 
-        public class AddOfferPatch : ModulePatch
+    public class AddOfferPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Update));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(AddOfferWindow __instance, InteractableElement ____addOfferButton)
-            {
-                if (!____addOfferButton.isActiveAndEnabled || !____addOfferButton.Interactable)
-                {
-                    return;
-                }
-
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
-                {
-                    __instance.method_1();
-                }
-            }
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Update));
         }
 
-        public class ClickOutPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(AddOfferWindow __instance, InteractableElement ____addOfferButton)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!____addOfferButton.isActiveAndEnabled || !____addOfferButton.Interactable)
             {
-                return AccessTools.DeclaredMethod(typeof(MessageWindow), nameof(MessageWindow.Show));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(MessageWindow __instance)
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                if (!Settings.ClickOutOfDialogs.Value)
-                {
-                    return;
-                }
-
-                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent.
-                // Also for some reason some MessageWindows have a Window child and some don't.
-                Transform firewall = __instance.transform.Find("Firewall ") ?? __instance.transform.Find("Window/Firewall ");
-                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
-                if (button != null)
-                {
-                    button.transition = Selectable.Transition.None;
-                    button.onClick.AddListener(__instance.Close);
-                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
-                }
+                __instance.method_1();
             }
         }
+    }
 
-        public class ClickOutSplitDialogPatch : ModulePatch
+    public class ClickOutPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                // Using method_0 because there's 2 Show(), and they have 10+ args and f that
-                return AccessTools.Method(typeof(SplitDialog), nameof(SplitDialog.method_0));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(SplitDialog __instance)
-            {
-                if (!Settings.ClickOutOfDialogs.Value)
-                {
-                    return;
-                }
-
-                Button button = __instance.transform.Find("Background")?.gameObject.GetOrAddComponent<Button>();
-                if (button != null)
-                {
-                    button.transition = Selectable.Transition.None;
-                    button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
-                    button.onClick.AddListener(__instance.method_2);
-                }
-            }
+            return AccessTools.DeclaredMethod(typeof(MessageWindow), nameof(MessageWindow.Show));
         }
 
-        public class ClickOutItemsListPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(MessageWindow __instance)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!Settings.ClickOutOfDialogs.Value)
             {
-                return AccessTools.Method(typeof(ItemsListWindow), nameof(ItemsListWindow.Show));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(ItemsListWindow __instance)
+            // Note the space after firewall, because unity doesn't trim names and BSG is incompetent.
+            // Also for some reason some MessageWindows have a Window child and some don't.
+            Transform firewall = __instance.transform.Find("Firewall ") ?? __instance.transform.Find("Window/Firewall ");
+            Button button = firewall?.gameObject.GetOrAddComponent<Button>();
+            if (button != null)
             {
-                if (!Settings.ClickOutOfDialogs.Value)
-                {
-                    return;
-                }
-
-                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
-                Transform firewall = __instance.transform.Find("Firewall ");
-                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
-                if (button != null)
-                {
-                    button.transition = Selectable.Transition.None;
-                    button.onClick.AddListener(__instance.Close);
-                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
-                }
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(__instance.Close);
+                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }
+    }
 
-        public class ClickOutErrorScreenPatch : ModulePatch
+    public class ClickOutSplitDialogPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
+            // Using method_0 because there's 2 Show(), and they have 10+ args and f that
+            return AccessTools.Method(typeof(SplitDialog), nameof(SplitDialog.method_0));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SplitDialog __instance)
+        {
+            if (!Settings.ClickOutOfDialogs.Value)
             {
-                return AccessTools.DeclaredMethod(typeof(ErrorScreen), nameof(ErrorScreen.Show));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(ErrorScreen __instance)
+            Button button = __instance.transform.Find("Background")?.gameObject.GetOrAddComponent<Button>();
+            if (button != null)
             {
-                if (!Settings.ClickOutOfDialogs.Value)
-                {
-                    return;
-                }
+                button.transition = Selectable.Transition.None;
+                button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
+                button.onClick.AddListener(__instance.method_2);
+            }
+        }
+    }
 
-                // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
-                Transform firewall = __instance.transform.Find("Firewall ");
-                Button button = firewall?.gameObject.GetOrAddComponent<Button>();
-                if (button != null)
-                {
-                    button.transition = Selectable.Transition.None;
-                    button.onClick.AddListener(__instance.method_4);
-                    __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
-                }
+    public class ClickOutItemsListPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemsListWindow), nameof(ItemsListWindow.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ItemsListWindow __instance)
+        {
+            if (!Settings.ClickOutOfDialogs.Value)
+            {
+                return;
+            }
+
+            // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+            Transform firewall = __instance.transform.Find("Firewall ");
+            Button button = firewall?.gameObject.GetOrAddComponent<Button>();
+            if (button != null)
+            {
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(__instance.Close);
+                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+            }
+        }
+    }
+
+    public class ClickOutErrorScreenPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(ErrorScreen), nameof(ErrorScreen.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ErrorScreen __instance)
+        {
+            if (!Settings.ClickOutOfDialogs.Value)
+            {
+                return;
+            }
+
+            // Note the space after firewall, because unity doesn't trim names and BSG is incompetent
+            Transform firewall = __instance.transform.Find("Firewall ");
+            Button button = firewall?.gameObject.GetOrAddComponent<Button>();
+            if (button != null)
+            {
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(__instance.method_4);
+                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }
     }

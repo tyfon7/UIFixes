@@ -8,217 +8,216 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class ContextMenuShortcutPatches
 {
-    public static class ContextMenuShortcutPatches
+    private static TMP_InputField LastSelectedInput = null;
+
+    public static void Enable()
     {
-        private static TMP_InputField LastSelectedInput = null;
+        new ItemUiContextPatch().Enable();
 
-        public static void Enable()
+        new HideoutItemViewRegisterContextPatch().Enable();
+        new HideoutItemViewUnegisterContextPatch().Enable();
+
+        new TradingPanelRegisterContextPatch().Enable();
+        new TradingPanelUnregisterContextPatch().Enable();
+
+        new SelectCurrentContextPatch().Enable();
+        new DeselectCurrentContextPatch().Enable();
+    }
+
+    public class ItemUiContextPatch : ModulePatch
+    {
+        private static ItemInfoInteractionsAbstractClass<EItemInfoButton> Interactions;
+
+        protected override MethodBase GetTargetMethod()
         {
-            new ItemUiContextPatch().Enable();
-
-            new HideoutItemViewRegisterContextPatch().Enable();
-            new HideoutItemViewUnegisterContextPatch().Enable();
-
-            new TradingPanelRegisterContextPatch().Enable();
-            new TradingPanelUnregisterContextPatch().Enable();
-
-            new SelectCurrentContextPatch().Enable();
-            new DeselectCurrentContextPatch().Enable();
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
         }
 
-        public class ItemUiContextPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ItemUiContext __instance)
         {
-            private static ItemInfoInteractionsAbstractClass<EItemInfoButton> Interactions;
-
-            protected override MethodBase GetTargetMethod()
+            // Need an item context to operate on
+            ItemContextAbstractClass itemContext = __instance.R().ItemContext;
+            if (itemContext == null)
             {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.Update));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(ItemUiContext __instance)
+            if (!Settings.ItemContextBlocksTextInputs.Value &&
+                EventSystem.current?.currentSelectedGameObject != null &&
+                EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
             {
-                // Need an item context to operate on
-                ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-                if (itemContext == null)
-                {
-                    return;
-                }
-
-                if (!Settings.ItemContextBlocksTextInputs.Value && 
-                    EventSystem.current?.currentSelectedGameObject != null && 
-                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
-                {
-                    return;
-                }
-
-                if (Settings.InspectKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.Inspect);
-                }
-
-                if (Settings.OpenKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.Open);
-                }
-
-                if (Settings.TopUpKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.TopUp);
-                }
-
-                if (Settings.UseKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.Use);
-                }
-
-                if (Settings.UseAllKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, EItemInfoButton.Use);
-                }
-
-                if (Settings.UnloadKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.Unload, EItemInfoButton.UnloadAmmo);
-                }
-
-                if (Settings.UnpackKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.Unpack);
-                }
-
-                if (Settings.FilterByKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.FilterSearch);
-                }
-
-                if (Settings.LinkedSearchKeyBind.Value.IsDown())
-                {
-                    TryInteraction(__instance, itemContext, EItemInfoButton.LinkedSearch);
-                }
-
-                Interactions = null;
+                return;
             }
 
-            private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton? fallbackInteraction = null)
+            if (Settings.InspectKeyBind.Value.IsDown())
             {
-                Interactions ??= itemUiContext.GetItemContextInteractions(itemContext, null);
-                if (!Interactions.ExecuteInteraction(interaction) && fallbackInteraction.HasValue)
-                {
-                    Interactions.ExecuteInteraction(fallbackInteraction.Value);
-                }
+                TryInteraction(__instance, itemContext, EItemInfoButton.Inspect);
             }
+
+            if (Settings.OpenKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Open);
+            }
+
+            if (Settings.TopUpKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.TopUp);
+            }
+
+            if (Settings.UseKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Use);
+            }
+
+            if (Settings.UseAllKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, EItemInfoButton.Use);
+            }
+
+            if (Settings.UnloadKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Unload, EItemInfoButton.UnloadAmmo);
+            }
+
+            if (Settings.UnpackKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Unpack);
+            }
+
+            if (Settings.FilterByKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.FilterSearch);
+            }
+
+            if (Settings.LinkedSearchKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.LinkedSearch);
+            }
+
+            Interactions = null;
         }
 
-        // HideoutItemViews don't register themselves with ItemUiContext for some reason
-        public class HideoutItemViewRegisterContextPatch : ModulePatch
+        private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton? fallbackInteraction = null)
         {
-            protected override MethodBase GetTargetMethod()
+            Interactions ??= itemUiContext.GetItemContextInteractions(itemContext, null);
+            if (!Interactions.ExecuteInteraction(interaction) && fallbackInteraction.HasValue)
             {
-                return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerEnter));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
-            {
-                ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext);
+                Interactions.ExecuteInteraction(fallbackInteraction.Value);
             }
         }
+    }
 
-        public class HideoutItemViewUnegisterContextPatch : ModulePatch
+    // HideoutItemViews don't register themselves with ItemUiContext for some reason
+    public class HideoutItemViewRegisterContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerExit));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
-            {
-                ___ItemUiContext.UnregisterCurrentItemContext(__instance.ItemContext);
-            }
+            return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerEnter));
         }
 
-        public class TradingPanelRegisterContextPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_1)); // OnHoverStart
-            }
+            ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext);
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
-            {
-                ___itemUiContext_0.RegisterCurrentItemContext(___itemContextAbstractClass);
-            }
+    public class HideoutItemViewUnegisterContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerExit));
         }
 
-        public class TradingPanelUnregisterContextPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_2)); // OnHoverEnd
-            }
+            ___ItemUiContext.UnregisterCurrentItemContext(__instance.ItemContext);
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
-            {
-                ___itemUiContext_0.UnregisterCurrentItemContext(___itemContextAbstractClass);
-            }
+    public class TradingPanelRegisterContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_1)); // OnHoverStart
         }
 
-        // Keybinds don't work if a textbox has focus - setting the textbox to readonly seems the best way to fix this
-        // without changing selection and causing weird side effects
-        public class SelectCurrentContextPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.RegisterCurrentItemContext));
-            }
+            ___itemUiContext_0.RegisterCurrentItemContext(___itemContextAbstractClass);
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                if (!Settings.ItemContextBlocksTextInputs.Value)
-                {
-                    return;
-                }
-
-                if (EventSystem.current?.currentSelectedGameObject != null)
-                {
-                    LastSelectedInput = EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>();
-                    if (LastSelectedInput != null)
-                    {
-                        LastSelectedInput.readOnly = true;
-                    }
-                }
-            }
+    public class TradingPanelUnregisterContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_2)); // OnHoverEnd
         }
 
-        public class DeselectCurrentContextPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
         {
-            protected override MethodBase GetTargetMethod()
+            ___itemUiContext_0.UnregisterCurrentItemContext(___itemContextAbstractClass);
+        }
+    }
+
+    // Keybinds don't work if a textbox has focus - setting the textbox to readonly seems the best way to fix this
+    // without changing selection and causing weird side effects
+    public class SelectCurrentContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.RegisterCurrentItemContext));
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            if (!Settings.ItemContextBlocksTextInputs.Value)
             {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnregisterCurrentItemContext));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix()
+            if (EventSystem.current?.currentSelectedGameObject != null)
             {
-                if (!Settings.ItemContextBlocksTextInputs.Value)
-                {
-                    return;
-                }
-
+                LastSelectedInput = EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>();
                 if (LastSelectedInput != null)
                 {
-                    LastSelectedInput.readOnly = false;
+                    LastSelectedInput.readOnly = true;
                 }
-
-                LastSelectedInput = null;
             }
+        }
+    }
+
+    public class DeselectCurrentContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnregisterCurrentItemContext));
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            if (!Settings.ItemContextBlocksTextInputs.Value)
+            {
+                return;
+            }
+
+            if (LastSelectedInput != null)
+            {
+                LastSelectedInput.readOnly = false;
+            }
+
+            LastSelectedInput = null;
         }
     }
 }

@@ -5,57 +5,56 @@ using SPT.Reflection.Patching;
 using System.Reflection;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class AddOfferRememberAutoselectPatches
 {
-    public static class AddOfferRememberAutoselectPatches
+    private static readonly string PlayerPrefKey = "UIFixes.AddOffer.AutoselectSimilar";
+
+    public static void Enable()
     {
-        private static readonly string PlayerPrefKey = "UIFixes.AddOffer.AutoselectSimilar";
+        new RememberAutoselectPatch().Enable();
+        new RestoreAutoselectPatch().Enable();
 
-        public static void Enable()
+        Settings.RememberAutoselectSimilar.Subscribe(enabled =>
         {
-            new RememberAutoselectPatch().Enable();
-            new RestoreAutoselectPatch().Enable();
-
-            Settings.RememberAutoselectSimilar.Subscribe(enabled => 
+            if (!enabled)
             {
-                if (!enabled)
-                {
-                    PlayerPrefs.DeleteKey(PlayerPrefKey);
-                }
-            });
+                PlayerPrefs.DeleteKey(PlayerPrefKey);
+            }
+        });
+    }
+
+    public class RememberAutoselectPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_7));
         }
 
-        public class RememberAutoselectPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(bool value)
         {
-            protected override MethodBase GetTargetMethod()
+            if (Settings.RememberAutoselectSimilar.Value)
             {
-                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_7));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(bool value)
-            {
-                if (Settings.RememberAutoselectSimilar.Value)
-                {
-                    PlayerPrefs.SetInt(PlayerPrefKey, value ? 1 : 0);
-                }
+                PlayerPrefs.SetInt(PlayerPrefKey, value ? 1 : 0);
             }
         }
+    }
 
-        public class RestoreAutoselectPatch : ModulePatch
+    public class RestoreAutoselectPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Awake));
-            }
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Awake));
+        }
 
-            [PatchPrefix]
-            public static void Prefix(UpdatableToggle ____autoSelectSimilar)
+        [PatchPrefix]
+        public static void Prefix(UpdatableToggle ____autoSelectSimilar)
+        {
+            if (Settings.RememberAutoselectSimilar.Value && PlayerPrefs.HasKey(PlayerPrefKey))
             {
-                if (Settings.RememberAutoselectSimilar.Value && PlayerPrefs.HasKey(PlayerPrefKey))
-                {
-                    ____autoSelectSimilar.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey) == 1);
-                }
+                ____autoSelectSimilar.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey) == 1);
             }
         }
     }

@@ -4,33 +4,32 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace UIFixes
+namespace UIFixes;
+
+public class RemoveDoorActionsPatch : ModulePatch
 {
-    public class RemoveDoorActionsPatch : ModulePatch
+    private static readonly string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
+
+    protected override MethodBase GetTargetMethod()
     {
-        private static readonly string[] UnimplementedActions = ["Bang & clear", "Flash & clear", "Move in"];
-
-        protected override MethodBase GetTargetMethod()
+        Type type = typeof(GetActionsClass);
+        return AccessTools.GetDeclaredMethods(type).FirstOrDefault(x =>
         {
-            Type type = typeof(GetActionsClass);
-            return AccessTools.GetDeclaredMethods(type).FirstOrDefault(x =>
-            {
-                var parameters = x.GetParameters();
-                return x.Name == nameof(GetActionsClass.GetAvailableActions) && parameters[0].Name == "owner";
-            });
-        }
+            var parameters = x.GetParameters();
+            return x.Name == nameof(GetActionsClass.GetAvailableActions) && parameters[0].Name == "owner";
+        });
+    }
 
-        [PatchPostfix]
-        public static void Postfix(ref ActionsReturnClass __result)
+    [PatchPostfix]
+    public static void Postfix(ref ActionsReturnClass __result)
+    {
+        if (Settings.RemoveDisabledActions.Value && __result != null)
         {
-            if (Settings.RemoveDisabledActions.Value && __result != null)
+            for (int i = __result.Actions.Count - 1; i >= 0; i--)
             {
-                for (int i = __result.Actions.Count - 1; i >= 0; i--)
+                if (UnimplementedActions.Contains(__result.Actions[i].Name))
                 {
-                    if (UnimplementedActions.Contains(__result.Actions[i].Name))
-                    {
-                        __result.Actions.RemoveAt(i);
-                    }
+                    __result.Actions.RemoveAt(i);
                 }
             }
         }

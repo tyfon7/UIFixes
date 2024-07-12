@@ -9,142 +9,141 @@ using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class LoadMultipleMagazinesPatches
 {
-    public static class LoadMultipleMagazinesPatches
+    private static ItemFilter[] CombinedFilters;
+
+    public static void Enable()
     {
-        private static ItemFilter[] CombinedFilters;
+        new FindCompatibleAmmoPatch().Enable();
+        new CheckItemFilterPatch().Enable();
+        new LoadAmmoPatch().Enable();
+        new FilterMagPresetsPatch().Enable();
+        new LoadPresetPatch().Enable();
+    }
 
-        public static void Enable()
+    public class FindCompatibleAmmoPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new FindCompatibleAmmoPatch().Enable();
-            new CheckItemFilterPatch().Enable();
-            new LoadAmmoPatch().Enable();
-            new FilterMagPresetsPatch().Enable();
-            new LoadPresetPatch().Enable();
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.FindCompatibleAmmo));
         }
 
-        public class FindCompatibleAmmoPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix()
         {
-            protected override MethodBase GetTargetMethod()
+            if (MultiSelect.Active)
             {
-                return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.FindCompatibleAmmo));
-            }
-
-            [PatchPrefix]
-            public static void Prefix()
-            {
-                if (MultiSelect.Active)
-                {
-                    CombinedFilters = MultiSelect.SortedItemContexts()
-                        .Select(itemContext => itemContext.Item)
-                        .OfType<MagazineClass>()
-                        .SelectMany(mag => mag.Cartridges.Filters)
-                        .ToArray();
-                }
-            }
-
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                CombinedFilters = null;
+                CombinedFilters = MultiSelect.SortedItemContexts()
+                    .Select(itemContext => itemContext.Item)
+                    .OfType<MagazineClass>()
+                    .SelectMany(mag => mag.Cartridges.Filters)
+                    .ToArray();
             }
         }
 
-        public class CheckItemFilterPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix()
         {
-            protected override MethodBase GetTargetMethod()
+            CombinedFilters = null;
+        }
+    }
+
+    public class CheckItemFilterPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemFilterExtensions), nameof(ItemFilterExtensions.CheckItemFilter));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(ref ItemFilter[] filters)
+        {
+            if (CombinedFilters == null)
             {
-                return AccessTools.Method(typeof(ItemFilterExtensions), nameof(ItemFilterExtensions.CheckItemFilter));
+                return;
             }
 
-            [PatchPrefix]
-            public static void Prefix(ref ItemFilter[] filters)
-            {
-                if (CombinedFilters == null)
-                {
-                    return;
-                }
+            filters = CombinedFilters;
+        }
+    }
 
-                filters = CombinedFilters;
+    public class LoadAmmoPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagInteraction") != null);
+            return AccessTools.Method(type, "method_6");
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(string ammoTemplateId, ref Task __result, ItemUiContext ___itemUiContext_0)
+        {
+            if (!MultiSelect.Active)
+            {
+                return true;
+            }
+
+            __result = MultiSelect.LoadAmmoAll(___itemUiContext_0, ammoTemplateId, false);
+            return false;
+        }
+    }
+
+    public class FilterMagPresetsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
+            return AccessTools.Method(type, "method_7");
+        }
+
+        [PatchPrefix]
+        public static void Prefix()
+        {
+            if (MultiSelect.Active)
+            {
+                CombinedFilters = MultiSelect.SortedItemContexts()
+                    .Select(itemContext => itemContext.Item)
+                    .OfType<MagazineClass>()
+                    .SelectMany(mag => mag.Cartridges.Filters)
+                    .ToArray();
             }
         }
 
-        public class LoadAmmoPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagInteraction") != null);
-                return AccessTools.Method(type, "method_6");
-            }
+            CombinedFilters = null;
+        }
+    }
 
-            [PatchPrefix]
-            public static bool Prefix(string ammoTemplateId, ref Task __result, ItemUiContext ___itemUiContext_0)
-            {
-                if (!MultiSelect.Active)
-                {
-                    return true;
-                }
-
-                __result = MultiSelect.LoadAmmoAll(___itemUiContext_0, ammoTemplateId, false);
-                return false;
-            }
+    public class LoadPresetPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
+            return AccessTools.Method(type, "method_6");
         }
 
-        public class FilterMagPresetsPatch : ModulePatch
+        [PatchPrefix]
+        public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___itemUiContext_1)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!MultiSelect.Active)
             {
-                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
-                return AccessTools.Method(type, "method_7");
+                return true;
             }
 
-            [PatchPrefix]
-            public static void Prefix()
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
-                if (MultiSelect.Active)
-                {
-                    CombinedFilters = MultiSelect.SortedItemContexts()
-                        .Select(itemContext => itemContext.Item)
-                        .OfType<MagazineClass>()
-                        .SelectMany(mag => mag.Cartridges.Filters)
-                        .ToArray();
-                }
+                return true;
             }
 
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                CombinedFilters = null;
-            }
-        }
+            var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineClass>();
+            ___itemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
 
-        public class LoadPresetPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
-                return AccessTools.Method(type, "method_6");
-            }
-
-            [PatchPrefix]
-            public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___itemUiContext_1)
-            {
-                if (!MultiSelect.Active)
-                {
-                    return true;
-                }
-
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-                {
-                    return true;
-                }
-
-                var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineClass>();
-                ___itemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
-
-                return false;
-            }
+            return false;
         }
     }
 }

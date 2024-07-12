@@ -7,99 +7,98 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class TradingAutoSwitchPatches
 {
-    public static class TradingAutoSwitchPatches
+    private static Tab BuyTab;
+    private static Tab SellTab;
+
+    public static void Enable()
     {
-        private static Tab BuyTab;
-        private static Tab SellTab;
+        new GetTraderScreensGroupPatch().Enable();
+        new SwitchOnClickPatch().Enable();
+    }
 
-        public static void Enable()
+    public class GetTraderScreensGroupPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new GetTraderScreensGroupPatch().Enable();
-            new SwitchOnClickPatch().Enable();
+            return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.Show));
         }
 
-        public class GetTraderScreensGroupPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(TraderScreensGroup __instance)
         {
-            protected override MethodBase GetTargetMethod()
+            var wrappedInstance = __instance.R();
+
+            BuyTab = wrappedInstance.BuyTab;
+            SellTab = wrappedInstance.SellTab;
+
+            wrappedInstance.UI.AddDisposable(() =>
             {
-                return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.Show));
-            }
+                BuyTab = null;
+                SellTab = null;
+            });
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix(TraderScreensGroup __instance)
-            {
-                var wrappedInstance = __instance.R();
-
-                BuyTab = wrappedInstance.BuyTab;
-                SellTab = wrappedInstance.SellTab;
-
-                wrappedInstance.UI.AddDisposable(() =>
-                {
-                    BuyTab = null;
-                    SellTab = null;
-                });
-            }
+    public class SwitchOnClickPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TradingItemView), nameof(TradingItemView.OnClick));
         }
 
-        public class SwitchOnClickPatch : ModulePatch
+        // Basically reimplementing this method for the two cases I want to handle
+        // Key difference being NOT to check the current trading mode, and to call switch at the end
+        // Have to call switch *after*, because it completely rebuilds the entire player-side grid 
+        [PatchPrefix]
+        public static bool Prefix(
+            TradingItemView __instance,
+            PointerEventData.InputButton button,
+            bool doubleClick,
+            ETradingItemViewType ___etradingItemViewType_0, bool ___bool_8)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!Settings.AutoSwitchTrading.Value)
             {
-                return AccessTools.Method(typeof(TradingItemView), nameof(TradingItemView.OnClick));
-            }
-
-            // Basically reimplementing this method for the two cases I want to handle
-            // Key difference being NOT to check the current trading mode, and to call switch at the end
-            // Have to call switch *after*, because it completely rebuilds the entire player-side grid 
-            [PatchPrefix]
-            public static bool Prefix(
-                TradingItemView __instance,
-                PointerEventData.InputButton button,
-                bool doubleClick,
-                ETradingItemViewType ___etradingItemViewType_0, bool ___bool_8)
-            {
-                if (!Settings.AutoSwitchTrading.Value)
-                {
-                    return true;
-                }
-
-                var tradingItemView = __instance.R();
-                if (button != PointerEventData.InputButton.Left || ___etradingItemViewType_0 == ETradingItemViewType.TradingTable)
-                {
-                    return true;
-                }
-
-                bool ctrlPressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-
-                if (!ctrlPressed && doubleClick)
-                {
-                    return true;
-                }
-
-                if (!___bool_8 && ctrlPressed && tradingItemView.TraderAssortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
-                {
-                    __instance.ItemContext.CloseDependentWindows();
-                    __instance.HideTooltip();
-                    Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
-
-                    SellTab.OnPointerClick(null);
-
-                    return false;
-                }
-
-                if (___bool_8)
-                {
-                    tradingItemView.TraderAssortmentController.SelectItem(__instance.Item);
-
-                    BuyTab.OnPointerClick(null);
-
-                    return false;
-                }
-
                 return true;
             }
+
+            var tradingItemView = __instance.R();
+            if (button != PointerEventData.InputButton.Left || ___etradingItemViewType_0 == ETradingItemViewType.TradingTable)
+            {
+                return true;
+            }
+
+            bool ctrlPressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+
+            if (!ctrlPressed && doubleClick)
+            {
+                return true;
+            }
+
+            if (!___bool_8 && ctrlPressed && tradingItemView.TraderAssortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+            {
+                __instance.ItemContext.CloseDependentWindows();
+                __instance.HideTooltip();
+                Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
+
+                SellTab.OnPointerClick(null);
+
+                return false;
+            }
+
+            if (___bool_8)
+            {
+                tradingItemView.TraderAssortmentController.SelectItem(__instance.Item);
+
+                BuyTab.OnPointerClick(null);
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

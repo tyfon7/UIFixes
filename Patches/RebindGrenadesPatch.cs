@@ -7,41 +7,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace UIFixes
-{
-    public class RebindGrenadesPatch : ModulePatch
-    {
-        private static readonly EquipmentSlot[] Slots = [EquipmentSlot.Pockets, EquipmentSlot.TacticalVest, EquipmentSlot.Backpack, EquipmentSlot.SecuredContainer, EquipmentSlot.ArmBand];
+namespace UIFixes;
 
-        protected override MethodBase GetTargetMethod()
+public class RebindGrenadesPatch : ModulePatch
+{
+    private static readonly EquipmentSlot[] Slots = [EquipmentSlot.Pockets, EquipmentSlot.TacticalVest, EquipmentSlot.Backpack, EquipmentSlot.SecuredContainer, EquipmentSlot.ArmBand];
+
+    protected override MethodBase GetTargetMethod()
+    {
+        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("DiscardResult") != null);
+        return AccessTools.Method(type, "RaiseEvents");
+    }
+
+    // This is a grenade specific event emitter that has all the info needed to do this
+    [PatchPostfix]
+    public static void Postfix(CommandStatus status, DiscardResult ___DiscardResult)
+    {
+        if (status != CommandStatus.Succeed)
         {
-            Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("DiscardResult") != null);
-            return AccessTools.Method(type, "RaiseEvents");
+            return;
         }
 
-        // This is a grenade specific event emitter that has all the info needed to do this
-        [PatchPostfix]
-        public static void Postfix(CommandStatus status, DiscardResult ___DiscardResult)
+        var unbindResult = ___DiscardResult.UnbindResults.FirstOrDefault();
+        if (unbindResult != null)
         {
-            if (status != CommandStatus.Succeed)
+            InventoryControllerClass controller = unbindResult.Controller;
+            EBoundItem index = unbindResult.Index;
+
+            List<GrenadeClass> matchingGrenades = [];
+            controller.GetAcceptableItemsNonAlloc<GrenadeClass>(Slots, matchingGrenades, g => g.TemplateId == unbindResult.Item.TemplateId);
+
+            var nextGrenade = matchingGrenades.FirstOrDefault(g => controller.IsAtBindablePlace(g));
+            if (nextGrenade != null)
             {
-                return;
-            }
-
-            var unbindResult = ___DiscardResult.UnbindResults.FirstOrDefault();
-            if (unbindResult != null)
-            {
-                InventoryControllerClass controller = unbindResult.Controller;
-                EBoundItem index = unbindResult.Index;
-
-                List<GrenadeClass> matchingGrenades = [];
-                controller.GetAcceptableItemsNonAlloc<GrenadeClass>(Slots, matchingGrenades, g => g.TemplateId == unbindResult.Item.TemplateId);
-
-                var nextGrenade = matchingGrenades.FirstOrDefault(g => controller.IsAtBindablePlace(g));
-                if (nextGrenade != null)
-                {
-                    controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextGrenade, index, true), null);
-                }
+                controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextGrenade, index, true), null);
             }
         }
     }

@@ -4,51 +4,50 @@ using SPT.Reflection.Patching;
 using System.Linq;
 using System.Reflection;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class FleaSlotSearchPatches
 {
-    public static class FleaSlotSearchPatches
+    public static void Enable()
     {
-        public static void Enable()
+        new HandbookWorkaroundPatch().Enable();
+    }
+
+    public class HandbookWorkaroundPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new HandbookWorkaroundPatch().Enable();
+            return AccessTools.Method(typeof(RagFairClass), nameof(RagFairClass.method_24));
         }
 
-        public class HandbookWorkaroundPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix(RagfairSearch[] searches, ref string __state, HandbookClass ___handbookClass)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!Settings.EnableSlotSearch.Value)
             {
-                return AccessTools.Method(typeof(RagFairClass), nameof(RagFairClass.method_24));
+                return;
             }
 
-            [PatchPrefix]
-            public static void Prefix(RagfairSearch[] searches, ref string __state, HandbookClass ___handbookClass)
+            var search = searches.FirstOrDefault(s => s.Type == EFilterType.LinkedSearch && s.StringValue.Contains(":"));
+            if (search != null)
             {
-                if (!Settings.EnableSlotSearch.Value)
-                {
-                    return;
-                }
+                __state = search.StringValue.Split(':')[0];
+                ___handbookClass[__state].Data.Id = search.StringValue;
+                searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
+            }
+        }
 
-                var search = searches.FirstOrDefault(s => s.Type == EFilterType.LinkedSearch && s.StringValue.Contains(":"));
-                if (search != null)
-                {
-                    __state = search.StringValue.Split(':')[0];
-                    ___handbookClass[__state].Data.Id = search.StringValue;
-                    searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
-                }
+        [PatchPostfix]
+        public static void Postfix(ref string __state, HandbookClass ___handbookClass)
+        {
+            if (!Settings.EnableSlotSearch.Value)
+            {
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(ref string __state, HandbookClass ___handbookClass)
+            if (__state != null)
             {
-                if (!Settings.EnableSlotSearch.Value)
-                {
-                    return;
-                }
-
-                if (__state != null)
-                {
-                    ___handbookClass[__state].Data.Id = __state;
-                }
+                ___handbookClass[__state].Data.Id = __state;
             }
         }
     }

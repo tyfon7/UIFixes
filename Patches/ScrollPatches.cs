@@ -13,353 +13,352 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class ScrollPatches
 {
-    public static class ScrollPatches
+    public static void Enable()
     {
-        public static void Enable()
-        {
-            new EnhanceStashScrollingPatch().Enable();
-            new EnchanceTraderStashScrollingPatch().Enable();
-            new EnhanceFleaScrollingPatch().Enable();
-            new EnhanceMailScrollingPatch().Enable();
-            new MouseScrollingSpeedPatch().Enable();
-            new EnhanceHideoutScrollingPatch().Enable();
-            new EnhanceTaskListScrollingPatch().Enable();
-            new OpenLastTaskPatch().Enable();
-        }
+        new EnhanceStashScrollingPatch().Enable();
+        new EnchanceTraderStashScrollingPatch().Enable();
+        new EnhanceFleaScrollingPatch().Enable();
+        new EnhanceMailScrollingPatch().Enable();
+        new MouseScrollingSpeedPatch().Enable();
+        new EnhanceHideoutScrollingPatch().Enable();
+        new EnhanceTaskListScrollingPatch().Enable();
+        new OpenLastTaskPatch().Enable();
+    }
 
-        private static bool HandleInput(ScrollRect scrollRect)
+    private static bool HandleInput(ScrollRect scrollRect)
+    {
+        if (scrollRect != null)
         {
-            if (scrollRect != null)
+            if (Settings.UseHomeEnd.Value)
             {
-                if (Settings.UseHomeEnd.Value)
+                if (Input.GetKeyDown(KeyCode.Home))
                 {
-                    if (Input.GetKeyDown(KeyCode.Home))
-                    {
-                        scrollRect.verticalNormalizedPosition = 1f;
-                        return true;
-                    }
-                    if (Input.GetKeyDown(KeyCode.End))
-                    {
-                        scrollRect.verticalNormalizedPosition = 0f;
-                        return true;
-                    }
+                    scrollRect.verticalNormalizedPosition = 1f;
+                    return true;
                 }
-
-                if (Settings.RebindPageUpDown.Value)
+                if (Input.GetKeyDown(KeyCode.End))
                 {
-                    if (Input.GetKeyDown(KeyCode.PageUp))
-                    {
-                        // Duplicate this code to avoid running it every frame
-                        Rect contentRect = scrollRect.content.rect;
-                        Rect viewRect = scrollRect.RectTransform().rect;
-                        float pageSize = viewRect.height / contentRect.height;
-
-
-                        scrollRect.verticalNormalizedPosition = Math.Min(1f, scrollRect.verticalNormalizedPosition + pageSize);
-                        return true;
-                    }
-
-                    if (Input.GetKeyDown(KeyCode.PageDown))
-                    {
-                        // Duplicate this code to avoid running it every frame
-                        Rect contentRect = scrollRect.content.rect;
-                        Rect viewRect = scrollRect.RectTransform().rect;
-                        float pageSize = viewRect.height / contentRect.height;
-
-
-                        scrollRect.verticalNormalizedPosition = Math.Max(0f, scrollRect.verticalNormalizedPosition - pageSize);
-                        return true;
-                    }
+                    scrollRect.verticalNormalizedPosition = 0f;
+                    return true;
                 }
             }
 
-            return false;
-        }
-
-        // LightScrollers don't expose heights that I can see, so just fudge it with fake OnScroll events
-        private static bool HandleInput(LightScroller lightScroller)
-        {
-            if (lightScroller != null)
+            if (Settings.RebindPageUpDown.Value)
             {
-                if (Settings.UseHomeEnd.Value)
+                if (Input.GetKeyDown(KeyCode.PageUp))
                 {
-                    if (Input.GetKeyDown(KeyCode.Home))
-                    {
-                        lightScroller.SetScrollPosition(0f);
-                        return true;
-                    }
-                    if (Input.GetKeyDown(KeyCode.End))
-                    {
-                        lightScroller.SetScrollPosition(1f);
-                        return true;
-                    }
+                    // Duplicate this code to avoid running it every frame
+                    Rect contentRect = scrollRect.content.rect;
+                    Rect viewRect = scrollRect.RectTransform().rect;
+                    float pageSize = viewRect.height / contentRect.height;
+
+
+                    scrollRect.verticalNormalizedPosition = Math.Min(1f, scrollRect.verticalNormalizedPosition + pageSize);
+                    return true;
                 }
 
-                if (Settings.RebindPageUpDown.Value)
+                if (Input.GetKeyDown(KeyCode.PageDown))
                 {
-                    if (Input.GetKeyDown(KeyCode.PageUp))
-                    {
-                        var eventData = new PointerEventData(EventSystem.current)
-                        {
-                            scrollDelta = new Vector2(0f, 25f)
-                        };
-                        lightScroller.OnScroll(eventData);
-                        return true;
-                    }
-                    if (Input.GetKeyDown(KeyCode.PageDown))
-                    {
-                        var eventData = new PointerEventData(EventSystem.current)
-                        {
-                            scrollDelta = new Vector2(0f, -25f)
-                        };
-                        lightScroller.OnScroll(eventData);
-                        return true;
-                    }
+                    // Duplicate this code to avoid running it every frame
+                    Rect contentRect = scrollRect.content.rect;
+                    Rect viewRect = scrollRect.RectTransform().rect;
+                    float pageSize = viewRect.height / contentRect.height;
+
+
+                    scrollRect.verticalNormalizedPosition = Math.Max(0f, scrollRect.verticalNormalizedPosition - pageSize);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // LightScrollers don't expose heights that I can see, so just fudge it with fake OnScroll events
+    private static bool HandleInput(LightScroller lightScroller)
+    {
+        if (lightScroller != null)
+        {
+            if (Settings.UseHomeEnd.Value)
+            {
+                if (Input.GetKeyDown(KeyCode.Home))
+                {
+                    lightScroller.SetScrollPosition(0f);
+                    return true;
+                }
+                if (Input.GetKeyDown(KeyCode.End))
+                {
+                    lightScroller.SetScrollPosition(1f);
+                    return true;
                 }
             }
 
-            return false;
-        }
-
-        private static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
-        {
-            foreach (var instruction in instructions)
+            if (Settings.RebindPageUpDown.Value)
             {
-                if (instruction.LoadsConstant((int)KeyCode.PageUp))
+                if (Input.GetKeyDown(KeyCode.PageUp))
                 {
-                    yield return new CodeInstruction(instruction)
+                    var eventData = new PointerEventData(EventSystem.current)
                     {
-                        operand = 0
+                        scrollDelta = new Vector2(0f, 25f)
                     };
+                    lightScroller.OnScroll(eventData);
+                    return true;
                 }
-                else if (instruction.LoadsConstant((int)KeyCode.PageDown))
+                if (Input.GetKeyDown(KeyCode.PageDown))
                 {
-                    yield return new CodeInstruction(instruction)
+                    var eventData = new PointerEventData(EventSystem.current)
                     {
-                        operand = 0
+                        scrollDelta = new Vector2(0f, -25f)
                     };
+                    lightScroller.OnScroll(eventData);
+                    return true;
                 }
-                else
+            }
+        }
+
+        return false;
+    }
+
+    private static IEnumerable<CodeInstruction> RemovePageUpDownHandling(IEnumerable<CodeInstruction> instructions)
+    {
+        foreach (var instruction in instructions)
+        {
+            if (instruction.LoadsConstant((int)KeyCode.PageUp))
+            {
+                yield return new CodeInstruction(instruction)
                 {
-                    yield return instruction;
-                }
+                    operand = 0
+                };
             }
-        }
-
-        public class KeyScrollListener : MonoBehaviour
-        {
-            private ScrollRect scrollRect;
-
-            public UnityEvent OnKeyScroll;
-
-            public void Awake()
+            else if (instruction.LoadsConstant((int)KeyCode.PageDown))
             {
-                scrollRect = GetComponent<ScrollRect>();
-                OnKeyScroll = new();
-            }
-
-            public void Update()
-            {
-                if (HandleInput(scrollRect))
+                yield return new CodeInstruction(instruction)
                 {
-                    OnKeyScroll.Invoke();
-                }
+                    operand = 0
+                };
+            }
+            else
+            {
+                yield return instruction;
             }
         }
+    }
 
-        public class EnhanceStashScrollingPatch : ModulePatch
+    public class KeyScrollListener : MonoBehaviour
+    {
+        private ScrollRect scrollRect;
+
+        public UnityEvent OnKeyScroll;
+
+        public void Awake()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(SimpleStashPanel), nameof(SimpleStashPanel.Update));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
-            {
-                // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
-                HandleInput(____stashScroll ?? __instance.GetComponentInChildren<ScrollRect>());
-            }
-
-            [PatchTranspiler]
-            public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
-            {
-                if (Settings.RebindPageUpDown.Value)
-                {
-                    return RemovePageUpDownHandling(instructions);
-                }
-
-                return instructions;
-            }
+            scrollRect = GetComponent<ScrollRect>();
+            OnKeyScroll = new();
         }
 
-        public class EnchanceTraderStashScrollingPatch : ModulePatch
+        public void Update()
         {
-            protected override MethodBase GetTargetMethod()
+            if (HandleInput(scrollRect))
             {
-                return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.Update));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
-            {
-                HandleInput(___etraderMode_0 == TraderDealScreen.ETraderMode.Purchase ? ____traderScroll : ____stashScroll);
-            }
-
-            [PatchTranspiler]
-            public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
-            {
-                if (Settings.RebindPageUpDown.Value)
-                {
-                    return RemovePageUpDownHandling(instructions);
-                }
-
-                return instructions;
+                OnKeyScroll.Invoke();
             }
         }
+    }
 
-        public class EnhanceFleaScrollingPatch : ModulePatch
+    public class EnhanceStashScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.Update));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(LightScroller ____scroller)
-            {
-                HandleInput(____scroller);
-            }
-
-            [PatchTranspiler]
-            private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                if (Settings.RebindPageUpDown.Value)
-                {
-                    return RemovePageUpDownHandling(instructions);
-                }
-
-                return instructions;
-            }
+            return AccessTools.Method(typeof(SimpleStashPanel), nameof(SimpleStashPanel.Update));
         }
 
-        public class EnhanceHideoutScrollingPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.Awake));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(AreaScreenSubstrate __instance)
-            {
-                ScrollRect scrollRect = __instance.transform.Find("Content/CurrentLevel/CurrentContainer/Scrollview")?.GetComponent<ScrollRect>();
-                if (scrollRect == null)
-                {
-                    return;
-                }
-
-                scrollRect.GetOrAddComponent<KeyScrollListener>();
-            }
+            // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
+            HandleInput(____stashScroll ?? __instance.GetComponentInChildren<ScrollRect>());
         }
 
-        public class EnhanceMailScrollingPatch : ModulePatch
+        [PatchTranspiler]
+        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
         {
-            protected override MethodBase GetTargetMethod()
+            if (Settings.RebindPageUpDown.Value)
             {
-                return AccessTools.Method(typeof(MessagesContainer), nameof(MessagesContainer.Update));
+                return RemovePageUpDownHandling(instructions);
             }
 
-            [PatchPrefix]
-            public static void Prefix(LightScroller ____scroller)
-            {
-                HandleInput(____scroller);
-            }
+            return instructions;
+        }
+    }
 
-            [PatchTranspiler]
-            private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-            {
-                if (Settings.RebindPageUpDown.Value)
-                {
-                    return RemovePageUpDownHandling(instructions);
-                }
-
-                return instructions;
-            }
+    public class EnchanceTraderStashScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.Update));
         }
 
-        public class MouseScrollingSpeedPatch : ModulePatch
+        [PatchPrefix]
+        public static void Prefix(TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(PointerEventData data)
-            {
-                int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
-                data.scrollDelta *= multi;
-            }
+            HandleInput(___etraderMode_0 == TraderDealScreen.ETraderMode.Purchase ? ____traderScroll : ____stashScroll);
         }
 
-        public class EnhanceTaskListScrollingPatch : ModulePatch
+        [PatchTranspiler]
+        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
         {
-            protected override MethodBase GetTargetMethod()
+            if (Settings.RebindPageUpDown.Value)
             {
-                return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
+                return RemovePageUpDownHandling(instructions);
             }
 
-            [PatchPostfix]
-            public static void Postfix(ScrollRect ____scrollRect)
-            {
-                var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
-                keyScroller.Init(____scrollRect);
-            }
+            return instructions;
+        }
+    }
+
+    public class EnhanceFleaScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.Update));
         }
 
-        public class KeyScroller : MonoBehaviour
+        [PatchPrefix]
+        public static void Prefix(LightScroller ____scroller)
         {
-            ScrollRect scrollRect;
-
-            public void Init(ScrollRect scrollRect)
-            {
-                this.scrollRect = scrollRect;
-            }
-
-            public void Update()
-            {
-                HandleInput(scrollRect);
-            }
+            HandleInput(____scroller);
         }
 
-        public class OpenLastTaskPatch : ModulePatch
+        [PatchTranspiler]
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            private static string LastQuestId = null;
-
-            protected override MethodBase GetTargetMethod()
+            if (Settings.RebindPageUpDown.Value)
             {
-                return AccessTools.Method(typeof(NotesTask), nameof(NotesTask.Show));
+                return RemovePageUpDownHandling(instructions);
             }
 
-            [PatchPostfix]
-            public static void Postfix(NotesTask __instance, QuestClass quest)
+            return instructions;
+        }
+    }
+
+    public class EnhanceHideoutScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.Awake));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(AreaScreenSubstrate __instance)
+        {
+            ScrollRect scrollRect = __instance.transform.Find("Content/CurrentLevel/CurrentContainer/Scrollview")?.GetComponent<ScrollRect>();
+            if (scrollRect == null)
             {
-                void OnTaskSelected(bool open)
-                {
-                    LastQuestId = open ? quest.Id : null;
-                }
+                return;
+            }
 
-                Toggle toggle = __instance.GetComponent<Toggle>();
-                toggle.onValueChanged.AddListener(OnTaskSelected);
-                __instance.R().UI.AddDisposable(() => toggle.onValueChanged.RemoveListener(OnTaskSelected));
+            scrollRect.GetOrAddComponent<KeyScrollListener>();
+        }
+    }
 
-                if (quest.Id == LastQuestId)
-                {
-                    toggle.isOn = true;
-                }
+    public class EnhanceMailScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(MessagesContainer), nameof(MessagesContainer.Update));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(LightScroller ____scroller)
+        {
+            HandleInput(____scroller);
+        }
+
+        [PatchTranspiler]
+        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            if (Settings.RebindPageUpDown.Value)
+            {
+                return RemovePageUpDownHandling(instructions);
+            }
+
+            return instructions;
+        }
+    }
+
+    public class MouseScrollingSpeedPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ScrollRectNoDrag), nameof(ScrollRectNoDrag.OnScroll));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(PointerEventData data)
+        {
+            int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
+            data.scrollDelta *= multi;
+        }
+    }
+
+    public class EnhanceTaskListScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ScrollRect ____scrollRect)
+        {
+            var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
+            keyScroller.Init(____scrollRect);
+        }
+    }
+
+    public class KeyScroller : MonoBehaviour
+    {
+        ScrollRect scrollRect;
+
+        public void Init(ScrollRect scrollRect)
+        {
+            this.scrollRect = scrollRect;
+        }
+
+        public void Update()
+        {
+            HandleInput(scrollRect);
+        }
+    }
+
+    public class OpenLastTaskPatch : ModulePatch
+    {
+        private static string LastQuestId = null;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(NotesTask), nameof(NotesTask.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(NotesTask __instance, QuestClass quest)
+        {
+            void OnTaskSelected(bool open)
+            {
+                LastQuestId = open ? quest.Id : null;
+            }
+
+            Toggle toggle = __instance.GetComponent<Toggle>();
+            toggle.onValueChanged.AddListener(OnTaskSelected);
+            __instance.R().UI.AddDisposable(() => toggle.onValueChanged.RemoveListener(OnTaskSelected));
+
+            if (quest.Id == LastQuestId)
+            {
+                toggle.isOn = true;
             }
         }
     }

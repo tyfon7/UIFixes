@@ -4,26 +4,25 @@ using SPT.Reflection.Patching;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace UIFixes
+namespace UIFixes;
+
+public class TransferConfirmPatch : ModulePatch
 {
-    public class TransferConfirmPatch : ModulePatch
+    protected override MethodBase GetTargetMethod()
     {
-        protected override MethodBase GetTargetMethod()
+        return AccessTools.Method(typeof(TransferItemsScreen), nameof(TransferItemsScreen.method_4));
+    }
+
+    [PatchPrefix]
+    public static bool Prefix(ref Task<bool> __result)
+    {
+        if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
         {
-            return AccessTools.Method(typeof(TransferItemsScreen), nameof(TransferItemsScreen.method_4));
+            return true;
         }
 
-        [PatchPrefix]
-        public static bool Prefix(ref Task<bool> __result)
-        {
-            if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
-            {
-                return true;
-            }
-
-            __result = Task.FromResult(true);
-            return false;
-        }
+        __result = Task.FromResult(true);
+        return false;
     }
 }
 

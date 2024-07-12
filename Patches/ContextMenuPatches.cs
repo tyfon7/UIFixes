@@ -9,512 +9,510 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
-using UIFixes.ContextMenus;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class ContextMenuPatches
 {
-    public static class ContextMenuPatches
+    private static InsuranceInteractions CurrentInsuranceInteractions = null;
+    private static RepairInteractions CurrentRepairInteractions = null;
+    private static string CreatedButtonInteractionId = null;
+
+    public static void Enable()
     {
-        private static InsuranceInteractions CurrentInsuranceInteractions = null;
-        private static RepairInteractions CurrentRepairInteractions = null;
-        private static string CreatedButtonInteractionId = null;
+        new ContextMenuNamesPatch().Enable();
+        new PositionSubMenuPatch().Enable();
+        new PositionInsuranceSubMenuPatch().Enable();
 
-        public static void Enable()
+        new DeclareSubInteractionsInventoryPatch().Enable();
+        new CreateSubInteractionsInventoryPatch().Enable();
+
+        new DeclareSubInteractionsTradingPatch().Enable();
+        new CreateSubInteractionsTradingPatch().Enable();
+
+        new SniffInteractionButtonCreationPatch().Enable();
+        new ChangeInteractionButtonCreationPatch().Enable();
+
+        new EnableInsureInnerItemsPatch().Enable();
+
+        new DisableLoadPresetOnBulletsPatch().Enable();
+
+        new EmptySlotMenuPatch().Enable();
+        new EmptySlotMenuRemovePatch().Enable();
+    }
+
+    public class ContextMenuNamesPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new ContextMenuNamesPatch().Enable();
-            new PositionSubMenuPatch().Enable();
-            new PositionInsuranceSubMenuPatch().Enable();
-
-            new DeclareSubInteractionsInventoryPatch().Enable();
-            new CreateSubInteractionsInventoryPatch().Enable();
-
-            new DeclareSubInteractionsTradingPatch().Enable();
-            new CreateSubInteractionsTradingPatch().Enable();
-
-            new SniffInteractionButtonCreationPatch().Enable();
-            new ChangeInteractionButtonCreationPatch().Enable();
-
-            new EnableInsureInnerItemsPatch().Enable();
-
-            new DisableLoadPresetOnBulletsPatch().Enable();
-
-            new EmptySlotMenuPatch().Enable();
-            new EmptySlotMenuRemovePatch().Enable();
+            return AccessTools.Method(typeof(ContextMenuButton), nameof(ContextMenuButton.Show));
         }
 
-        public class ContextMenuNamesPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(string caption, TextMeshProUGUI ____text)
         {
-            protected override MethodBase GetTargetMethod()
+            if (MultiSelect.Count < 1)
             {
-                return AccessTools.Method(typeof(ContextMenuButton), nameof(ContextMenuButton.Show));
+                return;
             }
 
-            [PatchPostfix]
-            public static void Postfix(string caption, TextMeshProUGUI ____text)
+            if (caption == EItemInfoButton.Insure.ToString())
             {
-                if (MultiSelect.Count < 1)
-                {
-                    return;
-                }
+                InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
+                int count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
+                    .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
+                    .Count();
 
-                if (caption == EItemInfoButton.Insure.ToString())
+                if (count > 0)
                 {
-                    InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
-                    int count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
-                        .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
-                        .Count();
-
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
-                } 
-                else if (caption == EItemInfoButton.Equip.ToString())
-                {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
                 }
-                else if (caption == EItemInfoButton.Unequip.ToString())
+            }
+            else if (caption == EItemInfoButton.Equip.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
+                if (count > 0)
                 {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.Unequip, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
                 }
-                else if (caption == EItemInfoButton.LoadAmmo.ToString())
+            }
+            else if (caption == EItemInfoButton.Unequip.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.Unequip, ItemUiContext.Instance);
+                if (count > 0)
                 {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.LoadAmmo, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
                 }
-                else if (caption == EItemInfoButton.UnloadAmmo.ToString())
+            }
+            else if (caption == EItemInfoButton.LoadAmmo.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.LoadAmmo, ItemUiContext.Instance);
+                if (count > 0)
                 {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
                 }
-                else if (caption == EItemInfoButton.ApplyMagPreset.ToString())
+            }
+            else if (caption == EItemInfoButton.UnloadAmmo.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
+                if (count > 0)
                 {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
                 }
-                else if (caption == EItemInfoButton.Unpack.ToString())
+            }
+            else if (caption == EItemInfoButton.ApplyMagPreset.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);
+                if (count > 0)
                 {
-                    int count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
-                    if (count > 0)
-                    {
-                        ____text.text += " (x" + count + ")";
-                    }
+                    ____text.text += " (x" + count + ")";
+                }
+            }
+            else if (caption == EItemInfoButton.Unpack.ToString())
+            {
+                int count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
+                if (count > 0)
+                {
+                    ____text.text += " (x" + count + ")";
                 }
             }
         }
+    }
 
-        public class DeclareSubInteractionsInventoryPatch : ModulePatch
+    public class DeclareSubInteractionsInventoryPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
+            return AccessTools.Method(R.InventoryInteractions.Type, "get_SubInteractions");
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        {
+            __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+        }
+    }
+
+    public class CreateSubInteractionsInventoryPatch : ModulePatch
+    {
+        private static bool LoadingInsuranceActions = false;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
+        {
+            // Clear this, since something else should be active (even a different mouseover of the insurance button) 
+            LoadingInsuranceActions = false;
+
+            if (parentInteraction == EItemInfoButton.Insure)
             {
-                return AccessTools.Method(R.InventoryInteractions.Type, "get_SubInteractions");
+                int playerRubles = GetPlayerRubles(___itemUiContext_1);
+
+                CurrentInsuranceInteractions = MultiSelect.Active ?
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_1, playerRubles) :
+                    new(___item_0, ___itemUiContext_1, playerRubles);
+
+                // Because this is async, need to protect against a different subInteractions activating before loading is done
+                // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
+                LoadingInsuranceActions = true;
+                CurrentInsuranceInteractions.LoadAsync(() =>
+                {
+                    if (LoadingInsuranceActions)
+                    {
+                        subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
+                        LoadingInsuranceActions = false;
+                    }
+                });
+
+                return false;
             }
 
-            [PatchPostfix]
-            public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+            if (parentInteraction == EItemInfoButton.Repair)
             {
-                __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+                int playerRubles = GetPlayerRubles(___itemUiContext_1);
+
+                CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
+                subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class DeclareSubInteractionsTradingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.TradingInteractions.Type, "get_SubInteractions");
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        {
+            __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+        }
+    }
+
+    public class CreateSubInteractionsTradingPatch : ModulePatch
+    {
+        private static bool LoadingInsuranceActions = false;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.TradingInteractions.Type, "CreateSubInteractions");
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(object __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, ItemUiContext ___itemUiContext_0)
+        {
+            // Clear this, since something else should be active (even a different mouseover of the insurance button) 
+            LoadingInsuranceActions = false;
+
+            var wrappedInstance = new R.TradingInteractions(__instance);
+
+            if (parentInteraction == EItemInfoButton.Insure)
+            {
+                int playerRubles = GetPlayerRubles(___itemUiContext_0);
+
+                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                Item item = wrappedInstance.Item;
+
+                CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
+                CurrentInsuranceInteractions = MultiSelect.Active ?
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_0, playerRubles) :
+                    new(item, ___itemUiContext_0, playerRubles);
+
+                // Because this is async, need to protect against a different subInteractions activating before loading is done
+                // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
+                LoadingInsuranceActions = true;
+                CurrentInsuranceInteractions.LoadAsync(() =>
+                {
+                    if (LoadingInsuranceActions)
+                    {
+                        subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
+                        LoadingInsuranceActions = false;
+                    }
+                });
+
+                return false;
+            }
+
+            if (parentInteraction == EItemInfoButton.Repair)
+            {
+                int playerRubles = GetPlayerRubles(___itemUiContext_0);
+
+                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                Item item = wrappedInstance.Item;
+
+                CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
+                subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class SniffInteractionButtonCreationPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_3));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(DynamicInteractionClass interaction)
+        {
+            if (interaction.IsInsuranceInteraction() || interaction.IsRepairInteraction())
+            {
+                CreatedButtonInteractionId = interaction.Id;
             }
         }
 
-        public class CreateSubInteractionsInventoryPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix()
         {
-            private static bool LoadingInsuranceActions = false;
+            CreatedButtonInteractionId = null;
+        }
+    }
 
-            protected override MethodBase GetTargetMethod()
+    public class ChangeInteractionButtonCreationPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_5));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(SimpleContextMenuButton button)
+        {
+            if (!String.IsNullOrEmpty(CreatedButtonInteractionId))
             {
-                return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
+                if (InsuranceInteractions.IsInsuranceInteractionId(CreatedButtonInteractionId) && CurrentInsuranceInteractions != null)
+                {
+                    button.SetButtonInteraction(CurrentInsuranceInteractions.GetButtonInteraction(CreatedButtonInteractionId));
+                }
+                else if (RepairInteractions.IsRepairInteractionId(CreatedButtonInteractionId) && CurrentRepairInteractions != null)
+                {
+                    button.SetButtonInteraction(CurrentRepairInteractions.GetButtonInteraction(CreatedButtonInteractionId));
+                }
             }
+        }
+    }
 
-            [PatchPrefix]
-            public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
+    public class CleanUpInteractionsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(SimpleContextMenu), nameof(SimpleContextMenu.Close));
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            CurrentInsuranceInteractions = null;
+            CurrentRepairInteractions = null;
+            CreatedButtonInteractionId = null;
+        }
+    }
+
+    public class EnableInsureInnerItemsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.ContextMenuHelper.Type, "IsInteractive");
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(object __instance, EItemInfoButton button, ref IResult __result, Item ___item_0)
+        {
+            if (button != EItemInfoButton.Insure)
             {
-                // Clear this, since something else should be active (even a different mouseover of the insurance button) 
-                LoadingInsuranceActions = false;
-
-                if (parentInteraction == EItemInfoButton.Insure)
-                {
-                    int playerRubles = GetPlayerRubles(___itemUiContext_1);
-
-                    CurrentInsuranceInteractions = MultiSelect.Active ? 
-                        new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_1, playerRubles) : 
-                        new(___item_0, ___itemUiContext_1, playerRubles);
-
-                    // Because this is async, need to protect against a different subInteractions activating before loading is done
-                    // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
-                    LoadingInsuranceActions = true;
-                    CurrentInsuranceInteractions.LoadAsync(() =>
-                    {
-                        if (LoadingInsuranceActions)
-                        {
-                            subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
-                            LoadingInsuranceActions = false;
-                        }
-                    });
-
-                    return false;
-                }
-
-                if (parentInteraction == EItemInfoButton.Repair)
-                {
-                    int playerRubles = GetPlayerRubles(___itemUiContext_1);
-
-                    CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
-                    subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
-
-                    return false;
-                }
-
                 return true;
             }
+
+            InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
+
+            IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [___item_0];
+            IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
+            IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
+                .Flatten(insurance.GetItemChildren)
+                .Concat(InsuranceItemes)
+                .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
+
+            if (insurableItems.Any())
+            {
+                __result = SuccessfulResult.New;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class DisableLoadPresetOnBulletsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
         }
 
-        public class DeclareSubInteractionsTradingPatch : ModulePatch
+        [PatchPrefix]
+        public static bool Prefix(Item selectedItem, ref GStruct416<Item> __result)
         {
-            protected override MethodBase GetTargetMethod()
+            if (Settings.LoadMagPresetOnBullets.Value)
             {
-                return AccessTools.Method(R.TradingInteractions.Type, "get_SubInteractions");
-            }
-
-            [PatchPostfix]
-            public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
-            {
-                __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
-            }
-        }
-
-        public class CreateSubInteractionsTradingPatch : ModulePatch
-        {
-            private static bool LoadingInsuranceActions = false;
-
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(R.TradingInteractions.Type, "CreateSubInteractions");
-            }
-
-            [PatchPrefix]
-            public static bool Prefix(object __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, ItemUiContext ___itemUiContext_0)
-            {
-                // Clear this, since something else should be active (even a different mouseover of the insurance button) 
-                LoadingInsuranceActions = false;
-
-                var wrappedInstance = new R.TradingInteractions(__instance);
-
-                if (parentInteraction == EItemInfoButton.Insure)
-                {
-                    int playerRubles = GetPlayerRubles(___itemUiContext_0);
-
-                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
-                    Item item = wrappedInstance.Item;
-
-                    CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
-                    CurrentInsuranceInteractions = MultiSelect.Active ?
-                        new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_0, playerRubles) :
-                        new(item, ___itemUiContext_0, playerRubles);
-
-                    // Because this is async, need to protect against a different subInteractions activating before loading is done
-                    // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
-                    LoadingInsuranceActions = true;
-                    CurrentInsuranceInteractions.LoadAsync(() =>
-                    {
-                        if (LoadingInsuranceActions)
-                        {
-                            subInteractionsWrapper.SetSubInteractions(CurrentInsuranceInteractions);
-                            LoadingInsuranceActions = false;
-                        }
-                    });
-
-                    return false;
-                }
-
-                if (parentInteraction == EItemInfoButton.Repair)
-                {
-                    int playerRubles = GetPlayerRubles(___itemUiContext_0);
-
-                    // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
-                    Item item = wrappedInstance.Item;
-
-                    CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
-                    subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
-
-                    return false;
-                }
-
                 return true;
             }
+
+            if (selectedItem is BulletClass)
+            {
+                __result = new MagazineBuildClass.Class3183(selectedItem);
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class EmptySlotMenuPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.Show));
         }
 
-        public class SniffInteractionButtonCreationPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ModSlotView __instance, Slot slot, ItemContextAbstractClass parentItemContext, ItemUiContext itemUiContext)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!Settings.EnableSlotSearch.Value || slot.ContainedItem != null)
             {
-                return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_3));
+                return;
             }
 
-            [PatchPrefix]
-            public static void Prefix(DynamicInteractionClass interaction)
-            {
-                if (interaction.IsInsuranceInteraction() || interaction.IsRepairInteraction())
-                {
-                    CreatedButtonInteractionId = interaction.Id;
-                }
-            }
+            EmptySlotMenuTrigger menuTrigger = __instance.GetOrAddComponent<EmptySlotMenuTrigger>();
+            menuTrigger.Init(slot, parentItemContext, itemUiContext);
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                CreatedButtonInteractionId = null;
-            }
+    public class EmptySlotMenuRemovePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.SetupItemView));
         }
 
-        public class ChangeInteractionButtonCreationPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(ModSlotView __instance)
         {
-            protected override MethodBase GetTargetMethod()
+            EmptySlotMenuTrigger menuTrigger = __instance.GetComponent<EmptySlotMenuTrigger>();
+            if (menuTrigger != null)
             {
-                return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_5));
-            }
-
-            [PatchPrefix]
-            public static void Prefix(SimpleContextMenuButton button)
-            {
-                if (!String.IsNullOrEmpty(CreatedButtonInteractionId))
-                {
-                    if (InsuranceInteractions.IsInsuranceInteractionId(CreatedButtonInteractionId) && CurrentInsuranceInteractions != null)
-                    {
-                        button.SetButtonInteraction(CurrentInsuranceInteractions.GetButtonInteraction(CreatedButtonInteractionId));
-                    }
-                    else if (RepairInteractions.IsRepairInteractionId(CreatedButtonInteractionId) && CurrentRepairInteractions != null)
-                    {
-                        button.SetButtonInteraction(CurrentRepairInteractions.GetButtonInteraction(CreatedButtonInteractionId));
-                    }
-                }
+                UnityEngine.Object.Destroy(menuTrigger);
             }
         }
+    }
 
-        public class CleanUpInteractionsPatch : ModulePatch
+    public class PositionSubMenuPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(SimpleContextMenu), nameof(SimpleContextMenu.Close));
-            }
-
-            [PatchPostfix]
-            public static void Postfix()
-            {
-                CurrentInsuranceInteractions = null;
-                CurrentRepairInteractions = null;
-                CreatedButtonInteractionId = null;
-            }
+            return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
         }
 
-        public class EnableInsureInnerItemsPatch : ModulePatch
+        // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
+        [PatchPostfix]
+        public static void Postfix(ISubInteractions subInteractionsWrapper)
         {
-            protected override MethodBase GetTargetMethod()
+            if (subInteractionsWrapper is not InteractionButtonsContainer buttonsContainer)
             {
-                return AccessTools.Method(R.ContextMenuHelper.Type, "IsInteractive");
+                return;
             }
 
-            [PatchPrefix]
-            public static bool Prefix(object __instance, EItemInfoButton button, ref IResult __result, Item ___item_0)
+            var wrappedContainer = buttonsContainer.R();
+            SimpleContextMenuButton button = wrappedContainer.ContextMenuButton;
+            SimpleContextMenu flyoutMenu = wrappedContainer.ContextMenu;
+
+            if (button == null || flyoutMenu == null)
             {
-                if (button != EItemInfoButton.Insure)
-                {
-                    return true;
-                }
-
-                InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
-
-                IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [___item_0];
-                IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
-                IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
-                    .Flatten(insurance.GetItemChildren)
-                    .Concat(InsuranceItemes)
-                    .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
-
-                if (insurableItems.Any())
-                {
-                    __result = SuccessfulResult.New;
-                    return false;
-                }
-
-                return true;
+                return;
             }
+
+            PositionContextMenuFlyout(button, flyoutMenu);
+        }
+    }
+
+    // Insurance submenu is async, need to postfix the actual set call
+    public class PositionInsuranceSubMenuPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.SetSubInteractions)).MakeGenericMethod([typeof(InsuranceInteractions.EInsurers)]);
         }
 
-        public class DisableLoadPresetOnBulletsPatch : ModulePatch
+        // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
+        [PatchPostfix]
+        public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
-            }
-
-            [PatchPrefix]
-            public static bool Prefix(Item selectedItem, ref GStruct416<Item> __result)
-            {
-                if (Settings.LoadMagPresetOnBullets.Value)
-                {
-                    return true;
-                }
-
-                if (selectedItem is BulletClass)
-                {
-                    __result = new MagazineBuildClass.Class3183(selectedItem);
-                    return false;
-                }
-
-                return true;
-            }
+            PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
         }
+    }
 
-        public class EmptySlotMenuPatch : ModulePatch
+    private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
+    {
+        RectTransform buttonTransform = button.RectTransform();
+        RectTransform flyoutTransform = flyoutMenu.RectTransform();
+
+        Vector2 leftPosition = flyoutTransform.position; // BSG's code will always put it on the left
+        leftPosition = new Vector2((float)Math.Round((double)leftPosition.x), (float)Math.Round((double)leftPosition.y));
+
+        Vector2 size = buttonTransform.rect.size;
+        Vector2 rightPosition = size - size * buttonTransform.pivot;
+        rightPosition = buttonTransform.TransformPoint(rightPosition);
+
+        // Round vector the way that CorrectPosition does
+        rightPosition = new Vector2((float)Math.Round((double)rightPosition.x), (float)Math.Round((double)rightPosition.y));
+
+        if (Settings.ContextMenuOnRight.Value)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.Show));
-            }
+            // Try on the right
+            flyoutTransform.position = rightPosition;
+            flyoutMenu.CorrectPosition();
 
-            [PatchPostfix]
-            public static void Postfix(ModSlotView __instance, Slot slot, ItemContextAbstractClass parentItemContext, ItemUiContext itemUiContext)
-            {
-                if (!Settings.EnableSlotSearch.Value || slot.ContainedItem != null)
-                {
-                    return;
-                }
-
-                EmptySlotMenuTrigger menuTrigger = __instance.GetOrAddComponent<EmptySlotMenuTrigger>();
-                menuTrigger.Init(slot, parentItemContext, itemUiContext);
-            }
-        }
-
-        public class EmptySlotMenuRemovePatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.DeclaredMethod(typeof(ModSlotView), nameof(ModSlotView.SetupItemView));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(ModSlotView __instance)
-            {
-                EmptySlotMenuTrigger menuTrigger = __instance.GetComponent<EmptySlotMenuTrigger>();
-                if (menuTrigger != null)
-                {
-                    UnityEngine.Object.Destroy(menuTrigger);
-                }
-            }
-        }
-
-        public class PositionSubMenuPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
-            }
-
-            // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
-            [PatchPostfix]
-            public static void Postfix(ISubInteractions subInteractionsWrapper)
-            {
-                if (subInteractionsWrapper is not InteractionButtonsContainer buttonsContainer)
-                {
-                    return;
-                }
-
-                var wrappedContainer = buttonsContainer.R();
-                SimpleContextMenuButton button = wrappedContainer.ContextMenuButton;
-                SimpleContextMenu flyoutMenu = wrappedContainer.ContextMenu;
-
-                if (button == null || flyoutMenu == null)
-                {
-                    return;
-                }
-
-                PositionContextMenuFlyout(button, flyoutMenu);
-            }
-        }
-
-        // Insurance submenu is async, need to postfix the actual set call
-        public class PositionInsuranceSubMenuPatch : ModulePatch
-        {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.SetSubInteractions)).MakeGenericMethod([typeof(InsuranceInteractions.EInsurers)]);
-            }
-
-            // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
-            [PatchPostfix]
-            public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
-            {
-                PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
-            }
-        }
-
-        private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
-        {
-            RectTransform buttonTransform = button.RectTransform();
-            RectTransform flyoutTransform = flyoutMenu.RectTransform();
-
-            Vector2 leftPosition = flyoutTransform.position; // BSG's code will always put it on the left
-            leftPosition = new Vector2((float)Math.Round((double)leftPosition.x), (float)Math.Round((double)leftPosition.y));
-
-            Vector2 size = buttonTransform.rect.size;
-            Vector2 rightPosition = size - size * buttonTransform.pivot;
-            rightPosition = buttonTransform.TransformPoint(rightPosition);
-
-            // Round vector the way that CorrectPosition does
-            rightPosition = new Vector2((float)Math.Round((double)rightPosition.x), (float)Math.Round((double)rightPosition.y));
-
-            if (Settings.ContextMenuOnRight.Value)
-            {
-                // Try on the right
-                flyoutTransform.position = rightPosition;
-                flyoutMenu.CorrectPosition();
-
-                // This means CorrectPosition() moved it
-                if (!(flyoutTransform.position.x - rightPosition.x).IsZero())
-                {
-                    flyoutTransform.position = leftPosition;
-                }
-            }
-            else
+            // This means CorrectPosition() moved it
+            if (!(flyoutTransform.position.x - rightPosition.x).IsZero())
             {
                 flyoutTransform.position = leftPosition;
-                flyoutMenu.CorrectPosition();
-
-                if (!(flyoutTransform.position.x - leftPosition.x).IsZero())
-                {
-                    flyoutTransform.position = rightPosition;
-                }
             }
         }
-
-        private static int GetPlayerRubles(ItemUiContext itemUiContext)
+        else
         {
-            StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
-            if (stash == null)
-            {
-                return 0;
-            }
+            flyoutTransform.position = leftPosition;
+            flyoutMenu.CorrectPosition();
 
-            return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
+            if (!(flyoutTransform.position.x - leftPosition.x).IsZero())
+            {
+                flyoutTransform.position = rightPosition;
+            }
         }
+    }
+
+    private static int GetPlayerRubles(ItemUiContext itemUiContext)
+    {
+        StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
+        if (stash == null)
+        {
+            return 0;
+        }
+
+        return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
     }
 }

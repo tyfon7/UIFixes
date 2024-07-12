@@ -6,96 +6,95 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class StackFirItemsPatches
 {
-    public static class StackFirItemsPatches
+    public static void Enable()
     {
-        public static void Enable()
+        new ContainerStackPatch().Enable();
+        new TopUpStackPatch().Enable();
+    }
+
+    public class ContainerStackPatch : ModulePatch
+    {
+        private static Type MergeableItemType;
+
+        protected override MethodBase GetTargetMethod()
         {
-            new ContainerStackPatch().Enable();
-            new TopUpStackPatch().Enable();
+            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
+            MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type, GClass2751
+            return method;
         }
 
-        public class ContainerStackPatch : ModulePatch
+        // Reimplementing this entire method to ignore SpawnedInSession for certain types
+        [PatchPrefix]
+        public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
         {
-            private static Type MergeableItemType;
-
-            protected override MethodBase GetTargetMethod()
+            if (!MergeableItemType.IsInstanceOfType(itemToMerge))
             {
-                MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
-                MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type, GClass2751
-                return method;
+                mergeableItem = null;
+                __result = false;
             }
 
-            // Reimplementing this entire method to ignore SpawnedInSession for certain types
-            [PatchPrefix]
-            public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
+            if (overrideCount <= 0)
             {
-                if (!MergeableItemType.IsInstanceOfType(itemToMerge))
-                {
-                    mergeableItem = null;
-                    __result = false;
-                }
-
-                if (overrideCount <= 0)
-                {
-                    overrideCount = itemToMerge.StackObjectsCount;
-                }
-
-                bool ignoreSpawnedInSession;
-                if (itemToMerge.Template is MoneyClass)
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
-                }
-                else if (itemToMerge.Template is AmmoTemplate)
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
-                }
-                else
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIROther.Value;
-                }
-
-                mergeableItem = containersToPut.SelectMany(x => x.Items)
-                    .Where(MergeableItemType.IsInstanceOfType)
-                    .Where(x => x != itemToMerge)
-                    .Where(x => x.TemplateId == itemToMerge.TemplateId)
-                    .Where(x => ignoreSpawnedInSession || x.SpawnedInSession == itemToMerge.SpawnedInSession)
-                    .Where(x => x.StackObjectsCount < x.StackMaxSize)
-                    .FirstOrDefault(x => overrideCount <= x.StackMaxSize - x.StackObjectsCount);
-
-                __result = mergeableItem != null;
-                return false;
+                overrideCount = itemToMerge.StackObjectsCount;
             }
+
+            bool ignoreSpawnedInSession;
+            if (itemToMerge.Template is MoneyClass)
+            {
+                ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
+            }
+            else if (itemToMerge.Template is AmmoTemplate)
+            {
+                ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
+            }
+            else
+            {
+                ignoreSpawnedInSession = Settings.MergeFIROther.Value;
+            }
+
+            mergeableItem = containersToPut.SelectMany(x => x.Items)
+                .Where(MergeableItemType.IsInstanceOfType)
+                .Where(x => x != itemToMerge)
+                .Where(x => x.TemplateId == itemToMerge.TemplateId)
+                .Where(x => ignoreSpawnedInSession || x.SpawnedInSession == itemToMerge.SpawnedInSession)
+                .Where(x => x.StackObjectsCount < x.StackMaxSize)
+                .FirstOrDefault(x => overrideCount <= x.StackMaxSize - x.StackObjectsCount);
+
+            __result = mergeableItem != null;
+            return false;
+        }
+    }
+
+    public class TopUpStackPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Item), nameof(Item.IsSameItem));
         }
 
-        public class TopUpStackPatch : ModulePatch
+        [PatchPrefix]
+        public static bool Prefix(Item __instance, Item other, ref bool __result)
         {
-            protected override MethodBase GetTargetMethod()
+            bool ignoreSpawnedInSession;
+            if (__instance.Template is MoneyClass)
             {
-                return AccessTools.Method(typeof(Item), nameof(Item.IsSameItem));
+                ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
+            }
+            else if (__instance.Template is AmmoTemplate)
+            {
+                ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
+            }
+            else
+            {
+                ignoreSpawnedInSession = Settings.MergeFIROther.Value;
             }
 
-            [PatchPrefix]
-            public static bool Prefix(Item __instance, Item other, ref bool __result)
-            {
-                bool ignoreSpawnedInSession;
-                if (__instance.Template is MoneyClass)
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
-                }
-                else if (__instance.Template is AmmoTemplate)
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
-                }
-                else
-                {
-                    ignoreSpawnedInSession = Settings.MergeFIROther.Value;
-                }
-
-                __result = __instance.TemplateId == other.TemplateId && __instance.Id != other.Id && (ignoreSpawnedInSession || __instance.SpawnedInSession == other.SpawnedInSession);
-                return false;
-            }
+            __result = __instance.TemplateId == other.TemplateId && __instance.Id != other.Id && (ignoreSpawnedInSession || __instance.SpawnedInSession == other.SpawnedInSession);
+            return false;
         }
     }
 }

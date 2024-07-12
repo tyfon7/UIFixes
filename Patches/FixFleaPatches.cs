@@ -6,94 +6,93 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class FixFleaPatches
 {
-    public static class FixFleaPatches
+    public static void Enable()
     {
-        public static void Enable()
-        {
-            // These two are anal AF
-            new DoNotToggleOnMouseOverPatch().Enable();
-            new ToggleOnOpenPatch().Enable();
+        // These two are anal AF
+        new DoNotToggleOnMouseOverPatch().Enable();
+        new ToggleOnOpenPatch().Enable();
 
-            new OfferItemFixMaskPatch().Enable();
-            new OfferViewTweaksPatch().Enable();
+        new OfferItemFixMaskPatch().Enable();
+        new OfferViewTweaksPatch().Enable();
+    }
+
+    public class DoNotToggleOnMouseOverPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(CategoryView), nameof(CategoryView.PointerEnterHandler));
         }
 
-        public class DoNotToggleOnMouseOverPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
         {
-            protected override MethodBase GetTargetMethod()
+            if (!___bool_3)
             {
-                return AccessTools.Method(typeof(CategoryView), nameof(CategoryView.PointerEnterHandler));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
-            {
-                if (!___bool_3)
-                {
-                    ____toggleImage.sprite = ____closeSprite;
-                }
+                ____toggleImage.sprite = ____closeSprite;
             }
         }
+    }
 
-        public class ToggleOnOpenPatch : ModulePatch
+    public class ToggleOnOpenPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.Method(typeof(CategoryView), nameof(CategoryView.OpenCategory));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(Image ____toggleImage, Sprite ____openSprite, bool ___bool_3)
-            {
-                if (___bool_3)
-                {
-                    ____toggleImage.sprite = ____openSprite;
-                }
-            }
+            return AccessTools.Method(typeof(CategoryView), nameof(CategoryView.OpenCategory));
         }
 
-        public class OfferItemFixMaskPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(Image ____toggleImage, Sprite ____openSprite, bool ___bool_3)
         {
-            protected override MethodBase GetTargetMethod()
+            if (___bool_3)
             {
-                return AccessTools.Method(typeof(OfferItemDescription), nameof(OfferItemDescription.Show));
-            }
-
-            [PatchPostfix]
-            public static void Postfix(TextMeshProUGUI ____offerItemName)
-            {
-                ____offerItemName.maskable = true;
-                foreach (var item in ____offerItemName.GetComponentsInChildren<TMP_SubMeshUI>())
-                {
-                    item.maskable = true;
-                }
+                ____toggleImage.sprite = ____openSprite;
             }
         }
+    }
 
-        public class OfferViewTweaksPatch : ModulePatch
+    public class OfferItemFixMaskPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            protected override MethodBase GetTargetMethod()
+            return AccessTools.Method(typeof(OfferItemDescription), nameof(OfferItemDescription.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(TextMeshProUGUI ____offerItemName)
+        {
+            ____offerItemName.maskable = true;
+            foreach (var item in ____offerItemName.GetComponentsInChildren<TMP_SubMeshUI>())
             {
-                return AccessTools.Method(typeof(OfferView), nameof(OfferView.Awake));
+                item.maskable = true;
             }
+        }
+    }
 
-            [PatchPostfix]
-            public static void Postfix(OfferView __instance, GameObject ____expirationTimePanel)
-            {
-                // Intercept clicks on the actions area
-                var blocker = __instance.transform.Find("Actions").gameObject.GetOrAddComponent<Button>();
-                blocker.transition = Selectable.Transition.None;
+    public class OfferViewTweaksPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(OfferView), nameof(OfferView.Awake));
+        }
 
-                // But enable clicks specifically on the minimize button
-                var minimizeButton = __instance.transform.Find("Actions/MinimizeButton").gameObject.GetOrAddComponent<Button>();
-                minimizeButton.onClick.AddListener(() => __instance.OnPointerClick(null));
+        [PatchPostfix]
+        public static void Postfix(OfferView __instance, GameObject ____expirationTimePanel)
+        {
+            // Intercept clicks on the actions area
+            var blocker = __instance.transform.Find("Actions").gameObject.GetOrAddComponent<Button>();
+            blocker.transition = Selectable.Transition.None;
 
-                // Stop expiration clock from dancing around
-                var timeLeft = ____expirationTimePanel.transform.Find("TimeLeft").GetComponent<HorizontalLayoutGroup>();
-                timeLeft.childControlWidth = false;
-            }
+            // But enable clicks specifically on the minimize button
+            var minimizeButton = __instance.transform.Find("Actions/MinimizeButton").gameObject.GetOrAddComponent<Button>();
+            minimizeButton.onClick.AddListener(() => __instance.OnPointerClick(null));
+
+            // Stop expiration clock from dancing around
+            var timeLeft = ____expirationTimePanel.transform.Find("TimeLeft").GetComponent<HorizontalLayoutGroup>();
+            timeLeft.childControlWidth = false;
         }
     }
 }

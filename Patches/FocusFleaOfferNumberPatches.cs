@@ -6,69 +6,68 @@ using System.Reflection;
 using TMPro;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public static class FocusFleaOfferNumberPatches
 {
-    public static class FocusFleaOfferNumberPatches
+    public static void Enable()
     {
-        public static void Enable()
+        new MoneyPatch().Enable();
+        new BarterPatch().Enable();
+    }
+
+    public class MoneyPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            new MoneyPatch().Enable();
-            new BarterPatch().Enable();
+            return AccessTools.DeclaredMethod(typeof(HandoverRagfairMoneyWindow), nameof(HandoverRagfairMoneyWindow.Show));
         }
 
-        public class MoneyPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(HandoverRagfairMoneyWindow __instance, TMP_InputField ____inputField)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.DeclaredMethod(typeof(HandoverRagfairMoneyWindow), nameof(HandoverRagfairMoneyWindow.Show));
-            }
+            AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
+            allKeybind.Init(__instance.method_9);
 
-            [PatchPostfix]
-            public static void Postfix(HandoverRagfairMoneyWindow __instance, TMP_InputField ____inputField)
-            {
-                AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-                allKeybind.Init(__instance.method_9);
+            ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+            ____inputField.ActivateInputField();
+            ____inputField.Select();
+        }
+    }
 
-                ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                ____inputField.ActivateInputField();
-                ____inputField.Select();
-            }
+    public class BarterPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(HandoverExchangeableItemsWindow), nameof(HandoverExchangeableItemsWindow.Show));
         }
 
-        public class BarterPatch : ModulePatch
+        [PatchPostfix]
+        public static void Postfix(HandoverExchangeableItemsWindow __instance, TMP_InputField ____inputField)
         {
-            protected override MethodBase GetTargetMethod()
-            {
-                return AccessTools.DeclaredMethod(typeof(HandoverExchangeableItemsWindow), nameof(HandoverExchangeableItemsWindow.Show));
-            }
+            AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
+            allKeybind.Init(__instance.method_16);
 
-            [PatchPostfix]
-            public static void Postfix(HandoverExchangeableItemsWindow __instance, TMP_InputField ____inputField)
-            {
-                AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-                allKeybind.Init(__instance.method_16);
+            ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+            ____inputField.ActivateInputField();
+            ____inputField.Select();
+        }
+    }
 
-                ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                ____inputField.ActivateInputField();
-                ____inputField.Select();
-            }
+    public class AllButtonKeybind : MonoBehaviour
+    {
+        private Action purchaseAllAction;
+
+        public void Init(Action purchaseAllAction)
+        {
+            this.purchaseAllAction = purchaseAllAction;
         }
 
-        public class AllButtonKeybind : MonoBehaviour
+        public void Update()
         {
-            private Action purchaseAllAction;
-
-            public void Init(Action purchaseAllAction)
+            if (Settings.PurchaseAllKeybind.Value.IsDown())
             {
-                this.purchaseAllAction = purchaseAllAction;
-            }
-
-            public void Update()
-            {
-                if (Settings.PurchaseAllKeybind.Value.IsDown())
-                {
-                    purchaseAllAction();
-                }
+                purchaseAllAction();
             }
         }
     }

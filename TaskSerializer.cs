@@ -3,77 +3,76 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace UIFixes
+namespace UIFixes;
+
+public class TaskSerializer<T> : MonoBehaviour
 {
-    public class TaskSerializer<T> : MonoBehaviour
+    private Func<T, Task> func;
+    private Func<T, bool> canContinue;
+    private IEnumerator<T> enumerator;
+    private Task currentTask;
+    private TaskCompletionSource totalTask;
+
+    public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
     {
-        private Func<T, Task> func;
-        private Func<T, bool> canContinue;
-        private IEnumerator<T> enumerator;
-        private Task currentTask;
-        private TaskCompletionSource totalTask;
+        this.enumerator = items.GetEnumerator();
+        this.func = func;
+        this.canContinue = canContinue;
 
-        public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
+        currentTask = Task.CompletedTask;
+        totalTask = new TaskCompletionSource();
+
+        LateUpdate();
+
+        return totalTask.Task;
+    }
+
+    public void Cancel()
+    {
+        if (!totalTask.Task.IsCompleted)
         {
-            this.enumerator = items.GetEnumerator();
-            this.func = func;
-            this.canContinue = canContinue;
+            totalTask.TrySetCanceled();
+            Complete();
+        }
+    }
 
-            currentTask = Task.CompletedTask;
-            totalTask = new TaskCompletionSource();
+    public void OnDisable()
+    {
+        Cancel();
+    }
 
-            LateUpdate();
-
-            return totalTask.Task;
+    public void LateUpdate()
+    {
+        if (currentTask.IsCanceled)
+        {
+            Complete();
+            return;
         }
 
-        public void Cancel()
+        if (totalTask.Task.IsCompleted || !currentTask.IsCompleted)
         {
-            if (!totalTask.Task.IsCompleted)
-            {
-                totalTask.TrySetCanceled();
-                Complete();
-            }
+            return;
         }
 
-        public void OnDisable()
+        if (canContinue != null && enumerator.Current != null && !canContinue(enumerator.Current))
         {
-            Cancel();
+            return;
         }
 
-        public void LateUpdate()
+        if (enumerator.MoveNext())
         {
-            if (currentTask.IsCanceled)
-            {
-                Complete();
-                return;
-            }
-
-            if (totalTask.Task.IsCompleted || !currentTask.IsCompleted)
-            {
-                return;
-            }
-
-            if (canContinue != null && enumerator.Current != null && !canContinue(enumerator.Current))
-            {
-                return;
-            }
-
-            if (enumerator.MoveNext())
-            {
-                currentTask = func(enumerator.Current);
-            }
-            else
-            {
-                Complete();
-            }
+            currentTask = func(enumerator.Current);
         }
-
-        private void Complete()
+        else
         {
-            totalTask.TryComplete();
-            func = null;
-            Destroy(this);
+            Complete();
         }
+    }
+
+    private void Complete()
+    {
+        totalTask.TryComplete();
+        func = null;
+        Destroy(this);
     }
 }
