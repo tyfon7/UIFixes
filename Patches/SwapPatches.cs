@@ -162,8 +162,8 @@ namespace UIFixes
                 return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnEndDrag));
             }
 
-            [PatchPrefix]
-            public static void Prefix()
+            [PatchPostfix]
+            public static void Postfix()
             {
                 SourceContainer = null;
             }
