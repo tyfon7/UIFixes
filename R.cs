@@ -1,4 +1,5 @@
 ﻿using Comfort.Common;
+using EFT;
 using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
@@ -65,6 +66,7 @@ public static class R
         TransferInteractions.InitTypes();
         InventoryScreen.InitTypes();
         ScavengerInventoryScreen.InitTypes();
+        LocalizedText.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -847,6 +849,24 @@ public static class R
 
         public SimpleStashPanel SimpleStashPanel { get { return (SimpleStashPanel)SimpleStashPanelField.GetValue(Value); } }
     }
+
+    public class LocalizedText(object value) : UIElement(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo StringCaseField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.LocalizedText);
+            StringCaseField = AccessTools.Field(Type, "_stringCase");
+        }
+
+        public EStringCase StringCase
+        {
+            get { return (EStringCase)StringCaseField.GetValue(Value); }
+            set { StringCaseField.SetValue(Value, value); }
+        }
+    }
 }
 
 public static class RExtentensions
@@ -877,4 +897,5 @@ public static class RExtentensions
     public static R.TradingTableGridView R(this TradingTableGridView value) => new(value);
     public static R.InventoryScreen R(this InventoryScreen value) => new(value);
     public static R.ScavengerInventoryScreen R(this ScavengerInventoryScreen value) => new(value);
+    public static R.LocalizedText R(this LocalizedText value) => new(value);
 }

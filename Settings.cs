@@ -91,6 +91,7 @@ internal class Settings
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
+    public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
@@ -483,6 +484,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Show your GP coins wherever your currency is displayed",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowOutOfStockCheckbox = config.Bind(
+            InventorySection,
+            "Show Out of Stock Toggle",
+            true,
+            new ConfigDescription(
+                "Whether the show the Out of Stock toggle on the trading screen",
                 null,
                 new ConfigurationManagerAttributes { })));
 

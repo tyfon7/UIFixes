@@ -63,6 +63,7 @@ public class Plugin : BaseUnityPlugin
         GPCoinPatches.Enable();
         FleaSlotSearchPatches.Enable();
         MoveSortingTablePatches.Enable();
+        FilterOutOfStockPatches.Enable();
     }
 
     public static bool InRaid()

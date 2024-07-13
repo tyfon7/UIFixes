@@ -29,3 +29,16 @@ public static class ExtraTemplatedGridsViewProperties
     public static bool GetReordered(this TemplatedGridsView gridsView) => properties.GetOrCreateValue(gridsView).Reordered;
     public static void SetReordered(this TemplatedGridsView gridsView, bool value) => properties.GetOrCreateValue(gridsView).Reordered = value;
 }
+
+public static class ExtraTradingGridProperties
+{
+    private static readonly ConditionalWeakTable<TradingGridView, Properties> properties = new();
+
+    private class Properties
+    {
+        public bool ShowOutOfStock = true;
+    }
+
+    public static bool GetShowOutOfStock(this TradingGridView gridView) => properties.GetOrCreateValue(gridView).ShowOutOfStock;
+    public static void SetShowOutOfStock(this TradingGridView gridView, bool value) => properties.GetOrCreateValue(gridView).ShowOutOfStock = value;
+}
