@@ -54,6 +54,7 @@ public static class MultiSelectPatches
         // Workarounds
         new DisableSplitPatch().Enable();
         new DisableSplitTargetPatch().Enable();
+        new FixSearchedContextPatch().Enable();
 
         // Actions
         new ItemViewClickPatch().Enable();
@@ -422,6 +423,71 @@ public static class MultiSelectPatches
         public static void Postfix()
         {
             HidePreviews();
+        }
+    }
+
+    public class FixSearchedContextPatch : ModulePatch
+    {
+        private static string CurrentContextSearchingId = null;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridView), nameof(GridView.OnItemAdded));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(GridView __instance, GEventArgs2 eventArgs, TraderControllerClass ___traderControllerClass, ItemUiContext ___itemUiContext_0)
+        {
+            if (eventArgs.To.Container != __instance.Grid || eventArgs.Status != CommandStatus.Begin)
+            {
+                return;
+            }
+
+            Item item = eventArgs.Item;
+            if (___itemUiContext_0.ItemContextAbstractClass?.Item != eventArgs.Item)
+            {
+                return;
+            }
+
+            LocationInGrid locationInGrid = ((GridItemAddress)eventArgs.To).LocationInGrid;
+
+            bool searchable = !(___traderControllerClass != null && ___traderControllerClass.CanSearch && ___traderControllerClass.ID != eventArgs.OwnerId);
+            if (!searchable || !locationInGrid.isSearched)
+            {
+                return;
+            }
+
+            ItemView itemView = __instance.method_9(item, iv => !iv.IsSearched);
+            if (itemView != null)
+            {
+                CurrentContextSearchingId = item.Id;
+            }
+        }
+
+        [PatchPostfix]
+        public static void Postfix(GridView __instance, GEventArgs2 eventArgs, ItemUiContext ___itemUiContext_0, Dictionary<string, ItemView> ___dictionary_0)
+        {
+            if (eventArgs.To.Container != __instance.Grid)
+            {
+                return;
+            }
+
+            if (CurrentContextSearchingId == eventArgs.Item.Id)
+            {
+                if (eventArgs.Status == CommandStatus.Succeed)
+                {
+                    if (___dictionary_0.TryGetValue(eventArgs.Item.Id, out ItemView itemView))
+                    {
+                        ___itemUiContext_0.RegisterCurrentItemContext(itemView.ItemContext);
+                    }
+
+                    CurrentContextSearchingId = null;
+                }
+                else if (eventArgs.Status == CommandStatus.Failed)
+                {
+                    CurrentContextSearchingId = null;
+                }
+            }
         }
     }
 

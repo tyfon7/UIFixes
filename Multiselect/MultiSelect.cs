@@ -196,12 +196,12 @@ public class MultiSelect
         SecondaryItems.Clear();
     }
 
-    public static IEnumerable<DragItemContext> ItemContexts
+    public static IEnumerable<MultiSelectItemContext> ItemContexts
     {
         get { return SelectedItems.Keys; }
     }
 
-    public static IEnumerable<DragItemContext> SecondaryContexts
+    public static IEnumerable<MultiSelectItemContext> SecondaryContexts
     {
         get { return SecondaryItems.Keys; }
     }
