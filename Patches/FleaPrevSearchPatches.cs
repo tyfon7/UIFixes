@@ -373,30 +373,35 @@ public static class FleaPrevSearchPatches
 
             if (Settings.AutoExpandCategories.Value)
             {
+                Transform scrollArea = __instance.transform.Find("CategoriesPanel/ScrollArea");
+
                 // Try to auto-expand categories to use available space. Gotta do math to see what fits
-                const int PanelHeight = 780;
-                const int CategoryHeight = 34;
-                const int SubcategoryHeight = 25;
+                float PanelHeight = scrollArea.RectTransform().sizeDelta.y * scrollArea.lossyScale.y; // 780;
+                float CategoryHeight = 36f * scrollArea.lossyScale.y;
+                float SubcategoryHeight = 25f * scrollArea.lossyScale.y;
 
                 var activeCategories = __instance.GetComponentsInChildren<CategoryView>();
                 var activeSubcategories = __instance.GetComponentsInChildren<SubcategoryView>();
-                int currentHeight = activeCategories.Length * CategoryHeight + activeSubcategories.Length * SubcategoryHeight;
+                float currentHeight = activeCategories.Length * CategoryHeight + activeSubcategories.Length * SubcategoryHeight;
 
                 var categories = __instance.GetComponentsInChildren<CombinedView>()
                     .Where(cv => cv.transform.childCount > 0)
                     .Select(cv => cv.transform.GetChild(0).GetComponent<CategoryView>())
                     .Where(c => c != null && c.gameObject.activeInHierarchy);
 
+                int categoryTrees = 0;
                 while (categories.Any())
                 {
+                    categoryTrees = Math.Max(categoryTrees, categories.Count());
+
                     // This is all child categories that aren't already open; have matching *offers* (x.Count); and if they have children themselves they're a category, otherwise a subcategory
-                    int additionalHeight = categories
+                    float additionalHeight = categories
                         .Where(c => !c.R().IsOpen && c.Node != null)
                         .SelectMany(c => c.Node.Children)
                         .Where(n => n.Count > 0)
                         .Sum(n => n.Children.Any() ? CategoryHeight : SubcategoryHeight);
 
-                    if (currentHeight + additionalHeight > PanelHeight)
+                    if (categoryTrees > 1 && currentHeight + additionalHeight > PanelHeight)
                     {
                         break;
                     }

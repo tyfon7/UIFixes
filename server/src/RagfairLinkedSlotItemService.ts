@@ -20,7 +20,21 @@ export class RagfairLinkedSlotItemService extends RagfairLinkedItemService {
 
         if (slotName) {
             this.logger.info(`UIFixes: Finding items for specific slot ${tpl}:${slotName}`);
-            return this.getSpecificFilter(this.databaseService.getItems()[tpl], slotName);
+
+            const resultSet = this.getSpecificFilter(this.databaseService.getItems()[tpl], slotName);
+
+            // Default Inventory, for equipment slots
+            if (tpl === "55d7217a4bdc2d86028b456d") {
+                const categories = [...resultSet];
+                const items = Object.keys(this.databaseService.getItems()).filter(tpl =>
+                    this.itemHelper.isOfBaseclasses(tpl, categories)
+                );
+
+                // Send the categories along too, some of them might actually be items
+                return new Set(items.concat(categories));
+            }
+
+            return resultSet;
         }
 
         return super.getLinkedItems(tpl);
@@ -42,4 +56,6 @@ export class RagfairLinkedSlotItemService extends RagfairLinkedItemService {
 
         return results;
     }
+
+    private getCategoryItems(category: string) {}
 }

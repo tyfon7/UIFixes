@@ -1,4 +1,5 @@
-﻿using EFT.UI.Ragfair;
+﻿using EFT.HandBook;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Linq;
@@ -32,7 +33,27 @@ public static class FleaSlotSearchPatches
             if (search != null)
             {
                 __state = search.StringValue.Split(':')[0];
-                ___handbookClass[__state].Data.Id = search.StringValue;
+                EntityNodeClass node = ___handbookClass[__state];
+                if (node != null)
+                {
+                    // If the id is in the handbook (any mod slots on actual items), 
+                    // fake out the id so the filter is generated with the slot suffix
+                    node.Data.Id = search.StringValue;
+                }
+                else
+                {
+                    // If the id is not, like equipment slots, inject a dummy node
+                    HandbookData dummyData = new HandbookData()
+                    {
+                        Id = search.StringValue
+                    };
+                    EntityNodeClass dummyNode = new EntityNodeClass()
+                    {
+                        Data = dummyData,
+                        IsDummy = true
+                    };
+                    ___handbookClass.StructuredItems.AddVirtual(__state, dummyNode);
+                }
                 searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
             }
         }
@@ -47,7 +68,17 @@ public static class FleaSlotSearchPatches
 
             if (__state != null)
             {
-                ___handbookClass[__state].Data.Id = __state;
+                EntityNodeClass node = ___handbookClass[__state];
+                if (node.IsDummy)
+                {
+                    // We injected this dummy node, remove it
+                    ___handbookClass.StructuredItems.RemoveVirtual(__state);
+                }
+                else
+                {
+                    // Restore the Id back to its normal value
+                    node.Data.Id = __state;
+                }
             }
         }
     }

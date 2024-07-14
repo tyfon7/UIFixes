@@ -38,6 +38,8 @@ public static class ContextMenuPatches
 
         new DisableLoadPresetOnBulletsPatch().Enable();
 
+        new EmptyModSlotMenuPatch().Enable();
+        new EmptyModSlotMenuRemovePatch().Enable();
         new EmptySlotMenuPatch().Enable();
         new EmptySlotMenuRemovePatch().Enable();
     }
@@ -383,7 +385,7 @@ public static class ContextMenuPatches
         }
     }
 
-    public class EmptySlotMenuPatch : ModulePatch
+    public class EmptyModSlotMenuPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -403,7 +405,7 @@ public static class ContextMenuPatches
         }
     }
 
-    public class EmptySlotMenuRemovePatch : ModulePatch
+    public class EmptyModSlotMenuRemovePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -412,6 +414,45 @@ public static class ContextMenuPatches
 
         [PatchPostfix]
         public static void Postfix(ModSlotView __instance)
+        {
+            EmptySlotMenuTrigger menuTrigger = __instance.GetComponent<EmptySlotMenuTrigger>();
+            if (menuTrigger != null)
+            {
+                UnityEngine.Object.Destroy(menuTrigger);
+            }
+        }
+    }
+
+    public class EmptySlotMenuPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // SetSlotGraphics is called with false both during setup and when an item is removed
+            return AccessTools.DeclaredMethod(typeof(SlotView), nameof(SlotView.SetSlotGraphics));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SlotView __instance, bool fullSlot, ItemUiContext ___ItemUiContext)
+        {
+            if (!Settings.EnableSlotSearch.Value || fullSlot)
+            {
+                return;
+            }
+
+            EmptySlotMenuTrigger menuTrigger = __instance.GetOrAddComponent<EmptySlotMenuTrigger>();
+            menuTrigger.Init(__instance.Slot, __instance.ParentItemContext, ___ItemUiContext);
+        }
+    }
+
+    public class EmptySlotMenuRemovePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(SlotView), nameof(SlotView.SetupItemView));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SlotView __instance)
         {
             EmptySlotMenuTrigger menuTrigger = __instance.GetComponent<EmptySlotMenuTrigger>();
             if (menuTrigger != null)

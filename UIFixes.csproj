@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>2.1.1</Version>
+    <Version>2.1.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release;Dist</Configurations>
@@ -95,8 +95,8 @@
       if $(ConfigurationName) == Dist (
         mkdir "$(ProjectDir)\dist\BepInEx\plugins"
         xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\dist\BepInEx\plugins\"
-        7z a -t7z Tyfon-UIFixes-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user
-        move /Y Tyfon-UIFixes-$(Version).7z dist\
+        7z a -t7z $(TargetName.Replace(".", "-"))-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user
+        move /Y $(TargetName.Replace(".", "-"))-$(Version).7z dist\
       )' />
   </Target>
 </Project>
