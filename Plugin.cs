@@ -64,6 +64,7 @@ public class Plugin : BaseUnityPlugin
         FleaSlotSearchPatches.Enable();
         MoveSortingTablePatches.Enable();
         FilterOutOfStockPatches.Enable();
+        SortPatches.Enable();
     }
 
     public static bool InRaid()
