@@ -117,7 +117,7 @@ public static class ContextMenuShortcutPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerEnter));
+            return AccessTools.DeclaredMethod(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerEnter));
         }
 
         [PatchPostfix]

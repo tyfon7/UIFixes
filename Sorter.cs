@@ -1,17 +1,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using EFT.InventoryLogic;
+using UnityEngine;
 
 namespace UIFixes;
 
 public static class Sorter
 {
-    public static GStruct414<GClass2824> Sort(LootItemClass sortingItem, InventoryControllerClass controller, bool includingContainers, bool simulate)
+    public static GStruct414<SortOperation> Sort(LootItemClass sortingItem, InventoryControllerClass controller, bool includingContainers, bool simulate)
     {
-        GClass2824 operation = new(sortingItem, controller);
+        SortOperation operation = new(sortingItem, controller);
         if (!operation.CanExecute(controller))
         {
-            return new GClass3325(sortingItem);
+            return new CannotSortError(sortingItem);
         }
 
         List<Item> itemsToSort = [];
@@ -19,7 +20,7 @@ public static class Sorter
         {
             operation.SetOldPositions(grid, grid.ItemCollection.ToListOfLocations());
             itemsToSort.AddRange(includingContainers ? grid.Items : grid.Items.Where(i => i is not LootItemClass compoundItem || !compoundItem.Grids.Any()));
-            var containers = includingContainers ? [] : grid.ItemCollection.Where(kvp => kvp.Key is LootItemClass compoundItem && compoundItem.Grids.Any()).Select(kvp => new GClass2521(kvp.Key, kvp.Value)).ToArray();
+            var containers = includingContainers ? [] : grid.ItemCollection.Where(kvp => kvp.Key is LootItemClass compoundItem && compoundItem.Grids.Any()).Select(kvp => new ItemWithLocation(kvp.Key, kvp.Value)).ToArray();
             grid.RemoveAll();
             controller.RaiseEvent(new GEventArgs23(grid));
 
@@ -31,7 +32,7 @@ public static class Sorter
             }
         }
 
-        List<Item> sortedItems = GClass2772.Sort(itemsToSort);
+        List<Item> sortedItems = ItemSorter.Sort(itemsToSort);
         int fallbackTries = 5;
         InventoryError inventoryError = null;
 
@@ -46,7 +47,7 @@ public static class Sorter
                     if (grid.Add(item).Succeeded)
                     {
                         sorted = true;
-                        operation.AddItemToGrid(grid, new GClass2521(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
+                        operation.AddItemToGrid(grid, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
                         break;
                     }
                 }
@@ -64,7 +65,7 @@ public static class Sorter
                             if (stashGridClass3 != null && !stashGridClass3.Add(item).Failed)
                             {
                                 sorted = true;
-                                operation.AddItemToGrid(stashGridClass3, new GClass2521(item, ((ItemAddressClass)item.CurrentAddress).LocationInGrid));
+                                operation.AddItemToGrid(stashGridClass3, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
                             }
                         }
                     }
@@ -78,7 +79,7 @@ public static class Sorter
                     continue;
                 }
 
-                inventoryError = new GClass3326(sortingItem);
+                inventoryError = new FailedToSortError(sortingItem);
                 break;
             }
         }
@@ -97,9 +98,9 @@ public static class Sorter
 
         foreach (StashGridClass grid in sortingItem.Grids)
         {
-            if (grid.ItemCollection.Any<KeyValuePair<Item, LocationInGrid>>() && grid is GClass2516 searchable)
+            if (grid.ItemCollection.Any<KeyValuePair<Item, LocationInGrid>>() && grid is SearchableGrid searchableGrid)
             {
-                searchable.FindAll(controller.Profile.ProfileId);
+                searchableGrid.FindAll(controller.Profile.ProfileId);
             }
         }
 

@@ -32,7 +32,7 @@ public static class SortPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(LootItemClass sortingItem, InventoryControllerClass controller, bool simulate, ref GStruct414<GClass2824> __result)
+        public static bool Prefix(LootItemClass sortingItem, InventoryControllerClass controller, bool simulate, ref GStruct414<SortOperation> __result)
         {
             __result = Sorter.Sort(sortingItem, controller, IncludeContainers, simulate);
             return false;
@@ -86,7 +86,7 @@ public static class SortPatches
 
             if (error == null)
             {
-                GStruct414<GClass2824> sortOperation = InteractionsHandlerClass.Sort(lootItem, inventoryController, false);
+                var sortOperation = InteractionsHandlerClass.Sort(lootItem, inventoryController, false);
                 if (sortOperation.Succeeded)
                 {
                     IResult result = await inventoryController.TryRunNetworkTransaction(sortOperation);
@@ -109,7 +109,6 @@ public static class SortPatches
         private static async Task<Error> StackAll(LootItemClass lootItem, InventoryControllerClass inventoryController)
         {
             Error error = null;
-            List<GStruct414<GInterface343>> transferOrMergeOperations = [];
             var mergeableItems = lootItem.Grids.SelectMany(g => g.Items)
                 .OfType<Stackable>()
                 .Where(i => i.StackObjectsCount < i.StackMaxSize)
@@ -123,7 +122,7 @@ public static class SortPatches
                     continue;
                 }
 
-                if (InteractionsHandlerClass.smethod_0(lootItem.Grids, item, out GClass2751 targetItem, 1))
+                if (InteractionsHandlerClass.smethod_0(lootItem.Grids, item, out Stackable targetItem, 1))
                 {
                     var operation = InteractionsHandlerClass.TransferOrMerge(item, targetItem, inventoryController, true);
                     if (operation.Succeeded)

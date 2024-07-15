@@ -38,7 +38,7 @@ public static class FilterOutOfStockPatches
         public static void Postfix(TraderDealScreen __instance, DefaultUIButton ____updateAssort, TradingGridView ____traderGridView)
         {
             OutOfStockPanel = new GameObject("OutOfStockPanel", [typeof(RectTransform)]);
-            OutOfStockPanel.transform.parent = __instance.transform.Find("Left Person/Possessions Grid");
+            OutOfStockPanel.transform.SetParent(__instance.transform.Find("Left Person/Possessions Grid"), false);
             OutOfStockPanel.transform.SetAsLastSibling();
             OutOfStockPanel.SetActive(true);
 

@@ -251,7 +251,7 @@ public class MultiSelect
         if (draggedItemView != null && Count > 1)
         {
             GameObject textOverlay = new("MultiSelectText", [typeof(RectTransform), typeof(TextMeshProUGUI)]);
-            textOverlay.transform.parent = draggedItemView.transform;
+            textOverlay.transform.SetParent(draggedItemView.transform, false);
             textOverlay.transform.SetAsLastSibling();
             textOverlay.SetActive(true);
 

@@ -15,7 +15,9 @@ global using Scheme = GClass1939;
 global using ItemFilterExtensions = GClass2524;
 global using QuickBindCommandMap = GClass3032;
 global using DiscardResult = GClass2799;
-global using BindOperation = GClass2818;
+global using ItemSorter = GClass2772;
+global using ItemWithLocation = GClass2521;
+global using SearchableGrid = GClass2516;
 
 // State machine states
 global using FirearmReadyState = EFT.Player.FirearmController.GClass1619;
@@ -32,12 +34,16 @@ global using GridSpaceTakenError = StashGridClass.GClass3311;
 global using GridModificationsUnavailableError = StashGridClass.GClass3315;
 global using NoRoomError = GClass3316;
 global using NoPossibleActionsError = GClass3317;
+global using CannotSortError = GClass3325;
+global using FailedToSortError = GClass3326;
 global using MoveSameSpaceError = InteractionsHandlerClass.GClass3353;
 
 // Operations
 global using ItemOperation = GStruct413;
 global using MoveOperation = GClass2802;
 global using NoOpMove = GClass2795;
+global using BindOperation = GClass2818;
+global using SortOperation = GClass2824;
 global using TargetItemOperation = TraderControllerClass.Struct775;
 
 // Interfaces
