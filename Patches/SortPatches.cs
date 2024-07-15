@@ -74,6 +74,11 @@ public static class SortPatches
         [PatchPrefix]
         public static bool Prefix(GridSortPanel __instance, LootItemClass ___lootItemClass, InventoryControllerClass ___inventoryControllerClass)
         {
+            if (!Settings.StackBeforeSort.Value)
+            {
+                return true;
+            }
+
             Sort(__instance, ___lootItemClass, ___inventoryControllerClass).HandleExceptions();
             return false;
         }

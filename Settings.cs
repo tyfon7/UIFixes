@@ -85,6 +85,7 @@ internal class Settings
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
+    public static ConfigEntry<bool> StackBeforeSort { get; set; }
     public static ConfigEntry<bool> MergeFIRMoney { get; set; }
     public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
@@ -430,6 +431,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(StackBeforeSort = config.Bind(
+            InventorySection,
+            "Combine Stacks Before Sorting",
+            true,
+            new ConfigDescription(
+                "When sorting containers, first combine stacks of the same type. This will not be undone if the sorting fails.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
