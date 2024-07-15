@@ -7,7 +7,7 @@
     <Version>2.2.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <Configurations>Debug;Release;Dist</Configurations>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -17,7 +17,6 @@
   <PropertyGroup>
     <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.9.0-debug</PathToSPT>
     <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.9.0</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Dist'">..\..\..\..\SPT\3.9.0</PathToSPT>
   </PropertyGroup>
 
   <ItemGroup>
@@ -86,16 +85,15 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command='if $(ConfigurationName) == Debug (
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
-        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
+        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
       )
       if $(ConfigurationName) == Release (
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\$(PathToSPT)\BepInEx\plugins\"
-      )
-      if $(ConfigurationName) == Dist (
-        mkdir "$(ProjectDir)\dist\BepInEx\plugins"
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)\dist\BepInEx\plugins\"
-        7z a -t7z $(TargetName.Replace(".", "-"))-$(Version).7z $(ProjectDir)\dist\BepInEx $(ProjectDir)\dist\user
+        mkdir "$(ProjectDir)dist\BepInEx\plugins"
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
+        xcopy /F /Y /S "$(ProjectDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
+        xcopy /F /Y /S "$(ProjectDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
+        7z a -t7z $(TargetName.Replace(".", "-"))-$(Version).7z $(ProjectDir)dist\BepInEx $(ProjectDir)dist\user
         move /Y $(TargetName.Replace(".", "-"))-$(Version).7z dist\
       )' />
   </Target>
