@@ -5,7 +5,6 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -34,6 +33,11 @@ public static class SortPatches
         [PatchPrefix]
         public static bool Prefix(LootItemClass sortingItem, InventoryControllerClass controller, bool simulate, ref GStruct414<SortOperation> __result)
         {
+            if (IncludeContainers)
+            {
+                return true;
+            }
+
             __result = Sorter.Sort(sortingItem, controller, IncludeContainers, simulate);
             return false;
         }

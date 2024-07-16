@@ -56,6 +56,4 @@ export class RagfairLinkedSlotItemService extends RagfairLinkedItemService {
 
         return results;
     }
-
-    private getCategoryItems(category: string) {}
 }
