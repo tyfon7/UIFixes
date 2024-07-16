@@ -66,9 +66,7 @@ public class MultiSelectDebug : MonoBehaviour
         }
 
         ItemAddress address = itemContext is DragItemContext dragItemContext ? dragItemContext.ItemAddress : itemContext.Item.CurrentAddress;
-        LocationInGrid location = address is GridItemAddress gridAddress ?
-            itemContext is MultiSelectItemContext ? MultiGrid.GetGridLocation(gridAddress) : gridAddress.LocationInGrid :
-            null;
+        LocationInGrid location = address is GridItemAddress gridAddress ? gridAddress.LocationInGrid : null;
         string locationString = location != null ? $"({location.x}, {location.y})" : "(slot)";
 
         return $"x{itemContext.Item.StackObjectsCount} {address.Container.ID} {locationString} {itemContext.Item.Name.Localized()}";

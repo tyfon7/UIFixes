@@ -162,7 +162,10 @@ public class MultiSelect
         if (oldItemContext != null)
         {
             MultiSelectItemContext newContext = oldItemContext.Refresh();
-            SelectedItems.Add(newContext, SelectedItems[oldItemContext]);
+            if (newContext != null)
+            {
+                SelectedItems.Add(newContext, SelectedItems[oldItemContext]);
+            }
 
             SelectedItems.Remove(oldItemContext);
             oldItemContext.Dispose();
@@ -463,7 +466,12 @@ public class MultiSelectItemContext : DragItemContext
 
     public MultiSelectItemContext Refresh()
     {
-        return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
+        if (Item == ItemContextAbstractClass.Item)
+        {
+            return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
+        }
+
+        return null;
     }
 
     public void UpdateDragContext(DragItemContext itemContext)
