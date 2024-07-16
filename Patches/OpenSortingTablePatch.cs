@@ -19,17 +19,24 @@ public class OpenSortingTablePatch : ModulePatch
     }
 
     [PatchPrefix]
-    public static void Prefix(ItemUiContext __instance)
+    public static bool Prefix(ItemUiContext __instance, ref ItemOperation __result)
     {
-        if (!Settings.AutoOpenSortingTable.Value || !AllowedScreens.Contains(__instance.ContextType) || Plugin.InRaid())
+        // BSG checks visibility, not in-raid. There's a bug where somehow that visibility can be true in raid
+        if (Plugin.InRaid())
         {
-            return;
+            __result = new GClass3370("SortingTable/VisibilityError");
+            return false;
+        }
+
+        if (!Settings.AutoOpenSortingTable.Value || !AllowedScreens.Contains(__instance.ContextType))
+        {
+            return true;
         }
 
         // Temporary work-around for LootValue bug - bail out if the ALT key is down
         if (Input.GetKey(KeyCode.LeftAlt))
         {
-            return;
+            return true;
         }
 
         SortingTableClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
@@ -46,5 +53,7 @@ public class OpenSortingTablePatch : ModulePatch
                 Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
             }
         }
+
+        return true;
     }
 }
