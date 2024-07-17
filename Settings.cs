@@ -140,7 +140,7 @@ internal class Settings
             "Show Transfer Items Confirmation Dialog",
             TransferConfirmationOption.Never,
             new ConfigDescription(
-                "When to show the confirmation dialog when you close the item transfer screen without tSPTng all the items",
+                "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -448,7 +448,7 @@ internal class Settings
             "Autostack Money with FiR Money",
             true,
             new ConfigDescription(
-                "Allows automatic stacking of Found In Raid money with other money, mSPTng container interaction easier",
+                "Allows automatic stacking of Found In Raid money with other money, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -457,7 +457,7 @@ internal class Settings
             "Autostack Ammo with FiR Ammo",
             false,
             new ConfigDescription(
-                "Allows automatic stacking of Found In Raid ammo with other money, mSPTng container interaction easier",
+                "Allows automatic stacking of Found In Raid ammo with other ammo, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -466,7 +466,7 @@ internal class Settings
             "Autostack Items with FiR Items",
             false,
             new ConfigDescription(
-                "Allows automatic stacking of Found In Raid items with other items, mSPTng container interaction easier",
+                "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
 
