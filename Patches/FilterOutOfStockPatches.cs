@@ -50,15 +50,16 @@ public static class FilterOutOfStockPatches
 
             HorizontalLayoutGroup layoutGroup = OutOfStockPanel.AddComponent<HorizontalLayoutGroup>();
             layoutGroup.childForceExpandHeight = layoutGroup.childForceExpandWidth = false;
-            layoutGroup.childControlHeight = layoutGroup.childControlWidth = false;
+            layoutGroup.childControlHeight = false;
+            layoutGroup.childControlWidth = true;
             layoutGroup.childAlignment = TextAnchor.MiddleRight;
 
             Image checkbox = UnityEngine.Object.Instantiate(__instance.transform.Find("TradeControll/Tabs/FillButton/Default/Icon_Box").GetComponent<Image>(), OutOfStockPanel.transform, false);
-            checkbox.SetNativeSize();
+            checkbox.RectTransform().sizeDelta = new Vector2(20f, 20f);
+            checkbox.preserveAspect = true;
             Image check = UnityEngine.Object.Instantiate(__instance.transform.Find("TradeControll/Tabs/FillButton/Checkmark").GetComponent<Image>(), checkbox.transform, false);
-            check.SetNativeSize();
-            check.RectTransform().anchoredPosition = Vector2.zero;
-            check.transform.localScale = new Vector3(.7f, .7f, .7f);
+            check.RectTransform().anchoredPosition = new Vector2(-2f, 0f);
+            check.RectTransform().sizeDelta = new Vector2(13f, 12f);
             check.gameObject.SetActive(ShowOutOfStockItems);
 
             LocalizedText text = UnityEngine.Object.Instantiate(____updateAssort.transform.Find("TextWhite").GetComponent<LocalizedText>(), OutOfStockPanel.transform, false);
@@ -67,7 +68,7 @@ public static class FilterOutOfStockPatches
 
             TextMeshProUGUI textMesh = text.GetComponent<TextMeshProUGUI>();
             textMesh.enableAutoSizing = false;
-            textMesh.fontSize = 18f;
+            textMesh.fontSize = 14f;
 
             Image background = OutOfStockPanel.AddComponent<Image>();
             background.color = Color.clear;
