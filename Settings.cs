@@ -81,6 +81,7 @@ internal class Settings
     public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
     public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
     public static ConfigEntry<bool> SwapItems { get; set; }
+    public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -395,6 +396,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Drag one item onto another to swap their positions, if possible",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SwapMags = config.Bind(
+            InventorySection,
+            "Reload Magazines In-Place",
+            true,
+            new ConfigDescription(
+                "When reloading a weapon with a magazine, swap locations with the new magazine (if possible)",
                 null,
                 new ConfigurationManagerAttributes { })));
 

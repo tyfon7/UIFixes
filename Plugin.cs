@@ -65,6 +65,7 @@ public class Plugin : BaseUnityPlugin
         MoveSortingTablePatches.Enable();
         FilterOutOfStockPatches.Enable();
         SortPatches.Enable();
+        ReloadInPlacePatches.Enable();
     }
 
     public static bool InRaid()
