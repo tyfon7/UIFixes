@@ -117,6 +117,7 @@ internal class Settings
     public static ConfigEntry<bool> EnableSlotSearch { get; set; }
     public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
     public static ConfigEntry<bool> AutoExpandCategories { get; set; }
+    public static ConfigEntry<bool> ClearFiltersOnSearch { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
     public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
@@ -660,6 +661,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Searches will auto-expand categories in the left panel if there is room wtihout scrolling",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ClearFiltersOnSearch = config.Bind(
+            FleaMarketSection,
+            "Clear Filters on Search",
+            true,
+            new ConfigDescription(
+                "Pressing Enter after typing in the flea search bar will clear non-default filters",
                 null,
                 new ConfigurationManagerAttributes { })));
 

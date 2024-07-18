@@ -1,4 +1,5 @@
-﻿using EFT.UI.Ragfair;
+﻿using EFT.UI;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
@@ -18,6 +19,8 @@ public static class FixFleaPatches
 
         new OfferItemFixMaskPatch().Enable();
         new OfferViewTweaksPatch().Enable();
+
+        new SearchPatch().Enable();
     }
 
     public class DoNotToggleOnMouseOverPatch : ModulePatch
@@ -93,6 +96,37 @@ public static class FixFleaPatches
             // Stop expiration clock from dancing around
             var timeLeft = ____expirationTimePanel.transform.Find("TimeLeft").GetComponent<HorizontalLayoutGroup>();
             timeLeft.childControlWidth = false;
+        }
+    }
+
+    public class SearchPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(RagfairCategoriesPanel), nameof(RagfairCategoriesPanel.method_9));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(RagfairCategoriesPanel __instance, string arg)
+        {
+            if (!Settings.ClearFiltersOnSearch.Value)
+            {
+                return true;
+            }
+
+            if (arg.StartsWith("#") || __instance.Ragfair == null || __instance.EViewListType_0 != EViewListType.AllOffers)
+            {
+                return true;
+            }
+
+            __instance.Ragfair.CancellableFilters.Clear();
+
+            FilterRule filterRule = __instance.Ragfair.method_3(EViewListType.AllOffers);
+            filterRule.HandbookId = string.Empty;
+
+            __instance.Ragfair.AddSearchesInRule(filterRule, true);
+
+            return false;
         }
     }
 }
