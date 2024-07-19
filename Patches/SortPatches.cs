@@ -119,7 +119,6 @@ public static class SortPatches
         {
             Error error = null;
             var mergeableItems = lootItem.Grids.SelectMany(g => g.Items)
-                .OfType<Stackable>()
                 .Where(i => i.StackObjectsCount < i.StackMaxSize)
                 .ToArray();
 
@@ -131,7 +130,7 @@ public static class SortPatches
                     continue;
                 }
 
-                if (InteractionsHandlerClass.smethod_0(lootItem.Grids, item, out Stackable targetItem, 1))
+                if (Sorter.FindStackForMerge(lootItem.Grids, item, out Item targetItem, 1))
                 {
                     var operation = InteractionsHandlerClass.TransferOrMerge(item, targetItem, inventoryController, true);
                     if (operation.Succeeded)

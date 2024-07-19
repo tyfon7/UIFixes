@@ -27,44 +27,10 @@ public static class StackFirItemsPatches
             return method;
         }
 
-        // Reimplementing this entire method to ignore SpawnedInSession for certain types
         [PatchPrefix]
-        public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref object mergeableItem, int overrideCount, ref bool __result)
+        public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref Item mergeableItem, int overrideCount, ref bool __result)
         {
-            if (!MergeableItemType.IsInstanceOfType(itemToMerge))
-            {
-                mergeableItem = null;
-                __result = false;
-            }
-
-            if (overrideCount <= 0)
-            {
-                overrideCount = itemToMerge.StackObjectsCount;
-            }
-
-            bool ignoreSpawnedInSession;
-            if (itemToMerge.Template is MoneyClass)
-            {
-                ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
-            }
-            else if (itemToMerge.Template is AmmoTemplate)
-            {
-                ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
-            }
-            else
-            {
-                ignoreSpawnedInSession = Settings.MergeFIROther.Value;
-            }
-
-            mergeableItem = containersToPut.SelectMany(x => x.Items)
-                .Where(MergeableItemType.IsInstanceOfType)
-                .Where(x => x != itemToMerge)
-                .Where(x => x.TemplateId == itemToMerge.TemplateId)
-                .Where(x => ignoreSpawnedInSession || x.SpawnedInSession == itemToMerge.SpawnedInSession)
-                .Where(x => x.StackObjectsCount < x.StackMaxSize)
-                .FirstOrDefault(x => overrideCount <= x.StackMaxSize - x.StackObjectsCount);
-
-            __result = mergeableItem != null;
+            __result = Sorter.FindStackForMerge(containersToPut, itemToMerge, out mergeableItem, overrideCount);
             return false;
         }
     }
