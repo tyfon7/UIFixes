@@ -2,6 +2,7 @@
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
@@ -116,6 +117,11 @@ public static class FixFleaPatches
             }
 
             if (arg.StartsWith("#") || __instance.Ragfair == null || __instance.EViewListType_0 != EViewListType.AllOffers)
+            {
+                return true;
+            }
+
+            if (__instance.FilteredNodes.Values.Sum(node => node.Count) > 0)
             {
                 return true;
             }
