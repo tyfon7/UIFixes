@@ -13,9 +13,10 @@ public static class FixFleaPatches
 {
     public static void Enable()
     {
-        // These two are anal AF
+        // These are anal AF
         new DoNotToggleOnMouseOverPatch().Enable();
         new ToggleOnOpenPatch().Enable();
+        new DropdownHeightPatch().Enable();
 
         new OfferItemFixMaskPatch().Enable();
         new OfferViewTweaksPatch().Enable();
@@ -127,6 +128,23 @@ public static class FixFleaPatches
             __instance.Ragfair.AddSearchesInRule(filterRule, true);
 
             return false;
+        }
+    }
+
+    public class DropdownHeightPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(DropDownBox), nameof(DropDownBox.Init));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref float ____maxVisibleHeight)
+        {
+            if (____maxVisibleHeight == 120f)
+            {
+                ____maxVisibleHeight = 240f;
+            }
         }
     }
 }
