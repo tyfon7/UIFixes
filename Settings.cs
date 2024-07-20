@@ -114,6 +114,7 @@ internal class Settings
 
     // Flea Market
     public static ConfigEntry<bool> EnableFleaHistory { get; set; }
+    public static ConfigEntry<bool> ShowBarterIcons { get; set; }
     public static ConfigEntry<bool> EnableSlotSearch { get; set; }
     public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
     public static ConfigEntry<bool> AutoExpandCategories { get; set; }
@@ -643,6 +644,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Keep a history of flea market searches and filters, and show a back button to navigate it",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowBarterIcons = config.Bind(
+            FleaMarketSection,
+            "Show Barter Icons",
+            true,
+            new ConfigDescription(
+                "Show item icons for barters instead of the generic barter icon",
                 null,
                 new ConfigurationManagerAttributes { })));
 

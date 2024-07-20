@@ -66,6 +66,7 @@ public class Plugin : BaseUnityPlugin
         FilterOutOfStockPatches.Enable();
         SortPatches.Enable();
         ReloadInPlacePatches.Enable();
+        BarterOfferPatches.Enable();
     }
 
     public static bool InRaid()

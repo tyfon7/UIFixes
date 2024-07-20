@@ -1,6 +1,7 @@
 ﻿using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace UIFixes;
 
@@ -10,7 +11,7 @@ public static class ExtraItemProperties
 
     private class Properties
     {
-        public bool Reordered;
+        public bool Reordered = false;
     }
 
     public static bool GetReordered(this Item item) => properties.GetOrCreateValue(item).Reordered;
@@ -23,7 +24,7 @@ public static class ExtraTemplatedGridsViewProperties
 
     private class Properties
     {
-        public bool Reordered;
+        public bool Reordered = false;
     }
 
     public static bool GetReordered(this TemplatedGridsView gridsView) => properties.GetOrCreateValue(gridsView).Reordered;
@@ -42,3 +43,47 @@ public static class ExtraTradingGridProperties
     public static bool GetShowOutOfStock(this TradingGridView gridView) => properties.GetOrCreateValue(gridView).ShowOutOfStock;
     public static void SetShowOutOfStock(this TradingGridView gridView, bool value) => properties.GetOrCreateValue(gridView).ShowOutOfStock = value;
 }
+
+public static class ExtraRagfairOfferItemViewProperties
+{
+    private static readonly ConditionalWeakTable<RagfairOfferItemView, Properties> properties = new();
+
+    private class Properties
+    {
+        public Vector2? SizeOverride = null;
+        public bool ShowCaption = false;
+        public string Inscription = null;
+        public string Count = null;
+        public string Tooltip = null;
+    }
+
+    public static Vector2? GetSizeOverride(this RagfairOfferItemView itemView) => properties.GetOrCreateValue(itemView).SizeOverride;
+    public static void SetSizeOverride(this RagfairOfferItemView itemView, Vector2 value) => properties.GetOrCreateValue(itemView).SizeOverride = value;
+
+    public static bool GetShowCaption(this RagfairOfferItemView itemView) => properties.GetOrCreateValue(itemView).ShowCaption;
+    public static void SetShowCaption(this RagfairOfferItemView itemView, bool value) => properties.GetOrCreateValue(itemView).ShowCaption = value;
+
+    public static string GetInscription(this RagfairOfferItemView itemView) => properties.GetOrCreateValue(itemView).Inscription;
+    public static void SetInscription(this RagfairOfferItemView itemView, string value) => properties.GetOrCreateValue(itemView).Inscription = value;
+
+    public static string GetCount(this RagfairOfferItemView itemView) => properties.GetOrCreateValue(itemView).Count;
+    public static void SetCount(this RagfairOfferItemView itemView, string value) => properties.GetOrCreateValue(itemView).Count = value;
+
+    public static string GetTooltip(this RagfairOfferItemView itemView) => properties.GetOrCreateValue(itemView).Tooltip;
+    public static void SetTooltip(this RagfairOfferItemView itemView, string value) => properties.GetOrCreateValue(itemView).Tooltip = value;
+
+}
+
+public static class ExtraItemViewStatsProperties
+{
+    private static readonly ConditionalWeakTable<ItemViewStats, Properties> properties = new();
+
+    private class Properties
+    {
+        public bool HideMods = false;
+    }
+
+    public static bool GetHideMods(this ItemViewStats itemViewStats) => properties.GetOrCreateValue(itemViewStats).HideMods;
+    public static void SetHideMods(this ItemViewStats itemViewStats, bool value) => properties.GetOrCreateValue(itemViewStats).HideMods = value;
+}
+
