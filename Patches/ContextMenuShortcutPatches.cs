@@ -19,7 +19,6 @@ public static class ContextMenuShortcutPatches
         new ItemUiContextPatch().Enable();
 
         new HideoutItemViewRegisterContextPatch().Enable();
-        new HideoutItemViewUnegisterContextPatch().Enable();
 
         new TradingPanelRegisterContextPatch().Enable();
         new TradingPanelUnregisterContextPatch().Enable();
@@ -124,20 +123,6 @@ public static class ContextMenuShortcutPatches
         public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
         {
             ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext);
-        }
-    }
-
-    public class HideoutItemViewUnegisterContextPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(HideoutItemView), nameof(HideoutItemView.OnPointerExit));
-        }
-
-        [PatchPostfix]
-        public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
-        {
-            ___ItemUiContext.UnregisterCurrentItemContext(__instance.ItemContext);
         }
     }
 

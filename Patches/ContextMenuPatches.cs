@@ -192,13 +192,20 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.TradingInteractions.Type, "get_SubInteractions");
+            return AccessTools.PropertyGetter(
+                typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
+                nameof(ItemInfoInteractionsAbstractClass<EItemInfoButton>.SubInteractions));
         }
 
         [PatchPostfix]
-        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        public static void Postfix(
+            ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance,
+            ref IEnumerable<EItemInfoButton> __result)
         {
-            __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+            if (R.TradingInteractions.Type.IsInstanceOfType(__instance))
+            {
+                __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+            }
         }
     }
 
@@ -208,12 +215,23 @@ public static class ContextMenuPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.TradingInteractions.Type, "CreateSubInteractions");
+            return AccessTools.Method(
+                typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
+                nameof(ItemInfoInteractionsAbstractClass<EItemInfoButton>.CreateSubInteractions));
         }
 
         [PatchPrefix]
-        public static bool Prefix(object __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, ItemUiContext ___itemUiContext_0)
+        public static bool Prefix(
+            ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance,
+            EItemInfoButton parentInteraction,
+            ISubInteractions subInteractionsWrapper,
+            ItemUiContext ___itemUiContext_0)
         {
+            if (!R.TradingInteractions.Type.IsInstanceOfType(__instance))
+            {
+                return true;
+            }
+
             // Clear this, since something else should be active (even a different mouseover of the insurance button) 
             LoadingInsuranceActions = false;
 

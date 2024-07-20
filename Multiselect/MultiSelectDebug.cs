@@ -69,6 +69,6 @@ public class MultiSelectDebug : MonoBehaviour
         LocationInGrid location = address is GridItemAddress gridAddress ? gridAddress.LocationInGrid : null;
         string locationString = location != null ? $"({location.x}, {location.y})" : "(slot)";
 
-        return $"x{itemContext.Item.StackObjectsCount} {address.Container.ID} {locationString} {itemContext.Item.Name.Localized()}";
+        return $"x{itemContext.Item.StackObjectsCount} {(address != null ? address.Container.ID : "")} {locationString} {itemContext.Item.Name.Localized()}";
     }
 }

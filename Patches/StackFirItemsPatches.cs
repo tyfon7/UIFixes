@@ -45,19 +45,12 @@ public static class StackFirItemsPatches
         [PatchPrefix]
         public static bool Prefix(Item __instance, Item other, ref bool __result)
         {
-            bool ignoreSpawnedInSession;
-            if (__instance.Template is MoneyClass)
+            bool ignoreSpawnedInSession = __instance.Template switch
             {
-                ignoreSpawnedInSession = Settings.MergeFIRMoney.Value;
-            }
-            else if (__instance.Template is AmmoTemplate)
-            {
-                ignoreSpawnedInSession = Settings.MergeFIRAmmo.Value;
-            }
-            else
-            {
-                ignoreSpawnedInSession = Settings.MergeFIROther.Value;
-            }
+                MoneyClass _ => Settings.MergeFIRMoney.Value,
+                AmmoTemplate _ => Settings.MergeFIRMoney.Value,
+                _ => Settings.MergeFIROther.Value,
+            };
 
             __result = __instance.TemplateId == other.TemplateId && __instance.Id != other.Id && (ignoreSpawnedInSession || __instance.SpawnedInSession == other.SpawnedInSession);
             return false;
