@@ -28,12 +28,16 @@ Existing SPT features made better
 
 -   Rebind Home/End, PageUp/PageDown to work like you would expect
 -   Customizable mouse scrolling speed
+-   Moving stacks into containers always moves entire stack
+-   ✨ Items made stackable by other mods follow normal stacking behavior
 -   Allow found in raid money and ammo automatically stack with non-found-in-raid items
 -   Synchronize stash scroll position everywhere your stash is visible
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
 -   Load ammo preset will pull ammo from inventory, not just stash
 -   ✨ Multi-grid vest and backpack grids reordered to be left to right, top to bottom.
+-   ✨ Sorting will stack and combine stacks of items
+-   ✨ Shift-clicking sort will only sort loose items, leaving containers in place
 
 #### Inspect windows
 
@@ -57,6 +61,8 @@ Existing SPT features made better
 -   Option to keep the Add Offer window open after placing your offer
 -   Set prices in the Add Offer window by clicking the min/avg/max market prices (multiplies for bulk orders)
 -   Autoselect Similar checkbox is remembered across sessions and application restarts
+-   ✨ Replace barter offers icons with actual item images, plus owned/required counts on expansion
+-   ✨ Clears filters for you when you type in search bar and there's no match
 
 #### Weapon modding/presets
 
@@ -70,6 +76,7 @@ Existing SPT features made better
 
 #### In raid
 
+-   ✨ Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room.
 -   ✨ Grenade quickbinds will transfer to the next grenade of the same type after throwing.
 -   ✨ Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
 
