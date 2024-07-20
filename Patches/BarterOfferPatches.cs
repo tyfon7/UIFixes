@@ -144,12 +144,11 @@ public static class BarterOfferPatches
                 return 0;
             }
 
-            DogtagComponent requiredDogTag = requirement.Item.GetItemComponent<DogtagComponent>();
-            if (requiredDogTag != null)
+            if (requirement.Item.GetItemComponent<DogtagComponent>() != null)
             {
                 return allItems.Select(item => item.GetItemComponent<DogtagComponent>())
                     .Where(dogtag => dogtag != null)
-                    .Where(dogtag => dogtag.Level >= requiredDogTag.Level)
+                    .Where(dogtag => dogtag.Level >= handoverRequirement.Level)
                     .Where(dogtag => handoverRequirement.Side == EDogtagExchangeSide.Any || dogtag.Side.ToString() == handoverRequirement.Side.ToString())
                     .Count();
             }
