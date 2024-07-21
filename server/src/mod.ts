@@ -71,7 +71,6 @@ class UIFixes implements IPreSptLoadMod {
 
                     for (let i = 0; i < offer.requirements.length; i++) {
                         if (barterScheme[i]["level"] !== undefined) {
-                            this.logger.info("UIFixes - adding dogtag requirements to trader offer");
                             offer.requirements[i]["level"] = barterScheme[i]["level"];
                             offer.requirements[i]["side"] = barterScheme[i]["side"];
                         }
