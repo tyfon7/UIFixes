@@ -23,7 +23,10 @@ public static class ScrollPatches
         new EnchanceTraderStashScrollingPatch().Enable();
         new EnhanceFleaScrollingPatch().Enable();
         new EnhanceMailScrollingPatch().Enable();
+
         new MouseScrollingSpeedPatch().Enable();
+        new LightScrollerSpeedPatch().Enable();
+
         new EnhanceHideoutScrollingPatch().Enable();
         new EnhanceTaskListScrollingPatch().Enable();
         new OpenLastTaskPatch().Enable();
@@ -302,6 +305,21 @@ public static class ScrollPatches
         {
             int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
             data.scrollDelta *= multi;
+        }
+    }
+
+    public class LightScrollerSpeedPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(LightScroller), nameof(LightScroller.method_1));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(ref float deltaPixels)
+        {
+            int multi = Settings.UseRaidMouseScrollMulti.Value && Plugin.InRaid() ? Settings.MouseScrollMultiInRaid.Value : Settings.MouseScrollMulti.Value;
+            deltaPixels *= multi;
         }
     }
 
