@@ -82,6 +82,7 @@ internal class Settings
     public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
     public static ConfigEntry<bool> SwapItems { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
+    public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -406,7 +407,16 @@ internal class Settings
             "Reload Magazines In-Place",
             true,
             new ConfigDescription(
-                "When reloading a weapon with a magazine, swap locations with the new magazine (if possible)",
+                "When reloading a weapon with a magazine, swap locations with the new magazine if necessary (and possible)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AlwaysSwapMags = config.Bind(
+            InventorySection,
+            "Always Reload Magazines In-Place",
+            false,
+            new ConfigDescription(
+                "Always reload magazines in-place, even if there's space not to. Note that in-place reloads are slower.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
