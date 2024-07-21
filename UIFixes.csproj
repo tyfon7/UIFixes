@@ -93,8 +93,7 @@
         xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
         xcopy /F /Y /S "$(ProjectDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
         xcopy /F /Y /S "$(ProjectDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
-        7z a -t7z $(TargetName.Replace(".", "-"))-$(Version).7z $(ProjectDir)dist\BepInEx $(ProjectDir)dist\user
-        move /Y $(TargetName.Replace(".", "-"))-$(Version).7z dist\
+        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(ProjectDir)dist\BepInEx $(ProjectDir)dist\user
       )' />
   </Target>
 </Project>
