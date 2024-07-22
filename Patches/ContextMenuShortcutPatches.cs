@@ -75,12 +75,12 @@ public static class ContextMenuShortcutPatches
 
             if (Settings.UseAllKeyBind.Value.IsDown())
             {
-                TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, EItemInfoButton.Use);
+                TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, [EItemInfoButton.Use]);
             }
 
             if (Settings.UnloadKeyBind.Value.IsDown())
             {
-                TryInteraction(__instance, itemContext, EItemInfoButton.Unload, EItemInfoButton.UnloadAmmo);
+                TryInteraction(__instance, itemContext, EItemInfoButton.Unload, [EItemInfoButton.UnloadAmmo]);
             }
 
             if (Settings.UnpackKeyBind.Value.IsDown())
@@ -103,15 +103,27 @@ public static class ContextMenuShortcutPatches
                 MoveToFromSortingTable(itemContext, __instance);
             }
 
+            if (Settings.ExamineKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Examine,
+                    [EItemInfoButton.Fold, EItemInfoButton.Unfold, EItemInfoButton.TurnOn, EItemInfoButton.TurnOff, EItemInfoButton.CheckMagazine]);
+            }
+
             Interactions = null;
         }
 
-        private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton? fallbackInteraction = null)
+        private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton[] fallbackInteractions = null)
         {
             Interactions ??= itemUiContext.GetItemContextInteractions(itemContext, null);
-            if (!Interactions.ExecuteInteraction(interaction) && fallbackInteraction.HasValue)
+            if (!Interactions.ExecuteInteraction(interaction) && fallbackInteractions != null)
             {
-                Interactions.ExecuteInteraction(fallbackInteraction.Value);
+                foreach (var fallbackInteraction in fallbackInteractions)
+                {
+                    if (Interactions.ExecuteInteraction(fallbackInteraction))
+                    {
+                        return;
+                    }
+                }
             }
         }
 

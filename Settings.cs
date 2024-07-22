@@ -48,6 +48,7 @@ internal class Settings
     private const string FleaMarketSection = "6. Flea Market";
 
     // General
+    public static ConfigEntry<bool> UnlockCursor { get; set; }
     public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
     public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
@@ -63,6 +64,7 @@ internal class Settings
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
     public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> ExamineKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
@@ -133,6 +135,15 @@ internal class Settings
         var configEntries = new List<ConfigEntryBase>();
 
         // General
+        configEntries.Add(UnlockCursor = config.Bind(
+            GeneralSection,
+            "Unlock Cursor",
+            true,
+            new ConfigDescription(
+                "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take affect.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(ShowPresetConfirmations = config.Bind(
             GeneralSection,
             "Show Weapon Preset Confirmation Dialog",
@@ -266,6 +277,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.O),
             new ConfigDescription(
                 "Keybind to open a container",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ExamineKeyBind = config.Bind(
+            InputSection,
+            "Examine/Interact Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to examine an item, fold it, unfold it, turn it on, turn it off, or check a magazine",
                 null,
                 new ConfigurationManagerAttributes { })));
 
