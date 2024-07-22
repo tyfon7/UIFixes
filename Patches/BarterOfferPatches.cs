@@ -146,14 +146,16 @@ public static class BarterOfferPatches
 
             if (requirement.Item.GetItemComponent<DogtagComponent>() != null)
             {
-                return allItems.Select(item => item.GetItemComponent<DogtagComponent>())
+                return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+                    .Select(item => item.GetItemComponent<DogtagComponent>())
                     .Where(dogtag => dogtag != null)
                     .Where(dogtag => dogtag.Level >= handoverRequirement.Level)
                     .Where(dogtag => handoverRequirement.Side == EDogtagExchangeSide.Any || dogtag.Side.ToString() == handoverRequirement.Side.ToString())
                     .Count();
             }
 
-            return allItems.Where(item => item.TemplateId == requirement.Item.TemplateId)
+            return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+                .Where(item => item.TemplateId == requirement.Item.TemplateId)
                 .Where(item => !requirement.OnlyFunctional || item is not LootItemClass lootItem || !lootItem.MissingVitalParts.Any())
                 .Where(item => item is not GInterface325 encodable || requirement.Item is not GInterface325 || encodable.IsEncoded() == requirement.IsEncoded)
                 .Sum(item => item.StackObjectsCount);
