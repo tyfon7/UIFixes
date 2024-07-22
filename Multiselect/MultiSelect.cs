@@ -125,6 +125,8 @@ public class MultiSelect
 
     public static void OnKillItemView(GridItemView itemView)
     {
+        CombineSecondary();
+
         MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Value == itemView).Key;
         if (itemContext != null)
         {
@@ -139,6 +141,8 @@ public class MultiSelect
         {
             return;
         }
+
+        CombineSecondary();
 
         MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
         if (itemContext != null)
@@ -157,6 +161,8 @@ public class MultiSelect
         {
             return;
         }
+
+        CombineSecondary();
 
         MultiSelectItemContext oldItemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == eventArgs.Item).Key;
         if (oldItemContext != null)
@@ -221,7 +227,7 @@ public class MultiSelect
 
     public static bool Active
     {
-        get { return SelectedItems.Count > 0; }
+        get { return SelectedItems.Count > 0 || SecondaryItems.Count > 0; }
     }
 
     // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one

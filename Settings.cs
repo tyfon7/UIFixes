@@ -70,6 +70,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
     public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
@@ -93,6 +94,7 @@ internal class Settings
     public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
+    public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
@@ -330,6 +332,15 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        configEntries.Add(SortingTableKeyBind = config.Bind(
+            InputSection,
+            "Transfer to/from Sorting Table",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
            InputSection,
            "Block Text Inputs on Item Mouseover",
@@ -501,6 +512,15 @@ internal class Settings
                 "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(DefaultSortingTableBind = config.Bind(
+            InventorySection,
+            "Shift-Click to Sorting Table",
+            true,
+            new ConfigDescription(
+                "This setting lets you enable/disable the default Tarkov behavior of shift-clicking items to transfer them to the sorting table.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(ContextMenuOnRight = config.Bind(
             InventorySection,

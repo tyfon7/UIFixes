@@ -148,7 +148,7 @@ public static class MultiSelectPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemView __instance, PointerEventData eventData)
+        public static void Postfix(ItemView __instance, PointerEventData eventData, TraderControllerClass ___ItemController)
         {
             if (!MultiSelect.Enabled || __instance is RagfairNewOfferItemView || __instance is InsuranceItemView)
             {
@@ -159,14 +159,32 @@ public static class MultiSelectPatches
             bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
             bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
 
-            if (Settings.EnableMultiClick.Value && __instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && shiftDown && !ctrlDown && !altDown)
+            // If sorting table is open and default shift-click behavior is enabled, don't multiselect
+            bool couldBeSortingTableMove = false;
+            if (Settings.DefaultSortingTableBind.Value &&
+                shiftDown &&
+                eventData.button == PointerEventData.InputButton.Left &&
+                ___ItemController is InventoryControllerClass inventoryController)
+            {
+                SortingTableClass sortingTable = inventoryController.Inventory.SortingTable;
+                if (sortingTable != null && sortingTable.IsVisible)
+                {
+                    couldBeSortingTableMove = true;
+                }
+            }
+
+            if (Settings.EnableMultiClick.Value &&
+                !couldBeSortingTableMove &&
+                __instance is GridItemView gridItemView &&
+                eventData.button == PointerEventData.InputButton.Left &&
+                shiftDown && !ctrlDown && !altDown)
             {
                 MultiSelect.Toggle(gridItemView);
                 return;
             }
 
             // Mainly this tests for when selection box is rebound to another mouse button, to enable secondary selection
-            if (shiftDown && Settings.SelectionBoxKey.Value.IsDownIgnoreOthers())
+            if (!couldBeSortingTableMove && shiftDown && Settings.SelectionBoxKey.Value.IsDownIgnoreOthers())
             {
                 return;
             }
@@ -209,9 +227,14 @@ public static class MultiSelectPatches
                 return false;
             }
 
-            if (shiftDown)
+            if (shiftDown && !ctrlDown && !altDown)
             {
-                // Nothing to do, mousedown handled it. 
+                if (Settings.DefaultSortingTableBind.Value)
+                {
+                    QuickMove(__instance, ___ItemUiContext, ___ItemController, true);
+                    return false;
+                }
+
                 return true;
             }
 
@@ -220,15 +243,17 @@ public static class MultiSelectPatches
             return true;
         }
 
-        private static void QuickMove(GridItemView gridItemView, ItemUiContext itemUiContext, TraderControllerClass itemController)
+        private static void QuickMove(GridItemView gridItemView, ItemUiContext itemUiContext, TraderControllerClass itemController, bool moveToSortingTable = false)
         {
             bool succeeded = true;
             DisableMerge = true;
             IgnoreItemParent = true;
             Stack<ItemOperation> operations = new();
-            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts())
+            foreach (var selectedItemContext in MultiSelect.SortedItemContexts())
             {
-                ItemOperation operation = itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                ItemOperation operation = moveToSortingTable ?
+                    itemUiContext.QuickMoveToSortingTable(selectedItemContext.Item, false /*simulate*/) :
+                    itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                 if (operation.Succeeded && itemController.CanExecute(operation.Value))
                 {
                     operations.Push(operation);

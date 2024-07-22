@@ -25,6 +25,8 @@ public class DrawMultiSelect : MonoBehaviour
     private bool drawing;
     private bool secondary;
 
+    private static Vector2 Deadzone = new(5f, 5f);
+
     public void Start()
     {
         selectTexture = new Texture2D(1, 1);
@@ -70,6 +72,21 @@ public class DrawMultiSelect : MonoBehaviour
             selectOrigin = Input.mousePosition;
             drawing = true;
             secondary = shiftDown;
+
+            if (!secondary)
+            {
+                MultiSelect.Clear();
+            }
+        }
+
+        if (drawing && !Settings.SelectionBoxKey.Value.IsPressedIgnoreOthers())
+        {
+            drawing = false;
+            if (secondary)
+            {
+                MultiSelect.CombineSecondary();
+                secondary = false;
+            }
         }
 
         if (drawing)
@@ -77,6 +94,10 @@ public class DrawMultiSelect : MonoBehaviour
             selectEnd = Input.mousePosition;
 
             Rect selectRect = new(selectOrigin, selectEnd - selectOrigin);
+            if (Mathf.Abs(selectRect.size.x) < Deadzone.x && Mathf.Abs(selectRect.size.y) < Deadzone.y)
+            {
+                return;
+            }
 
             // If not secondary, then we can kick out any non-rendered items, plus they won't be covered by the foreach below
             if (!secondary)
@@ -117,16 +138,6 @@ public class DrawMultiSelect : MonoBehaviour
                 }
 
                 MultiSelect.Deselect(gridItemView, secondary);
-            }
-        }
-
-        if (drawing && !Settings.SelectionBoxKey.Value.IsPressedIgnoreOthers())
-        {
-            drawing = false;
-            if (secondary)
-            {
-                MultiSelect.CombineSecondary();
-                secondary = false;
             }
         }
     }

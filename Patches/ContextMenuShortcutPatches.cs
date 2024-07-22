@@ -1,11 +1,11 @@
-﻿using EFT.InventoryLogic;
+﻿using Comfort.Common;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
-using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace UIFixes;
@@ -98,6 +98,11 @@ public static class ContextMenuShortcutPatches
                 TryInteraction(__instance, itemContext, EItemInfoButton.LinkedSearch);
             }
 
+            if (Settings.SortingTableKeyBind.Value.IsDown())
+            {
+                MoveToFromSortingTable(itemContext, __instance);
+            }
+
             Interactions = null;
         }
 
@@ -107,6 +112,36 @@ public static class ContextMenuShortcutPatches
             if (!Interactions.ExecuteInteraction(interaction) && fallbackInteraction.HasValue)
             {
                 Interactions.ExecuteInteraction(fallbackInteraction.Value);
+            }
+        }
+
+        private static void MoveToFromSortingTable(ItemContextAbstractClass itemContext, ItemUiContext itemUiContext)
+        {
+            Item item = itemContext.Item;
+            if (item.Owner is not InventoryControllerClass controller)
+            {
+                return;
+            }
+
+            SortingTableClass sortingTable = controller.Inventory.SortingTable;
+            bool isInSortingTable = sortingTable != null && item.Parent.Container.ParentItem == sortingTable;
+
+            var operation = isInSortingTable ? itemUiContext.QuickFindAppropriatePlace(itemContext, controller, false, true, true) : itemUiContext.QuickMoveToSortingTable(item, true);
+            if (operation.Succeeded && controller.CanExecute(operation.Value))
+            {
+                if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)
+                {
+                    NotificationManagerClass.DisplayWarningNotification(new DestroyError(item, destroyResult.ItemsToDestroy).GetLocalizedDescription());
+                    return;
+                }
+
+                controller.RunNetworkTransaction(operation.Value, null);
+                if (itemUiContext.Tooltip != null)
+                {
+                    itemUiContext.Tooltip.Close();
+                }
+
+                Singleton<GUISounds>.Instance.PlayItemSound(item.ItemSound, EInventorySoundType.pickup, false);
             }
         }
     }

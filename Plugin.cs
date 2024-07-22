@@ -47,7 +47,7 @@ public class Plugin : BaseUnityPlugin
         new LoadMagPresetsPatch().Enable();
         KeepWindowsOnScreenPatches.Enable();
         ContextMenuShortcutPatches.Enable();
-        new OpenSortingTablePatch().Enable();
+        OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
         MultiSelectPatches.Enable();
         new FixUnloadLastBulletPatch().Enable();
