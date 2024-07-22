@@ -13,12 +13,17 @@ namespace UIFixes;
 
 public static class UnloadAmmoPatches
 {
+    private static UnloadAmmoBoxState UnloadState = null;
+
     public static void Enable()
     {
         new TradingPlayerPatch().Enable();
         new TransferPlayerPatch().Enable();
         new UnloadScavTransferPatch().Enable();
         new NoScavStashPatch().Enable();
+
+        new UnloadAmmoBoxPatch().Enable();
+        new QuickFindUnloadAmmoBoxPatch().Enable();
     }
 
     public class TradingPlayerPatch : ModulePatch
@@ -96,6 +101,97 @@ public static class UnloadAmmoPatches
         public static void Prefix(InventoryContainerClass scavController)
         {
             scavController.Inventory.Stash = null;
+        }
+    }
+
+    public class UnloadAmmoBoxPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnloadAmmo));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(Item item)
+        {
+            if (item is AmmoBox)
+            {
+                UnloadState = new();
+            }
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            UnloadState = null;
+        }
+    }
+
+    public class QuickFindUnloadAmmoBoxPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(Item item, TraderControllerClass controller, ref IEnumerable<LootItemClass> targets, ref InteractionsHandlerClass.EMoveItemOrder order)
+        {
+            if (UnloadState == null)
+            {
+                return;
+            }
+
+            AmmoBox box = item.Parent.Container.ParentItem as AmmoBox;
+            if (box == null)
+            {
+                return;
+            }
+
+            // Ammo boxes with multiple stacks will loop through this code, so we only want to move the box once
+            if (UnloadState.initialized)
+            {
+                order = UnloadState.order;
+                targets = UnloadState.targets;
+            }
+            else
+            {
+                // Have to do this for them, since the calls to get parent will be wrong once we move the box
+                if (!order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent))
+                {
+                    LootItemClass parent = (item.GetNotMergedParent() as LootItemClass) ?? (item.GetRootMergedItem() as EquipmentClass);
+                    if (parent != null)
+                    {
+                        UnloadState.targets = targets = order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.PrioritizeParent) ?
+                            parent.ToEnumerable().Concat(targets).Distinct() :
+                            targets.Concat(parent.ToEnumerable()).Distinct();
+                    }
+
+                    UnloadState.order = order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
+                }
+
+                var operation = InteractionsHandlerClass.Move(box, UnloadState.fakeStash.Grid.FindLocationForItem(box), controller, false);
+                operation.Value.RaiseEvents(controller, CommandStatus.Begin);
+                operation.Value.RaiseEvents(controller, CommandStatus.Succeed);
+
+                UnloadState.initialized = true;
+            }
+        }
+    }
+
+    public class UnloadAmmoBoxState
+    {
+        public StashClass fakeStash;
+        public TraderControllerClass fakeController;
+
+        public bool initialized;
+        public InteractionsHandlerClass.EMoveItemOrder order;
+        public IEnumerable<LootItemClass> targets;
+
+        public UnloadAmmoBoxState()
+        {
+            fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
+            fakeController = new(fakeStash, "FakeId", "FakeController", true, EOwnerType.Profile);
         }
     }
 }
