@@ -1,4 +1,5 @@
-﻿using Comfort.Common;
+﻿using BepInEx.Configuration;
+using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using System;
@@ -56,37 +57,19 @@ public class DrawMultiSelect : MonoBehaviour
             return;
         }
 
-        // checking ItemUiContext is a quick and easy way to know the mouse is over an item
-        if (Input.GetKeyDown(Settings.SelectionBoxKey.Value.MainKey) && ItemUiContext.Instance.R().ItemContext == null)
+        if (Settings.SelectionBoxKey.Value.IsDownIgnoreOthers())
         {
-            PointerEventData eventData = new(EventSystem.current)
+            bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            // Only need to check we aren't over draggables/clickables if the multiselect key is left mouse
+            if (Settings.SelectionBoxKey.Value.MainKey == KeyCode.Mouse0 && !shiftDown && !MouseIsOverClickable())
             {
-                position = Input.mousePosition
-            };
-
-            List<RaycastResult> results = [];
-            localRaycaster.Raycast(eventData, results);
-            preloaderRaycaster.Raycast(eventData, results);
-
-            foreach (GameObject gameObject in results.Select(r => r.gameObject))
-            {
-                var draggables = gameObject.GetComponents<MonoBehaviour>()
-                    .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
-                    .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
-                    .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
-
-                var clickables = gameObject.GetComponents<MonoBehaviour>()
-                    .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler);
-
-                if (draggables.Any() || clickables.Any())
-                {
-                    return;
-                }
+                return;
             }
 
             selectOrigin = Input.mousePosition;
             drawing = true;
-            secondary = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            secondary = shiftDown;
         }
 
         if (drawing)
@@ -137,7 +120,7 @@ public class DrawMultiSelect : MonoBehaviour
             }
         }
 
-        if (drawing && !Input.GetKey(Settings.SelectionBoxKey.Value.MainKey))
+        if (drawing && !Settings.SelectionBoxKey.Value.IsPressedIgnoreOthers())
         {
             drawing = false;
             if (secondary)
@@ -169,6 +152,42 @@ public class DrawMultiSelect : MonoBehaviour
             lineArea.x = area.xMax - 1; // Right
             GUI.DrawTexture(lineArea, selectTexture);
         }
+    }
+
+    private bool MouseIsOverClickable()
+    {
+        // checking ItemUiContext is a quick and easy way to know the mouse is over an item
+        if (ItemUiContext.Instance.R().ItemContext != null)
+        {
+            return false;
+        }
+
+        PointerEventData eventData = new(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+
+        List<RaycastResult> results = [];
+        localRaycaster.Raycast(eventData, results);
+        preloaderRaycaster.Raycast(eventData, results);
+
+        foreach (GameObject gameObject in results.Select(r => r.gameObject))
+        {
+            var draggables = gameObject.GetComponents<MonoBehaviour>()
+                .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
+                .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
+                .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
+
+            var clickables = gameObject.GetComponents<MonoBehaviour>()
+                .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler);
+
+            if (draggables.Any() || clickables.Any())
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private bool IsOnTop(Rect itemRect, Transform itemTransform, GraphicRaycaster raycaster)

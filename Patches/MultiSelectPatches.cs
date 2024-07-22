@@ -24,7 +24,7 @@ public static class MultiSelectPatches
     // Used to prevent infinite recursion of CanAccept/AcceptItem
     private static bool InPatch = false;
 
-    // If the CanAccept method should render highlights
+    // Keep track of preview images when dragging
     private static readonly List<Image> Previews = [];
 
     // Point that various QuickFindPlace overrides should start at
@@ -162,6 +162,12 @@ public static class MultiSelectPatches
             if (Settings.EnableMultiClick.Value && __instance is GridItemView gridItemView && eventData.button == PointerEventData.InputButton.Left && shiftDown && !ctrlDown && !altDown)
             {
                 MultiSelect.Toggle(gridItemView);
+                return;
+            }
+
+            // Mainly this tests for when selection box is rebound to another mouse button, to enable secondary selection
+            if (shiftDown && Settings.SelectionBoxKey.Value.IsDownIgnoreOthers())
+            {
                 return;
             }
 
@@ -398,6 +404,13 @@ public static class MultiSelectPatches
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnBeginDrag));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix()
+        {
+            // Disable drag if shift is down
+            return !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
         }
 
         [PatchPostfix]

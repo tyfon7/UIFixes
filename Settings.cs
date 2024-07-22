@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using UnityEngine;
 
 namespace UIFixes;
@@ -833,10 +834,25 @@ public static class SettingExtensions
         configEntry.SettingChanged += (_, _) => onChange(configEntry.Value);
     }
 
-
     public static void Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
     {
         configEntry.Subscribe(onChange);
         onChange(configEntry.Value);
+    }
+
+    // KeyboardShortcut methods return false if any other key is down
+    public static bool IsDownIgnoreOthers(this KeyboardShortcut shortcut)
+    {
+        return Input.GetKeyDown(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
+    }
+
+    public static bool IsPressedIgnoreOthers(this KeyboardShortcut shortcut)
+    {
+        return Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
+    }
+
+    public static bool IsUpIgnoreOthers(this KeyboardShortcut shortcut)
+    {
+        return Input.GetKeyUp(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
     }
 }
