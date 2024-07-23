@@ -37,6 +37,14 @@ internal enum SortingTableDisplay
     Both
 }
 
+internal enum AutoFleaPrice
+{
+    None,
+    Minimum,
+    Average,
+    Maximum
+}
+
 internal class Settings
 {
     // Categories
@@ -87,6 +95,7 @@ internal class Settings
     public static ConfigEntry<bool> SwapItems { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
+    public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -125,6 +134,8 @@ internal class Settings
     public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
     public static ConfigEntry<bool> AutoExpandCategories { get; set; }
     public static ConfigEntry<bool> ClearFiltersOnSearch { get; set; }
+    public static ConfigEntry<AutoFleaPrice> AutoOfferPrice { get; set; }
+    public static ConfigEntry<bool> UpdatePriceOnBulk { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
     public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
@@ -452,6 +463,15 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
+            InventorySection,
+            "Unload Ammo Boxes In-Place",
+            true,
+            new ConfigDescription(
+                "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
         configEntries.Add(SwapImpossibleContainers = config.Bind(
             InventorySection,
             "Swap with Incompatible Containers",
@@ -731,6 +751,24 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Pressing Enter after typing in the flea search bar will clear non-default filters",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AutoOfferPrice = config.Bind(
+            FleaMarketSection,
+            "Autopopulate Offer Price",
+            AutoFleaPrice.None,
+            new ConfigDescription(
+                "Autopopulte new offers with min/avg/max market price, or leave blank",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UpdatePriceOnBulk = config.Bind(
+            FleaMarketSection,
+            "Update Offer Price on Bulk",
+            true,
+            new ConfigDescription(
+                "Automatically multiply or divide the price when you check/uncheck bulk, or or when you change the number of selected items while bulk is checked.",
                 null,
                 new ConfigurationManagerAttributes { })));
 

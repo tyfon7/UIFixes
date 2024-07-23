@@ -1,5 +1,7 @@
 ﻿using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
+using EFT.UI.Ragfair;
+using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -85,5 +87,18 @@ public static class ExtraItemViewStatsProperties
 
     public static bool GetHideMods(this ItemViewStats itemViewStats) => properties.GetOrCreateValue(itemViewStats).HideMods;
     public static void SetHideMods(this ItemViewStats itemViewStats, bool value) => properties.GetOrCreateValue(itemViewStats).HideMods = value;
+}
+
+public static class ExtraItemMarketPricesPanelProperties
+{
+    private static readonly ConditionalWeakTable<ItemMarketPricesPanel, Properties> properties = new();
+
+    private class Properties
+    {
+        public Action OnMarketPricesCallback = null;
+    }
+
+    public static Action GetOnMarketPricesCallback(this ItemMarketPricesPanel panel) => properties.GetOrCreateValue(panel).OnMarketPricesCallback;
+    public static Action SetOnMarketPricesCallback(this ItemMarketPricesPanel panel, Action handler) => properties.GetOrCreateValue(panel).OnMarketPricesCallback = handler;
 }
 

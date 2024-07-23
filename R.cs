@@ -67,6 +67,7 @@ public static class R
         InventoryScreen.InitTypes();
         ScavengerInventoryScreen.InitTypes();
         LocalizedText.InitTypes();
+        GameWorld.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -867,6 +868,20 @@ public static class R
             set { StringCaseField.SetValue(Value, value); }
         }
     }
+
+    public class GameWorld(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo StashField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.GameWorld);
+            StashField = AccessTools.Field(Type, "stashClass");
+        }
+
+        public StashClass Stash { get { return (StashClass)StashField.GetValue(Value); } }
+    }
 }
 
 public static class RExtentensions
@@ -898,4 +913,5 @@ public static class RExtentensions
     public static R.InventoryScreen R(this InventoryScreen value) => new(value);
     public static R.ScavengerInventoryScreen R(this ScavengerInventoryScreen value) => new(value);
     public static R.LocalizedText R(this LocalizedText value) => new(value);
+    public static R.GameWorld R(this GameWorld value) => new(value);
 }

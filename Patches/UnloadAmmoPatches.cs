@@ -1,4 +1,5 @@
 ﻿using Comfort.Common;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -115,15 +116,21 @@ public static class UnloadAmmoPatches
         [PatchPrefix]
         public static void Prefix(Item item)
         {
-            if (item is AmmoBox)
+            if (Settings.UnloadAmmoBoxInPlace.Value && item is AmmoBox)
             {
                 UnloadState = new();
             }
         }
 
         [PatchPostfix]
-        public static void Postfix()
+        public static async void Postfix(Task __result)
         {
+            if (!Settings.UnloadAmmoBoxInPlace.Value)
+            {
+                return;
+            }
+
+            await __result;
             UnloadState = null;
         }
     }
@@ -143,8 +150,7 @@ public static class UnloadAmmoPatches
                 return;
             }
 
-            AmmoBox box = item.Parent.Container.ParentItem as AmmoBox;
-            if (box == null)
+            if (item.Parent.Container.ParentItem is not AmmoBox box)
             {
                 return;
             }
@@ -191,10 +197,17 @@ public static class UnloadAmmoPatches
 
         public UnloadAmmoBoxState()
         {
-            fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
+            if (Plugin.InRaid())
+            {
+                fakeStash = Singleton<GameWorld>.Instance.R().Stash;
+            }
+            else
+            {
+                fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
 
-            var profile = PatchConstants.BackEndSession.Profile;
-            fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
+                var profile = PatchConstants.BackEndSession.Profile;
+                fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
+            }
         }
     }
 }
