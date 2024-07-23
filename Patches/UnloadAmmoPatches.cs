@@ -3,6 +3,7 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -191,7 +192,9 @@ public static class UnloadAmmoPatches
         public UnloadAmmoBoxState()
         {
             fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
-            fakeController = new(fakeStash, "FakeId", "FakeController", true, EOwnerType.Profile);
+
+            var profile = PatchConstants.BackEndSession.Profile;
+            fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
         }
     }
 }
