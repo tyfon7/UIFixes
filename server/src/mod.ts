@@ -229,4 +229,4 @@ class UIFixes implements IPreSptLoadMod {
     }
 }
 
-module.exports = { mod: new UIFixes() };
+export const mod = new UIFixes();
