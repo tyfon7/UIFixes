@@ -15,7 +15,7 @@ namespace UIFixes;
 
 public static class UnloadAmmoPatches
 {
-    private static UnloadAmmoBoxState UnloadState = null;
+    //private static UnloadAmmoBoxState UnloadState = null;
 
     public static void Enable()
     {
@@ -24,8 +24,8 @@ public static class UnloadAmmoPatches
         new UnloadScavTransferPatch().Enable();
         new NoScavStashPatch().Enable();
 
-        new UnloadAmmoBoxPatch().Enable();
-        new QuickFindUnloadAmmoBoxPatch().Enable();
+        //new UnloadAmmoBoxPatch().Enable();
+        //new QuickFindUnloadAmmoBoxPatch().Enable();
     }
 
     public class TradingPlayerPatch : ModulePatch
@@ -106,108 +106,108 @@ public static class UnloadAmmoPatches
         }
     }
 
-    public class UnloadAmmoBoxPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnloadAmmo));
-        }
+    // public class UnloadAmmoBoxPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnloadAmmo));
+    //     }
 
-        [PatchPrefix]
-        public static void Prefix(Item item)
-        {
-            if (Settings.UnloadAmmoBoxInPlace.Value && item is AmmoBox)
-            {
-                UnloadState = new();
-            }
-        }
+    //     [PatchPrefix]
+    //     public static void Prefix(Item item)
+    //     {
+    //         if (Settings.UnloadAmmoBoxInPlace.Value && item is AmmoBox)
+    //         {
+    //             UnloadState = new();
+    //         }
+    //     }
 
-        [PatchPostfix]
-        public static async void Postfix(Task __result)
-        {
-            if (!Settings.UnloadAmmoBoxInPlace.Value)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static async void Postfix(Task __result)
+    //     {
+    //         if (!Settings.UnloadAmmoBoxInPlace.Value)
+    //         {
+    //             return;
+    //         }
 
-            await __result;
-            UnloadState = null;
-        }
-    }
+    //         await __result;
+    //         UnloadState = null;
+    //     }
+    // }
 
-    public class QuickFindUnloadAmmoBoxPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));
-        }
+    // public class QuickFindUnloadAmmoBoxPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));
+    //     }
 
-        [PatchPrefix]
-        public static void Prefix(Item item, TraderControllerClass controller, ref IEnumerable<LootItemClass> targets, ref InteractionsHandlerClass.EMoveItemOrder order)
-        {
-            if (UnloadState == null)
-            {
-                return;
-            }
+    //     [PatchPrefix]
+    //     public static void Prefix(Item item, TraderControllerClass controller, ref IEnumerable<LootItemClass> targets, ref InteractionsHandlerClass.EMoveItemOrder order)
+    //     {
+    //         if (UnloadState == null)
+    //         {
+    //             return;
+    //         }
 
-            if (item.Parent.Container.ParentItem is not AmmoBox box)
-            {
-                return;
-            }
+    //         if (item.Parent.Container.ParentItem is not AmmoBox box)
+    //         {
+    //             return;
+    //         }
 
-            // Ammo boxes with multiple stacks will loop through this code, so we only want to move the box once
-            if (UnloadState.initialized)
-            {
-                order = UnloadState.order;
-                targets = UnloadState.targets;
-            }
-            else
-            {
-                // Have to do this for them, since the calls to get parent will be wrong once we move the box
-                if (!order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent))
-                {
-                    LootItemClass parent = (item.GetNotMergedParent() as LootItemClass) ?? (item.GetRootMergedItem() as EquipmentClass);
-                    if (parent != null)
-                    {
-                        UnloadState.targets = targets = order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.PrioritizeParent) ?
-                            parent.ToEnumerable().Concat(targets).Distinct() :
-                            targets.Concat(parent.ToEnumerable()).Distinct();
-                    }
+    //         // Ammo boxes with multiple stacks will loop through this code, so we only want to move the box once
+    //         if (UnloadState.initialized)
+    //         {
+    //             order = UnloadState.order;
+    //             targets = UnloadState.targets;
+    //         }
+    //         else
+    //         {
+    //             // Have to do this for them, since the calls to get parent will be wrong once we move the box
+    //             if (!order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent))
+    //             {
+    //                 LootItemClass parent = (item.GetNotMergedParent() as LootItemClass) ?? (item.GetRootMergedItem() as EquipmentClass);
+    //                 if (parent != null)
+    //                 {
+    //                     UnloadState.targets = targets = order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.PrioritizeParent) ?
+    //                         parent.ToEnumerable().Concat(targets).Distinct() :
+    //                         targets.Concat(parent.ToEnumerable()).Distinct();
+    //                 }
 
-                    UnloadState.order = order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
-                }
+    //                 UnloadState.order = order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
+    //             }
 
-                var operation = InteractionsHandlerClass.Move(box, UnloadState.fakeStash.Grid.FindLocationForItem(box), controller, false);
-                operation.Value.RaiseEvents(controller, CommandStatus.Begin);
-                operation.Value.RaiseEvents(controller, CommandStatus.Succeed);
+    //             var operation = InteractionsHandlerClass.Move(box, UnloadState.fakeStash.Grid.FindLocationForItem(box), controller, false);
+    //             operation.Value.RaiseEvents(controller, CommandStatus.Begin);
+    //             operation.Value.RaiseEvents(controller, CommandStatus.Succeed);
 
-                UnloadState.initialized = true;
-            }
-        }
-    }
+    //             UnloadState.initialized = true;
+    //         }
+    //     }
+    // }
 
-    public class UnloadAmmoBoxState
-    {
-        public StashClass fakeStash;
-        public TraderControllerClass fakeController;
+    // public class UnloadAmmoBoxState
+    // {
+    //     public StashClass fakeStash;
+    //     public TraderControllerClass fakeController;
 
-        public bool initialized;
-        public InteractionsHandlerClass.EMoveItemOrder order;
-        public IEnumerable<LootItemClass> targets;
+    //     public bool initialized;
+    //     public InteractionsHandlerClass.EMoveItemOrder order;
+    //     public IEnumerable<LootItemClass> targets;
 
-        public UnloadAmmoBoxState()
-        {
-            if (Plugin.InRaid())
-            {
-                fakeStash = Singleton<GameWorld>.Instance.R().Stash;
-            }
-            else
-            {
-                fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
+    //     public UnloadAmmoBoxState()
+    //     {
+    //         if (Plugin.InRaid())
+    //         {
+    //             fakeStash = Singleton<GameWorld>.Instance.R().Stash;
+    //         }
+    //         else
+    //         {
+    //             fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
 
-                var profile = PatchConstants.BackEndSession.Profile;
-                fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
-            }
-        }
-    }
+    //             var profile = PatchConstants.BackEndSession.Profile;
+    //             fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
+    //         }
+    //     }
+    // }
 }

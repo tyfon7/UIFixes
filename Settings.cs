@@ -96,7 +96,7 @@ internal class Settings
     public static ConfigEntry<bool> SwapItems { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
-    public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
+    //public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
@@ -473,14 +473,14 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
-            InventorySection,
-            "Unload Ammo Boxes In-Place",
-            true,
-            new ConfigDescription(
-                "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
+        // configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
+        //     InventorySection,
+        //     "Unload Ammo Boxes In-Place",
+        //     true,
+        //     new ConfigDescription(
+        //         "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
+        //         null,
+        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(SwapImpossibleContainers = config.Bind(
             InventorySection,
