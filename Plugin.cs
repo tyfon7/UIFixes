@@ -68,6 +68,7 @@ public class Plugin : BaseUnityPlugin
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();
+        LimitDragPatches.Enable();
     }
 
     public static bool InRaid()

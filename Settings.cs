@@ -70,6 +70,8 @@ internal class Settings
     public static ConfigEntry<bool> UseHomeEnd { get; set; }
     public static ConfigEntry<bool> RebindPageUpDown { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
+    public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
+    public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
     public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> ExamineKeyBind { get; set; }
@@ -81,8 +83,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
-    public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
-    public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
+    public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
     // Inventory
@@ -371,6 +372,15 @@ internal class Settings
                 "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(LimitNonstandardDrags = config.Bind(
+            InputSection,
+            "Limit Nonstandard Drags",
+            true,
+            new ConfigDescription(
+                "Constrain dragging to the left mouse, when shift is not down",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
            InputSection,
