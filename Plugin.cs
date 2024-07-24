@@ -1,10 +1,12 @@
 ﻿using BepInEx;
+using BepInEx.Bootstrap;
 using Comfort.Common;
 using EFT;
 
 namespace UIFixes;
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
     public void Awake()
@@ -75,5 +77,17 @@ public class Plugin : BaseUnityPlugin
     {
         bool? inRaid = Singleton<AbstractGame>.Instance?.InRaid;
         return inRaid.HasValue && inRaid.Value;
+    }
+
+    private static bool? IsFikaPresent;
+
+    public static bool FikaPresent()
+    {
+        if (!IsFikaPresent.HasValue)
+        {
+            IsFikaPresent = Chainloader.PluginInfos.ContainsKey("com.fika.core");
+        }
+
+        return IsFikaPresent.Value;
     }
 }

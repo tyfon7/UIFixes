@@ -103,6 +103,12 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
+            if (Plugin.FikaPresent())
+            {
+                Type type = Type.GetType("Fika.Core.Coop.ClientClasses.CoopClientFirearmController, Fika.Core");
+                return AccessTools.Method(type, "ReloadMag");
+            }
+
             return AccessTools.Method(typeof(Player.FirearmController), nameof(Player.FirearmController.ReloadMag));
         }
 
