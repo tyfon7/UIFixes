@@ -1,4 +1,5 @@
 using EFT;
+using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -12,6 +13,7 @@ public static class ReloadInPlacePatches
 {
     private static bool IsReloading = false;
     private static MagazineClass FoundMagazine = null;
+    private static ItemAddress FoundAddress = null;
 
     public static void Enable()
     {
@@ -19,6 +21,7 @@ public static class ReloadInPlacePatches
         new ReloadInPlacePatch().Enable();
         new ReloadInPlaceFindMagPatch().Enable();
         new ReloadInPlaceFindSpotPatch().Enable();
+        new AlwaysSwapPatch().Enable();
 
         // This patches the firearmsController code when you hit R in raid with an external magazine class
         new SwapIfNoSpacePatch().Enable();
@@ -42,6 +45,7 @@ public static class ReloadInPlacePatches
         {
             IsReloading = false;
             FoundMagazine = null;
+            FoundAddress = null;
         }
     }
 
@@ -58,6 +62,7 @@ public static class ReloadInPlacePatches
             if (IsReloading)
             {
                 FoundMagazine = __result;
+                FoundAddress = FoundMagazine.Parent;
             }
         }
     }
@@ -66,7 +71,7 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("currentMagazine") != null);
+            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("currentMagazine") != null); // ItemUiContext.Class2546
             return AccessTools.Method(type, "method_0");
         }
 
@@ -95,6 +100,30 @@ public static class ReloadInPlacePatches
             if (__state.Succeeded)
             {
                 __state.Value.RollBack();
+            }
+        }
+    }
+
+    public class AlwaysSwapPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("func_3") != null); // ItemUiContext.Class2536
+            return AccessTools.Method(type, "method_4");
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ItemAddressClass g, ref int __result)
+        {
+            if (!Settings.AlwaysSwapMags.Value)
+            {
+                return;
+            }
+
+            if (!g.Equals(FoundAddress))
+            {
+                // Addresses that aren't the found address get massive value increase so found address is sorted first
+                __result += 1000;
             }
         }
     }
@@ -132,6 +161,7 @@ public static class ReloadInPlacePatches
             }
 
             InventoryControllerClass controller = __instance.Weapon.Owner as InventoryControllerClass;
+            ItemAddress magAddress = magazine.Parent;
 
             // Null address means it couldn't find a spot. Try to remove magazine (temporarily) and try again
             var operation = InteractionsHandlerClass.Remove(magazine, controller, false, false);
@@ -143,6 +173,7 @@ public static class ReloadInPlacePatches
             gridItemAddress = controller.Inventory.Equipment.GetPrioritizedGridsForUnloadedObject(false)
                 .Select(grid => grid.FindLocationForItem(currentMagazine))
                 .Where(address => address != null)
+                .OrderByDescending(address => Settings.AlwaysSwapMags.Value && address.Equals(magAddress)) // Prioritize swapping if desired
                 .OrderBy(address => address.Grid.GridWidth.Value * address.Grid.GridHeight.Value)
                 .FirstOrDefault(); // BSG's version checks null again, but there's no nulls already. If there's no matches, the enumerable is empty
 
