@@ -63,8 +63,8 @@ public class DrawMultiSelect : MonoBehaviour
         {
             bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-            // Only need to check we aren't over draggables/clickables if the multiselect key is left mouse
-            if (Settings.SelectionBoxKey.Value.MainKey == KeyCode.Mouse0 && !shiftDown && !MouseIsOverClickable())
+            // Special case: if selection key is mouse0 (left), don't start selection if over a clickable
+            if (Settings.SelectionBoxKey.Value.MainKey == KeyCode.Mouse0 && !shiftDown && MouseIsOverClickable())
             {
                 return;
             }
@@ -75,7 +75,11 @@ public class DrawMultiSelect : MonoBehaviour
 
             if (!secondary)
             {
-                MultiSelect.Clear();
+                // Special case: if selection key is any mouse key (center,right), don't clear selection on mouse down if over item
+                if (Settings.SelectionBoxKey.Value.MainKey != KeyCode.Mouse1 && Settings.SelectionBoxKey.Value.MainKey != KeyCode.Mouse2 || !MouseIsOverItem())
+                {
+                    MultiSelect.Clear();
+                }
             }
         }
 
@@ -165,12 +169,17 @@ public class DrawMultiSelect : MonoBehaviour
         }
     }
 
-    private bool MouseIsOverClickable()
+    private bool MouseIsOverItem()
     {
         // checking ItemUiContext is a quick and easy way to know the mouse is over an item
-        if (ItemUiContext.Instance.R().ItemContext != null)
+        return ItemUiContext.Instance.R().ItemContext != null;
+    }
+
+    private bool MouseIsOverClickable()
+    {
+        if (MouseIsOverItem())
         {
-            return false;
+            return true;
         }
 
         PointerEventData eventData = new(EventSystem.current)
@@ -194,11 +203,11 @@ public class DrawMultiSelect : MonoBehaviour
 
             if (draggables.Any() || clickables.Any())
             {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     private bool IsOnTop(Rect itemRect, Transform itemTransform, GraphicRaycaster raycaster)
