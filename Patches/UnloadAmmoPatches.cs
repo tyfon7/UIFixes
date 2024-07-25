@@ -1,5 +1,6 @@
 ﻿using Comfort.Common;
 using EFT;
+using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -15,8 +16,6 @@ namespace UIFixes;
 
 public static class UnloadAmmoPatches
 {
-    //private static UnloadAmmoBoxState UnloadState = null;
-
     public static void Enable()
     {
         new TradingPlayerPatch().Enable();
@@ -24,8 +23,7 @@ public static class UnloadAmmoPatches
         new UnloadScavTransferPatch().Enable();
         new NoScavStashPatch().Enable();
 
-        //new UnloadAmmoBoxPatch().Enable();
-        //new QuickFindUnloadAmmoBoxPatch().Enable();
+        new UnloadAmmoBoxPatch().Enable();
     }
 
     public class TradingPlayerPatch : ModulePatch
@@ -106,108 +104,128 @@ public static class UnloadAmmoPatches
         }
     }
 
-    // public class UnloadAmmoBoxPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnloadAmmo));
-    //     }
+    public class UnloadAmmoBoxPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.UnloadAmmo));
+        }
 
-    //     [PatchPrefix]
-    //     public static void Prefix(Item item)
-    //     {
-    //         if (Settings.UnloadAmmoBoxInPlace.Value && item is AmmoBox)
-    //         {
-    //             UnloadState = new();
-    //         }
-    //     }
+        [PatchPrefix]
+        public static bool Prefix(Item item, ref Task __result, InventoryContainerClass ___inventoryControllerClass)
+        {
+            if (!Settings.UnloadAmmoBoxInPlace.Value || item is not AmmoBox ammoBox)
+            {
+                return true;
+            }
 
-    //     [PatchPostfix]
-    //     public static async void Postfix(Task __result)
-    //     {
-    //         if (!Settings.UnloadAmmoBoxInPlace.Value)
-    //         {
-    //             return;
-    //         }
+            if (ammoBox.Cartridges.Last is not BulletClass lastBullet)
+            {
+                return true;
+            }
 
-    //         await __result;
-    //         UnloadState = null;
-    //     }
-    // }
+            __result = UnloadAmmoBox(ammoBox, ___inventoryControllerClass);
+            return false;
+        }
 
-    // public class QuickFindUnloadAmmoBoxPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.QuickFindAppropriatePlace));
-    //     }
+        private static async Task UnloadAmmoBox(AmmoBox ammoBox, InventoryControllerClass inventoryController)
+        {
+            BulletClass lastBullet = ammoBox.Cartridges.Last as BulletClass;
+            IEnumerable<LootItemClass> containers = inventoryController.Inventory.Stash != null ?
+                [inventoryController.Inventory.Equipment, inventoryController.Inventory.Stash] :
+                [inventoryController.Inventory.Equipment];
 
-    //     [PatchPrefix]
-    //     public static void Prefix(Item item, TraderControllerClass controller, ref IEnumerable<LootItemClass> targets, ref InteractionsHandlerClass.EMoveItemOrder order)
-    //     {
-    //         if (UnloadState == null)
-    //         {
-    //             return;
-    //         }
+            // Explicitly add the current parent before its moved. IgnoreParentItem will be sent along later
+            containers = containers.Prepend(ammoBox.Parent.Container.ParentItem as LootItemClass);
 
-    //         if (item.Parent.Container.ParentItem is not AmmoBox box)
-    //         {
-    //             return;
-    //         }
+            // Move the box to a temporary stash so it can unload in place
+            TraderControllerClass tempController = GetTempController();
+            StashClass tempStash = tempController.RootItem as StashClass;
+            var moveOperation = InteractionsHandlerClass.Move(ammoBox, tempStash.Grid.FindLocationForItem(ammoBox), inventoryController, true);
+            if (moveOperation.Succeeded)
+            {
+                IResult networkResult = await inventoryController.TryRunNetworkTransaction(moveOperation);
+                if (networkResult.Failed)
+                {
+                    moveOperation = new GClass3370(networkResult.Error);
+                }
 
-    //         // Ammo boxes with multiple stacks will loop through this code, so we only want to move the box once
-    //         if (UnloadState.initialized)
-    //         {
-    //             order = UnloadState.order;
-    //             targets = UnloadState.targets;
-    //         }
-    //         else
-    //         {
-    //             // Have to do this for them, since the calls to get parent will be wrong once we move the box
-    //             if (!order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent))
-    //             {
-    //                 LootItemClass parent = (item.GetNotMergedParent() as LootItemClass) ?? (item.GetRootMergedItem() as EquipmentClass);
-    //                 if (parent != null)
-    //                 {
-    //                     UnloadState.targets = targets = order.HasFlag(InteractionsHandlerClass.EMoveItemOrder.PrioritizeParent) ?
-    //                         parent.ToEnumerable().Concat(targets).Distinct() :
-    //                         targets.Concat(parent.ToEnumerable()).Distinct();
-    //                 }
+                // Surprise! The operation is STILL not done. <insert enraged, profanity-laced, unhinged anti-BSG rant here>
+                await Task.Yield();
+            }
 
-    //                 UnloadState.order = order |= InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent;
-    //             }
+            if (moveOperation.Failed)
+            {
+                NotificationManagerClass.DisplayWarningNotification(moveOperation.Error.ToString(), ENotificationDurationType.Default);
+                return;
+            }
 
-    //             var operation = InteractionsHandlerClass.Move(box, UnloadState.fakeStash.Grid.FindLocationForItem(box), controller, false);
-    //             operation.Value.RaiseEvents(controller, CommandStatus.Begin);
-    //             operation.Value.RaiseEvents(controller, CommandStatus.Succeed);
+            bool unloadedAny = false;
+            ItemOperation operation = default;
+            for (BulletClass bullet = lastBullet; bullet != null; bullet = ammoBox.Cartridges.Last as BulletClass)
+            {
+                operation = InteractionsHandlerClass.QuickFindAppropriatePlace(
+                    bullet,
+                    inventoryController,
+                    containers,
+                    InteractionsHandlerClass.EMoveItemOrder.UnloadAmmo | InteractionsHandlerClass.EMoveItemOrder.IgnoreItemParent,
+                    true);
 
-    //             UnloadState.initialized = true;
-    //         }
-    //     }
-    // }
+                if (operation.Failed)
+                {
+                    break;
+                }
 
-    // public class UnloadAmmoBoxState
-    // {
-    //     public StashClass fakeStash;
-    //     public TraderControllerClass fakeController;
+                unloadedAny = true;
 
-    //     public bool initialized;
-    //     public InteractionsHandlerClass.EMoveItemOrder order;
-    //     public IEnumerable<LootItemClass> targets;
+                IResult networkResult = await inventoryController.TryRunNetworkTransaction(operation);
+                if (networkResult.Failed)
+                {
+                    operation = new GClass3370(networkResult.Error);
+                    break;
+                }
 
-    //     public UnloadAmmoBoxState()
-    //     {
-    //         if (Plugin.InRaid())
-    //         {
-    //             fakeStash = Singleton<GameWorld>.Instance.R().Stash;
-    //         }
-    //         else
-    //         {
-    //             fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
+                if (operation.Value is GInterface343 raisable)
+                {
+                    raisable.TargetItem.RaiseRefreshEvent(false, true);
+                }
 
-    //             var profile = PatchConstants.BackEndSession.Profile;
-    //             fakeController = new(fakeStash, profile.ProfileId, profile.Nickname);
-    //         }
-    //     }
-    // }
+                // Surprise! The operation STILL IS NOT DONE. <insert enraged, profanity-laced, unhinged anti-BSG rant here>
+                await Task.Yield();
+            }
+
+            if (unloadedAny && Singleton<GUISounds>.Instantiated)
+            {
+                Singleton<GUISounds>.Instance.PlayItemSound(lastBullet.ItemSound, EInventorySoundType.drop, false);
+            }
+
+            if (operation.Succeeded)
+            {
+                tempController.DestroyItem(ammoBox);
+            }
+            else
+            {
+                ammoBox.RaiseRefreshEvent(false, true);
+            }
+
+            if (operation.Failed)
+            {
+                NotificationManagerClass.DisplayWarningNotification(operation.Error.ToString(), ENotificationDurationType.Default);
+            }
+        }
+
+        private static TraderControllerClass GetTempController()
+        {
+            if (Plugin.InRaid())
+            {
+                return Singleton<GameWorld>.Instance.R().TraderController;
+            }
+            else
+            {
+                var profile = PatchConstants.BackEndSession.Profile;
+                StashClass fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
+                return new(fakeStash, profile.ProfileId, profile.Nickname);
+            }
+        }
+    }
 }

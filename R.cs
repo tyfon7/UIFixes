@@ -872,15 +872,15 @@ public static class R
     public class GameWorld(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
-        private static FieldInfo StashField;
+        private static FieldInfo TraderControllerField;
 
         public static void InitTypes()
         {
             Type = typeof(EFT.GameWorld);
-            StashField = AccessTools.Field(Type, "stashClass");
+            TraderControllerField = AccessTools.Field(Type, "traderControllerClass");
         }
 
-        public StashClass Stash { get { return (StashClass)StashField.GetValue(Value); } }
+        public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
     }
 }
 
