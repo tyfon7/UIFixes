@@ -18,7 +18,8 @@ New UI features enabled by this mod
 -   Flea market history - press the new back button to go back to the previous search
 -   ✨ Linked flea search from empty slots - find mods that fit that specific slot
 -   Keybinds for most context menu actions
--   ✨ Toggle/Hold Aiming - tap to toggle ADS, or hold to ADS and stop when you release
+-   ✨ Toggle/Hold input - tap a key for "Press" mechanics, hold the key for "Continuous" mechanics
+    -   Can be set for aiming, sprinting, tactical devices, headlights, and goggles/faceshields.
 
 ## Improved features
 
