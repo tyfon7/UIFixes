@@ -67,6 +67,10 @@ internal class Settings
 
     // Input
     public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldSprint { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
     public static ConfigEntry<bool> UseHomeEnd { get; set; }
     public static ConfigEntry<bool> RebindPageUpDown { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
@@ -225,7 +229,43 @@ internal class Settings
             "Use Toggle/Hold Aiming",
             false,
             new ConfigDescription(
-                "Tap the aim key to toggle aiming, or hold the aim key for continuous aiming",
+                "Tap the aim key to toggle aiming, or hold the key for continuous aiming",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldSprint = config.Bind(
+            InputSection,
+            "Use Toggle/Hold Sprint",
+            false,
+            new ConfigDescription(
+                "Tap the sprint key to toggle sprinting, or hold the key for continuous sprinting",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldTactical = config.Bind(
+            InputSection,
+            "Use Toggle/Hold Tactical Device",
+            false,
+            new ConfigDescription(
+                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldHeadlight = config.Bind(
+            InputSection,
+            "Use Toggle/Hold Headlight",
+            false,
+            new ConfigDescription(
+                "Tap the headlight key to toggle your headlight, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldGoggles = config.Bind(
+            InputSection,
+            "Use Toggle/Hold Goggles",
+            false,
+            new ConfigDescription(
+                "Tap the goggles key to toggle night vision/goggles/faceshield, or hold the key for continuous",
                 null,
                 new ConfigurationManagerAttributes { })));
 
