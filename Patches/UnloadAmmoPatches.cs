@@ -201,7 +201,7 @@ public static class UnloadAmmoPatches
 
             if (operation.Succeeded)
             {
-                tempController.DestroyItem(ammoBox);
+                inventoryController.DestroyItem(ammoBox);
             }
             else
             {
