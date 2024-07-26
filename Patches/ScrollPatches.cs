@@ -8,6 +8,7 @@ using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -34,6 +35,12 @@ public static class ScrollPatches
 
     private static bool HandleInput(ScrollRect scrollRect)
     {
+        if (EventSystem.current?.currentSelectedGameObject != null &&
+            EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+        {
+            return false;
+        }
+
         if (scrollRect != null)
         {
             if (Settings.UseHomeEnd.Value)
