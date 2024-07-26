@@ -141,15 +141,15 @@ public static class FixFleaPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(DropDownBox), nameof(DropDownBox.Init));
+            return AccessTools.DeclaredMethod(typeof(DropDownBox), nameof(DropDownBox.Show));
         }
 
         [PatchPostfix]
-        public static void Postfix(ref float ____maxVisibleHeight)
+        public static void Postfix(DropDownBox __instance, ref float ____maxVisibleHeight)
         {
             if (____maxVisibleHeight == 120f)
             {
-                ____maxVisibleHeight = 240f;
+                ____maxVisibleHeight = 150f;
             }
         }
     }
