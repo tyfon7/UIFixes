@@ -13,8 +13,6 @@ import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { RagfairLinkedSlotItemService } from "./RagfairLinkedSlotItemService";
 
 import config from "../config/config.json";
-import { RagfairOfferGenerator } from "@spt/generators/RagfairOfferGenerator";
-import { IRagfairOffer } from "@spt/models/eft/ragfair/IRagfairOffer";
 
 class UIFixes implements IPreSptLoadMod {
     private databaseService: DatabaseService;
@@ -47,36 +45,6 @@ class UIFixes implements IPreSptLoadMod {
                             pmcData.Inventory.fastPanel[index] = fastPanel[index];
                         }
                     }
-                };
-            },
-            { frequency: "Always" }
-        );
-
-        // Trader offers with dogtag barter - fixed in next SPT release *after* 3.9.3
-        container.afterResolution(
-            "RagfairOfferGenerator",
-            (_, ragfairOfferGenerator: RagfairOfferGenerator) => {
-                const original = ragfairOfferGenerator["createOffer"]; // By name because protected
-
-                ragfairOfferGenerator["createOffer"] = (userID, time, items, barterScheme, loyalLevel, isPackOffer) => {
-                    const offer: IRagfairOffer = original.call(
-                        ragfairOfferGenerator,
-                        userID,
-                        time,
-                        items,
-                        barterScheme,
-                        loyalLevel,
-                        isPackOffer
-                    );
-
-                    for (let i = 0; i < offer.requirements.length; i++) {
-                        if (barterScheme[i]["level"] !== undefined) {
-                            offer.requirements[i]["level"] = barterScheme[i]["level"];
-                            offer.requirements[i]["side"] = barterScheme[i]["side"];
-                        }
-                    }
-
-                    return offer;
                 };
             },
             { frequency: "Always" }

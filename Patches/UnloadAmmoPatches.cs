@@ -223,8 +223,8 @@ public static class UnloadAmmoPatches
             else
             {
                 var profile = PatchConstants.BackEndSession.Profile;
-                StashClass fakeStash = (StashClass)Singleton<ItemFactory>.Instance.CreateItem("FakeStash", "566abbc34bdc2d92178b4576", null);
-                return new(fakeStash, profile.ProfileId, profile.Nickname);
+                StashClass fakeStash = Singleton<ItemFactory>.Instance.CreateFakeStash();
+                return new TraderControllerClass(fakeStash, profile.ProfileId, profile.Nickname);
             }
         }
     }
