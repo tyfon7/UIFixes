@@ -40,10 +40,14 @@ class UIFixes implements IPreSptLoadMod {
                     original.call(inRaidHelper, pmcData, sessionId);
 
                     // Restore the quickbinds for items that still exist
-                    for (const index in fastPanel) {
-                        if (pmcData.Inventory.items.find(i => i._id == fastPanel[index])) {
-                            pmcData.Inventory.fastPanel[index] = fastPanel[index];
+                    try {
+                        for (const index in fastPanel) {
+                            if (pmcData.Inventory.items.find(i => i._id == fastPanel[index])) {
+                                pmcData.Inventory.fastPanel[index] = fastPanel[index];
+                            }
                         }
+                    } catch (error) {
+                        this.logger.error(`UIFixes failed to restore quickbinds\n ${error}`);
                     }
                 };
             },
@@ -61,14 +65,20 @@ class UIFixes implements IPreSptLoadMod {
                         const result = original.call(hideoutHelper, pmcData, body, sessionID);
 
                         // The items haven't been deleted yet, augment the list with their parentId
-                        const bodyAsSingle = body as IHideoutSingleProductionStartRequestData;
-                        if (bodyAsSingle && bodyAsSingle.tools?.length > 0) {
-                            const requestTools = bodyAsSingle.tools;
-                            const tools = pmcData.Hideout.Production[body.recipeId].sptRequiredTools;
-                            for (let i = 0; i < tools.length; i++) {
-                                const originalTool = pmcData.Inventory.items.find(x => x._id === requestTools[i].id);
-                                tools[i]["uifixes.returnTo"] = [originalTool.parentId, originalTool.slotId];
+                        try {
+                            const bodyAsSingle = body as IHideoutSingleProductionStartRequestData;
+                            if (bodyAsSingle && bodyAsSingle.tools?.length > 0) {
+                                const requestTools = bodyAsSingle.tools;
+                                const tools = pmcData.Hideout.Production[body.recipeId].sptRequiredTools;
+                                for (let i = 0; i < tools.length; i++) {
+                                    const originalTool = pmcData.Inventory.items.find(
+                                        x => x._id === requestTools[i].id
+                                    );
+                                    tools[i]["uifixes.returnTo"] = [originalTool.parentId, originalTool.slotId];
+                                }
                             }
+                        } catch (error) {
+                            this.logger.error(`UIFixes failed to save tool origin\n ${error}`);
                         }
 
                         return result;
@@ -89,51 +99,59 @@ class UIFixes implements IPreSptLoadMod {
                         // If a tool marked with uifixes is there, try to return it to its original container
                         const tool = itemWithModsToAddClone[0];
                         if (tool["uifixes.returnTo"]) {
-                            const [containerId, slotId] = tool["uifixes.returnTo"];
+                            try {
+                                const [containerId, slotId] = tool["uifixes.returnTo"];
 
-                            const container = pmcData.Inventory.items.find(x => x._id === containerId);
-                            if (container) {
-                                const containerTemplate = itemHelper.getItem(container._tpl)[1];
-                                const containerFS2D = inventoryHelper.getContainerMap(
-                                    containerTemplate._props.Grids[0]._props.cellsH,
-                                    containerTemplate._props.Grids[0]._props.cellsV,
-                                    pmcData.Inventory.items,
-                                    containerId
-                                );
+                                const container = pmcData.Inventory.items.find(x => x._id === containerId);
+                                if (container) {
+                                    const [foundTemplate, containerTemplate] = itemHelper.getItem(container._tpl);
+                                    if (foundTemplate && containerTemplate) {
+                                        const containerFS2D = inventoryHelper.getContainerMap(
+                                            containerTemplate._props.Grids[0]._props.cellsH,
+                                            containerTemplate._props.Grids[0]._props.cellsV,
+                                            pmcData.Inventory.items,
+                                            containerId
+                                        );
 
-                                // will change the array so clone it
-                                if (
-                                    inventoryHelper.canPlaceItemInContainer(
-                                        cloner.clone(containerFS2D),
-                                        itemWithModsToAddClone
-                                    )
-                                ) {
-                                    // At this point everything should succeed
-                                    inventoryHelper.placeItemInContainer(
-                                        containerFS2D,
-                                        itemWithModsToAddClone,
-                                        containerId,
-                                        slotId
-                                    );
+                                        // will change the array so clone it
+                                        if (
+                                            inventoryHelper.canPlaceItemInContainer(
+                                                cloner.clone(containerFS2D),
+                                                itemWithModsToAddClone
+                                            )
+                                        ) {
+                                            // At this point everything should succeed
+                                            inventoryHelper.placeItemInContainer(
+                                                containerFS2D,
+                                                itemWithModsToAddClone,
+                                                containerId,
+                                                slotId
+                                            );
 
-                                    // protected function, bypass typescript
-                                    inventoryHelper["setFindInRaidStatusForItem"](
-                                        itemWithModsToAddClone,
-                                        request.foundInRaid
-                                    );
+                                            // protected function, bypass typescript
+                                            inventoryHelper["setFindInRaidStatusForItem"](
+                                                itemWithModsToAddClone,
+                                                request.foundInRaid
+                                            );
 
-                                    // Add item + mods to output and profile inventory
-                                    output.profileChanges[sessionId].items.new.push(...itemWithModsToAddClone);
-                                    pmcData.Inventory.items.push(...itemWithModsToAddClone);
+                                            // Add item + mods to output and profile inventory
+                                            output.profileChanges[sessionId].items.new.push(...itemWithModsToAddClone);
+                                            pmcData.Inventory.items.push(...itemWithModsToAddClone);
 
-                                    this.logger.debug(
-                                        `Added ${itemWithModsToAddClone[0].upd?.StackObjectsCount ?? 1} item: ${
-                                            itemWithModsToAddClone[0]._tpl
-                                        } with: ${itemWithModsToAddClone.length - 1} mods to ${containerId}`
-                                    );
+                                            this.logger.debug(
+                                                `Added ${itemWithModsToAddClone[0].upd?.StackObjectsCount ?? 1} item: ${
+                                                    itemWithModsToAddClone[0]._tpl
+                                                } with: ${itemWithModsToAddClone.length - 1} mods to ${containerId}`
+                                            );
 
-                                    return;
+                                            return;
+                                        }
+                                    }
                                 }
+                            } catch (error) {
+                                this.logger.error(
+                                    `UIFixes failed to put a tool back, it will be returned to your stash as normal.\n ${error}`
+                                );
                             }
                         }
 
