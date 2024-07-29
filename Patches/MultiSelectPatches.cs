@@ -273,7 +273,7 @@ public static class MultiSelectPatches
             }
 
             DisableMerge = false;
-            IgnoreItemParent = true;
+            IgnoreItemParent = false;
 
             if (succeeded)
             {
