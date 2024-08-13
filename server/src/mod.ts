@@ -47,7 +47,7 @@ class UIFixes implements IPreSptLoadMod {
                             }
                         }
                     } catch (error) {
-                        this.logger.error(`UIFixes failed to restore quickbinds\n ${error}`);
+                        this.logger.error(`UIFixes: Failed to restore quickbinds\n ${error}`);
                     }
                 };
             },
@@ -78,7 +78,7 @@ class UIFixes implements IPreSptLoadMod {
                                 }
                             }
                         } catch (error) {
-                            this.logger.error(`UIFixes failed to save tool origin\n ${error}`);
+                            this.logger.error(`UIFixes: Failed to save tool origin\n ${error}`);
                         }
 
                         return result;
@@ -149,10 +149,12 @@ class UIFixes implements IPreSptLoadMod {
                                     }
                                 }
                             } catch (error) {
-                                this.logger.error(
-                                    `UIFixes failed to put a tool back, it will be returned to your stash as normal.\n ${error}`
-                                );
+                                this.logger.error(`UIFixes: Encounted an error trying to put tool back.\n ${error}`);
                             }
+
+                            this.logger.info(
+                                "UIFixes: Unable to put tool back in its original container, returning it to stash."
+                            );
                         }
 
                         return original.call(inventoryHelper, sessionId, request, pmcData, output);
@@ -200,7 +202,7 @@ class UIFixes implements IPreSptLoadMod {
 
                         if (!quests[questId]) {
                             this.logger.error(
-                                `Trader ${traderId} questassort references unknown quest ${JSON.stringify(questId)}!`
+                                `UIFixes: Trader ${traderId} questassort references unknown quest ${JSON.stringify(questId)}!`
                             );
                             continue;
                         }
