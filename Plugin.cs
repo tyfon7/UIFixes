@@ -71,6 +71,7 @@ public class Plugin : BaseUnityPlugin
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();
         LimitDragPatches.Enable();
+        new HideoutCameraPatch().Enable();
     }
 
     public static bool InRaid()
