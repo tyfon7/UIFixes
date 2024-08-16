@@ -115,6 +115,7 @@ internal class Settings
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
+    public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
     // Inspect Panels
@@ -645,6 +646,15 @@ internal class Settings
             SortingTableDisplay.New,
             new ConfigDescription(
                 "What position to show the sorting table button",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TagsOverCaptions = config.Bind(
+            InventorySection,
+            "Prioritize Tags Over Names",
+            true,
+            new ConfigDescription(
+                "When there isn't enough space to show both the tag and the name of an item, show the tag",
                 null,
                 new ConfigurationManagerAttributes { })));
 

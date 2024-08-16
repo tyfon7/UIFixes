@@ -192,124 +192,124 @@ public static class WeaponModdingPatches
         }
     }
 
-    public class ModdingMoveToSortingTablePatch : ModulePatch
-    {
-        private static bool InPatch = false;
+    // public class ModdingMoveToSortingTablePatch : ModulePatch
+    // {
+    //     private static bool InPatch = false;
 
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.DeclaredMethod(typeof(GClass2848), nameof(GClass2848.Select));
-        }
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.DeclaredMethod(typeof(GClass2848), nameof(GClass2848.Select));
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(GClass2848 __instance, Item item, ItemAddress itemAddress, bool simulate, ref Error error, ref bool __result)
-        {
-            if (!Settings.MoveBuildsToSortingTable.Value || InPatch || __result || error is not InteractionsHandlerClass.GClass3363)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static void Postfix(GClass2848 __instance, Item item, ItemAddress itemAddress, bool simulate, ref Error error, ref bool __result)
+    //     {
+    //         if (!Settings.MoveBuildsToSortingTable.Value || InPatch || __result || error is not InteractionsHandlerClass.GClass3363)
+    //         {
+    //             return;
+    //         }
 
-            // get top level item (weapon)
-            Item rootItem = itemAddress.Container.ParentItem.GetRootMergedItem();
-            if (rootItem == null)
-            {
-                return;
-            }
+    //         // get top level item (weapon)
+    //         Item rootItem = itemAddress.Container.ParentItem.GetRootMergedItem();
+    //         if (rootItem == null)
+    //         {
+    //             return;
+    //         }
 
-            // move it to sorting table
-            SortingTableClass sortingTable = __instance.InventoryControllerClass.Inventory.SortingTable;
-            if (sortingTable == null)
-            {
-                return;
-            }
+    //         // move it to sorting table
+    //         SortingTableClass sortingTable = __instance.InventoryControllerClass.Inventory.SortingTable;
+    //         if (sortingTable == null)
+    //         {
+    //             return;
+    //         }
 
-            ItemAddressClass sortingTableAddress = sortingTable.Grid.FindLocationForItem(rootItem);
-            if (sortingTableAddress == null)
-            {
-                return;
-            }
+    //         ItemAddressClass sortingTableAddress = sortingTable.Grid.FindLocationForItem(rootItem);
+    //         if (sortingTableAddress == null)
+    //         {
+    //             return;
+    //         }
 
-            var sortingTableMove = InteractionsHandlerClass.Move(rootItem, sortingTableAddress, __instance.InventoryControllerClass, simulate);
-            if (sortingTableMove.Failed || sortingTableMove.Value == null)
-            {
-                return;
-            }
+    //         var sortingTableMove = InteractionsHandlerClass.Move(rootItem, sortingTableAddress, __instance.InventoryControllerClass, simulate);
+    //         if (sortingTableMove.Failed || sortingTableMove.Value == null)
+    //         {
+    //             return;
+    //         }
 
-            if (simulate)
-            {
-                // Just testing, and it was moveable to sorting table, so assume everything is fine.
-                error = null;
-                __result = true;
-                return;
-            }
+    //         if (simulate)
+    //         {
+    //             // Just testing, and it was moveable to sorting table, so assume everything is fine.
+    //             error = null;
+    //             __result = true;
+    //             return;
+    //         }
 
-            // Actually selecting it, so do it and then redo the select
-            __instance.InventoryControllerClass.RunNetworkTransaction(sortingTableMove.Value);
+    //         // Actually selecting it, so do it and then redo the select
+    //         __instance.InventoryControllerClass.RunNetworkTransaction(sortingTableMove.Value);
 
-            InPatch = true;
-            __result = __instance.Select(item, itemAddress, simulate, out error);
-            InPatch = false;
-        }
-    }
+    //         InPatch = true;
+    //         __result = __instance.Select(item, itemAddress, simulate, out error);
+    //         InPatch = false;
+    //     }
+    // }
 
-    public class PresetMoveToSortingTablePatch : ModulePatch
-    {
-        private static bool InPatch = false;
+    // public class PresetMoveToSortingTablePatch : ModulePatch
+    // {
+    //     private static bool InPatch = false;
 
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(GClass2849), nameof(GClass2849.method_2));
-        }
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(GClass2849), nameof(GClass2849.method_2));
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(
-            GClass2849 __instance,
-            Item item,
-            List<GClass2849.Class2174> modsWithSlots,
-            TraderControllerClass itemController,
-            bool simulate,
-            ref GStruct416<List<GStruct414<GClass2802>>> __result)
-        {
-            if (!Settings.MoveBuildsToSortingTable.Value ||
-                InPatch ||
-                __result.Succeeded ||
-                __result.Error is not InteractionsHandlerClass.GClass3363 ||
-                itemController is not InventoryControllerClass inventoryController)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static void Postfix(
+    //         GClass2849 __instance,
+    //         Item item,
+    //         List<GClass2849.Class2174> modsWithSlots,
+    //         TraderControllerClass itemController,
+    //         bool simulate,
+    //         ref GStruct416<List<GStruct414<GClass2802>>> __result)
+    //     {
+    //         if (!Settings.MoveBuildsToSortingTable.Value ||
+    //             InPatch ||
+    //             __result.Succeeded ||
+    //             __result.Error is not InteractionsHandlerClass.GClass3363 ||
+    //             itemController is not InventoryControllerClass inventoryController)
+    //         {
+    //             return;
+    //         }
 
-            // move it to sorting table
-            SortingTableClass sortingTable = inventoryController.Inventory.SortingTable;
-            if (sortingTable == null)
-            {
-                return;
-            }
+    //         // move it to sorting table
+    //         SortingTableClass sortingTable = inventoryController.Inventory.SortingTable;
+    //         if (sortingTable == null)
+    //         {
+    //             return;
+    //         }
 
-            ItemAddressClass sortingTableAddress = sortingTable.Grid.FindLocationForItem(item);
-            if (sortingTableAddress == null)
-            {
-                return;
-            }
+    //         ItemAddressClass sortingTableAddress = sortingTable.Grid.FindLocationForItem(item);
+    //         if (sortingTableAddress == null)
+    //         {
+    //             return;
+    //         }
 
-            var sortingTableMove = InteractionsHandlerClass.Move(item, sortingTableAddress, inventoryController, simulate); // only called with simulate = false
-            if (sortingTableMove.Failed || sortingTableMove.Value == null)
-            {
-                return;
-            }
+    //         var sortingTableMove = InteractionsHandlerClass.Move(item, sortingTableAddress, inventoryController, simulate); // only called with simulate = false
+    //         if (sortingTableMove.Failed || sortingTableMove.Value == null)
+    //         {
+    //             return;
+    //         }
 
-            InPatch = true;
-            __result = __instance.method_2(item, modsWithSlots, itemController, simulate);
-            InPatch = false;
+    //         InPatch = true;
+    //         __result = __instance.method_2(item, modsWithSlots, itemController, simulate);
+    //         InPatch = false;
 
-            if (__result.Succeeded)
-            {
-                __result.Value.Prepend(sortingTableMove);
-            }
-            else
-            {
-                sortingTableMove.Value.RollBack();
-            }
-        }
-    }
+    //         if (__result.Succeeded)
+    //         {
+    //             __result.Value.Prepend(sortingTableMove);
+    //         }
+    //         else
+    //         {
+    //             sortingTableMove.Value.RollBack();
+    //         }
+    //     }
+    // }
 }

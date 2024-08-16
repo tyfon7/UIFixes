@@ -73,6 +73,7 @@ public class Plugin : BaseUnityPlugin
         LimitDragPatches.Enable();
         new HideoutCameraPatch().Enable();
         WeaponModdingPatches.Enable();
+        TagPatches.Enable();
     }
 
     public static bool InRaid()
