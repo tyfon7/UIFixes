@@ -99,6 +99,19 @@ public static class ExtraItemMarketPricesPanelProperties
     }
 
     public static Action GetOnMarketPricesCallback(this ItemMarketPricesPanel panel) => properties.GetOrCreateValue(panel).OnMarketPricesCallback;
-    public static Action SetOnMarketPricesCallback(this ItemMarketPricesPanel panel, Action handler) => properties.GetOrCreateValue(panel).OnMarketPricesCallback = handler;
+    public static void SetOnMarketPricesCallback(this ItemMarketPricesPanel panel, Action handler) => properties.GetOrCreateValue(panel).OnMarketPricesCallback = handler;
+}
+
+public static class ExtraEventResultProperties
+{
+    private static readonly ConditionalWeakTable<GClass2803, Properties> properties = new();
+
+    private class Properties
+    {
+        public MoveOperation MoveOperation;
+    }
+
+    public static MoveOperation GetMoveOperation(this GClass2803 result) => properties.GetOrCreateValue(result).MoveOperation;
+    public static void SetMoveOperation(this GClass2803 result, MoveOperation operation) => properties.GetOrCreateValue(result).MoveOperation = operation;
 }
 

@@ -68,6 +68,8 @@ public static class R
         ScavengerInventoryScreen.InitTypes();
         LocalizedText.InitTypes();
         GameWorld.InitTypes();
+        MoveOperationResult.InitTypes();
+        AddOperationResult.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -882,6 +884,34 @@ public static class R
 
         public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
     }
+
+    public class MoveOperationResult(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo AddOperationField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(MoveOperation);
+            AddOperationField = AccessTools.Field(Type, "gclass2798_0");
+        }
+
+        public AddOperation AddOperation { get { return (AddOperation)AddOperationField.GetValue(Value); } }
+    }
+
+    public class AddOperationResult(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo ResizeOperationField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(AddOperation);
+            ResizeOperationField = AccessTools.Field(Type, "gclass2803_0");
+        }
+
+        public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
+    }
 }
 
 public static class RExtentensions
@@ -914,4 +944,6 @@ public static class RExtentensions
     public static R.ScavengerInventoryScreen R(this ScavengerInventoryScreen value) => new(value);
     public static R.LocalizedText R(this LocalizedText value) => new(value);
     public static R.GameWorld R(this GameWorld value) => new(value);
+    public static R.MoveOperationResult R(this MoveOperation value) => new(value);
+    public static R.AddOperationResult R(this AddOperation value) => new(value);
 }

@@ -42,6 +42,9 @@ global using MoveSameSpaceError = InteractionsHandlerClass.GClass3353;
 // Operations
 global using ItemOperation = GStruct413;
 global using MoveOperation = GClass2802;
+global using AddOperation = GClass2798;
+global using ResizeOperation = GClass2803;
+global using FoldOperation = GClass2815;
 global using NoOpMove = GClass2795;
 global using BindOperation = GClass2818;
 global using SortOperation = GClass2824;
