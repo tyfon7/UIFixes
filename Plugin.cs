@@ -74,6 +74,7 @@ public class Plugin : BaseUnityPlugin
         new HideoutCameraPatch().Enable();
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
+        TacticalBindsPatches.Enable();
     }
 
     public static bool InRaid()

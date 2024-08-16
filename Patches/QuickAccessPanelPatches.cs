@@ -3,10 +3,13 @@ using Comfort.Common;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.DragAndDrop;
 using EFT.UI.Settings;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIFixes;
 
@@ -17,6 +20,7 @@ public static class QuickAccessPanelPatches
         new FixWeaponBindsDisplayPatch().Enable();
         new FixVisibilityPatch().Enable();
         new TranslateCommandHackPatch().Enable();
+        new RotationPatch().Enable();
     }
 
     public class FixWeaponBindsDisplayPatch : ModulePatch
@@ -99,6 +103,32 @@ public static class QuickAccessPanelPatches
         public static void Postfix()
         {
             FixVisibilityPatch.Ignorable = false;
+        }
+    }
+
+    public class RotationPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(QuickSlotItemView), nameof(QuickSlotItemView.UpdateScale));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(QuickSlotItemView __instance, Image ___MainImage)
+        {
+            if (__instance.IconScale == null)
+            {
+                return;
+            }
+
+            // Already square items don't need to be rotated
+            XYCellSizeStruct size = __instance.Item.CalculateCellSize();
+            if (size.X == size.Y)
+            {
+                Transform transform = ___MainImage.transform;
+                transform.localRotation = Quaternion.identity;
+                transform.localScale = Vector3.one;
+            }
         }
     }
 }

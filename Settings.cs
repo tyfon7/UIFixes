@@ -45,6 +45,13 @@ internal enum AutoFleaPrice
     Maximum
 }
 
+internal enum TacticalBindModifier
+{
+    Shift,
+    Control,
+    Alt
+}
+
 internal class Settings
 {
     // Categories
@@ -71,6 +78,7 @@ internal class Settings
     public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
+    public static ConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
     public static ConfigEntry<bool> UseHomeEnd { get; set; }
     public static ConfigEntry<bool> RebindPageUpDown { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
@@ -267,6 +275,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "Tap the goggles key to toggle night vision/goggles/faceshield, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TacticalModeModifier = config.Bind(
+            InputSection,
+            "Change Quickbound Tactical Mode",
+            TacticalBindModifier.Shift,
+            new ConfigDescription(
+                "Holding this modifer when activating a quickbound tactical device will switch its active mode",
                 null,
                 new ConfigurationManagerAttributes { })));
 
