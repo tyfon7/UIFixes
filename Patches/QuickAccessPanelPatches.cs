@@ -121,13 +121,17 @@ public static class QuickAccessPanelPatches
                 return;
             }
 
-            // Already square items don't need to be rotated
-            XYCellSizeStruct size = __instance.Item.CalculateCellSize();
-            if (size.X == size.Y)
+            // Already square items don't need to be rotated. Still need to be scaled though!
+            XYCellSizeStruct cellSize = __instance.Item.CalculateCellSize();
+            if (cellSize.X == cellSize.Y)
             {
                 Transform transform = ___MainImage.transform;
                 transform.localRotation = Quaternion.identity;
-                transform.localScale = Vector3.one;
+
+                Vector3 size = ___MainImage.rectTransform.rect.size;
+                float xScale = __instance.IconScale.Value.x / Mathf.Abs(size.x);
+                float yScale = __instance.IconScale.Value.y / Mathf.Abs(size.y);
+                transform.localScale = Vector3.one * Mathf.Min(xScale, yScale);
             }
         }
     }
