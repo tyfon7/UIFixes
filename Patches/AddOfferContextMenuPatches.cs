@@ -71,6 +71,8 @@ public static class AddOfferContextMenuPatches
 
     public class AddOfferNameIconPatch : ModulePatch
     {
+        private static Sprite FleaSprite = null;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.Show)).MakeGenericMethod(typeof(EItemInfoButton));
@@ -84,9 +86,10 @@ public static class AddOfferContextMenuPatches
                 { AddOfferInfoButton, "ragfair/OFFER ADD" }
             };
 
+            FleaSprite ??= Resources.FindObjectsOfTypeAll<Sprite>().Single(s => s.name == "icon_flea_market");
             icons ??= new Dictionary<EItemInfoButton, Sprite>()
             {
-                { AddOfferInfoButton, EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(ECurrencyType.RUB) }
+                { AddOfferInfoButton, FleaSprite }
             };
         }
     }
