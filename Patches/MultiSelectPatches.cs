@@ -167,7 +167,7 @@ public static class MultiSelectPatches
                 ___ItemController is InventoryControllerClass inventoryController)
             {
                 SortingTableClass sortingTable = inventoryController.Inventory.SortingTable;
-                if (sortingTable != null && sortingTable.IsVisible)
+                if (sortingTable != null && sortingTable.IsVisible && !Plugin.InRaid())
                 {
                     couldBeSortingTableMove = true;
                 }

@@ -20,7 +20,8 @@ public static class AddOfferContextMenuPatches
 
     public static void Enable()
     {
-        new AddOfferMenuPatch().Enable();
+        new AddOfferInventoryMenuPatch().Enable();
+        new AddOfferTradingMenuPatch().Enable();
         new AddOfferIsActivePatch().Enable();
         new AddOfferIsInteractivePatch().Enable();
         new AddOfferNameIconPatch().Enable();
@@ -30,11 +31,30 @@ public static class AddOfferContextMenuPatches
         new SelectItemPatch().Enable();
     }
 
-    public class AddOfferMenuPatch : ModulePatch
+    public class AddOfferInventoryMenuPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.DeclaredProperty(R.InventoryInteractions.CompleteType, "AvailableInteractions").GetMethod;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        {
+            if (Settings.AddOfferContextMenu.Value)
+            {
+                var list = __result.ToList();
+                list.Insert(list.IndexOf(EItemInfoButton.Tag), AddOfferInfoButton);
+                __result = list;
+            }
+        }
+    }
+
+    public class AddOfferTradingMenuPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredProperty(R.TradingInteractions.Type, "AvailableInteractions").GetMethod;
         }
 
         [PatchPostfix]
@@ -131,7 +151,7 @@ public static class AddOfferContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.InventoryInteractions.Type, "ExecuteInteractionInternal");
+            return AccessTools.Method(typeof(BaseItemInfoInteractions), nameof(BaseItemInfoInteractions.ExecuteInteractionInternal));
         }
 
         [PatchPrefix]
