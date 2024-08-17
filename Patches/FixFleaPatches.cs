@@ -19,6 +19,8 @@ public static class FixFleaPatches
         new ToggleOnOpenPatch().Enable();
         new DropdownHeightPatch().Enable();
 
+        new AddOfferWindowDoubleScrollPatch().Enable();
+
         new OfferItemFixMaskPatch().Enable();
         new OfferViewTweaksPatch().Enable();
 
@@ -98,6 +100,28 @@ public static class FixFleaPatches
             // Stop expiration clock from dancing around
             var timeLeft = ____expirationTimePanel.transform.Find("TimeLeft").GetComponent<HorizontalLayoutGroup>();
             timeLeft.childControlWidth = false;
+        }
+    }
+
+    public class AddOfferWindowDoubleScrollPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Awake));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(AddOfferWindow __instance, GameObject ____noOfferPanel, GameObject ____selectedItemPanel)
+        {
+            // Not sure how they messed it this up, but the widths on some of these are hardcoded
+            // badly, so things move around
+            Transform stashPart = __instance.transform.Find("Inner/Contents/StashPart");
+            var stashLayout = stashPart.gameObject.GetComponent<LayoutElement>();
+            stashLayout.preferredWidth = 644f;
+
+            var noItemLayout = ____noOfferPanel.GetComponent<LayoutElement>();
+            var requirementLayout = ____selectedItemPanel.GetComponent<LayoutElement>();
+            requirementLayout.preferredWidth = noItemLayout.preferredWidth = 450f;
         }
     }
 
