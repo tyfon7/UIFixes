@@ -29,6 +29,8 @@ public static class TagPatches
         public static void Postfix(EditTagWindow __instance, ValidationInputField ____tagInput)
         {
             ____tagInput.onSubmit.AddListener(value => __instance.method_4());
+            ____tagInput.ActivateInputField();
+            ____tagInput.Select();
         }
     }
 
