@@ -94,6 +94,8 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
+    public static ConfigEntry<bool> AddOfferContextMenu { get; set; } // Advanced
+    public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
@@ -419,6 +421,24 @@ internal class Settings
             new KeyboardShortcut(KeyCode.L),
             new ConfigDescription(
                 "Keybind to search flea market for items linked to this item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AddOfferContextMenu = config.Bind(
+            InputSection,
+            "Add Offer Context Menu",
+            true,
+            new ConfigDescription(
+                "Add a context menu to list the item on the flea market",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(AddOfferKeyBind = config.Bind(
+            InputSection,
+            "Linked Search Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to list item on the flea market",
                 null,
                 new ConfigurationManagerAttributes { })));
 

@@ -736,10 +736,12 @@ public static class R
     public class InventoryInteractions(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
+        public static Type CompleteType { get; private set; }
 
         public static void InitTypes()
         {
             Type = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3045
+            CompleteType = PatchConstants.EftTypes.Single(t => t != Type && Type.IsAssignableFrom(t)); // GClass3046
         }
     }
 

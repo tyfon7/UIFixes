@@ -75,6 +75,7 @@ public class Plugin : BaseUnityPlugin
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
         TacticalBindsPatches.Enable();
+        AddOfferContextMenuPatches.Enable();
     }
 
     public static bool InRaid()
