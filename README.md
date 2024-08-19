@@ -15,10 +15,11 @@ New UI features enabled by this mod
     -   Ctrl-click and Alt-click to quick move or equip them all. Compatible with Quick Move to Containers!
     -   Context menu to insure all, equip all, unequip all, unload ammo from all
 -   Swap items in place - drag one item over another to swap their locations!
+-   ✨ Add offer to the flea market from an item's context menu
 -   Flea market history - press the new back button to go back to the previous search
--   ✨ Linked flea search from empty slots - find mods that fit that specific slot
+-   Linked flea search from empty slots - find mods that fit that specific slot
 -   Keybinds for most context menu actions
--   ✨ Toggle/Hold input - tap a key for "Press" mechanics, hold the key for "Continuous" mechanics
+-   Toggle/Hold input - tap a key for "Press" mechanics, hold the key for "Continuous" mechanics
     -   Can be set for aiming, sprinting, tactical devices, headlights, and goggles/faceshields.
 
 ## Improved features
@@ -30,15 +31,15 @@ Existing SPT features made better
 -   Rebind Home/End, PageUp/PageDown to work like you would expect
 -   Customizable mouse scrolling speed
 -   Moving stacks into containers always moves entire stack
--   ✨ Items made stackable by other mods follow normal stacking behavior
+-   Items made stackable by other mods follow normal stacking behavior
 -   Allow found in raid money and ammo automatically stack with non-found-in-raid items
 -   Synchronize stash scroll position everywhere your stash is visible
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
 -   Load ammo preset will pull ammo from inventory, not just stash
--   ✨ Multi-grid vest and backpack grids reordered to be left to right, top to bottom.
--   ✨ Sorting will stack and combine stacks of items
--   ✨ Shift-clicking sort will only sort loose items, leaving containers in place
+-   Multi-grid vest and backpack grids reordered to be left to right, top to bottom.
+-   Sorting will stack and combine stacks of items
+-   Shift-clicking sort will only sort loose items, leaving containers in place
 
 #### Inspect windows
 
@@ -62,11 +63,12 @@ Existing SPT features made better
 -   Option to keep the Add Offer window open after placing your offer
 -   Set prices in the Add Offer window by clicking the min/avg/max market prices (multiplies for bulk orders)
 -   Autoselect Similar checkbox is remembered across sessions and application restarts
--   ✨ Replace barter offers icons with actual item images, plus owned/required counts on expansion
--   ✨ Clears filters for you when you type in search bar and there's no match
+-   Replace barter offers icons with actual item images, plus owned/required counts on expansion
+-   Clears filters for you when you type in search bar and there's no match
 
 #### Weapon modding/presets
 
+-   ✨ Weapons can grow left or up, not just right and down
 -   Enable zooming with mousewheel
 -   Skip needless unsaved changes warnings when not actually closing the screen
 
@@ -77,9 +79,10 @@ Existing SPT features made better
 
 #### In raid
 
--   ✨ Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room.
--   ✨ Grenade quickbinds will transfer to the next grenade of the same type after throwing.
--   ✨ Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
+-   ✨ Quickbind tactical devices to control them individually
+-   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room.
+-   Grenade quickbinds will transfer to the next grenade of the same type after throwing.
+-   Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
 
 #### Mail
 
