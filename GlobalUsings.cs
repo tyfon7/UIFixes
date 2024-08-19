@@ -19,6 +19,7 @@ global using ItemSorter = GClass2772;
 global using ItemWithLocation = GClass2521;
 global using SearchableGrid = GClass2516;
 global using CursorManager = GClass3034;
+global using Helmet = GClass2651;
 
 // State machine states
 global using FirearmReadyState = EFT.Player.FirearmController.GClass1619;

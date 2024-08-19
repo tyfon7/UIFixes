@@ -74,15 +74,7 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand command, KeyCombination.KeyCombinationState[] ___keyCombinationState_1)
         {
-            bool useToggleHold = gameKey switch
-            {
-                EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
-                EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
-                EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,
-                _ => false
-            };
-
-            if (!useToggleHold)
+            if (!UseToggleHold(gameKey))
             {
                 return;
             }
@@ -108,21 +100,42 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(KeyCombination __instance)
         {
-            bool useToggleHold = __instance.GameKey switch
-            {
-                EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
-                EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
-                EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
-                EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,
-                EGameKey.Sprint => Settings.ToggleOrHoldSprint.Value,
-                _ => false
-            };
-
-            if (useToggleHold)
+            if (UseToggleHold(__instance.GameKey))
             {
                 __instance.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
             }
         }
+    }
+
+    private static bool UseToggleHold(EGameKey gameKey)
+    {
+        return gameKey switch
+        {
+            EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
+            EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
+            EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
+            EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,
+            EGameKey.Sprint => Settings.ToggleOrHoldSprint.Value,
+            EGameKey.Slot4 => UseToggleHoldQuickBind(EGameKey.Slot4),
+            EGameKey.Slot5 => UseToggleHoldQuickBind(EGameKey.Slot5),
+            EGameKey.Slot6 => UseToggleHoldQuickBind(EGameKey.Slot6),
+            EGameKey.Slot7 => UseToggleHoldQuickBind(EGameKey.Slot7),
+            EGameKey.Slot8 => UseToggleHoldQuickBind(EGameKey.Slot8),
+            EGameKey.Slot9 => UseToggleHoldQuickBind(EGameKey.Slot9),
+            EGameKey.Slot0 => UseToggleHoldQuickBind(EGameKey.Slot0),
+            _ => false
+        };
+    }
+
+    private static bool UseToggleHoldQuickBind(EGameKey gameKey)
+    {
+        return Quickbind.GetType(gameKey) switch
+        {
+            Quickbind.ItemType.Tactical => Settings.ToggleOrHoldTactical.Value,
+            Quickbind.ItemType.Headlight => Settings.ToggleOrHoldHeadlight.Value,
+            Quickbind.ItemType.NightVision => Settings.ToggleOrHoldGoggles.Value,
+            _ => false,
+        };
     }
 
     private static void OnSettingChanged(object sender, EventArgs args)
