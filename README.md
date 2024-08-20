@@ -20,7 +20,7 @@ New UI features enabled by this mod
 -   Linked flea search from empty slots - find mods that fit that specific slot
 -   Keybinds for most context menu actions
 -   Toggle/Hold input - tap a key for "Press" mechanics, hold the key for "Continuous" mechanics
-    -   Can be set for aiming, sprinting, tactical devices, headlights, and goggles/faceshields.
+    -   Can be set for aiming, sprinting, tactical devices, headlights, and goggles/faceshields
 
 ## Improved features
 
@@ -37,7 +37,7 @@ Existing SPT features made better
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
 -   Load ammo preset will pull ammo from inventory, not just stash
--   Multi-grid vest and backpack grids reordered to be left to right, top to bottom.
+-   Multi-grid vest and backpack grids reordered to be left to right, top to bottom
 -   Sorting will stack and combine stacks of items
 -   Shift-clicking sort will only sort loose items, leaving containers in place
 
@@ -46,7 +46,7 @@ Existing SPT features made better
 -   Show the total stats (including sub-mods) when inspecting mods (optional, toggleable _in_ the inspect pane with a new button)
 -   See stats change as you add/remove mods, with color-coded deltas
 -   Remember last window size when you change it, with restore button to resize to default
--   Move left and move right buttons + keybinds to quickly snap inspect windows to the left or right half of the screen, for easy comparisons.
+-   Move left and move right buttons + keybinds to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
 -   Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 -   Quickbinds will not be removed from items you keep when you die
 
@@ -80,8 +80,8 @@ Existing SPT features made better
 #### In raid
 
 -   ✨ Quickbind tactical devices to control them individually
--   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room.
--   Grenade quickbinds will transfer to the next grenade of the same type after throwing.
+-   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room
+-   Grenade quickbinds will transfer to the next grenade of the same type after throwing
 -   Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
 
 #### Mail
