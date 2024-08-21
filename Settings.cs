@@ -52,6 +52,14 @@ internal enum TacticalBindModifier
     Alt
 }
 
+internal enum ModRaidWeapon
+{
+    Never,
+    [Description("With Multitool")]
+    WithTool,
+    Always
+}
+
 internal class Settings
 {
     // Categories
@@ -94,7 +102,6 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
-    public static ConfigEntry<bool> AddOfferContextMenu { get; set; } // Advanced
     public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
@@ -112,6 +119,8 @@ internal class Settings
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
     public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
+    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; } // Advanced
+    public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
@@ -122,6 +131,7 @@ internal class Settings
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
     public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
+    public static ConfigEntry<bool> AddOfferContextMenu { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
@@ -424,15 +434,6 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(AddOfferContextMenu = config.Bind(
-            InputSection,
-            "Add Offer Context Menu",
-            true,
-            new ConfigDescription(
-                "Add a context menu to list the item on the flea market",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
         configEntries.Add(AddOfferKeyBind = config.Bind(
             InputSection,
             "Linked Search Shortcut",
@@ -569,6 +570,24 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        configEntries.Add(ModifyEquippedWeapons = config.Bind(
+            InventorySection,
+            "Modify Equipped Weapons",
+            true,
+            new ConfigDescription(
+                "Enable the modification of equipped weapons, including vital parts, out of raid",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(ModifyRaidWeapons = config.Bind(
+            InventorySection,
+            "Modify Weapons In Raid",
+            ModRaidWeapon.Never,
+            new ConfigDescription(
+                "When to enable the modification of vital parts of unequipped weapons, in raid",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(ReorderGrids = config.Bind(
             InventorySection,
             "Standardize Grid Order",
@@ -656,6 +675,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Open context menu sub-menu to the right, as BSG intended but failed to do",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AddOfferContextMenu = config.Bind(
+            InputSection,
+            "Add Offer Context Menu",
+            true,
+            new ConfigDescription(
+                "Add a context menu to list the item on the flea market",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -915,7 +943,6 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         RecalcOrder(configEntries);
-
 
         MakeDependent(EnableMultiSelect, EnableMultiSelectInRaid);
         MakeDependent(EnableMultiSelect, ShowMultiSelectDebug, false);

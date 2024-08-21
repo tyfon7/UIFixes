@@ -39,6 +39,9 @@ global using NoPossibleActionsError = GClass3317;
 global using CannotSortError = GClass3325;
 global using FailedToSortError = GClass3326;
 global using MoveSameSpaceError = InteractionsHandlerClass.GClass3353;
+global using NotModdableInRaidError = GClass3321;
+global using MultitoolNeededError = GClass3322;
+global using ModVitalPartInRaidError = GClass3323;
 
 // Operations
 global using ItemOperation = GStruct413;

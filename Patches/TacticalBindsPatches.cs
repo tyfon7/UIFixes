@@ -263,11 +263,6 @@ public static class TacticalBindsPatches
 
         Quickbind.SetType(index, Quickbind.ItemType.Other);
     }
-
-    private static Item GetRootItemNotEquipment(this Item item)
-    {
-        return item.GetAllParentItemsAndSelf(true).LastOrDefault(i => i is not EquipmentClass) ?? item;
-    }
 }
 
 public static class Quickbind
