@@ -16,8 +16,20 @@ public class FixTraderControllerSimulateFalsePatch : ModulePatch
     // Recreating this function to add the comment section, so calling this with simulate = false doesn't break everything
     [PatchPrefix]
     [HarmonyPriority(Priority.Last)]
-    public static bool Prefix(TraderControllerClass __instance, ItemContextAbstractClass itemContext, Item targetItem, bool partialTransferOnly, bool simulate, ref ItemOperation __result)
+    public static bool Prefix(
+        TraderControllerClass __instance,
+        ItemContextAbstractClass itemContext,
+        Item targetItem,
+        bool partialTransferOnly,
+        bool simulate,
+        ref ItemOperation __result,
+        bool __runOriginal)
     {
+        if (!__runOriginal)
+        {
+            return __runOriginal;
+        }
+
         TargetItemOperation opStruct;
         opStruct.targetItem = targetItem;
         opStruct.traderControllerClass = __instance;
