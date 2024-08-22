@@ -25,10 +25,14 @@ public class FixTraderControllerSimulateFalsePatch : ModulePatch
         ref ItemOperation __result,
         bool __runOriginal)
     {
-        if (!__runOriginal)
-        {
-            return __runOriginal;
-        }
+        // TODO: The following commented code is necessary for compatibility with any mod that prefix patches and returns false,
+        // specifically MergeConsumables. However, that mod currently doesn't implement Rollback() on its operations, 
+        // which breaks multi-select and has very nasty side effects. 
+        // Until that is fixed, leaving this as commented because while this breaks that mod, there are no game-breaking effects.
+        // if (!__runOriginal)
+        // {
+        //     return __runOriginal;
+        // }
 
         TargetItemOperation opStruct;
         opStruct.targetItem = targetItem;
