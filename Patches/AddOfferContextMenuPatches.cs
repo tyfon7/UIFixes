@@ -137,15 +137,23 @@ public static class AddOfferContextMenuPatches
 
             ISession session = PatchConstants.BackEndSession;
             RagFairClass ragfair = session.RagFair;
+            if (ragfair.Status != RagFairClass.ERagFairStatus.Available)
+            {
+                __result = new FailedResult(ragfair.GetFormattedStatusDescription());
+                return;
+            }
+
             if (ragfair.MyOffersCount >= ragfair.GetMaxOffersCount(ragfair.MyRating))
             {
                 __result = new FailedResult("ragfair/Reached maximum amount of offers");
+                return;
             }
 
             RagfairOfferSellHelperClass ragfairHelper = new(session.Profile, session.Profile.Inventory.Stash.Grid);
             if (!ragfairHelper.method_4(___item_0, out string error))
             {
                 __result = new FailedResult(error);
+                return;
             }
         }
     }
