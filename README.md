@@ -81,7 +81,7 @@ Existing SPT features made better
 #### In raid
 
 -   ✨ Quickbind tactical devices to control them individually
--   ✨ Option to make unequipped weapons moddable in raid, optionally with multitool.
+-   ✨ Option to make unequipped weapons moddable in raid, optionally with multitool
 -   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room
 -   Grenade quickbinds will transfer to the next grenade of the same type after throwing
 -   Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one
