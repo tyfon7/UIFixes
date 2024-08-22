@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -555,7 +556,7 @@ internal class Settings
         configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
             InventorySection,
             "Unload Ammo Boxes In-Place",
-            true,
+            !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
             new ConfigDescription(
                 "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
                 null,
