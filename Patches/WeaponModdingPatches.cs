@@ -487,7 +487,7 @@ public static class WeaponModdingPatches
         }
 
         Item rootItem = itemAddress.GetRootItemNotEquipment();
-        if (rootItem is not Weapon weapon)
+        if (rootItem is not Weapon weapon || weapon.CurrentAddress == null)
         {
             return true;
         }
