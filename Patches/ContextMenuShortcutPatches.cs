@@ -78,6 +78,11 @@ public static class ContextMenuShortcutPatches
                 TryInteraction(__instance, itemContext, EItemInfoButton.UseAll, [EItemInfoButton.Use]);
             }
 
+            if (Settings.ReloadKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Reload);
+            }
+
             if (Settings.UnloadKeyBind.Value.IsDown())
             {
                 TryInteraction(__instance, itemContext, EItemInfoButton.Unload, [EItemInfoButton.UnloadAmmo]);

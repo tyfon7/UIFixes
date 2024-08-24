@@ -99,6 +99,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> ReloadKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UnloadKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
@@ -396,6 +397,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to use all of an item, such a consumable. This will still work on items that don't have 'Use All', just 'Use', in their context menu.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ReloadKeyBind = config.Bind(
+            InputSection,
+            "Reload Weapon Shortcut",
+            new KeyboardShortcut(KeyCode.R),
+            new ConfigDescription(
+                "Keybind to reload a weapon. Note that this is solely in the menus, and doesn't affect the normal reload key.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
