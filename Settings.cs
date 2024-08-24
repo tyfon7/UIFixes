@@ -437,7 +437,7 @@ internal class Settings
 
         configEntries.Add(AddOfferKeyBind = config.Bind(
             InputSection,
-            "Linked Search Shortcut",
+            "Add Offer Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to list item on the flea market",
