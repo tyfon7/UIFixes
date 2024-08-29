@@ -2,6 +2,8 @@
 using BepInEx.Bootstrap;
 using Comfort.Common;
 using EFT;
+using TMPro;
+using UnityEngine.EventSystems;
 
 namespace UIFixes;
 
@@ -82,6 +84,12 @@ public class Plugin : BaseUnityPlugin
     {
         bool? inRaid = Singleton<AbstractGame>.Instance?.InRaid;
         return inRaid.HasValue && inRaid.Value;
+    }
+
+    public static bool TextboxActive()
+    {
+        return EventSystem.current?.currentSelectedGameObject != null &&
+            EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 
     private static bool? IsFikaPresent;

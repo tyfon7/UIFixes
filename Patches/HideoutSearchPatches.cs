@@ -223,9 +223,7 @@ public static class HideoutSearchPatches
         [PatchPrefix]
         public static bool Prefix(ECommand command, ref InputNode.ETranslateResult __result)
         {
-            if (command == ECommand.Enter &&
-                EventSystem.current?.currentSelectedGameObject != null &&
-                EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+            if (command == ECommand.Enter && Plugin.TextboxActive())
             {
                 __result = InputNode.ETranslateResult.Block;
                 return false;

@@ -73,6 +73,11 @@ public class GridWindowButtonsPatch : ModulePatch
 
         public void Update()
         {
+            if (Plugin.TextboxActive())
+            {
+                return;
+            }
+
             bool isTopWindow = window.transform.GetSiblingIndex() == window.transform.parent.childCount - 1;
             if (Settings.SnapLeftKeybind.Value.IsDown() && isTopWindow)
             {

@@ -46,9 +46,7 @@ public static class ContextMenuShortcutPatches
                 return;
             }
 
-            if (!Settings.ItemContextBlocksTextInputs.Value &&
-                EventSystem.current?.currentSelectedGameObject != null &&
-                EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+            if (!Settings.ItemContextBlocksTextInputs.Value && Plugin.TextboxActive())
             {
                 return;
             }

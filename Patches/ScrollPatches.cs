@@ -35,8 +35,7 @@ public static class ScrollPatches
 
     private static bool HandleInput(ScrollRect scrollRect)
     {
-        if (EventSystem.current?.currentSelectedGameObject != null &&
-            EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null)
+        if (Plugin.TextboxActive())
         {
             return false;
         }
