@@ -64,6 +64,8 @@ public static class ReorderGridsPatches
                         ____presetGridViews = orderedGridView;
                         __instance.SetReordered(false);
                     }
+
+                    GridMaps.Remove(compoundItem.TemplateId);
                 }
 
                 return;
@@ -99,26 +101,9 @@ public static class ReorderGridsPatches
             }
 
             var pairs = compoundItem.Grids.Zip(____presetGridViews, (g, gv) => new KeyValuePair<StashGridClass, GridView>(g, gv));
+            var sortedPairs = SortGrids(__instance, pairs);
 
-            RectTransform parentView = __instance.RectTransform();
-            Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
-            Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
-
-            var sorted = pairs.OrderBy(pair =>
-            {
-                var grid = pair.Key;
-                var gridView = pair.Value;
-
-                float xOffset = gridView.transform.position.x - parentPosition.x;
-                float yOffset = -(gridView.transform.position.y - parentPosition.y); // invert y since grid coords are upper-left origin
-
-                int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
-                int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
-
-                return y * 100 + x;
-            });
-
-            GridView[] orderedGridViews = sorted.Select(pair => pair.Value).ToArray();
+            GridView[] orderedGridViews = sortedPairs.Select(pair => pair.Value).ToArray();
 
             // Populate the gridmap
             if (!GridMaps.ContainsKey(compoundItem.TemplateId))
@@ -132,11 +117,41 @@ public static class ReorderGridsPatches
                 GridMaps.Add(compoundItem.TemplateId, map);
             }
 
-            compoundItem.Grids = sorted.Select(pair => pair.Key).ToArray();
+            compoundItem.Grids = sortedPairs.Select(pair => pair.Key).ToArray();
             ____presetGridViews = orderedGridViews;
 
             compoundItem.SetReordered(true);
             __instance.SetReordered(true);
+        }
+
+        private static IOrderedEnumerable<KeyValuePair<StashGridClass, GridView>> SortGrids(
+            TemplatedGridsView __instance,
+            IEnumerable<KeyValuePair<StashGridClass, GridView>> pairs)
+        {
+            RectTransform parentView = __instance.RectTransform();
+            Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
+            Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
+
+            int calculateCoords(KeyValuePair<StashGridClass, GridView> pair)
+            {
+                var grid = pair.Key;
+                var gridView = pair.Value;
+
+                float xOffset = gridView.transform.position.x - parentPosition.x;
+                float yOffset = -(gridView.transform.position.y - parentPosition.y); // invert y since grid coords are upper-left origin
+
+                int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
+                int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
+
+                return y * 100 + x;
+            }
+
+            if (Settings.PrioritizeSmallerGrids.Value)
+            {
+                return pairs.OrderBy(pair => pair.Key.GridWidth.Value).ThenBy(pair => pair.Key.GridHeight.Value).ThenBy(calculateCoords);
+            }
+
+            return pairs.OrderBy(calculateCoords);
         }
     }
 }

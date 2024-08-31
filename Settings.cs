@@ -124,6 +124,7 @@ internal class Settings
     public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; } // Advanced
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
+    public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
@@ -608,6 +609,15 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        configEntries.Add(PrioritizeSmallerGrids = config.Bind(
+            InventorySection,
+            "Prioritize Smaller Slots (requires restart)",
+            false,
+            new ConfigDescription(
+                "When adding items to containers with multiple slots, place the item in the smallest slot that can hold it, rather than just the first empty space. Requires Standardize Grid Order.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(SynchronizeStashScrolling = config.Bind(
             InventorySection,
             "Synchronize Stash Scroll Position",
@@ -960,6 +970,8 @@ internal class Settings
         MakeDependent(EnableMultiSelect, EnableMultiClick);
 
         MakeExclusive(EnableMultiClick, AutoOpenSortingTable, false);
+
+        MakeDependent(ReorderGrids, PrioritizeSmallerGrids, false);
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
