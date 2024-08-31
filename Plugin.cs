@@ -103,4 +103,16 @@ public class Plugin : BaseUnityPlugin
 
         return IsFikaPresent.Value;
     }
+
+    private static bool? IsMergeConsumablesPresent;
+
+    public static bool MergeConsumablesPresent()
+    {
+        if (!IsMergeConsumablesPresent.HasValue)
+        {
+            IsMergeConsumablesPresent = Chainloader.PluginInfos.ContainsKey("com.lacyway.mc");
+        }
+
+        return IsMergeConsumablesPresent.Value;
+    }
 }

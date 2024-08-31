@@ -27,7 +27,12 @@ public class FixTraderControllerSimulateFalsePatch : ModulePatch
     {
         if (!__runOriginal)
         {
-            return __runOriginal;
+            // This is a little hairy, as *some* prefix didn't want to run. If MergeConsumables is present, assume it's that.
+            // If MC succeeded, bail out. If it failed, we might still want to swap
+            if (Plugin.MergeConsumablesPresent() && __result.Succeeded)
+            {
+                return __runOriginal;
+            }
         }
 
         TargetItemOperation opStruct;
