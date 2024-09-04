@@ -327,7 +327,10 @@ public static class FleaPrevSearchPatches
         [PatchPostfix]
         public static void Postfix(EViewListType type)
         {
-            PreviousFilterButton.Instance?.gameObject.SetActive(type == EViewListType.AllOffers);
+            if (PreviousFilterButton.Instance != null)
+            {
+                PreviousFilterButton.Instance.gameObject.SetActive(type == EViewListType.AllOffers);
+            }
         }
     }
 
@@ -369,7 +372,10 @@ public static class FleaPrevSearchPatches
                 return;
             }
 
-            PreviousFilterButton.Instance.OnOffersLoaded(__instance);
+            if (PreviousFilterButton.Instance != null)
+            {
+                PreviousFilterButton.Instance.OnOffersLoaded(__instance);
+            }
 
             if (Settings.AutoExpandCategories.Value)
             {
