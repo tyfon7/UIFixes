@@ -1,9 +1,11 @@
-﻿using EFT.UI;
+﻿using EFT.HandBook;
+using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +14,8 @@ namespace UIFixes;
 
 public static class FixFleaPatches
 {
+    private static Task SearchFilterTask;
+
     public static void Enable()
     {
         // These are anal AF
@@ -24,7 +28,10 @@ public static class FixFleaPatches
         new OfferItemFixMaskPatch().Enable();
         new OfferViewTweaksPatch().Enable();
 
+        new SearchFilterPatch().Enable();
         new SearchPatch().Enable();
+        new SearchKeyPatch().Enable();
+        new SearchKeyHandbookPatch().Enable();
     }
 
     public class DoNotToggleOnMouseOverPatch : ModulePatch
@@ -125,6 +132,20 @@ public static class FixFleaPatches
         }
     }
 
+    public class SearchFilterPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(BrowseCategoriesPanel), nameof(BrowseCategoriesPanel.Filter));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Task __result)
+        {
+            SearchFilterTask = __result;
+        }
+    }
+
     public class SearchPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -145,19 +166,64 @@ public static class FixFleaPatches
                 return true;
             }
 
+            if (SearchFilterTask != null && !SearchFilterTask.IsCompleted)
+            {
+                SearchFilterTask.ContinueWith(t => DoSearch(__instance), TaskScheduler.FromCurrentSynchronizationContext());
+                return true;
+            }
+
             if (__instance.FilteredNodes.Values.Sum(node => node.Count) > 0)
             {
                 return true;
             }
 
-            __instance.Ragfair.CancellableFilters.Clear();
+            DoSearch(__instance);
+            return false;
+        }
 
-            FilterRule filterRule = __instance.Ragfair.method_3(EViewListType.AllOffers);
+        private static void DoSearch(RagfairCategoriesPanel panel)
+        {
+            if (panel.FilteredNodes.Values.Sum(node => node.Count) > 0)
+            {
+                return;
+            }
+
+            panel.Ragfair.CancellableFilters.Clear();
+
+            FilterRule filterRule = panel.Ragfair.method_3(EViewListType.AllOffers);
             filterRule.HandbookId = string.Empty;
 
-            __instance.Ragfair.AddSearchesInRule(filterRule, true);
+            panel.Ragfair.AddSearchesInRule(filterRule, true);
+        }
+    }
 
-            return false;
+    public class SearchKeyPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(BrowseCategoriesPanel), nameof(BrowseCategoriesPanel.Awake));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(TMP_InputField ___SearchInputField)
+        {
+            ___SearchInputField.GetOrAddComponent<SearchKeyListener>();
+        }
+    }
+
+    // Have to target HandbookCategoriesPanel specifically because even though it inherits from BrowseCategoriesPanel,
+    // BSG couldn't be bothered to call base.Awake()
+    public class SearchKeyHandbookPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(HandbookCategoriesPanel), nameof(HandbookCategoriesPanel.Awake));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(TMP_InputField ___SearchInputField)
+        {
+            ___SearchInputField.GetOrAddComponent<SearchKeyListener>();
         }
     }
 

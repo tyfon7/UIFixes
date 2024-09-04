@@ -106,6 +106,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
@@ -461,6 +462,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SearchKeyBind = config.Bind(
+            InputSection,
+            "Highlight Search Box",
+            new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
+            new ConfigDescription(
+                "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
                 null,
                 new ConfigurationManagerAttributes { })));
 

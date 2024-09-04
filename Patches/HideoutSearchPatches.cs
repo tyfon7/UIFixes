@@ -7,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TMPro;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace UIFixes;
@@ -107,6 +105,8 @@ public static class HideoutSearchPatches
                 layoutElement.minHeight = 750f; // aka areaScreenSubstrate._maxHeight
                 areaScreenSubstrate.method_8();
             }
+
+            ____searchInputField.GetOrAddComponent<SearchKeyListener>();
 
             ____searchInputField.ActivateInputField();
             ____searchInputField.Select();
