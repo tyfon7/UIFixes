@@ -14,8 +14,6 @@ namespace UIFixes;
 
 public static class AddOfferContextMenuPatches
 {
-    private const EItemInfoButton AddOfferInfoButton = (EItemInfoButton)77;
-
     private static Item AddOfferItem = null;
 
     public static void Enable()
@@ -44,7 +42,7 @@ public static class AddOfferContextMenuPatches
             if (Settings.AddOfferContextMenu.Value)
             {
                 var list = __result.ToList();
-                list.Insert(list.IndexOf(EItemInfoButton.Tag), AddOfferInfoButton);
+                list.Insert(list.IndexOf(EItemInfoButton.Tag), EItemInfoButtonExt.AddOffer);
                 __result = list;
             }
         }
@@ -63,7 +61,7 @@ public static class AddOfferContextMenuPatches
             if (Settings.AddOfferContextMenu.Value)
             {
                 var list = __result.ToList();
-                list.Insert(list.IndexOf(EItemInfoButton.Tag), AddOfferInfoButton);
+                list.Insert(list.IndexOf(EItemInfoButton.Tag), EItemInfoButtonExt.AddOffer);
                 __result = list;
             }
         }
@@ -83,13 +81,13 @@ public static class AddOfferContextMenuPatches
         {
             names ??= new Dictionary<EItemInfoButton, string>()
             {
-                { AddOfferInfoButton, "ragfair/OFFER ADD" }
+                { EItemInfoButtonExt.AddOffer, "ragfair/OFFER ADD" }
             };
 
             FleaSprite ??= Resources.FindObjectsOfTypeAll<Sprite>().Single(s => s.name == "icon_flea_market");
             icons ??= new Dictionary<EItemInfoButton, Sprite>()
             {
-                { AddOfferInfoButton, FleaSprite }
+                { EItemInfoButtonExt.AddOffer, FleaSprite }
             };
         }
     }
@@ -104,7 +102,7 @@ public static class AddOfferContextMenuPatches
         [PatchPrefix]
         public static bool Prefix(EItemInfoButton button, ref bool __result)
         {
-            if (button != AddOfferInfoButton)
+            if (button != EItemInfoButtonExt.AddOffer)
             {
                 return true;
             }
@@ -130,7 +128,7 @@ public static class AddOfferContextMenuPatches
         [PatchPostfix]
         public static void Postfix(EItemInfoButton button, ref IResult __result, Item ___item_0)
         {
-            if (button != AddOfferInfoButton)
+            if (button != EItemInfoButtonExt.AddOffer)
             {
                 return;
             }
@@ -168,7 +166,7 @@ public static class AddOfferContextMenuPatches
         [PatchPrefix]
         public static bool Prefix(ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance, EItemInfoButton interaction, Item ___item_0)
         {
-            if (interaction != AddOfferInfoButton)
+            if (interaction != EItemInfoButtonExt.AddOffer)
             {
                 return true;
             }

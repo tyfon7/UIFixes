@@ -13,6 +13,11 @@ using UnityEngine;
 
 namespace UIFixes;
 
+public static class EItemInfoButtonExt
+{
+    public const EItemInfoButton AddOffer = (EItemInfoButton)77;
+}
+
 public static class ContextMenuPatches
 {
     private static InsuranceInteractions CurrentInsuranceInteractions = null;

@@ -112,6 +112,11 @@ public static class ContextMenuShortcutPatches
                     [EItemInfoButton.Fold, EItemInfoButton.Unfold, EItemInfoButton.TurnOn, EItemInfoButton.TurnOff, EItemInfoButton.CheckMagazine]);
             }
 
+            if (Settings.AddOfferKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButtonExt.AddOffer);
+            }
+
             Interactions = null;
         }
 
