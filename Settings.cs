@@ -80,6 +80,7 @@ internal class Settings
     public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
     public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
+    public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
 
     // Input
     public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
@@ -246,6 +247,15 @@ internal class Settings
             new ConfigDescription(
                 "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
                 null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(OperationQueueTime = config.Bind(
+            GeneralSection,
+            "Server Operation Queue Time",
+            15,
+            new ConfigDescription(
+                "The client waits this long to batch inventory operations before sending them to the server. Vanilla Tarkov is 60 (!)",
+                new AcceptableValueRange<int>(0, 60),
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Input
