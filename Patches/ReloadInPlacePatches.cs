@@ -59,7 +59,7 @@ public static class ReloadInPlacePatches
         [PatchPostfix]
         public static void Postfix(MagazineClass __result)
         {
-            if (IsReloading)
+            if (__result != null && IsReloading)
             {
                 FoundMagazine = __result;
                 FoundAddress = FoundMagazine.Parent;
