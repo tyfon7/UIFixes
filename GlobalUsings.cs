@@ -42,6 +42,7 @@ global using MoveSameSpaceError = InteractionsHandlerClass.GClass3353;
 global using NotModdableInRaidError = GClass3321;
 global using MultitoolNeededError = GClass3322;
 global using ModVitalPartInRaidError = GClass3323;
+global using SlotNotEmptyError = EFT.InventoryLogic.Slot.GClass3339;
 
 // Operations
 global using ItemOperation = GStruct413;

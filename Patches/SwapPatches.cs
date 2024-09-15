@@ -43,6 +43,7 @@ public static class SwapPatches
         new DetectGridHighlightPrecheckPatch().Enable();
         new DetectSlotHighlightPrecheckPatch().Enable();
         new SlotCanAcceptSwapPatch().Enable();
+        new WeaponApplyPatch().Enable();
         new DetectFilterForSwapPatch().Enable();
         new FixNoGridErrorPatch().Enable();
         new SwapOperationRaiseEventsPatch().Enable();
@@ -405,6 +406,39 @@ public static class SwapPatches
             var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
             operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
             __result = result.Succeeded;
+        }
+    }
+
+    public class WeaponApplyPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Weapon), nameof(Weapon.Apply));
+        }
+
+        // Allow dragging magazines onto weapons and do a mag swap
+        [PatchPostfix]
+        public static void Postfix(Weapon __instance, TraderControllerClass itemController, Item item, bool simulate, ref ItemOperation __result)
+        {
+            if (!Settings.SwapItems.Value || MultiSelect.Active)
+            {
+                return;
+            }
+
+            // Check if the source container is a non-interactable GridView. Specifically for StashSearch, but may exist in other scenarios?
+            if (SourceContainer != null && SourceContainer is GridView && new R.GridView(SourceContainer).NonInteractable)
+            {
+                return;
+            }
+
+            if (__result.Succeeded || item is not MagazineClass || __result.Error is not SlotNotEmptyError)
+            {
+                return;
+            }
+
+            Slot magazineSlot = __instance.GetMagazineSlot();
+
+            __result = InteractionsHandlerClass.Swap(item, magazineSlot.ContainedItem.Parent, magazineSlot.ContainedItem, item.Parent, itemController, simulate);
         }
     }
 
