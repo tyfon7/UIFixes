@@ -58,29 +58,34 @@ public static class TradingAutoSwitchPatches
             TradingItemView __instance,
             PointerEventData.InputButton button,
             bool doubleClick,
-            ETradingItemViewType ___etradingItemViewType_0, bool ___bool_8)
+            ETradingItemViewType ___etradingItemViewType_0,
+            bool ___bool_8)
         {
-            if (!Settings.AutoSwitchTrading.Value)
+            if (!Settings.AutoSwitchTrading.Value || SellTab == null || BuyTab == null)
             {
                 return true;
             }
 
-            var tradingItemView = __instance.R();
+            var assortmentController = __instance.R().TraderAssortmentController;
+            if (assortmentController == null)
+            {
+                return true;
+            }
+
             if (button != PointerEventData.InputButton.Left || ___etradingItemViewType_0 == ETradingItemViewType.TradingTable)
             {
                 return true;
             }
 
             bool ctrlPressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-
             if (!ctrlPressed && doubleClick)
             {
                 return true;
             }
 
-            if (!___bool_8 && ctrlPressed && tradingItemView.TraderAssortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+            if (!___bool_8 && ctrlPressed && assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
             {
-                __instance.ItemContext.CloseDependentWindows();
+                __instance.ItemContext?.CloseDependentWindows();
                 __instance.HideTooltip();
                 Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
 
@@ -91,7 +96,7 @@ public static class TradingAutoSwitchPatches
 
             if (___bool_8)
             {
-                tradingItemView.TraderAssortmentController.SelectItem(__instance.Item);
+                assortmentController.SelectItem(__instance.Item);
 
                 BuyTab.OnPointerClick(null);
 
