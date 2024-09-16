@@ -188,23 +188,39 @@ public class DrawMultiSelect : MonoBehaviour
         };
 
         List<RaycastResult> results = [];
+        preloaderRaycaster.Raycast(eventData, results); // preload objects are on top, so check that first
         localRaycaster.Raycast(eventData, results);
-        preloaderRaycaster.Raycast(eventData, results);
 
-        foreach (GameObject gameObject in results.Select(r => r.gameObject))
+        GameObject gameObject = results.FirstOrDefault().gameObject;
+        if (gameObject == null)
         {
-            var draggables = gameObject.GetComponents<MonoBehaviour>()
-                .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
-                .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
-                .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
+            return false;
+        }
 
-            var clickables = gameObject.GetComponents<MonoBehaviour>()
-                .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler);
+        var draggables = gameObject.GetComponentsInParent<MonoBehaviour>()
+            .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
+            .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
+            .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
 
-            if (draggables.Any() || clickables.Any())
+        var clickables = gameObject.GetComponentsInParent<MonoBehaviour>()
+            .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler)
+            .Where(c => c is not EmptySlotMenuTrigger); // ignore empty slots that are right-clickable due to UIFixes
+
+        // Windows are clickable to focus them, but that shouldn't block selection
+        var windows = clickables
+            .Where(c => c is UIInputNode) // Windows<>'s parent, cheap check
+            .Where(c =>
             {
-                return true;
-            }
+                // Most window types implement IPointerClickHandler and inherit directly from Window<>
+                Type baseType = c.GetType().BaseType;
+                return baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Window<>);
+            });
+
+        clickables = clickables.Except(windows);
+
+        if (draggables.Any() || clickables.Any())
+        {
+            return true;
         }
 
         return false;

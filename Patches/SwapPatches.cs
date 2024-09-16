@@ -146,7 +146,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnDrag));
+            return AccessTools.Method(typeof(ItemView), nameof(ItemView.OnBeginDrag));
         }
 
         [PatchPrefix]

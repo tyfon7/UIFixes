@@ -123,7 +123,7 @@ internal class Settings
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
     public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
-    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; } // Advanced
+    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
@@ -609,7 +609,7 @@ internal class Settings
             new ConfigDescription(
                 "Enable the modification of equipped weapons, including vital parts, out of raid",
                 null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
+                new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ModifyRaidWeapons = config.Bind(
             InventorySection,
