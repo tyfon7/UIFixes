@@ -74,6 +74,15 @@ class UIFixes implements IPreSptLoadMod {
                                     const originalTool = pmcData.Inventory.items.find(
                                         x => x._id === requestTools[i].id
                                     );
+
+                                    // If the tool is in the stash itself, skip it. Same check as InventoryHelper.isItemInStash
+                                    if (
+                                        originalTool.parentId === pmcData.Inventory.stash &&
+                                        originalTool.slotId === "hideout"
+                                    ) {
+                                        continue;
+                                    }
+
                                     tools[i]["uifixes.returnTo"] = [originalTool.parentId, originalTool.slotId];
                                 }
                             }
