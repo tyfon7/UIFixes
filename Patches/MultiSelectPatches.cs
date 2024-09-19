@@ -1390,6 +1390,11 @@ public static class MultiSelectPatches
             return;
         }
 
+        if (gridAddress == null)
+        {
+            return;
+        }
+
         if (gridAddress.Grid != gridView.Grid)
         {
             GridView otherGridView = gridView.transform.parent.GetComponentsInChildren<GridView>().FirstOrDefault(gv => gv.Grid == gridAddress.Grid);
