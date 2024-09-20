@@ -1,7 +1,7 @@
 import type { DependencyContainer } from "tsyringe";
 
+import type { InraidController } from "@spt/controllers/InraidController";
 import type { HideoutHelper } from "@spt/helpers/HideoutHelper";
-import type { InRaidHelper } from "@spt/helpers/InRaidHelper";
 import type { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import type { ItemHelper } from "@spt/helpers/ItemHelper";
 import type { IHideoutSingleProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutSingleProductionStartRequestData";
@@ -28,16 +28,16 @@ class UIFixes implements IPreSptLoadMod {
 
         // Keep quickbinds for items that aren't actually lost on death
         container.afterResolution(
-            "InRaidHelper",
-            (_, inRaidHelper: InRaidHelper) => {
-                const original = inRaidHelper.deleteInventory;
+            "InraidController",
+            (_, inRaidController: InraidController) => {
+                const original = inRaidController["performPostRaidActionsWhenDead"]; // protected, can only access by name
 
-                inRaidHelper.deleteInventory = (pmcData, sessionId) => {
+                inRaidController["performPostRaidActionsWhenDead"] = (postRaidSaveRequest, pmcData, sessionId) => {
                     // Copy the existing quickbinds
                     const fastPanel = cloner.clone(pmcData.Inventory.fastPanel);
 
                     // Nukes the inventory and the fastpanel
-                    original.call(inRaidHelper, pmcData, sessionId);
+                    const result = original.call(inRaidController, postRaidSaveRequest, pmcData, sessionId);
 
                     // Restore the quickbinds for items that still exist
                     try {
@@ -49,6 +49,8 @@ class UIFixes implements IPreSptLoadMod {
                     } catch (error) {
                         this.logger.error(`UIFixes: Failed to restore quickbinds\n ${error}`);
                     }
+
+                    return result;
                 };
             },
             { frequency: "Always" }
