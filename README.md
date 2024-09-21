@@ -116,3 +116,28 @@ Fixing bugs that BSG won't or can't
 
 -   Skips "You can return to this later" warnings when not transferring all items
 -   "Receive All" button no longer shows up when there is nothing to receive
+
+## Interop
+
+UI Fixes offers interop with other mods that want to use the multi-select functionality, _without_ taking a hard dependency on `Tyfon.UIFixes.dll`.
+
+To do this, simply download and add [MultiSelectInterop.cs](src/Multiselect/MultiSelectInterop.cs) to your client project. It will take care of testing if UI Fixes is present and, using reflection, interoping with the mod.
+
+MultiSelectInterop exposes a small static surface to give you access to the multi-selection.
+
+```cs
+public static class MultiSelect
+{
+    // Returns the number of items in the current selection
+    public static int Count { get; }
+
+    // Returns the items in the current selection
+    public static IEnumerable<Item> Items { get; }
+
+    // Executes an operation on each item in the selection, sequentially
+    // Passing an ItemUiContext is optional as it will use ItemUiContext.Instance if needed
+    // The second overload takes an async operation and returns a task representing the aggregate.
+    public static void Apply(Action<Item> action, ItemUiContext context = null);
+    public static Task Apply(Func<Item, Task> func, ItemUiContext context = null);
+}
+```
