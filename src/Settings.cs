@@ -105,6 +105,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> RequiredSearchKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
@@ -454,6 +455,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.L),
             new ConfigDescription(
                 "Keybind to search flea market for items linked to this item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RequiredSearchKeyBind = config.Bind(
+            InputSection,
+            "Required Search Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to search flea market for items to barter for this item",
                 null,
                 new ConfigurationManagerAttributes { })));
 

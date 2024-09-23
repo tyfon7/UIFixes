@@ -101,6 +101,11 @@ public static class ContextMenuShortcutPatches
                 TryInteraction(__instance, itemContext, EItemInfoButton.LinkedSearch);
             }
 
+            if (Settings.RequiredSearchKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.NeededSearch);
+            }
+
             if (Settings.SortingTableKeyBind.Value.IsDown())
             {
                 MoveToFromSortingTable(itemContext, __instance);
