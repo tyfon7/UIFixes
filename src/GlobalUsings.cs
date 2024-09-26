@@ -1,4 +1,4 @@
-﻿// These shouln't change (unless they do)
+﻿// These shouldn't change (unless they do)
 global using GridItemAddress = ItemAddressClass;
 global using DragItemContext = ItemContextClass;
 global using InsuranceItem = ItemClass;

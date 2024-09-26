@@ -138,6 +138,7 @@ internal class Settings
     public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> AddOfferContextMenu { get; set; }
+    public static ConfigEntry<bool> WishlistContextEverywhere { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
@@ -730,11 +731,20 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AddOfferContextMenu = config.Bind(
-            InputSection,
+            InventorySection,
             "Add Offer Context Menu",
             true,
             new ConfigDescription(
                 "Add a context menu to list the item on the flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(WishlistContextEverywhere = config.Bind(
+            InventorySection,
+            "Wishlist Context Menu Everywhere",
+            true,
+            new ConfigDescription(
+                "Add/Remove to wishlist available in the context menu on all screens",
                 null,
                 new ConfigurationManagerAttributes { })));
 

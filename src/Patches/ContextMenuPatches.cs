@@ -4,6 +4,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,6 +48,9 @@ public static class ContextMenuPatches
         new EmptyModSlotMenuRemovePatch().Enable();
         new EmptySlotMenuPatch().Enable();
         new EmptySlotMenuRemovePatch().Enable();
+
+        new InventoryWishlistPatch().Enable();
+        new TradingWishlistPatch().Enable();
     }
 
     public class ContextMenuNamesPatch : ModulePatch
@@ -64,65 +68,51 @@ public static class ContextMenuPatches
                 return;
             }
 
+            int count = 0;
             if (caption == EItemInfoButton.Insure.ToString())
             {
                 InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
-                int count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
+                count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
                     .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
                     .Count();
 
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
             }
             else if (caption == EItemInfoButton.Equip.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
             }
             else if (caption == EItemInfoButton.Unequip.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.Unequip, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.Unequip, ItemUiContext.Instance);
             }
             else if (caption == EItemInfoButton.LoadAmmo.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.LoadAmmo, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.LoadAmmo, ItemUiContext.Instance);
             }
             else if (caption == EItemInfoButton.UnloadAmmo.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
             }
             else if (caption == EItemInfoButton.ApplyMagPreset.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);
             }
             else if (caption == EItemInfoButton.Unpack.ToString())
             {
-                int count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
-                if (count > 0)
-                {
-                    ____text.text += " (x" + count + ")";
-                }
+                count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
+            }
+            else if (caption == EItemInfoButton.AddToWishlist.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.AddToWishlist, ItemUiContext.Instance);
+            }
+            else if (caption == EItemInfoButton.RemoveFromWishlist.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.RemoveFromWishlist, ItemUiContext.Instance);
+            }
+
+            if (count > 0)
+            {
+                ____text.text += " (x" + count + ")";
             }
         }
     }
@@ -519,7 +509,9 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.SetSubInteractions)).MakeGenericMethod([typeof(InsuranceInteractions.EInsurers)]);
+            return AccessTools.Method(
+                typeof(InteractionButtonsContainer),
+                nameof(InteractionButtonsContainer.SetSubInteractions)).MakeGenericMethod([typeof(InsuranceInteractions.EInsurers)]);
         }
 
         // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
@@ -527,6 +519,54 @@ public static class ContextMenuPatches
         public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
         {
             PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
+        }
+    }
+
+    public class InventoryWishlistPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // R.InventoryActions.Type is only ever referenced by it's child class, which overrides AvailableInteractions
+            Type type = PatchConstants.EftTypes.First(t => t.BaseType == R.InventoryInteractions.Type);
+            return AccessTools.DeclaredProperty(type, "AvailableInteractions").GetMethod;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        {
+            if (!Settings.WishlistContextEverywhere.Value)
+            {
+                return;
+            }
+
+            var list = __result.ToList();
+            int index = list.IndexOf(EItemInfoButton.Tag);
+            list.Insert(index, EItemInfoButton.RemoveFromWishlist);
+            list.Insert(index, EItemInfoButton.AddToWishlist);
+            __result = list;
+        }
+    }
+
+    public class TradingWishlistPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredProperty(R.TradingInteractions.Type, "AvailableInteractions").GetMethod;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        {
+            if (!Settings.WishlistContextEverywhere.Value)
+            {
+                return;
+            }
+
+            var list = __result.ToList();
+            int index = list.IndexOf(EItemInfoButton.Tag);
+            list.Insert(index, EItemInfoButton.RemoveFromWishlist);
+            list.Insert(index, EItemInfoButton.AddToWishlist);
+            __result = list;
         }
     }
 
