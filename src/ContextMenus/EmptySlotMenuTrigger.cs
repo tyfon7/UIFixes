@@ -32,6 +32,9 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
             using EmptySlotContext context = new(slot, parentContext, itemUiContext);
             var interactions = itemUiContext.GetItemContextInteractions(context, null);
             interactions.ExecuteInteraction(EItemInfoButton.LinkedSearch);
+
+            // Call this explicitly since screen transition prevents it from firing normally
+            OnPointerExit(null);
         }
     }
 
