@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>2.5.0</Version>
+    <Version>2.5.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release</Configurations>
@@ -80,11 +80,13 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2"
+      PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command='if $(ConfigurationName) == Debug (
+    <Exec
+      Command='if $(ConfigurationName) == Debug (
         xcopy /F /Y "$(TargetPath)" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
         xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
       )
