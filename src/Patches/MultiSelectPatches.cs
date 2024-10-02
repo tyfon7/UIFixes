@@ -35,6 +35,8 @@ public static class MultiSelectPatches
     private static bool DisableMerge = false;
     private static bool IgnoreItemParent = false;
 
+    private static bool DisableMagnify = false; // Causes issues during multi drag
+
     private static readonly Color ValidMoveColor = new(0.06f, 0.38f, 0.06f, 0.57f);
 
     public static void Enable()
@@ -55,6 +57,7 @@ public static class MultiSelectPatches
         new DisableSplitPatch().Enable();
         new DisableSplitTargetPatch().Enable();
         new FixSearchedContextPatch().Enable();
+        new DisableMagnifyPatch().Enable();
 
         // Actions
         new ItemViewClickPatch().Enable();
@@ -535,6 +538,24 @@ public static class MultiSelectPatches
         }
     }
 
+    // MagnifyIfPossible gets called when a dynamic grid (sorting table) resizes. It causes GridViews to be killed and recreated asynchronously (!)
+    // This causes all sorts of issues with multiselect move, as there are race conditions and items get dropped and views duplicated
+    // I'm not 100% sure what it does, it appears to be trying to unload items that may now be out of sight, an optimization I'm willing
+    // to sacrifice for this actually work properly.
+    public class DisableMagnifyPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridView), nameof(GridView.MagnifyIfPossible), []);
+        }
+
+        [PatchPrefix]
+        public static bool Prefix()
+        {
+            return !DisableMagnify;
+        }
+    }
+
     public class GridViewCanAcceptPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -592,6 +613,7 @@ public static class MultiSelectPatches
 
             Item targetItem = __instance.method_8(targetItemContext);
             DisableMerge = targetItem == null;
+            DisableMagnify = true;
             bool isGridPlacement = targetItem == null;
 
             // If everything selected is the same type and is a stackable type, allow partial success
@@ -718,6 +740,8 @@ public static class MultiSelectPatches
             {
                 operations.Pop().Value?.RollBack();
             }
+
+            DisableMagnify = false;
 
             // result and operation are set to the last one that completed - so success if they all passed, or the first failure
             return false;
@@ -1314,28 +1338,35 @@ public static class MultiSelectPatches
             int firstStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.x : FindOrigin.LocationInGrid.y : 0;
             int secondStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.y : FindOrigin.LocationInGrid.x : 0;
 
-            // Walks the first dimension until it finds a row/column with enough space, then walks down that row
-            // /column until it finds a column/row with enough space
+            // Walks the first dimension until it finds a row/column with enough space, 
+            // then walks down that row/column until it finds a column/row with enough space
             // Starts at origin, wraps around
             for (int i = 0; i < firstDimensionSize; i++)
             {
-                int firstDim = (firstStart + i) % firstDimensionSize;
-                //for (int j = i == firstStart ? secondStart : 0; j + itemSecondSize <= secondDimensionSize; j++)
+                int firstDim = (firstStart + i) % firstDimensionSize; // loop around from start
                 for (int j = 0; j < secondDimensionSize; j++)
                 {
+                    // second dimension starts at FindOrigin, but after first dimension increases, starts back at 0
+                    // e.g. there wasn't room on the first row, then on the second row we start with first column
                     int secondDim = firstDim == firstStart ? (secondStart + j) % secondDimensionSize : j;
                     if (secondDim + itemSecondSize > secondDimensionSize)
                     {
                         continue;
                     }
 
-                    int secondDimOpenSpaces = (invertDimensions ? secondDimensionSpaces[secondDim * firstDimensionSize + firstDim] : secondDimensionSpaces[firstDim * secondDimensionSize + secondDim]);
-                    if (secondDimOpenSpaces >= itemSecondSize || secondDimOpenSpaces == -1) // no idea what -1 means
+                    // Open spaces is a look-ahead number of open spaces in that dimension
+                    // -1 means "infinite", the grid can stretch in that direction (and there's no item further in that direction)
+                    int secondDimOpenSpaces = invertDimensions ?
+                        secondDimensionSpaces[secondDim * firstDimensionSize + firstDim] :
+                        secondDimensionSpaces[firstDim * secondDimensionSize + secondDim];
+                    if (secondDimOpenSpaces >= itemSecondSize || secondDimOpenSpaces == -1)
                     {
                         bool enoughSpace = true;
                         for (int k = secondDim; enoughSpace && k < secondDim + itemSecondSize; k++)
                         {
-                            int firstDimOpenSpaces = (invertDimensions ? firstDimensionSpaces[k * firstDimensionSize + firstDim] : firstDimensionSpaces[firstDim * secondDimensionSize + k]);
+                            int firstDimOpenSpaces = invertDimensions ?
+                                firstDimensionSpaces[k * firstDimensionSize + firstDim] :
+                                firstDimensionSpaces[firstDim * secondDimensionSize + k];
                             enoughSpace &= firstDimOpenSpaces >= itemMainSize || firstDimOpenSpaces == -1;
                         }
 
