@@ -125,9 +125,20 @@ public static class ContextMenuPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+        public static void Postfix(ref IEnumerable<EItemInfoButton> __result, Item ___item_0)
         {
             __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
+
+            if (___item_0 is LootItemClass container && container.Grids.Any())
+            {
+                var innerContainers = container.GetFirstLevelItems()
+                    .Where(i => i != container)
+                    .Where(i => i is LootItemClass innerContainer && innerContainer.Grids.Any());
+                if (innerContainers.Count() == 1)
+                {
+                    __result = __result.Append(EItemInfoButton.Open);
+                }
+            }
         }
     }
 
@@ -141,7 +152,12 @@ public static class ContextMenuPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper, Item ___item_0, ItemUiContext ___itemUiContext_1)
+        public static bool Prefix(
+            EItemInfoButton parentInteraction,
+            ISubInteractions subInteractionsWrapper,
+            Item ___item_0,
+            ItemContextAbstractClass ___itemContextAbstractClass,
+            ItemUiContext ___itemUiContext_1)
         {
             // Clear this, since something else should be active (even a different mouseover of the insurance button) 
             LoadingInsuranceActions = false;
@@ -176,6 +192,12 @@ public static class ContextMenuPatches
                 CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
                 subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
+                return false;
+            }
+
+            if (Settings.OpenAllContextMenu.Value && parentInteraction == EItemInfoButton.Open)
+            {
+                subInteractionsWrapper.SetSubInteractions(new OpenInteractions(___itemContextAbstractClass, ___itemUiContext_1));
                 return false;
             }
 

@@ -139,6 +139,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> AddOfferContextMenu { get; set; }
     public static ConfigEntry<bool> WishlistContextEverywhere { get; set; }
+    public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
@@ -745,6 +746,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Add/Remove to wishlist available in the context menu on all screens",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(OpenAllContextMenu = config.Bind(
+            InventorySection,
+            "Open All Context Flyout",
+            true,
+            new ConfigDescription(
+                "Add a flyout to the Open context menu to recursively open a stack of containers",
                 null,
                 new ConfigurationManagerAttributes { })));
 
