@@ -3,6 +3,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -83,24 +84,31 @@ public static class TradingAutoSwitchPatches
                 return true;
             }
 
-            if (!___bool_8 && ctrlPressed && assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+            try
             {
-                __instance.ItemContext?.CloseDependentWindows();
-                __instance.HideTooltip();
-                Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
+                if (!___bool_8 && ctrlPressed && assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+                {
+                    __instance.ItemContext?.CloseDependentWindows();
+                    __instance.HideTooltip();
+                    Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
 
-                SellTab.OnPointerClick(null);
+                    SellTab.OnPointerClick(null);
 
-                return false;
+                    return false;
+                }
+
+                if (___bool_8)
+                {
+                    assortmentController.SelectItem(__instance.Item);
+
+                    BuyTab.OnPointerClick(null);
+
+                    return false;
+                }
             }
-
-            if (___bool_8)
+            catch (Exception e)
             {
-                assortmentController.SelectItem(__instance.Item);
-
-                BuyTab.OnPointerClick(null);
-
-                return false;
+                Logger.LogError(e);
             }
 
             return true;
