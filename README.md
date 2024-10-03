@@ -41,6 +41,8 @@ Existing SPT features made better
 -   Multi-grid vest and backpack grids reordered to be left to right, top to bottom
 -   Sorting will stack and combine stacks of items
 -   Shift-clicking sort will only sort loose items, leaving containers in place
+-   ✨ Open->All context flyout that will recursively open nested containers to get at that innermost bag
+-   ✨ Add/Remove from wishlist everywhere
 
 #### Inspect windows
 
