@@ -45,7 +45,7 @@ public class Plugin : BaseUnityPlugin
         TradingAutoSwitchPatches.Enable();
         AddOfferRememberAutoselectPatches.Enable();
         KeepMessagesOpenPatches.Enable();
-        new FocusTradeQuantityPatch().Enable();
+        TradeQuantityPatches.Enable();
         RememberRepairerPatches.Enable();
         new GridWindowButtonsPatch().Enable();
         new LoadMagPresetsPatch().Enable();
