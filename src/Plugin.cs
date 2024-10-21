@@ -80,6 +80,7 @@ public class Plugin : BaseUnityPlugin
         AddOfferContextMenuPatches.Enable();
         new OperationQueuePatch().Enable();
         SliderPatches.Enable();
+        DropdownPatches.Enable();
     }
 
     public static bool InRaid()
