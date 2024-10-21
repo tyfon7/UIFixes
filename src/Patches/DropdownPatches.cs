@@ -1,4 +1,6 @@
 using Comfort.Common;
+using Diz.LanguageExtensions;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.WeaponModding;
@@ -28,6 +30,8 @@ public static class DropdownPatches
         new EmptySlotClickPatch().Enable();
 
         new BackgroundClickClosePatch().Enable();
+
+        new FixBlockedItemSwapPatch().Enable();
     }
 
     public class ModdingScreenListenOpenPatch : ModulePatch
@@ -185,6 +189,57 @@ public static class DropdownPatches
                     parentView.method_3();
                 }
             });
+        }
+    }
+
+    // BSG forgets to rollback the removeOperation below if the addOperation fails. Reimplement method to fix.
+    public class FixBlockedItemSwapPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(GClass2847), nameof(GClass2847.Select));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(GClass2847 __instance, Item item, ItemAddress itemAddress, bool simulate, ref Error error, ref bool __result)
+        {
+            if (item?.TemplateId == itemAddress.Item?.TemplateId)
+            {
+                error = null;
+                __result = true;
+                return false;
+            }
+
+            ItemOperation removeOperation = default;
+            if (itemAddress.Item != null)
+            {
+                removeOperation = InteractionsHandlerClass.Remove(itemAddress.Item, __instance.InventoryControllerClass, item == null && simulate, false);
+                error = removeOperation.Error;
+                __result = removeOperation.Succeeded;
+                if (removeOperation.Failed)
+                {
+                    return false;
+                }
+            }
+
+            GStruct414<AddOperation> addOperation = default;
+            if (item != null)
+            {
+                addOperation = InteractionsHandlerClass.Add(
+                    item.CloneItem(__instance.InventoryControllerClass),
+                    itemAddress,
+                    __instance.InventoryControllerClass,
+                    simulate);
+                error = addOperation.Error;
+                __result = addOperation.Succeeded;
+            }
+
+            if (simulate || addOperation.Failed)
+            {
+                removeOperation.Value?.RollBack();
+            }
+
+            return false;
         }
     }
 
