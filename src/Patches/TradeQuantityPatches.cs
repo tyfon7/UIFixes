@@ -3,6 +3,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using TMPro;
+using UnityEngine.EventSystems;
 
 namespace UIFixes;
 
@@ -11,6 +12,7 @@ public static class TradeQuantityPatches
     public static void Enable()
     {
         new FocusTradeQuantityPatch().Enable();
+        new SelectAllPatch().Enable();
     }
 
     public class FocusTradeQuantityPatch : ModulePatch
@@ -28,6 +30,29 @@ public static class TradeQuantityPatches
         {
             ____quantity.ActivateInputField();
             ____quantity.Select();
+        }
+    }
+
+    public class SelectAllPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(BarterSchemePanel), nameof(BarterSchemePanel.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(BarterSchemePanel __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass, TMP_InputField ____quantity)
+        {
+            FocusFleaOfferNumberPatches.AllButtonKeybind allKeybind = __instance.GetOrAddComponent<FocusFleaOfferNumberPatches.AllButtonKeybind>();
+            allKeybind.Init(() =>
+            {
+                if (EventSystem.current?.currentSelectedGameObject != null &&
+                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() == ____quantity)
+                {
+                    ___traderAssortmentControllerClass.CurrentQuantity = ___traderAssortmentControllerClass.SelectedItem.StackObjectsCount;
+                    ____quantity.MoveTextEnd(false);
+                }
+            });
         }
     }
 }
