@@ -1,6 +1,6 @@
 {
     "name": "uifixes",
-    "version": "2.5.1",
+    "version": "2.5.2",
     "main": "src/mod.js",
     "license": "MIT",
     "author": "Tyfon",
