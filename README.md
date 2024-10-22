@@ -43,6 +43,7 @@ Existing SPT features made better
 -   Shift-clicking sort will only sort loose items, leaving containers in place
 -   ✨ Open->All context flyout that will recursively open nested containers to get at that innermost bag
 -   ✨ Add/Remove from wishlist everywhere
+-   ✨ Improve modding/preset dropdown usability
 
 #### Inspect windows
 
@@ -107,6 +108,7 @@ Fixing bugs that BSG won't or can't
 
 -   Fix item tooltips disapparing if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
 -   Fix windows appearing partially offscreen
+-   ✨ Fix modding/preset UI breaking when you click not allowed (red outlined) items
 
 #### In raid
 
