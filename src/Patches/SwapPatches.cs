@@ -96,8 +96,14 @@ public static class SwapPatches
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
         bool isContainer = targetItemContext.Item is LootItemClass compoundItem && compoundItem.Grids.Length > 0;
-        if (Settings.SwapImpossibleContainers.Value && isContainer && !Plugin.InRaid() && error.StartsWith("No free room"))
+        if (Settings.SwapImpossibleContainers.Value && isContainer && error.StartsWith("No free room"))
         {
+            // Disallow in-raid, unless it's an equipment slot
+            if (Plugin.InRaid() && targetItemContext.Item.Parent.Container.ParentItem is not EquipmentClass)
+            {
+                return false;
+            }
+
             // Check if it isn't allowed in that container, if so try to swap
             if (LastCheckItemFilterId == itemContext.Item.Id && !LastCheckItemFilterResult)
             {
