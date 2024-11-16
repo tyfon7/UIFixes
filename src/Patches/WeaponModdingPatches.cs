@@ -172,11 +172,11 @@ public static class WeaponModdingPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderControllerClass __instance, IRaiseEvents operationResult)
+        public static bool Prefix(TraderControllerClass __instance, IRaiseEvents operationResult, Callback callback)
         {
             if (InPatch)
             {
-                return;
+                return true;
             }
 
             MoveOperation extraOperation = null;
@@ -191,16 +191,45 @@ public static class WeaponModdingPatches
 
             if (extraOperation != null)
             {
-                try
+                InPatch = true;
+                __instance.RunNetworkTransaction(extraOperation, extraResult =>
                 {
-                    InPatch = true;
-                    __instance.RunNetworkTransaction(extraOperation);
-                }
-                finally
-                {
-                    InPatch = false;
-                }
+                    if (extraResult.Failed)
+                    {
+                        InPatch = false;
+                        if (callback != null)
+                        {
+                            callback(extraResult);
+                        }
+
+                        return;
+                    }
+
+                    void Continue(object eventArgs)
+                    {
+                        if (__instance.HasActiveEvents)
+                        {
+                            return;
+                        }
+
+                        __instance.ActiveEventsChanged -= Continue;
+                        __instance.RunNetworkTransaction(operationResult, result =>
+                        {
+                            InPatch = false;
+                            if (callback != null)
+                            {
+                                callback(result);
+                            }
+                        });
+                    }
+
+                    __instance.ActiveEventsChanged += Continue;
+                });
+
+                return false;
             }
+
+            return true;
         }
     }
 
