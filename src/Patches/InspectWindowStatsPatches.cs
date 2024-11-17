@@ -25,6 +25,7 @@ public static class InspectWindowStatsPatches
         new FormatCompactValuesPatch().Enable();
         new FormatFullValuesPatch().Enable();
         new FixDurabilityBarPatch().Enable();
+        new HighlightSlotsPatch().Enable();
     }
 
     public class CalculateModStatsPatch : ModulePatch
@@ -309,6 +310,26 @@ public static class InspectWindowStatsPatches
             ___Current.rectTransform.anchorMax = new Vector2(
                 Mathf.Min(___Current.rectTransform.anchorMax.x, 1f),
                 ___Current.rectTransform.anchorMax.y);
+        }
+    }
+
+    public class HighlightSlotsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ItemSpecificationPanel __instance, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext)
+        {
+            if (!Settings.HighlightEmptySlots.Value)
+            {
+                return;
+            }
+
+            itemUiContext.RegisterView(itemContext);
+            __instance.R().UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
         }
     }
 

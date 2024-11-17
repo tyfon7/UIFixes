@@ -148,6 +148,7 @@ internal class Settings
 
     // Inspect Panels
     public static ConfigEntry<bool> ShowModStats { get; set; }
+    public static ConfigEntry<bool> HighlightEmptySlots { get; set; }
     public static ConfigEntry<bool> RememberInspectSize { get; set; }
     public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
     public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
@@ -810,6 +811,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Item mods will show stats that include mods attached to them (you can also control this from a mod's inspect window)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HighlightEmptySlots = config.Bind(
+            InspectSection,
+            "Highlight Compatible Slots",
+            true,
+            new ConfigDescription(
+                "In addition to the default behavior of compatible components shading green, empty slots that can accept the mod will have a green border",
                 null,
                 new ConfigurationManagerAttributes { })));
 

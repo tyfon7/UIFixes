@@ -202,7 +202,7 @@ public static class R
         public LayoutElement ContentLayout { get { return (LayoutElement)ContentLayoutField.GetValue(Value); } }
     }
 
-    public class ItemSpecificationPanel(object value) : Wrapper(value)
+    public class ItemSpecificationPanel(object value) : UIElement(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo CompactCharacteristicPanelsField;
