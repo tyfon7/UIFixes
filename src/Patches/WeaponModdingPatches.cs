@@ -4,6 +4,7 @@ using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -521,8 +522,8 @@ public static class WeaponModdingPatches
             return true;
         }
 
-        // Can't modify weapon in hands
-        if (EquippedSlots.Contains(weapon.Parent.Container.ID))
+        // Can't modify weapon in player's hands
+        if (weapon.Owner.ID == PatchConstants.BackEndSession.Profile.Id && EquippedSlots.Contains(weapon.Parent.Container.ID))
         {
             if (Plugin.InRaid())
             {
