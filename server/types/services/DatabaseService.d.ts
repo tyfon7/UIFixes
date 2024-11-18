@@ -3,6 +3,7 @@ import { ILocation } from "@spt/models/eft/common/ILocation";
 import { IAchievement } from "@spt/models/eft/common/tables/IAchievement";
 import { ICustomizationItem } from "@spt/models/eft/common/tables/ICustomizationItem";
 import { IHandbookBase } from "@spt/models/eft/common/tables/IHandbookBase";
+import { ILocationServices } from "@spt/models/eft/common/tables/ILocationServices";
 import { IMatch } from "@spt/models/eft/common/tables/IMatch";
 import { IProfileTemplates } from "@spt/models/eft/common/tables/IProfileTemplate";
 import { IQuest } from "@spt/models/eft/common/tables/IQuest";
@@ -19,7 +20,7 @@ import { ISettingsBase } from "@spt/models/spt/server/ISettingsBase";
 import { ITemplates } from "@spt/models/spt/templates/ITemplates";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
-import { LocalisationService } from "./LocalisationService";
+import { LocalisationService } from "@spt/services/LocalisationService";
 export declare class DatabaseService {
     protected logger: ILogger;
     protected databaseServer: DatabaseServer;
@@ -52,7 +53,7 @@ export declare class DatabaseService {
     getLocations(): ILocations;
     /**
      * Get specific location by its Id
-     * @param locationId Desired trader id
+     * @param locationId Desired location id
      * @returns assets/database/locations/
      */
     getLocation(locationId: string): ILocation;
@@ -110,4 +111,8 @@ export declare class DatabaseService {
      * @returns assets/database/traders/
      */
     getTrader(traderId: string): ITrader;
+    /**
+     * @returns assets/database/locationServices/
+     */
+    getLocationServices(): ILocationServices;
 }

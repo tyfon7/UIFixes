@@ -1,3 +1,4 @@
+import { ISurveyResponseData } from "@spt/models/eft/game/ISurveyResponseData";
 import { IBaseConfig } from "@spt/models/spt/config/IBaseConfig";
 export interface ICoreConfig extends IBaseConfig {
     kind: "spt-core";
@@ -11,6 +12,7 @@ export interface ICoreConfig extends IBaseConfig {
     bsgLogging: IBsgLogging;
     release: IRelease;
     fixes: IGameFixes;
+    survey: ISurveyResponseData;
     features: IServerFeatures;
     /** Commit hash build server was created from */
     commit?: string;
@@ -62,12 +64,16 @@ export interface IServerFeatures {
     autoInstallModDependencies: boolean;
     compressProfile: boolean;
     chatbotFeatures: IChatbotFeatures;
+    /** Keyed to profile type e.g. "Standard" or "SPT Developer" */
+    createNewProfileTypesBlacklist: string[];
 }
 export interface IChatbotFeatures {
     sptFriendEnabled: boolean;
+    sptFriendGiftsEnabled: boolean;
     commandoEnabled: boolean;
     commandoFeatures: ICommandoFeatures;
     commandUseLimits: Record<string, number>;
+    ids: Record<string, string>;
 }
 export interface ICommandoFeatures {
     giveCommandEnabled: boolean;

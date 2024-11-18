@@ -38,7 +38,7 @@ import ignore from "ignore";
 import archiver from "archiver";
 import winston from "winston";
 
-const sptPath = "/SPT/3.9.3-debug";
+const sptPath = "/SPT/3.10-be";
 
 // Get the command line arguments to determine whether to use verbose logging.
 const args = process.argv.slice(2);
