@@ -56,7 +56,7 @@ public static class MultiSelectPatches
         // Workarounds
         new DisableSplitPatch().Enable();
         new DisableSplitTargetPatch().Enable();
-        new FixSearchedContextPatch().Enable();
+        // new FixSearchedContextPatch().Enable(); // TODO: Check if still needed, looks like search was refactored
         new DisableMagnifyPatch().Enable();
 
         // Actions
@@ -138,7 +138,7 @@ public static class MultiSelectPatches
         {
             Settings.EnableMultiSelect.Bind(enabled =>
             {
-                __instance.TraderScreensGroup.transform.Find("Deal Screen").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                __instance.TraderScreensGroup.transform.Find("TraderDealScreen").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
             });
         }
     }
@@ -167,9 +167,9 @@ public static class MultiSelectPatches
             if (Settings.DefaultSortingTableBind.Value &&
                 shiftDown &&
                 eventData.button == PointerEventData.InputButton.Left &&
-                ___ItemController is InventoryControllerClass inventoryController)
+                ___ItemController is InventoryController inventoryController)
             {
-                SortingTableClass sortingTable = inventoryController.Inventory.SortingTable;
+                SortingTableItemClass sortingTable = inventoryController.Inventory.SortingTable;
                 if (sortingTable != null && sortingTable.IsVisible && !Plugin.InRaid())
                 {
                     couldBeSortingTableMove = true;
@@ -339,12 +339,12 @@ public static class MultiSelectPatches
                 case EItemInfoButton.Unpack:
                     MultiSelect.UnpackAll(___itemUiContext_1, false);
                     return false;
-                case EItemInfoButton.AddToWishlist:
-                    MultiSelect.WishlistAll(___itemUiContext_1, __instance, true, false);
-                    return false;
-                case EItemInfoButton.RemoveFromWishlist:
-                    MultiSelect.WishlistAll(___itemUiContext_1, __instance, false, false);
-                    return false;
+                // case EItemInfoButton.AddToWishlist:
+                //     MultiSelect.WishlistAll(___itemUiContext_1, __instance, true, false);
+                //     return false;
+                // case EItemInfoButton.RemoveFromWishlist:
+                //     MultiSelect.WishlistAll(___itemUiContext_1, __instance, false, false);
+                //     return false;
                 default:
                     return true;
             }
@@ -473,70 +473,70 @@ public static class MultiSelectPatches
         }
     }
 
-    public class FixSearchedContextPatch : ModulePatch
-    {
-        private static string CurrentContextSearchingId = null;
+    // public class FixSearchedContextPatch : ModulePatch
+    // {
+    //     private static string CurrentContextSearchingId = null;
 
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(GridView), nameof(GridView.OnItemAdded));
-        }
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(GridView), nameof(GridView.OnItemAdded));
+    //     }
 
-        [PatchPrefix]
-        public static void Prefix(GridView __instance, GEventArgs2 eventArgs, TraderControllerClass ___traderControllerClass, ItemUiContext ___itemUiContext_0)
-        {
-            if (eventArgs.To.Container != __instance.Grid || eventArgs.Status != CommandStatus.Begin)
-            {
-                return;
-            }
+    //     [PatchPrefix]
+    //     public static void Prefix(GridView __instance, GEventArgs2 eventArgs, TraderControllerClass ___traderControllerClass, ItemUiContext ___itemUiContext_0)
+    //     {
+    //         if (eventArgs.To.Container != __instance.Grid || eventArgs.Status != CommandStatus.Begin)
+    //         {
+    //             return;
+    //         }
 
-            Item item = eventArgs.Item;
-            if (___itemUiContext_0.ItemContextAbstractClass?.Item != eventArgs.Item)
-            {
-                return;
-            }
+    //         Item item = eventArgs.Item;
+    //         if (___itemUiContext_0.ItemContextAbstractClass?.Item != eventArgs.Item)
+    //         {
+    //             return;
+    //         }
 
-            LocationInGrid locationInGrid = ((GridItemAddress)eventArgs.To).LocationInGrid;
+    //         LocationInGrid locationInGrid = ((GridItemAddress)eventArgs.To).LocationInGrid;
 
-            bool searchable = !(___traderControllerClass != null && ___traderControllerClass.CanSearch && ___traderControllerClass.ID != eventArgs.OwnerId);
-            if (!searchable || !locationInGrid.isSearched)
-            {
-                return;
-            }
+    //         bool searchable = !(___traderControllerClass != null && ___traderControllerClass.CanSearch && ___traderControllerClass.ID != eventArgs.OwnerId);
+    //         if (!searchable || !locationInGrid.isSearched)
+    //         {
+    //             return;
+    //         }
 
-            ItemView itemView = __instance.method_9(item, iv => !iv.IsSearched);
-            if (itemView != null)
-            {
-                CurrentContextSearchingId = item.Id;
-            }
-        }
+    //         ItemView itemView = __instance.method_9(item, iv => !iv.IsSearched);
+    //         if (itemView != null)
+    //         {
+    //             CurrentContextSearchingId = item.Id;
+    //         }
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(GridView __instance, GEventArgs2 eventArgs, ItemUiContext ___itemUiContext_0, Dictionary<string, ItemView> ___dictionary_0)
-        {
-            if (eventArgs.To.Container != __instance.Grid)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static void Postfix(GridView __instance, GEventArgs2 eventArgs, ItemUiContext ___itemUiContext_0, Dictionary<string, ItemView> ___dictionary_0)
+    //     {
+    //         if (eventArgs.To.Container != __instance.Grid)
+    //         {
+    //             return;
+    //         }
 
-            if (CurrentContextSearchingId == eventArgs.Item.Id)
-            {
-                if (eventArgs.Status == CommandStatus.Succeed)
-                {
-                    if (___dictionary_0.TryGetValue(eventArgs.Item.Id, out ItemView itemView))
-                    {
-                        ___itemUiContext_0.RegisterCurrentItemContext(itemView.ItemContext);
-                    }
+    //         if (CurrentContextSearchingId == eventArgs.Item.Id)
+    //         {
+    //             if (eventArgs.Status == CommandStatus.Succeed)
+    //             {
+    //                 if (___dictionary_0.TryGetValue(eventArgs.Item.Id, out ItemView itemView))
+    //                 {
+    //                     ___itemUiContext_0.RegisterCurrentItemContext(itemView.ItemContext);
+    //                 }
 
-                    CurrentContextSearchingId = null;
-                }
-                else if (eventArgs.Status == CommandStatus.Failed)
-                {
-                    CurrentContextSearchingId = null;
-                }
-            }
-        }
-    }
+    //                 CurrentContextSearchingId = null;
+    //             }
+    //             else if (eventArgs.Status == CommandStatus.Failed)
+    //             {
+    //                 CurrentContextSearchingId = null;
+    //             }
+    //         }
+    //     }
+    // }
 
     // MagnifyIfPossible gets called when a dynamic grid (sorting table) resizes. It causes GridViews to be killed and recreated asynchronously (!)
     // This causes all sorts of issues with multiselect move, as there are race conditions and items get dropped and views duplicated
@@ -605,8 +605,8 @@ public static class MultiSelectPatches
                 return false;
             }
 
-            GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
-            if (!item.CheckAction(hoveredAddress))
+            GridItemAddress hoveredAddress = new StashGridItemAddress(__instance.Grid, hoveredLocation);
+            if (item.CheckAction(hoveredAddress).Failed)
             {
                 return false;
             }
@@ -674,7 +674,7 @@ public static class MultiSelectPatches
                         FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
                     }
 
-                    if (targetItem is SortingTableClass)
+                    if (targetItem is SortingTableItemClass)
                     {
                         operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
                     }
@@ -774,7 +774,7 @@ public static class MultiSelectPatches
         public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result, ItemUiContext ___itemUiContext_0)
         {
             // Need to fully implement AcceptItem for the sorting table - normally that just uses null targetItemContext
-            if (InPatch && targetItemContext?.Item is SortingTableClass)
+            if (InPatch && targetItemContext?.Item is SortingTableItemClass)
             {
                 MoveToSortingTable(__instance, itemContext, ___itemUiContext_0);
                 __result = Task.CompletedTask;
@@ -790,9 +790,9 @@ public static class MultiSelectPatches
             DisableMerge = targetItemContext == null;
 
             LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-            GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+            GridItemAddress hoveredAddress = new StashGridItemAddress(__instance.Grid, hoveredLocation);
 
-            if (__instance.Grid.ParentItem is SortingTableClass)
+            if (__instance.Grid.ParentItem is SortingTableItemClass)
             {
                 // Sorting table will need a targetItemContext. Dunno if this is the right type but all it needs is the .Item property
                 targetItemContext = new GenericItemContext(__instance.Grid.ParentItem, EItemViewType.Empty);
@@ -924,7 +924,7 @@ public static class MultiSelectPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref ItemOperation operation, ref bool __result, InventoryControllerClass ___InventoryController)
+        public static bool Prefix(SlotView __instance, ItemContextAbstractClass targetItemContext, ref ItemOperation operation, ref bool __result, TraderControllerClass ___ItemController)
         {
             if (InPatch || !MultiSelect.Active)
             {
@@ -945,7 +945,7 @@ public static class MultiSelectPatches
             {
                 if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
                 {
-                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
+                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
                     if (operation.Succeeded)
                     {
                         operations.Push(operation);
@@ -974,7 +974,7 @@ public static class MultiSelectPatches
                         }
 
                         stackCount = itemContext.Item.StackObjectsCount;
-                        __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___InventoryController, out operation, false /* simulate */);
+                        __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
                         if (operation.Succeeded)
                         {
                             operations.Push(operation);
@@ -1066,7 +1066,7 @@ public static class MultiSelectPatches
             bool firstItem = true;
 
             LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-            GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+            GridItemAddress hoveredAddress = new StashGridItemAddress(__instance.Grid, hoveredLocation);
 
             DisableMerge = true;
 
@@ -1079,8 +1079,17 @@ public static class MultiSelectPatches
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                     operation = firstItem ?
-                        InteractionsHandlerClass.Move(selectedItemContext.Item, new GridItemAddress(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)), traderAssortmentController.TraderController, false) :
-                        InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, false);
+                        InteractionsHandlerClass.Move(
+                            selectedItemContext.Item,
+                            new StashGridItemAddress(__instance.Grid, __instance.CalculateItemLocation(selectedItemContext)),
+                            traderAssortmentController.TraderController,
+                            false) :
+                        InteractionsHandlerClass.QuickFindAppropriatePlace(
+                            selectedItemContext.Item,
+                            traderAssortmentController.TraderController,
+                            [__instance.Grid.ParentItem as CompoundItem],
+                            InteractionsHandlerClass.EMoveItemOrder.Apply,
+                            false);
 
                     FindVerticalFirst = false;
 
@@ -1143,7 +1152,7 @@ public static class MultiSelectPatches
             TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
 
             LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
-            GridItemAddress hoveredAddress = new(__instance.Grid, hoveredLocation);
+            GridItemAddress hoveredAddress = new StashGridItemAddress(__instance.Grid, hoveredLocation);
 
             itemContext.DragCancelled();
             traderAssortmentController.PrepareToSell(itemContext.Item, hoveredLocation);
@@ -1157,7 +1166,12 @@ public static class MultiSelectPatches
                 FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                 FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
-                ItemOperation operation = InteractionsHandlerClass.QuickFindAppropriatePlace(selectedItemContext.Item, traderAssortmentController.TraderController, [__instance.Grid.ParentItem as LootItemClass], InteractionsHandlerClass.EMoveItemOrder.Apply, true);
+                ItemOperation operation = InteractionsHandlerClass.QuickFindAppropriatePlace(
+                    selectedItemContext.Item,
+                    traderAssortmentController.TraderController,
+                    [__instance.Grid.ParentItem as CompoundItem],
+                    InteractionsHandlerClass.EMoveItemOrder.Apply,
+                    true);
 
                 FindVerticalFirst = false;
 
@@ -1314,7 +1328,7 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_11));
+            return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_7));
         }
 
         [PatchPrefix]
@@ -1395,7 +1409,7 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_10));
+            return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.method_6));
         }
 
         [PatchPrefix]

@@ -19,7 +19,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
         switch (interaction)
         {
             case EItemInfoButton.LinkedSearch:
-                Search(new(EFilterType.LinkedSearch, slot.ParentItem.TemplateId + ":" + slot.Id, true));
+                Search(new(EFilterType.LinkedSearch, slot.ParentItem.TemplateId + ":" + slot.ID, true));
                 break;
             default:
                 break;

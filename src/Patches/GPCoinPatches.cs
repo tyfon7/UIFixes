@@ -44,7 +44,7 @@ public static class GPCoinPatches
                 gpCoinsTransform.name = "GPCoins";
 
                 Image icon = gpCoinsTransform.Find("Image").GetComponent<Image>();
-                icon.sprite = EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(ECurrencyType.GP);
+                icon.sprite = EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(CurrencyInfo.GetCurrencyId(ECurrencyType.GP));
 
                 LayoutElement imageLayout = icon.GetComponent<LayoutElement>();
                 imageLayout.preferredHeight = -1f;

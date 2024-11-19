@@ -95,11 +95,11 @@ public static class SwapPatches
         string error = operation.Error.ToString();
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
-        bool isContainer = targetItemContext.Item is LootItemClass compoundItem && compoundItem.Grids.Length > 0;
+        bool isContainer = targetItemContext.Item is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
         if (Settings.SwapImpossibleContainers.Value && isContainer && error.StartsWith("No free room"))
         {
             // Disallow in-raid, unless it's an equipment slot
-            if (Plugin.InRaid() && targetItemContext.Item.Parent.Container.ParentItem is not EquipmentClass)
+            if (Plugin.InRaid() && targetItemContext.Item.Parent.Container.ParentItem is not InventoryEquipment)
             {
                 return false;
             }
@@ -128,7 +128,7 @@ public static class SwapPatches
     private static bool CouldEverFit(DragItemContext itemContext, ItemContextAbstractClass containerItemContext)
     {
         Item item = itemContext.Item;
-        if (containerItemContext.Item is not LootItemClass container)
+        if (containerItemContext.Item is not CompoundItem container)
         {
             return false;
         }
@@ -138,8 +138,8 @@ public static class SwapPatches
 
         foreach (StashGridClass grid in container.Grids)
         {
-            if (size.X <= grid.GridWidth.Value && size.Y <= grid.GridHeight.Value ||
-                rotatedSize.X <= grid.GridWidth.Value && rotatedSize.Y <= grid.GridHeight.Value)
+            if (size.X <= grid.GridWidth && size.Y <= grid.GridHeight ||
+                rotatedSize.X <= grid.GridWidth && rotatedSize.Y <= grid.GridHeight)
             {
                 return true;
             }
@@ -204,7 +204,7 @@ public static class SwapPatches
                 {
                     for (int x = 0; x < itemASize.X; x++)
                     {
-                        itemASlots.Add((locationA.y + y) * grid.GridWidth.Value + locationA.x + x);
+                        itemASlots.Add((locationA.y + y) * grid.GridWidth + locationA.x + x);
                     }
                 }
 
@@ -213,7 +213,7 @@ public static class SwapPatches
                 {
                     for (int x = 0; x < itemBSize.X; x++)
                     {
-                        int num = (locationB.y + y) * grid.GridWidth.Value + locationB.x + x;
+                        int num = (locationB.y + y) * grid.GridWidth + locationB.x + x;
                         if (itemASlots.Contains(num))
                         {
                             return true;
@@ -226,7 +226,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___dictionary_0)
+        public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
         {
             if (!ValidPrerequisites(itemContext, targetItemContext, operation))
             {
@@ -244,7 +244,7 @@ public static class SwapPatches
             }
 
             // Repair kits are special
-            if (___dictionary_0.TryGetValue(targetItem.Id, out ItemView targetItemView))
+            if (___ItemViews.TryGetValue(targetItem.Id, out ItemView targetItemView))
             {
                 if (targetItemView.CanInteract(itemContext))
                 {
@@ -257,7 +257,7 @@ public static class SwapPatches
 
             // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
             var targetGridItemAddress = targetItemAddress as GridItemAddress;
-            ItemAddress itemToAddress = new GridItemAddress(targetGridItemAddress.Grid, itemToLocation);
+            ItemAddress itemToAddress = new StashGridItemAddress(targetGridItemAddress.Grid, itemToLocation);
 
             ItemAddress targetToAddress;
             if (itemAddress is GridItemAddress gridItemAddress)
@@ -265,7 +265,7 @@ public static class SwapPatches
                 LocationInGrid targetToLocation = gridItemAddress.LocationInGrid.Clone();
                 targetToLocation.r = targetGridItemAddress.LocationInGrid.r;
 
-                targetToAddress = new GridItemAddress(gridItemAddress.Grid, targetToLocation);
+                targetToAddress = new StashGridItemAddress(gridItemAddress.Grid, targetToLocation);
             }
             else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
             {
@@ -318,13 +318,13 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass2813
+            return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass3147
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item1)
+        public static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item2)
         {
-            if (status != CommandStatus.Succeed || ___Item == null || ___Item1 == null || controller is not InventoryControllerClass inventoryController)
+            if (status != CommandStatus.Succeed || ___Item == null || ___Item2 == null || controller is not InventoryController inventoryController)
             {
                 return;
             }
@@ -339,9 +339,9 @@ public static class SwapPatches
                 }
             }
 
-            if (!inventoryController.IsAtBindablePlace(___Item1))
+            if (!inventoryController.IsAtBindablePlace(___Item2))
             {
-                var result = inventoryController.UnbindItemDirect(___Item1, false);
+                var result = inventoryController.UnbindItemDirect(___Item2, false);
                 if (result.Succeeded)
                 {
                     result.Value.RaiseEvents(controller, CommandStatus.Begin);
@@ -404,7 +404,7 @@ public static class SwapPatches
 
             // Repair kits again
             // Don't have access to ItemView to call CanInteract, but repair kits can't go into any slot I'm aware of, so...
-            if (item.Template is RepairKitClass)
+            if (item is RepairKitsItemClass)
             {
                 return;
             }
@@ -437,7 +437,7 @@ public static class SwapPatches
                 return;
             }
 
-            if (__result.Succeeded || item is not MagazineClass || __result.Error is not SlotNotEmptyError)
+            if (__result.Succeeded || item is not MagazineItemClass || __result.Error is not SlotNotEmptyError)
             {
                 return;
             }
@@ -520,7 +520,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct414<GInterface339> __result, Error ___noSpaceError, Error ___noActionsError)
+        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct446<GInterface385> __result, Error ___noSpaceError, Error ___noActionsError)
         {
             // Since 3.9 EFT handles slots in addition to containers here, they get the wrong error
             if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
@@ -556,7 +556,7 @@ public static class SwapPatches
 
                     // DragItemContext must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
                     using DragItemContext itemUnderCursorContext = itemUnderCursor != null ? new DragItemContext(itemUnderCursor, ItemRotation.Horizontal) : null;
-                    panel.method_15(slot, itemUnderCursorContext);
+                    panel.method_19(slot, itemUnderCursorContext);
                 }
             }
         }

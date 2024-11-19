@@ -45,10 +45,10 @@ public static class StackFirItemsPatches
         [PatchPrefix]
         public static bool Prefix(Item __instance, Item other, ref bool __result)
         {
-            bool ignoreSpawnedInSession = __instance.Template switch
+            bool ignoreSpawnedInSession = __instance switch
             {
-                MoneyClass _ => Settings.MergeFIRMoney.Value,
-                AmmoTemplate _ => Settings.MergeFIRMoney.Value,
+                MoneyItemClass _ => Settings.MergeFIRMoney.Value,
+                AmmoItemClass _ => Settings.MergeFIRMoney.Value,
                 _ => Settings.MergeFIROther.Value,
             };
 

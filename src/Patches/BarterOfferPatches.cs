@@ -42,7 +42,7 @@ public static class BarterOfferPatches
             IExchangeRequirement requirement,
             ItemTooltip tooltip,
             Offer offer,
-            InventoryControllerClass inventoryController,
+            InventoryController inventoryController,
             ItemUiContext itemUiContext,
             InsuranceCompanyClass insuranceCompany,
             int index,
@@ -132,7 +132,7 @@ public static class BarterOfferPatches
             }
         }
 
-        private static int GetOwnedCount(IExchangeRequirement requirement, InventoryControllerClass inventoryController)
+        private static int GetOwnedCount(IExchangeRequirement requirement, InventoryController inventoryController)
         {
             List<Item> allItems = [];
             inventoryController.Inventory.Stash.GetAllAssembledItemsNonAlloc(allItems);
@@ -156,8 +156,8 @@ public static class BarterOfferPatches
 
             return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
                 .Where(item => item.TemplateId == requirement.Item.TemplateId)
-                .Where(item => !requirement.OnlyFunctional || item is not LootItemClass lootItem || !lootItem.MissingVitalParts.Any())
-                .Where(item => item is not GInterface325 encodable || requirement.Item is not GInterface325 || encodable.IsEncoded() == requirement.IsEncoded)
+                .Where(item => !requirement.OnlyFunctional || item is not CompoundItem lootItem || !lootItem.MissingVitalParts.Any())
+                .Where(item => item is not GInterface373 encodable || requirement.Item is not GInterface373 || encodable.IsEncoded() == requirement.IsEncoded)
                 .Sum(item => item.StackObjectsCount);
         }
     }

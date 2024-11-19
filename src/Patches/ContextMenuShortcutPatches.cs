@@ -143,12 +143,12 @@ public static class ContextMenuShortcutPatches
         private static void MoveToFromSortingTable(ItemContextAbstractClass itemContext, ItemUiContext itemUiContext)
         {
             Item item = itemContext.Item;
-            if (item.Owner is not InventoryControllerClass controller)
+            if (item.Owner is not InventoryController controller)
             {
                 return;
             }
 
-            SortingTableClass sortingTable = controller.Inventory.SortingTable;
+            SortingTableItemClass sortingTable = controller.Inventory.SortingTable;
             bool isInSortingTable = sortingTable != null && item.Parent.Container.ParentItem == sortingTable;
 
             var operation = isInSortingTable ? itemUiContext.QuickFindAppropriatePlace(itemContext, controller, false, true, true) : itemUiContext.QuickMoveToSortingTable(item, true);

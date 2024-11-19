@@ -13,22 +13,22 @@ public class PutToolsBackPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(R.ItemReceiver.Type, "method_9"); // GClass1855
+        return AccessTools.Method(R.ItemReceiver.Type, "method_9"); // GClass2055
     }
 
     // The patched method can't handle new items that aren't in stash root.
     // Find items that are in subcontainers and handle them first - the patched method will ignore items that have a CurrentAddress
     // This is a subset of the original method - doesn't handle slots, equipment containers, etc.
     [PatchPrefix]
-    public static void Prefix(object __instance, ref JsonItem[] newItems, Profile ___profile_0, ItemFactory ___itemFactory)
+    public static void Prefix(object __instance, ref JsonItem[] newItems, Profile ___profile_0, ItemFactoryClass ___itemFactoryClass)
     {
         Inventory inventory = ___profile_0.Inventory;
-        StashClass stash = inventory.Stash;
+        StashItemClass stash = inventory.Stash;
         if (inventory != null && stash != null)
         {
             // Handled items are either in these top level containers or are nested inside each other (mods, attachments, etc)
             var handledContainerIds = newItems.Select(i => i._id).Concat([inventory.Stash.Id, inventory.Equipment.Id, inventory.QuestRaidItems.Id, inventory.QuestStashItems.Id, inventory.SortingTable.Id]);
-            var unhandledItems = newItems.Where(i => !String.IsNullOrEmpty(i.parentId) && !handledContainerIds.Contains(i.parentId));
+            var unhandledItems = newItems.Where(i => i.parentId.HasValue && !handledContainerIds.Contains(i.parentId.Value));
 
             if (!unhandledItems.Any())
             {
@@ -40,9 +40,9 @@ public class PutToolsBackPatch : ModulePatch
 
             List<Item> stashItems = stash.GetNotMergedItems().ToList();
 
-            InventoryControllerClass inventoryController = new R.ItemReceiver(__instance).InventoryController;
+            InventoryController inventoryController = new R.ItemReceiver(__instance).InventoryController;
 
-            var tree = ___itemFactory.FlatItemsToTree(unhandledItems.ToArray(), true, null);
+            var tree = ___itemFactoryClass.FlatItemsToTree(unhandledItems.ToArray(), true, null);
             foreach (Item item in tree.Items.Values.Where(i => i.CurrentAddress == null))
             {
                 var newItem = unhandledItems.First(i => i._id == item.Id);
@@ -55,7 +55,7 @@ public class PutToolsBackPatch : ModulePatch
                         if (containerCollection.GetContainer(newItem.slotId) is StashGridClass grid)
                         {
                             LocationInGrid location = LocationJsonParser.CreateItemLocation<LocationInGrid>(newItem.location);
-                            ItemAddress itemAddress = new GridItemAddress(grid, location);
+                            ItemAddress itemAddress = new StashGridItemAddress(grid, location);
 
                             var operation = InteractionsHandlerClass.Add(item, itemAddress, inventoryController, false);
                             if (operation.Succeeded)

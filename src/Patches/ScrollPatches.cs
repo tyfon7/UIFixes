@@ -29,7 +29,7 @@ public static class ScrollPatches
         new LightScrollerSpeedPatch().Enable();
 
         new EnhanceHideoutScrollingPatch().Enable();
-        new EnhanceTaskListScrollingPatch().Enable();
+        //new EnhanceTaskListScrollingPatch().Enable(); // Changed shape, where's the scroller?
         new OpenLastTaskPatch().Enable();
     }
 
@@ -212,9 +212,9 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderDealScreen.ETraderMode ___etraderMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
+        public static void Prefix(ETradeMode ___etradeMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
         {
-            HandleInput(___etraderMode_0 == TraderDealScreen.ETraderMode.Purchase ? ____traderScroll : ____stashScroll);
+            HandleInput(___etradeMode_0 == ETradeMode.Purchase ? ____traderScroll : ____stashScroll);
         }
 
         [PatchTranspiler]
@@ -329,20 +329,20 @@ public static class ScrollPatches
         }
     }
 
-    public class EnhanceTaskListScrollingPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
-        }
+    // public class EnhanceTaskListScrollingPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(ScrollRect ____scrollRect)
-        {
-            var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
-            keyScroller.Init(____scrollRect);
-        }
-    }
+    //     [PatchPostfix]
+    //     public static void Postfix(ScrollRect ____scrollRect)
+    //     {
+    //         var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
+    //         keyScroller.Init(____scrollRect);
+    //     }
+    // }
 
     public class KeyScroller : MonoBehaviour
     {

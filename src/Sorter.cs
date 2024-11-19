@@ -7,105 +7,105 @@ namespace UIFixes;
 
 public static class Sorter
 {
-    public static GStruct414<SortOperation> Sort(LootItemClass sortingItem, InventoryControllerClass controller, bool includingContainers, bool simulate)
-    {
-        SortOperation operation = new(sortingItem, controller);
-        if (!operation.CanExecute(controller))
-        {
-            return new CannotSortError(sortingItem);
-        }
+    // public static GStruct446<SortOperation> Sort(CompoundItem sortingItem, InventoryController controller, bool includingContainers, bool simulate)
+    // {
+    //     SortOperation operation = new(sortingItem, controller);
+    //     if (!operation.CanExecute(controller))
+    //     {
+    //         return new CannotSortError(sortingItem);
+    //     }
 
-        List<Item> itemsToSort = [];
-        foreach (StashGridClass grid in sortingItem.Grids)
-        {
-            operation.SetOldPositions(grid, grid.ItemCollection.ToListOfLocations());
-            itemsToSort.AddRange(includingContainers ? grid.Items : grid.Items.Where(i => i is not LootItemClass compoundItem || !compoundItem.Grids.Any()));
-            var containers = includingContainers ? [] : grid.ItemCollection.Where(kvp => kvp.Key is LootItemClass compoundItem && compoundItem.Grids.Any()).Select(kvp => new ItemWithLocation(kvp.Key, kvp.Value)).ToArray();
-            grid.RemoveAll();
-            controller.RaiseEvent(new GEventArgs23(grid));
+    //     List<Item> itemsToSort = [];
+    //     foreach (StashGridClass grid in sortingItem.Grids)
+    //     {
+    //         operation.SetOldPositions(grid, grid.ItemCollection.ToListOfLocations());
+    //         itemsToSort.AddRange(includingContainers ? grid.Items : grid.Items.Where(i => i is not CompoundItem compoundItem || !compoundItem.Grids.Any()));
+    //         var containers = includingContainers ? [] : grid.ItemCollection.Where(kvp => kvp.Key is CompoundItem compoundItem && compoundItem.Grids.Any()).Select(kvp => new ItemWithLocation(kvp.Key, kvp.Value)).ToArray();
+    //         grid.RemoveAll();
+    //         controller.RaiseEvent(new GEventArgs23(grid));
 
-            // Immediately put the containers back in their original spots
-            foreach (var itemWithLocation in containers)
-            {
-                grid.Add(itemWithLocation.Item, itemWithLocation.Location, false);
-                operation.AddItemToGrid(grid, itemWithLocation);
-            }
-        }
+    //         // Immediately put the containers back in their original spots
+    //         foreach (var itemWithLocation in containers)
+    //         {
+    //             grid.Add(itemWithLocation.Item, itemWithLocation.Location, false);
+    //             operation.AddItemToGrid(grid, itemWithLocation);
+    //         }
+    //     }
 
-        List<Item> sortedItems = ItemSorter.Sort(itemsToSort);
-        int fallbackTries = 5;
-        InventoryError inventoryError = null;
+    //     List<Item> sortedItems = ItemSorter.Sort(itemsToSort);
+    //     int fallbackTries = 5;
+    //     InventoryError inventoryError = null;
 
-        for (int i = 0; i < sortedItems.Count; i++)
-        {
-            Item item = sortedItems[i];
-            if (item.CurrentAddress == null)
-            {
-                bool sorted = false;
-                foreach (StashGridClass grid in sortingItem.Grids)
-                {
-                    if (grid.Add(item).Succeeded)
-                    {
-                        sorted = true;
-                        operation.AddItemToGrid(grid, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
-                        break;
-                    }
-                }
+    //     for (int i = 0; i < sortedItems.Count; i++)
+    //     {
+    //         Item item = sortedItems[i];
+    //         if (item.CurrentAddress == null)
+    //         {
+    //             bool sorted = false;
+    //             foreach (StashGridClass grid in sortingItem.Grids)
+    //             {
+    //                 if (grid.Add(item).Succeeded)
+    //                 {
+    //                     sorted = true;
+    //                     operation.AddItemToGrid(grid, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
+    //                     break;
+    //                 }
+    //             }
 
-                if (!sorted && --fallbackTries > 0)
-                {
-                    XYCellSizeStruct xycellSizeStruct = item.CalculateCellSize();
-                    while (!sorted && --i > 0)
-                    {
-                        Item item2 = sortedItems[i];
-                        XYCellSizeStruct xycellSizeStruct2 = item2.CalculateCellSize();
-                        if (!xycellSizeStruct.Equals(xycellSizeStruct2))
-                        {
-                            StashGridClass stashGridClass3 = operation.RemoveItemFromGrid(item2);
-                            if (stashGridClass3 != null && !stashGridClass3.Add(item).Failed)
-                            {
-                                sorted = true;
-                                operation.AddItemToGrid(stashGridClass3, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
-                            }
-                        }
-                    }
+    //             if (!sorted && --fallbackTries > 0)
+    //             {
+    //                 XYCellSizeStruct xycellSizeStruct = item.CalculateCellSize();
+    //                 while (!sorted && --i > 0)
+    //                 {
+    //                     Item item2 = sortedItems[i];
+    //                     XYCellSizeStruct xycellSizeStruct2 = item2.CalculateCellSize();
+    //                     if (!xycellSizeStruct.Equals(xycellSizeStruct2))
+    //                     {
+    //                         StashGridClass stashGridClass3 = operation.RemoveItemFromGrid(item2);
+    //                         if (stashGridClass3 != null && !stashGridClass3.Add(item).Failed)
+    //                         {
+    //                             sorted = true;
+    //                             operation.AddItemToGrid(stashGridClass3, new ItemWithLocation(item, ((GridItemAddress)item.CurrentAddress).LocationInGrid));
+    //                         }
+    //                     }
+    //                 }
 
-                    i--;
-                    continue;
-                }
+    //                 i--;
+    //                 continue;
+    //             }
 
-                if (fallbackTries > 0)
-                {
-                    continue;
-                }
+    //             if (fallbackTries > 0)
+    //             {
+    //                 continue;
+    //             }
 
-                inventoryError = new FailedToSortError(sortingItem);
-                break;
-            }
-        }
+    //             inventoryError = new FailedToSortError(sortingItem);
+    //             break;
+    //         }
+    //     }
 
-        if (inventoryError != null)
-        {
-            operation.RollBack();
-            operation.RaiseEvents(controller, CommandStatus.Failed);
-            return inventoryError;
-        }
+    //     if (inventoryError != null)
+    //     {
+    //         operation.RollBack();
+    //         operation.RaiseEvents(controller, CommandStatus.Failed);
+    //         return inventoryError;
+    //     }
 
-        if (simulate)
-        {
-            operation.RollBack();
-        }
+    //     if (simulate)
+    //     {
+    //         operation.RollBack();
+    //     }
 
-        foreach (StashGridClass grid in sortingItem.Grids)
-        {
-            if (grid.ItemCollection.Any<KeyValuePair<Item, LocationInGrid>>() && grid is SearchableGrid searchableGrid)
-            {
-                searchableGrid.FindAll(controller.Profile.ProfileId);
-            }
-        }
+    //     foreach (StashGridClass grid in sortingItem.Grids)
+    //     {
+    //         if (grid.ItemCollection.Any<KeyValuePair<Item, LocationInGrid>>() && grid is SearchableGrid searchableGrid)
+    //         {
+    //             searchableGrid.FindAll(controller.Profile.ProfileId);
+    //         }
+    //     }
 
-        return operation;
-    }
+    //     return operation;
+    // }
 
     // Recreation of InteractionsHandlerClass.smethod_0, but without the out type being Stackable. 
     // minimumStackSpace of 0 means complete merge only, i.e. mininumStackSpace = itemToMerge.StackObjectCount
@@ -116,10 +116,10 @@ public static class Sorter
             minimumStackSpace = itemToMerge.StackObjectsCount;
         }
 
-        bool ignoreSpawnedInSession = itemToMerge.Template switch
+        bool ignoreSpawnedInSession = itemToMerge switch
         {
-            MoneyClass _ => Settings.MergeFIRMoney.Value,
-            AmmoTemplate _ => Settings.MergeFIRMoney.Value,
+            MoneyItemClass _ => Settings.MergeFIRMoney.Value,
+            AmmoItemClass _ => Settings.MergeFIRMoney.Value,
             _ => Settings.MergeFIROther.Value,
         };
 

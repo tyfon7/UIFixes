@@ -321,7 +321,7 @@ public static class FleaPrevSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_9));
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_11));
         }
 
         [PatchPostfix]

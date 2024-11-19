@@ -23,7 +23,7 @@ public static class FixFleaPatches
         new ToggleOnOpenPatch().Enable();
         new DropdownHeightPatch().Enable();
 
-        new AddOfferWindowDoubleScrollPatch().Enable();
+        //new AddOfferWindowDoubleScrollPatch().Enable(); // TODO: Fixed?
 
         new OfferItemFixMaskPatch().Enable();
         new OfferViewTweaksPatch().Enable();

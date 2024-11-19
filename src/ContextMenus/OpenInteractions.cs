@@ -1,4 +1,5 @@
 using Comfort.Common;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
 
     public override void ExecuteInteractionInternal(Options interaction)
     {
-        if (itemContext == null || itemContext.Item is not LootItemClass compoundItem)
+        if (itemContext == null || itemContext.Item is not CompoundItem compoundItem)
         {
             return;
         }
@@ -23,7 +24,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
         {
             if (containerContext != null)
             {
-                itemUiContext_0.OpenItem(containerContext.Item as LootItemClass, containerContext, true);
+                itemUiContext_0.OpenItem(containerContext.Item as CompoundItem, containerContext);
             }
 
             return Task.CompletedTask;
@@ -53,7 +54,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
     private IEnumerable<ItemContextAbstractClass> GetNestedContainers(ItemContextAbstractClass first)
     {
         var windowRoot = Singleton<PreloaderUI>.Instance;
-        LootItemClass parent = first.Item as LootItemClass;
+        CompoundItem parent = first.Item as CompoundItem;
 
         yield return first;
 
@@ -61,7 +62,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
         {
             var innerContainers = parent.GetFirstLevelItems()
                 .Where(i => i != parent)
-                .Where(i => i is LootItemClass innerContainer && innerContainer.Grids.Any());
+                .Where(i => i is CompoundItem innerContainer && innerContainer.Grids.Any());
             if (innerContainers.Count() != 1)
             {
                 yield break;
@@ -74,7 +75,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
                 yield return null; // Keeps returning null until the window is open
             }
 
-            parent = targetItemView.Item as LootItemClass;
+            parent = targetItemView.Item as CompoundItem;
             yield return targetItemView.ItemContext;
         }
     }

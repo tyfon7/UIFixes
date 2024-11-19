@@ -37,8 +37,8 @@ public class Plugin : BaseUnityPlugin
         new MoveTaskbarPatch().Enable();
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
-        KeepOfferWindowOpenPatches.Enable();
-        AddOfferClickablePricesPatches.Enable();
+        //KeepOfferWindowOpenPatches.Enable(); // TODO: Completely refactored
+        //AddOfferClickablePricesPatches.Enable(); // TODO: BSG made them clickable, but forgot to handle bulk
         new AssortUnlocksPatch().Enable();
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();
@@ -60,15 +60,15 @@ public class Plugin : BaseUnityPlugin
         new FixTraderControllerSimulateFalsePatch().Enable();
         LoadMultipleMagazinesPatches.Enable();
         new PutToolsBackPatch().Enable();
-        new RebindGrenadesPatch().Enable();
+        //new RebindGrenadesPatch().Enable(); // TODO: Still needed?
         AimToggleHoldPatches.Enable();
         ReorderGridsPatches.Enable();
-        NoRandomGrenadesPatch.Init();
+        // NoRandomGrenadesPatch.Init(); // TODO: Reassess - there's some kind of "Top Priority Grenade" now?
         GPCoinPatches.Enable();
         FleaSlotSearchPatches.Enable();
-        MoveSortingTablePatches.Enable();
+        //MoveSortingTablePatches.Enable();
         FilterOutOfStockPatches.Enable();
-        SortPatches.Enable();
+        //SortPatches.Enable(); // TODO: Still needed? Better search options now with locking/pinning
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();
@@ -77,7 +77,7 @@ public class Plugin : BaseUnityPlugin
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
         TacticalBindsPatches.Enable();
-        AddOfferContextMenuPatches.Enable();
+        //AddOfferContextMenuPatches.Enable();
         new OperationQueuePatch().Enable();
         SliderPatches.Enable();
         DropdownPatches.Enable();

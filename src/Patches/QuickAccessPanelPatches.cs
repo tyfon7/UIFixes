@@ -55,7 +55,7 @@ public static class QuickAccessPanelPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.method_4));
+            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.method_5));
         }
 
         // This method is a mess. The visibility setting has to be ignored in some cases, respected in others

@@ -24,7 +24,7 @@ public static class SyncScrollPositionPatches
         StashScrollPosition = position.y;
     }
 
-    private static void SynchronizeScrollRect(UIElement element, ScrollRect scrollRect = null)
+    private static void SynchronizeScrollRect(UIInputNode element, ScrollRect scrollRect = null)
     {
         if (!Settings.SynchronizeStashScrolling.Value || element == null || (scrollRect ??= element.GetComponentInChildren<ScrollRect>()) == null)
         {
@@ -56,7 +56,7 @@ public static class SyncScrollPositionPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_3));
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_6));
         }
 
         // TraderDealScreen is a monstrosity that loads multiple times and isn't done loading when Show() is done
@@ -64,7 +64,7 @@ public static class SyncScrollPositionPatches
         [PatchPostfix]
         public static void Postfix(TraderDealScreen __instance, ScrollRect ____stashScroll)
         {
-            if (__instance.method_5())
+            if (__instance.method_8())
             {
                 SynchronizeScrollRect(__instance, ____stashScroll);
             }
@@ -75,7 +75,7 @@ public static class SyncScrollPositionPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
+            return AccessTools.DeclaredMethod(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
         }
 
         [PatchPostfix]

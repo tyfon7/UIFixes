@@ -80,7 +80,7 @@ public static class InspectWindowStatsPatches
                     item.Value.Transform.SetSiblingIndex(++siblingIndex);
                 }
             }
-            __instance.method_10(0f);
+            __instance.method_14(0f);
             __instance.method_6(null);
         }
     }

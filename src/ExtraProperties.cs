@@ -104,14 +104,14 @@ public static class ExtraItemMarketPricesPanelProperties
 
 public static class ExtraEventResultProperties
 {
-    private static readonly ConditionalWeakTable<GClass2803, Properties> properties = new();
+    private static readonly ConditionalWeakTable<ResizeOperation, Properties> properties = new();
 
     private class Properties
     {
         public MoveOperation MoveOperation;
     }
 
-    public static MoveOperation GetMoveOperation(this GClass2803 result) => properties.GetOrCreateValue(result).MoveOperation;
-    public static void SetMoveOperation(this GClass2803 result, MoveOperation operation) => properties.GetOrCreateValue(result).MoveOperation = operation;
+    public static MoveOperation GetMoveOperation(this ResizeOperation result) => properties.GetOrCreateValue(result).MoveOperation;
+    public static void SetMoveOperation(this ResizeOperation result, MoveOperation operation) => properties.GetOrCreateValue(result).MoveOperation = operation;
 }
 

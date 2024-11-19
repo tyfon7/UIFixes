@@ -166,7 +166,7 @@ public static class DropdownPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(EmptyItemView __instance, ref bool ___bool_0, GClass2838 ___gclass2838_0)
+        public static void Postfix(EmptyItemView __instance, ref bool ___bool_0, GClass3176 ___gclass3176_0)
         {
             // initialize bool_0 since BSG can't be bothered to
             ___bool_0 = true;
@@ -175,7 +175,7 @@ public static class DropdownPatches
             {
                 if (__instance.Interactable) // normal behavior
                 {
-                    ___gclass2838_0.ToggleSelection();
+                    ___gclass3176_0.ToggleSelection();
                 }
                 else // Patched behavior
                 {
@@ -197,13 +197,13 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GClass2847), nameof(GClass2847.Select));
+            return AccessTools.DeclaredMethod(typeof(BuildItemSelector), nameof(BuildItemSelector.Select));
         }
 
         [PatchPrefix]
-        public static bool Prefix(GClass2847 __instance, Item item, ItemAddress itemAddress, bool simulate, ref Error error, ref bool __result)
+        public static bool Prefix(BuildItemSelector __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
         {
-            if (item?.TemplateId == itemAddress.Item?.TemplateId)
+            if (item?.TemplateId == slot.ContainedItem?.TemplateId)
             {
                 error = null;
                 __result = true;
@@ -211,9 +211,9 @@ public static class DropdownPatches
             }
 
             ItemOperation removeOperation = default;
-            if (itemAddress.Item != null)
+            if (slot.ContainedItem != null)
             {
-                removeOperation = InteractionsHandlerClass.Remove(itemAddress.Item, __instance.InventoryControllerClass, item == null && simulate, false);
+                removeOperation = InteractionsHandlerClass.Remove(slot.ContainedItem, __instance.InventoryController_0, item == null && simulate);
                 error = removeOperation.Error;
                 __result = removeOperation.Succeeded;
                 if (removeOperation.Failed)
@@ -222,13 +222,13 @@ public static class DropdownPatches
                 }
             }
 
-            GStruct414<AddOperation> addOperation = default;
+            GStruct446<AddOperation> addOperation = default;
             if (item != null)
             {
                 addOperation = InteractionsHandlerClass.Add(
-                    item.CloneItem(__instance.InventoryControllerClass),
-                    itemAddress,
-                    __instance.InventoryControllerClass,
+                    item.CloneItem(__instance.InventoryController_0),
+                    slot.CreateItemAddress(),
+                    __instance.InventoryController_0,
                     simulate);
                 error = addOperation.Error;
                 __result = addOperation.Succeeded;

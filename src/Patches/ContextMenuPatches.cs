@@ -49,8 +49,9 @@ public static class ContextMenuPatches
         new EmptySlotMenuPatch().Enable();
         new EmptySlotMenuRemovePatch().Enable();
 
-        new InventoryWishlistPatch().Enable();
-        new TradingWishlistPatch().Enable();
+        // No longer needed?
+        //new InventoryWishlistPatch().Enable();
+        //new TradingWishlistPatch().Enable();
     }
 
     public class ContextMenuNamesPatch : ModulePatch
@@ -121,7 +122,7 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.InventoryInteractions.Type, "get_SubInteractions");
+            return AccessTools.DeclaredProperty(typeof(InventoryInteractions), nameof(InventoryInteractions.SubInteractions)).GetMethod;
         }
 
         [PatchPostfix]
@@ -129,11 +130,11 @@ public static class ContextMenuPatches
         {
             __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
 
-            if (___item_0 is LootItemClass container && container.Grids.Any())
+            if (___item_0 is CompoundItem container && container.Grids.Any())
             {
                 var innerContainers = container.GetFirstLevelItems()
                     .Where(i => i != container)
-                    .Where(i => i is LootItemClass innerContainer && innerContainer.Grids.Any());
+                    .Where(i => i is CompoundItem innerContainer && innerContainer.Grids.Any());
                 if (innerContainers.Count() == 1)
                 {
                     __result = __result.Append(EItemInfoButton.Open);
@@ -148,7 +149,7 @@ public static class ContextMenuPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
+            return AccessTools.Method(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
         }
 
         [PatchPrefix]
@@ -219,7 +220,7 @@ public static class ContextMenuPatches
             ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance,
             ref IEnumerable<EItemInfoButton> __result)
         {
-            if (R.TradingInteractions.Type.IsInstanceOfType(__instance))
+            if (__instance is TradingPlayerInteractions)
             {
                 __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
             }
@@ -244,7 +245,7 @@ public static class ContextMenuPatches
             ISubInteractions subInteractionsWrapper,
             ItemUiContext ___itemUiContext_0)
         {
-            if (!R.TradingInteractions.Type.IsInstanceOfType(__instance))
+            if (__instance is not TradingPlayerInteractions)
             {
                 return true;
             }
@@ -403,16 +404,16 @@ public static class ContextMenuPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct416<Item> __result)
+        public static bool Prefix(Item selectedItem, ref GStruct448<Item> __result)
         {
             if (Settings.LoadMagPresetOnBullets.Value)
             {
                 return true;
             }
 
-            if (selectedItem is BulletClass)
+            if (selectedItem is AmmoItemClass)
             {
-                __result = new MagazineBuildClass.Class3183(selectedItem);
+                __result = new InvalidMagPresetError(selectedItem);
                 return false;
             }
 
@@ -501,7 +502,7 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.InventoryInteractions.Type, "CreateSubInteractions");
+            return AccessTools.Method(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
         }
 
         // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
@@ -544,53 +545,53 @@ public static class ContextMenuPatches
         }
     }
 
-    public class InventoryWishlistPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            // R.InventoryActions.Type is only ever referenced by it's child class, which overrides AvailableInteractions
-            Type type = PatchConstants.EftTypes.First(t => t.BaseType == R.InventoryInteractions.Type);
-            return AccessTools.DeclaredProperty(type, "AvailableInteractions").GetMethod;
-        }
+    // public class InventoryWishlistPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         // R.InventoryActions.Type is only ever referenced by it's child class, which overrides AvailableInteractions
+    //         Type type = PatchConstants.EftTypes.First(t => t.BaseType == R.InventoryInteractions.Type);
+    //         return AccessTools.DeclaredProperty(type, "AvailableInteractions").GetMethod;
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
-        {
-            if (!Settings.WishlistContextEverywhere.Value)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+    //     {
+    //         if (!Settings.WishlistContextEverywhere.Value)
+    //         {
+    //             return;
+    //         }
 
-            var list = __result.ToList();
-            int index = list.IndexOf(EItemInfoButton.Tag);
-            list.Insert(index, EItemInfoButton.RemoveFromWishlist);
-            list.Insert(index, EItemInfoButton.AddToWishlist);
-            __result = list;
-        }
-    }
+    //         var list = __result.ToList();
+    //         int index = list.IndexOf(EItemInfoButton.Tag);
+    //         list.Insert(index, EItemInfoButton.RemoveFromWishlist);
+    //         list.Insert(index, EItemInfoButton.AddToWishlist);
+    //         __result = list;
+    //     }
+    // }
 
-    public class TradingWishlistPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.DeclaredProperty(R.TradingInteractions.Type, "AvailableInteractions").GetMethod;
-        }
+    // public class TradingWishlistPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.DeclaredProperty(typeof(TradingPlayerInteractions), nameof(TradingPlayerInteractions.AvailableInteractions)).GetMethod;
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
-        {
-            if (!Settings.WishlistContextEverywhere.Value)
-            {
-                return;
-            }
+    //     [PatchPostfix]
+    //     public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
+    //     {
+    //         if (!Settings.WishlistContextEverywhere.Value)
+    //         {
+    //             return;
+    //         }
 
-            var list = __result.ToList();
-            int index = list.IndexOf(EItemInfoButton.Tag);
-            list.Insert(index, EItemInfoButton.RemoveFromWishlist);
-            list.Insert(index, EItemInfoButton.AddToWishlist);
-            __result = list;
-        }
-    }
+    //         var list = __result.ToList();
+    //         int index = list.IndexOf(EItemInfoButton.Tag);
+    //         list.Insert(index, EItemInfoButton.RemoveFromWishlist);
+    //         list.Insert(index, EItemInfoButton.AddToWishlist);
+    //         __result = list;
+    //     }
+    // }
 
     private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
     {
@@ -633,7 +634,7 @@ public static class ContextMenuPatches
 
     private static int GetPlayerRubles(ItemUiContext itemUiContext)
     {
-        StashClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
+        StashItemClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
         if (stash == null)
         {
             return 0;

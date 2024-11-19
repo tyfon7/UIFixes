@@ -18,30 +18,30 @@ public class LoadMagPresetsPatch : ModulePatch
     // in equipment if stash + sorting table are not present. 
     // Can't just add equipment because that includes equipped slots and it likes to pull the chambered bullet out of equipped guns
     [PatchPostfix]
-    public static void Postfix(Inventory inventory, List<LootItemClass> __result)
+    public static void Postfix(Inventory inventory, List<CompoundItem> __result)
     {
         if (!__result.Contains(inventory.Equipment))
         {
             var vest = inventory.Equipment.GetSlot(EquipmentSlot.TacticalVest);
-            if (vest.ContainedItem is LootItemClass vestLootItem)
+            if (vest.ContainedItem is CompoundItem vestLootItem)
             {
                 __result.Add(vestLootItem);
             }
 
             var pockets = inventory.Equipment.GetSlot(EquipmentSlot.Pockets);
-            if (pockets.ContainedItem is LootItemClass pocketsLootItem)
+            if (pockets.ContainedItem is CompoundItem pocketsLootItem)
             {
                 __result.Add(pocketsLootItem);
             }
 
             var backpack = inventory.Equipment.GetSlot(EquipmentSlot.Backpack);
-            if (backpack.ContainedItem is LootItemClass backpackLootItem)
+            if (backpack.ContainedItem is CompoundItem backpackLootItem)
             {
                 __result.Add(backpackLootItem);
             }
 
             var secureContainer = inventory.Equipment.GetSlot(EquipmentSlot.SecuredContainer);
-            if (secureContainer.ContainedItem is LootItemClass secureContainerLootItem)
+            if (secureContainer.ContainedItem is CompoundItem secureContainerLootItem)
             {
                 __result.Add(secureContainerLootItem);
             }

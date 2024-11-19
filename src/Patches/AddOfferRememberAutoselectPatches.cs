@@ -29,7 +29,7 @@ public static class AddOfferRememberAutoselectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_7));
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_13));
         }
 
         [PatchPostfix]

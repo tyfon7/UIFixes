@@ -47,10 +47,10 @@ public static class FixTooltipPatches
             if (trigger == null)
             {
                 trigger = ___ItemValue.gameObject.AddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_31();
+                trigger.OnHoverStart += eventData => __instance.method_33();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_32();
+                    __instance.method_34();
                     __instance.ShowTooltip();
                 };
 

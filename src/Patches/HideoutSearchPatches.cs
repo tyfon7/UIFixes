@@ -127,7 +127,7 @@ public static class HideoutSearchPatches
         {
             __result = __instance.R().ProductionBuilds.OfType<Scheme>().Where(scheme => !scheme.locked)
                 .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
-                .ThenBy(__instance.method_18)
+                .ThenBy(__instance.method_19)
                 .ThenBy(scheme => scheme.FavoriteIndex)
                 .ThenBy(scheme => scheme.Level);
 

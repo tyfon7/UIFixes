@@ -19,7 +19,7 @@ public static class MultiGrid
             return realAddress.LocationInGrid;
         }
 
-        Vector2Int gridOffset = GridOffsets[realAddress.Container.ParentItem.TemplateId][realAddress.Grid.Id];
+        Vector2Int gridOffset = GridOffsets[realAddress.Container.ParentItem.TemplateId][realAddress.Grid.ID];
         return new LocationInGrid(realAddress.LocationInGrid.x + gridOffset.x, realAddress.LocationInGrid.y + gridOffset.y, realAddress.LocationInGrid.r);
     }
 
@@ -28,10 +28,10 @@ public static class MultiGrid
         if (!IsMultiGrid(originGrid.ParentItem))
         {
             // Clamp to the actual grid
-            multigridLocation.x = Math.Max(0, Math.Min(originGrid.GridWidth.Value, multigridLocation.x));
-            multigridLocation.y = Math.Max(0, Math.Min(originGrid.GridHeight.Value, multigridLocation.y));
+            multigridLocation.x = Math.Max(0, Math.Min(originGrid.GridWidth, multigridLocation.x));
+            multigridLocation.y = Math.Max(0, Math.Min(originGrid.GridHeight, multigridLocation.y));
 
-            return new GridItemAddress(originGrid, multigridLocation);
+            return new StashGridItemAddress(originGrid, multigridLocation);
         }
 
         var gridsByLocation = GridsByLocation[originGrid.ParentItem.TemplateId];
@@ -49,11 +49,11 @@ public static class MultiGrid
         }
 
         string gridId = gridsByLocation[x][y];
-        StashGridClass grid = (originGrid.ParentItem as LootItemClass).Grids.Single(g => g.Id == gridId);
+        StashGridClass grid = (originGrid.ParentItem as CompoundItem).Grids.Single(g => g.ID == gridId);
         Vector2Int offsets = GridOffsets[originGrid.ParentItem.TemplateId][gridId];
 
         LocationInGrid location = new(x - offsets.x, y - offsets.y, multigridLocation.r);
-        return new GridItemAddress(grid, location);
+        return new StashGridItemAddress(grid, location);
     }
 
     public static void Cache(GridView initialGridView)
@@ -87,10 +87,10 @@ public static class MultiGrid
             int x = (int)Math.Round(xOffset / gridSize.x, MidpointRounding.AwayFromZero);
             int y = (int)Math.Round(yOffset / gridSize.y, MidpointRounding.AwayFromZero);
 
-            gridOffsets.Add(gridView.Grid.Id, new Vector2Int(x, y));
+            gridOffsets.Add(gridView.Grid.ID, new Vector2Int(x, y));
 
             // Populate reverse lookup
-            for (int i = 0; i < gridView.Grid.GridWidth.Value; i++)
+            for (int i = 0; i < gridView.Grid.GridWidth; i++)
             {
                 if (!gridsByLocation.ContainsKey(x + i))
                 {
@@ -98,9 +98,9 @@ public static class MultiGrid
                 }
 
                 var rowGrids = gridsByLocation[x + i];
-                for (int j = 0; j < gridView.Grid.GridHeight.Value; j++)
+                for (int j = 0; j < gridView.Grid.GridHeight; j++)
                 {
-                    rowGrids.Add(y + j, gridView.Grid.Id);
+                    rowGrids.Add(y + j, gridView.Grid.ID);
                 }
             }
         }
@@ -116,7 +116,7 @@ public static class MultiGrid
 
     private static bool IsMultiGrid(Item item)
     {
-        if (item is not LootItemClass lootItem)
+        if (item is not CompoundItem lootItem)
         {
             return false;
         }

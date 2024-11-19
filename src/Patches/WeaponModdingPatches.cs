@@ -46,14 +46,14 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref bool __result)
+        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct446<GInterface368> __result)
         {
-            if (__result || InPatch)
+            if (__result.Succeeded || InPatch)
             {
                 return;
             }
 
-            if (item.Owner is not InventoryControllerClass inventoryController)
+            if (item.Owner is not InventoryController inventoryController)
             {
                 return;
             }
@@ -86,7 +86,7 @@ public static class WeaponModdingPatches
                         }
 
                         LocationInGrid newLocation = new(itemLocation.x - x, itemLocation.y - y, itemLocation.r);
-                        ItemAddress newAddress = new GridItemAddress(__instance, newLocation);
+                        ItemAddress newAddress = new StashGridItemAddress(__instance, newLocation);
 
                         var moveOperation = InteractionsHandlerClass.Move(item, newAddress, inventoryController, false);
                         if (moveOperation.Failed || moveOperation.Value == null)
@@ -94,22 +94,22 @@ public static class WeaponModdingPatches
                             continue;
                         }
 
-                        bool resizeResult = __instance.Resize(item, oldSize, newSize, simulate);
+                        var resizeResult = __instance.Resize(item, oldSize, newSize, simulate);
 
                         // If simulating, rollback. Note that for some reason, only the Fold case even uses simulate
                         // The other cases (adding a mod, etc) never simulate, and then rollback later. Likely because there is normally
                         // no server side-effect of a resize - the only effect is updating the grid's free/used map. 
-                        if (simulate || !resizeResult)
+                        if (simulate || resizeResult.Failed)
                         {
                             moveOperation.Value.RollBack();
                         }
 
-                        if (resizeResult)
+                        if (resizeResult.Succeeded)
                         {
                             // Stash the move operation so it can be executed or rolled back later
                             NecessaryMoveOperation = moveOperation.Value;
 
-                            __result = true;
+                            __result = resizeResult;
                             return;
                         }
                     }
@@ -130,7 +130,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ref GStruct414<ResizeOperation> __result)
+        public static void Postfix(ref GStruct446<ResizeOperation> __result)
         {
             if (__result.Failed || __result.Value == null)
             {
@@ -187,7 +187,7 @@ public static class WeaponModdingPatches
             }
             else if (operationResult is FoldOperation foldOperation)
             {
-                extraOperation = foldOperation.ResizeResult?.GetMoveOperation();
+                extraOperation = foldOperation.R().ResizeOperation?.GetMoveOperation();
             }
 
             if (extraOperation != null)
@@ -312,7 +312,7 @@ public static class WeaponModdingPatches
 
         // As far as I can tell this never gets called, but hey
         [PatchPostfix]
-        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct416<bool> __result)
+        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct448<bool> __result)
         {
             if (__result.Succeeded)
             {
@@ -346,7 +346,7 @@ public static class WeaponModdingPatches
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct416<GClass3372> __result)
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct448<GClass3759> __result)
         {
             if (item is not Mod mod)
             {
@@ -378,7 +378,7 @@ public static class WeaponModdingPatches
             if (__result.Failed && canModify)
             {
                 // Override result with success if DestinationCheck passes
-                var destinationCheck = InteractionsHandlerClass.DestinationCheck(item.Parent, to, itemController.OwnerType);
+                var destinationCheck = InteractionsHandlerClass.DestinationCheck(item.Parent, to, itemController);
                 if (destinationCheck.Failed)
                 {
                     return;
@@ -411,12 +411,12 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(LootItemClass), nameof(LootItemClass.Apply));
+            return AccessTools.Method(typeof(CompoundItem), nameof(CompoundItem.Apply));
         }
 
         // Gets called when dropping mods on top of weapons
         [PatchPrefix]
-        public static void Prefix(LootItemClass __instance, Item item)
+        public static void Prefix(CompoundItem __instance, Item item)
         {
             if (!Plugin.InRaid())
             {
@@ -436,7 +436,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(LootItemClass __instance, ref ItemOperation __result)
+        public static void Postfix(CompoundItem __instance, ref ItemOperation __result)
         {
             ModRaidModdablePatch.Override = false;
             EmptyVitalPartsPatch.Override = false;
@@ -479,7 +479,7 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(LootItemClass), nameof(LootItemClass.VitalParts)).GetMethod;
+            return AccessTools.Property(typeof(CompoundItem), nameof(CompoundItem.VitalParts)).GetMethod;
         }
 
         [PatchPrefix]

@@ -38,7 +38,7 @@ public static class LoadMultipleMagazinesPatches
             {
                 CombinedFilters = MultiSelect.SortedItemContexts()
                     .Select(itemContext => itemContext.Item)
-                    .OfType<MagazineClass>()
+                    .OfType<MagazineItemClass>()
                     .SelectMany(mag => mag.Cartridges.Filters)
                     .ToArray();
             }
@@ -106,7 +106,7 @@ public static class LoadMultipleMagazinesPatches
             {
                 CombinedFilters = MultiSelect.SortedItemContexts()
                     .Select(itemContext => itemContext.Item)
-                    .OfType<MagazineClass>()
+                    .OfType<MagazineItemClass>()
                     .SelectMany(mag => mag.Cartridges.Filters)
                     .ToArray();
             }
@@ -140,7 +140,7 @@ public static class LoadMultipleMagazinesPatches
                 return true;
             }
 
-            var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineClass>();
+            var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineItemClass>();
             ___itemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
 
             return false;

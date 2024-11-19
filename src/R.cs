@@ -61,15 +61,15 @@ public static class R
         RagfairNewOfferItemView.InitTypes();
         TradingTableGridView.InitTypes();
         ItemReceiver.InitTypes();
-        InventoryInteractions.InitTypes();
+        //InventoryInteractions.InitTypes();
         TradingInteractions.InitTypes();
-        TransferInteractions.InitTypes();
         InventoryScreen.InitTypes();
         ScavengerInventoryScreen.InitTypes();
         LocalizedText.InitTypes();
         GameWorld.InitTypes();
         MoveOperationResult.InitTypes();
         AddOperationResult.InitTypes();
+        FoldOperationResult.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -136,7 +136,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass961
+            Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass1041
             GetKeyNameMethod = AccessTools.Method(Type, "GetKeyName");
         }
 
@@ -181,11 +181,11 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass1923
+            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass2158
             EndProductField = AccessTools.Field(Type, "endProduct");
         }
 
-        public string EndProduct { get { return (string)EndProductField.GetValue(Value); } }
+        public MongoID EndProduct { get { return (MongoID)EndProductField.GetValue(Value); } }
     }
 
     public class AreaScreenSubstrate(object value) : Wrapper(value)
@@ -266,7 +266,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => typeof(ItemAddress).IsAssignableFrom(t) && t.GetField("Slot") != null); // GClass2783
+            Type = typeof(Slot).GetNestedTypes().Single(t => typeof(ItemAddress).IsAssignableFrom(t)); // Slot.Class2293 (GClass3113)
             SlotField = AccessTools.Field(Type, "Slot");
         }
 
@@ -289,7 +289,7 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(EFT.UI.DragAndDrop.GridView);
-            TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderControllerClass)); // field gclass2758_0
+            TraderControllerField = AccessTools.Field(Type, "traderControllerClass");
             NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
             HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
             ValidMoveColorField = AccessTools.Field(Type, "ValidMoveColor");
@@ -311,8 +311,8 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct414<GClass2813>
-            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct413, parameter is a ref type, get underlying type
+            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct446<GClass3147>
+            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct445, parameter is a ref type, get underlying type
             ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptType);
         }
 
@@ -445,7 +445,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3212
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3614
             InstanceProperty = AccessTools.Property(Type, "Instance");
             GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
         }
@@ -501,12 +501,12 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(EFT.UI.ItemUiContext);
-            InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryControllerClass));
+            InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryController));
             GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
         }
 
-        public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
+        public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
         public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
     }
@@ -569,11 +569,11 @@ public static class R
         {
             Type = typeof(EFT.UI.GridWindow);
             GridSortPanelField = AccessTools.Field(Type, "_sortPanel");
-            LootItemField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(LootItemClass));
+            LootItemField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(CompoundItem));
         }
 
         public EFT.UI.DragAndDrop.GridSortPanel GridSortPanel { get { return (EFT.UI.DragAndDrop.GridSortPanel)GridSortPanelField.GetValue(Value); } }
-        public LootItemClass LootItem { get { return (LootItemClass)LootItemField.GetValue(Value); } }
+        public CompoundItem LootItem { get { return (CompoundItem)LootItemField.GetValue(Value); } }
     }
 
     public class GridSortPanel(object value) : Wrapper(value)
@@ -613,9 +613,9 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface34
-            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null); // GClass805
-            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null); // GClass804
+            Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface37
+            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null); // GClass875
+            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null); // GClass874
             RepairersProperty = AccessTools.Property(Type, "Repairers");
             CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
             HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
@@ -651,7 +651,7 @@ public static class R
         public int GetCurrencyPrice(float amount) => (int)GetCurrencyPriceMethod.Invoke(Value, [amount]);
         public Task<IResult> RepairItem(float repairAmount, object repairKit) => (Task<IResult>)RepairItemMethod.Invoke(Value, [repairAmount, repairKit]);
         public float Durability() => (float)DurabilityMethod.Invoke(Value, []);
-        public bool CanRepair(IRepairer repairer, string[] excludedCategories) => (bool)CanRepairMethod.Invoke(Value, [repairer, excludedCategories]);
+        public bool CanRepair(IRepairer repairer, MongoID[] excludedCategories) => (bool)CanRepairMethod.Invoke(Value, [repairer, excludedCategories]);
         public bool BrokenItemError() => (bool)BrokenItemErrorMethod.Invoke(Value, []);
         public bool IsNoCorrespondingArea() => (bool)IsNoCorrespondingAreaMethod.Invoke(Value, []);
     }
@@ -663,7 +663,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass803
+            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass873
             GetRepairPointsMethod = AccessTools.Method(Type, "GetRepairPoints");
         }
 
@@ -677,7 +677,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3074
+            Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3437
             InsuranceCompanyField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(InsuranceCompanyClass));
         }
 
@@ -715,7 +715,7 @@ public static class R
         public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
     }
 
-    public class ItemReceiver(object value) : Wrapper(value) // GClass1855
+    public class ItemReceiver(object value) : Wrapper(value) // GClass2055
     {
         public static Type Type { get; private set; }
         private static FieldInfo InventoryControllerField;
@@ -727,104 +727,37 @@ public static class R
                 FieldInfo field = t.GetField("localQuestControllerClass", BindingFlags.NonPublic | BindingFlags.Instance);
                 return field != null && field.IsInitOnly;
             });
-            InventoryControllerField = Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => typeof(InventoryControllerClass).IsAssignableFrom(f.FieldType));
+            InventoryControllerField = Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => typeof(InventoryController).IsAssignableFrom(f.FieldType));
         }
 
-        public InventoryControllerClass InventoryController { get { return (InventoryControllerClass)InventoryControllerField.GetValue(Value); } }
+        public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
     }
 
-    public class InventoryInteractions(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        public static Type CompleteType { get; private set; }
+    // public class InventoryInteractions(object value) : Wrapper(value)
+    // {
+    //     public static Type Type { get; private set; }
+    //     public static Type CompleteType { get; private set; }
 
-        public static void InitTypes()
-        {
-            Type = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3045
-            CompleteType = PatchConstants.EftTypes.Single(t => t != Type && Type.IsAssignableFrom(t)); // GClass3046
-        }
-    }
+    //     public static void InitTypes()
+    //     {
+    //         Type = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3405
+    //         CompleteType = PatchConstants.EftTypes.Single(t => t != Type && Type.IsAssignableFrom(t)); // GClass3406/GClass3407 // TODO: There are two now??
+    //     }
+    // }
 
     public class TradingInteractions(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo ItemField;
 
-        private static readonly HashSet<EItemInfoButton> Interactions =
-        [
-            EItemInfoButton.Inspect,
-                EItemInfoButton.Uninstall,
-                EItemInfoButton.Examine,
-                EItemInfoButton.Open,
-                EItemInfoButton.Insure,
-                EItemInfoButton.Repair,
-                EItemInfoButton.Modding,
-                EItemInfoButton.EditBuild,
-                EItemInfoButton.FilterSearch,
-                EItemInfoButton.LinkedSearch,
-                EItemInfoButton.NeededSearch,
-                EItemInfoButton.Tag,
-                EItemInfoButton.ResetTag,
-                EItemInfoButton.TurnOn,
-                EItemInfoButton.TurnOff,
-                EItemInfoButton.Fold,
-                EItemInfoButton.Unfold,
-                EItemInfoButton.Disassemble,
-                EItemInfoButton.Discard
-        ];
-
         public static void InitTypes()
         {
-            // GClass3054
-            Type = PatchConstants.EftTypes.Single(t =>
-            {
-                var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
-                if (enumerableField != null)
-                {
-                    var enumerable = (IEnumerable<EItemInfoButton>)enumerableField.GetValue(null);
-                    return Interactions.SetEquals(enumerable);
-                }
-
-                return false;
-            });
-            ItemField = AccessTools.Field(Type, "item_0");
+            // GClass3415
+            Type = typeof(TradingPlayerInteractions);
+            ItemField = AccessTools.Field(Type, "item_0"); // On base
         }
 
         public Item Item { get { return (Item)ItemField.GetValue(Value); } }
-    }
-
-    public class TransferInteractions(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-
-        private static readonly HashSet<EItemInfoButton> Interactions =
-        [
-            EItemInfoButton.Inspect,
-                EItemInfoButton.Uninstall,
-                EItemInfoButton.Examine,
-                EItemInfoButton.Equip,
-                EItemInfoButton.Open,
-                EItemInfoButton.Fold,
-                EItemInfoButton.Unfold,
-                EItemInfoButton.Disassemble,
-                EItemInfoButton.Discard
-        ];
-
-        public static void InitTypes()
-        {
-            // GClass3057
-            Type = PatchConstants.EftTypes.Single(t =>
-            {
-                var enumerableField = t.GetField("ienumerable_2", BindingFlags.NonPublic | BindingFlags.Static);
-                if (enumerableField != null)
-                {
-                    var enumerable = (IEnumerable<EItemInfoButton>)enumerableField.GetValue(null);
-                    return Interactions.SetEquals(enumerable);
-                }
-
-                return false;
-            });
-        }
     }
 
     public class InventoryScreen(object value) : UIInputNode(value)
@@ -895,7 +828,7 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(MoveOperation);
-            AddOperationField = AccessTools.Field(Type, "gclass2798_0");
+            AddOperationField = AccessTools.Field(Type, "gclass3126_0");
         }
 
         public AddOperation AddOperation { get { return (AddOperation)AddOperationField.GetValue(Value); } }
@@ -909,7 +842,21 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(AddOperation);
-            ResizeOperationField = AccessTools.Field(Type, "gclass2803_0");
+            ResizeOperationField = AccessTools.Field(Type, "gclass3137_0");
+        }
+
+        public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
+    }
+
+    public class FoldOperationResult(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo ResizeOperationField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(FoldOperation);
+            ResizeOperationField = AccessTools.Field(Type, "gclass3137_0");
         }
 
         public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
@@ -948,4 +895,5 @@ public static class RExtentensions
     public static R.GameWorld R(this GameWorld value) => new(value);
     public static R.MoveOperationResult R(this MoveOperation value) => new(value);
     public static R.AddOperationResult R(this AddOperation value) => new(value);
+    public static R.FoldOperationResult R(this FoldOperation value) => new(value);
 }

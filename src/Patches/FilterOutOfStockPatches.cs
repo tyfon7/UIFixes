@@ -81,8 +81,8 @@ public static class FilterOutOfStockPatches
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
                 ____traderGridView.SetShowOutOfStock(ShowOutOfStockItems);
-                ____traderGridView.method_19(); // Refreshes the grid
-                ____traderGridView.method_21(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
+                ____traderGridView.method_14(); // Refreshes the grid
+                ____traderGridView.method_16(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });
         }
     }
@@ -127,7 +127,7 @@ public static class FilterOutOfStockPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TradingGridView), nameof(TraderDealScreen.method_20));
+            return AccessTools.Method(typeof(TradingGridView), nameof(TraderDealScreen.method_15));
         }
 
         [PatchPrefix]

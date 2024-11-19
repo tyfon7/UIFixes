@@ -1,4 +1,5 @@
-﻿using EFT.UI.DragAndDrop;
+﻿using EFT.InventoryLogic;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
@@ -35,7 +36,7 @@ public static class ReorderGridsPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
+        public static void Prefix(TemplatedGridsView __instance, CompoundItem compoundItem, ref GridView[] ____presetGridViews)
         {
             if (!Settings.ReorderGrids.Value)
             {
@@ -93,7 +94,7 @@ public static class ReorderGridsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(TemplatedGridsView __instance, LootItemClass compoundItem, ref GridView[] ____presetGridViews)
+        public static void Postfix(TemplatedGridsView __instance, CompoundItem compoundItem, ref GridView[] ____presetGridViews)
         {
             if (!Settings.ReorderGrids.Value || compoundItem.GetReordered())
             {
@@ -148,7 +149,7 @@ public static class ReorderGridsPatches
 
             if (Settings.PrioritizeSmallerGrids.Value)
             {
-                return pairs.OrderBy(pair => pair.Key.GridWidth.Value).ThenBy(pair => pair.Key.GridHeight.Value).ThenBy(calculateCoords);
+                return pairs.OrderBy(pair => pair.Key.GridWidth).ThenBy(pair => pair.Key.GridHeight).ThenBy(calculateCoords);
             }
 
             return pairs.OrderBy(calculateCoords);

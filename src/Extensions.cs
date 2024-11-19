@@ -7,7 +7,7 @@ public static class Extensions
 {
     public static Item GetRootItemNotEquipment(this Item item)
     {
-        return item.GetAllParentItemsAndSelf(true).LastOrDefault(i => i is not EquipmentClass) ?? item;
+        return item.GetAllParentItemsAndSelf(true).LastOrDefault(i => i is not InventoryEquipment) ?? item;
     }
 
     public static Item GetRootItemNotEquipment(this ItemAddress itemAddress)

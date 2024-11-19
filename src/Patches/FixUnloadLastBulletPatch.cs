@@ -29,7 +29,7 @@ public class FixUnloadLastBulletPatch : ModulePatch
         {
             foreach (var eventArgs in __instance.List_0)
             {
-                ItemAddress location = eventArgs.GetLocation();
+                ItemAddress location = eventArgs.Location;
                 if (!eventArgs.OwnerId.Equals(anotherOwner.ID) && !eventArgs.OwnerId.Equals(__instance.ID)) // checking against this is what I changed
                 {
                     if (item2 == eventArgs.Item)

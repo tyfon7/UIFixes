@@ -29,11 +29,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryControllerClass), nameof(InventoryControllerClass.IsAtBindablePlace));
+            return AccessTools.Method(typeof(InventoryController), nameof(InventoryController.IsAtBindablePlace));
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryControllerClass __instance, Item item, ref bool __result)
+        public static void Postfix(InventoryController __instance, Item item, ref bool __result)
         {
             if (__result)
             {
@@ -48,11 +48,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryControllerClass), nameof(InventoryControllerClass.IsAtReachablePlace));
+            return AccessTools.Method(typeof(InventoryController), nameof(InventoryController.IsAtReachablePlace));
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryControllerClass __instance, Item item, ref bool __result)
+        public static void Postfix(InventoryController __instance, Item item, ref bool __result)
         {
             if (__result)
             {
@@ -73,7 +73,7 @@ public static class TacticalBindsPatches
         [PatchPrefix]
         public static bool Prefix(Player __instance, EBoundItem quickSlot, Callback<IHandsController> callback)
         {
-            Item boundItem = __instance.InventoryControllerClass.Inventory.FastAccess.GetBoundItem(quickSlot);
+            Item boundItem = __instance.InventoryController.Inventory.FastAccess.GetBoundItem(quickSlot);
             if (boundItem == null)
             {
                 return true;
@@ -94,7 +94,7 @@ public static class TacticalBindsPatches
                 if (rootItem is Helmet helmet &&
                     __instance.Inventory.Equipment.GetSlot(EquipmentSlot.Headwear).ContainedItem == helmet)
                 {
-                    __instance.InventoryControllerClass.TryRunNetworkTransaction(
+                    __instance.InventoryController.TryRunNetworkTransaction(
                         nightVisionComponent.Togglable.Set(!nightVisionComponent.Togglable.On, true, false));
                 }
 
@@ -170,11 +170,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass2818), nameof(GClass2818.Run));
+            return AccessTools.Method(typeof(BindOperation), nameof(BindOperation.Run));
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryControllerClass controller, Item item, EBoundItem index)
+        public static void Postfix(InventoryController controller, Item item, EBoundItem index)
         {
             UpdateQuickbindType(item, index);
 
@@ -187,11 +187,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass2819), nameof(GClass2819.Run));
+            return AccessTools.Method(typeof(UnbindOperation), nameof(UnbindOperation.Run));
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryControllerClass controller, Item item, EBoundItem index)
+        public static void Postfix(InventoryController controller, Item item, EBoundItem index)
         {
             Quickbind.SetType(index, Quickbind.ItemType.Other);
 
@@ -200,7 +200,7 @@ public static class TacticalBindsPatches
         }
     }
 
-    private static bool IsEquippedTacticalDevice(InventoryControllerClass inventoryController, Item item)
+    private static bool IsEquippedTacticalDevice(InventoryController inventoryController, Item item)
     {
         LightComponent lightComponent = item.GetItemComponent<LightComponent>();
         NightVisionComponent nightVisionComponent = item.GetItemComponent<NightVisionComponent>();

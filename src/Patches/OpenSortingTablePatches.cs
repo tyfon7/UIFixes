@@ -33,7 +33,7 @@ public static class OpenSortingTablePatches
             // BSG checks visibility, not in-raid. There's a bug where somehow that visibility can be true in raid
             if (Plugin.InRaid())
             {
-                __result = new GClass3370("SortingTable/VisibilityError");
+                __result = new GenericError("SortingTable/VisibilityError");
                 return false;
             }
 
@@ -49,7 +49,7 @@ public static class OpenSortingTablePatches
                 return true;
             }
 
-            SortingTableClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
+            SortingTableItemClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
             if (sortingTable != null && !sortingTable.IsVisible)
             {
                 if (__instance.ContextType == EItemUiContextType.InventoryScreen)

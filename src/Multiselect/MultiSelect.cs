@@ -299,14 +299,42 @@ public class MultiSelect
         }
 
         var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
-        bool result = contextInteractions.IsInteractionAvailable(interaction);
+        var result = contextInteractions.IsInteractionAvailable(interaction);
 
         if (createdContext)
         {
             innerContext.Dispose();
         }
 
-        return result;
+        return result.Succeed;
+    }
+
+    private static Task ExecuteInteraction(DragItemContext itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
+    {
+        // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
+        ItemContextAbstractClass innerContext = itemContext.ItemContextAbstractClass;
+        if (innerContext == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        bool createdContext = false;
+        if (innerContext.Item != itemContext.Item)
+        {
+            // Actual context went away and we're looking at inventory/stash context
+            innerContext = innerContext.CreateChild(itemContext.Item);
+            createdContext = true;
+        }
+
+        var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
+        contextInteractions.ExecuteInteraction(interaction);
+
+        if (createdContext)
+        {
+            innerContext.Dispose();
+        }
+
+        return Task.CompletedTask;
     }
 
     public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -316,7 +344,7 @@ public class MultiSelect
             var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             taskSerializer.Initialize(
                 SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)),
-                itemContext => itemUiContext.QuickEquip(itemContext.Item));
+                ic => ExecuteInteraction(ic, EItemInfoButton.Equip, itemUiContext));
 
             itemUiContext.Tooltip?.Close();
         }
@@ -343,12 +371,12 @@ public class MultiSelect
             LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             Task result = LoadUnloadSerializer.Initialize(
                 SortedItemContexts()
-                    .Where(ic => ic.Item is MagazineClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
+                    .Where(ic => ic.Item is MagazineItemClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
                     .SelectMany(ic => ic.RepeatUntilFull()),
                 itemContext =>
                 {
                     IgnoreStopLoading = true;
-                    return itemUiContext.LoadAmmoByType(itemContext.Item as MagazineClass, ammoTemplateId, itemContext.UpdateView);
+                    return itemUiContext.LoadAmmoByType(itemContext.Item as MagazineItemClass, ammoTemplateId, itemContext.UpdateView);
                 });
 
             itemUiContext.Tooltip?.Close();
@@ -419,37 +447,37 @@ public class MultiSelect
         }
     }
 
-    public static void WishlistAll(ItemUiContext itemUiContext, BaseItemInfoInteractions interactions, bool add, bool allOrNothing)
-    {
-        EItemInfoButton interaction = add ? EItemInfoButton.AddToWishlist : EItemInfoButton.RemoveFromWishlist;
-        if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
-        {
-            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            taskSerializer.Initialize(ItemContexts.Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
-                itemContext =>
-                {
-                    TaskCompletionSource taskSource = new();
-                    void callback()
-                    {
-                        interactions.RequestRedrawForItem();
-                        taskSource.Complete();
-                    }
+    // public static void WishlistAll(ItemUiContext itemUiContext, BaseItemInfoInteractions interactions, bool add, bool allOrNothing)
+    // {
+    //     EItemInfoButton interaction = add ? EItemInfoButton.AddToWishlist : EItemInfoButton.RemoveFromWishlist;
+    //     if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
+    //     {
+    //         var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+    //         taskSerializer.Initialize(ItemContexts.Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
+    //             itemContext =>
+    //             {
+    //                 TaskCompletionSource taskSource = new();
+    //                 void callback()
+    //                 {
+    //                     interactions.RequestRedrawForItem();
+    //                     taskSource.Complete();
+    //                 }
 
-                    if (add)
-                    {
-                        itemUiContext.AddToWishList(itemContext.Item, callback);
-                    }
-                    else
-                    {
-                        itemUiContext.RemoveFromWishList(itemContext.Item, callback);
-                    }
+    //                 if (add)
+    //                 {
+    //                     itemUiContext.AddToWishList(itemContext.Item, callback);
+    //                 }
+    //                 else
+    //                 {
+    //                     itemUiContext.RemoveFromWishList(itemContext.Item, callback);
+    //                 }
 
-                    return taskSource.Task;
-                });
+    //                 return taskSource.Task;
+    //             });
 
-            itemUiContext.Tooltip?.Close();
-        }
-    }
+    //         itemUiContext.Tooltip?.Close();
+    //     }
+    // }
 
     private static void ShowSelection(GridItemView itemView)
     {
@@ -498,7 +526,7 @@ public class MultiSelectItemContext : DragItemContext
             // Listen for underlying context being disposed, it might mean the item is gone (merged, destroyed, etc)
             ItemContextAbstractClass.OnDisposed += OnParentDispose;
             // This serves no purpose and causes stack overflows
-            ItemContextAbstractClass.OnCloseWindow -= CloseDependentWindows;
+            ItemContextAbstractClass.OnCloseDependentWindow -= CloseDependentWindows;
         }
     }
 
@@ -529,7 +557,7 @@ public class MultiSelectItemContext : DragItemContext
 
     private void OnParentDispose()
     {
-        if (Item.CurrentAddress == null || Item.CurrentAddress.Container.ParentItem is MagazineClass)
+        if (Item.CurrentAddress == null || Item.CurrentAddress.Container.ParentItem is MagazineItemClass)
         {
             // This item was entirely merged away, or went into a magazine
             MultiSelect.Deselect(this);
@@ -590,7 +618,7 @@ public static class MultiSelectExtensions
 
     public static IEnumerable<T> RepeatUntilFull<T>(this T itemContext) where T : ItemContextAbstractClass
     {
-        if (itemContext.Item is MagazineClass magazine)
+        if (itemContext.Item is MagazineItemClass magazine)
         {
             int ammoCount = -1;
             while (magazine.Count > ammoCount && magazine.Count < magazine.MaxCount)
