@@ -51,6 +51,7 @@ public static class StackMoveGreedyPatches
     // Specific type of TaskSerializer because Unity can't understand generics
     public class ItemContextTaskSerializer : TaskSerializer<DragItemContext> { }
 
+    // Keeps transfering a stack into a container until the stack is gone or the operation didn't move anything (meaning the container is full)
     private static bool AcceptStackable<T>(T __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result) where T : MonoBehaviour, IContainer
     {
         if (!Settings.GreedyStackMove.Value || InPatch || itemContext.Item.StackObjectsCount <= 1 || targetItemContext == null)

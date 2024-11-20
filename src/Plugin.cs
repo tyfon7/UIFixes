@@ -30,7 +30,7 @@ public class Plugin : BaseUnityPlugin
         ScrollPatches.Enable();
         StackFirItemsPatches.Enable();
         SwapPatches.Enable();
-        SyncScrollPositionPatches.Enable();
+        //SyncScrollPositionPatches.Enable(); // Not working
         new TransferConfirmPatch().Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
@@ -43,7 +43,7 @@ public class Plugin : BaseUnityPlugin
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();
         TradingAutoSwitchPatches.Enable();
-        AddOfferRememberAutoselectPatches.Enable();
+        AddOfferRememberAutoselectPatches.Enable(); // Doesn't seem to be saving
         KeepMessagesOpenPatches.Enable();
         TradeQuantityPatches.Enable();
         RememberRepairerPatches.Enable();
@@ -53,22 +53,20 @@ public class Plugin : BaseUnityPlugin
         ContextMenuShortcutPatches.Enable();
         OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
-        MultiSelectPatches.Enable();
-        new FixUnloadLastBulletPatch().Enable();
+        MultiSelectPatches.Enable(); // TODO: Check dragging bag while it's being searched
+        LoadMultipleMagazinesPatches.Enable();
+        MultipleWishlistPatches.Enable(); // TODO: Implement
         StackMoveGreedyPatches.Enable();
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
-        LoadMultipleMagazinesPatches.Enable();
         new PutToolsBackPatch().Enable();
-        //new RebindGrenadesPatch().Enable(); // TODO: Still needed?
-        AimToggleHoldPatches.Enable();
+        new RebindGrenadesPatch().Enable();
+        AimToggleHoldPatches.Enable(); // TODO: Tactical not working
         ReorderGridsPatches.Enable();
-        // NoRandomGrenadesPatch.Init(); // TODO: Reassess - there's some kind of "Top Priority Grenade" now?
         GPCoinPatches.Enable();
         FleaSlotSearchPatches.Enable();
-        //MoveSortingTablePatches.Enable();
         FilterOutOfStockPatches.Enable();
-        //SortPatches.Enable(); // TODO: Still needed? Better search options now with locking/pinning
+        //SortPatches.Enable(); // TODO: Stacking still needed?
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();
@@ -77,7 +75,6 @@ public class Plugin : BaseUnityPlugin
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
         TacticalBindsPatches.Enable();
-        //AddOfferContextMenuPatches.Enable();
         new OperationQueuePatch().Enable();
         SliderPatches.Enable();
         DropdownPatches.Enable();

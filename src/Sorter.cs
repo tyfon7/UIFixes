@@ -118,8 +118,7 @@ public static class Sorter
 
         bool ignoreSpawnedInSession = itemToMerge switch
         {
-            MoneyItemClass _ => Settings.MergeFIRMoney.Value,
-            AmmoItemClass _ => Settings.MergeFIRMoney.Value,
+            AmmoItemClass _ => Settings.MergeFIRAmmo.Value,
             _ => Settings.MergeFIROther.Value,
         };
 

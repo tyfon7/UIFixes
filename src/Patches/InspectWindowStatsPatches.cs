@@ -19,9 +19,9 @@ public static class InspectWindowStatsPatches
 {
     public static void Enable()
     {
-        new AddShowHideModStatsButtonPatch().Enable();
         new CalculateModStatsPatch().Enable();
         new CompareModStatsPatch().Enable();
+        new AddShowHideModStatsButtonPatch().Enable();
         new FormatCompactValuesPatch().Enable();
         new FormatFullValuesPatch().Enable();
         new FixDurabilityBarPatch().Enable();
@@ -188,6 +188,7 @@ public static class InspectWindowStatsPatches
                 Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
                 toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
                 toggleButton.Show(GetLabel(), null, sprite, onClick, null);
+                toggleButton.transform.SetSiblingIndex(toggleButton.transform.GetSiblingIndex() - 1);
                 ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
             }
 
@@ -295,15 +296,15 @@ public static class InspectWindowStatsPatches
         }
     }
 
+
+    // Bar width is currently set to durability/100, and that 100 is pretty much hardcoded by the client
+    // Just clamp the bar to keep it from overflowing
     public class FixDurabilityBarPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.DeclaredMethod(typeof(DurabilityPanel), nameof(DurabilityPanel.SetValues));
         }
-
-        // Bar width is currently set to durability/100, and that 100 is pretty much hardcoded by the client
-        // Just clamp the bar to keep it from overflowing
         [PatchPostfix]
         public static void Postfix(Image ___Current)
         {
@@ -313,6 +314,7 @@ public static class InspectWindowStatsPatches
         }
     }
 
+    // Highlight compatible slots when dragging mods. Built into the game already, just need to register the inspect window SlotViews
     public class HighlightSlotsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

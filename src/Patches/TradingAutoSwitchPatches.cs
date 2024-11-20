@@ -17,19 +17,21 @@ public static class TradingAutoSwitchPatches
 
     public static void Enable()
     {
-        new GetTraderScreensGroupPatch().Enable();
+        new GetBuySellTabsPatch().Enable();
         new SwitchOnClickPatch().Enable();
+        new RefreshOnSwitchPatch().Enable();
     }
 
-    public class GetTraderScreensGroupPatch : ModulePatch
+    // Get references to the buy/sell tabs
+    public class GetBuySellTabsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.Show));
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.Show));
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderScreensGroup __instance)
+        public static void Postfix(TraderDealScreen __instance)
         {
             var wrappedInstance = __instance.R();
 
@@ -44,6 +46,8 @@ public static class TradingAutoSwitchPatches
         }
     }
 
+    // Basically reimplementing this method for the two cases I want to handle
+    // Key difference being not to check the current trading mode
     public class SwitchOnClickPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -51,9 +55,6 @@ public static class TradingAutoSwitchPatches
             return AccessTools.Method(typeof(TradingItemView), nameof(TradingItemView.OnClick));
         }
 
-        // Basically reimplementing this method for the two cases I want to handle
-        // Key difference being NOT to check the current trading mode, and to call switch at the end
-        // Have to call switch *after*, because it completely rebuilds the entire player-side grid 
         [PatchPrefix]
         public static bool Prefix(
             TradingItemView __instance,
@@ -86,22 +87,23 @@ public static class TradingAutoSwitchPatches
 
             try
             {
-                if (!___bool_8 && ctrlPressed && assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+                if (!___bool_8 && ctrlPressed)
                 {
-                    __instance.ItemContext?.CloseDependentWindows();
-                    __instance.HideTooltip();
-                    Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
-
                     SellTab.OnPointerClick(null);
+                    if (assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+                    {
+                        __instance.ItemContext?.CloseDependentWindows();
+                        __instance.HideTooltip();
+                        Singleton<GUISounds>.Instance.PlayItemSound(__instance.Item.ItemSound, EInventorySoundType.pickup, false);
+                    }
 
                     return false;
                 }
 
                 if (___bool_8)
                 {
-                    assortmentController.SelectItem(__instance.Item);
-
                     BuyTab.OnPointerClick(null);
+                    assortmentController.SelectItem(__instance.Item);
 
                     return false;
                 }
@@ -112,6 +114,25 @@ public static class TradingAutoSwitchPatches
             }
 
             return true;
+        }
+    }
+
+    // BSG has a bug with or without my changes that the Deal button doesn't light up when swapping to Sell and there are items already there
+    // TODO: On switching back and forth, the for sale items aren't grayed out anymore. I can't figure out how they get set/unset
+    public class RefreshOnSwitchPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // method_5() is called from the Tab click
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_5));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(TraderDealScreen __instance, TraderClass ___traderClass_1)
+        {
+            // Normally this is invoked on selected item change, etc. 
+            ___traderClass_1.CurrentAssortment.PreparedItemsChanged.Invoke();
+            ___traderClass_1.CurrentAssortment.PreparedSumChanged.Invoke();
         }
     }
 }

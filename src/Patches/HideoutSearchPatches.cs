@@ -199,6 +199,7 @@ public static class HideoutSearchPatches
         }
     }
 
+    // Stop the auto-scroll when you start scrolling yourself
     public class CancelScrollOnMouseWheelPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -213,6 +214,7 @@ public static class HideoutSearchPatches
         }
     }
 
+    // Prevent enter from kicking you out of the UI and entering the hideout in first person
     public class BlockHideoutEnterPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

@@ -51,9 +51,10 @@ public static class SwapPatches
         new InspectWindowUpdateStatsOnSwapPatch().Enable();
         new FixAddModFirearmOperationPatch().Enable();
         new HideScaryTooltipPatch().Enable();
+        new ScavInventorySplitPatch().Enable();
     }
 
-    private static bool ValidPrerequisites(DragItemContext itemContext, ItemContextAbstractClass targetItemContext, IInventoryEventResult operation)
+    private static bool ValidPrerequisites(DragItemContext itemContext, Item targetItem, IInventoryEventResult operation)
     {
         if (!Settings.SwapItems.Value)
         {
@@ -71,17 +72,17 @@ public static class SwapPatches
             return false;
         }
 
-        if (InHighlight || itemContext == null || targetItemContext == null || operation.Succeeded)
+        if (InHighlight || itemContext == null || targetItem == null || operation.Succeeded)
         {
             return false;
         }
 
-        if (BannedOwnerTypes.Contains(itemContext.Item.Owner.OwnerType) || BannedOwnerTypes.Contains(targetItemContext.Item.Owner.OwnerType))
+        if (BannedOwnerTypes.Contains(itemContext.Item.Owner.OwnerType) || BannedOwnerTypes.Contains(targetItem.Owner.OwnerType))
         {
             return false;
         }
 
-        if (itemContext.Item == targetItemContext.Item || targetItemContext.Item.GetAllParentItems().Contains(itemContext.Item))
+        if (itemContext.Item == targetItem || targetItem.GetAllParentItems().Contains(itemContext.Item))
         {
             return false;
         }
@@ -95,11 +96,11 @@ public static class SwapPatches
         string error = operation.Error.ToString();
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
-        bool isContainer = targetItemContext.Item is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
+        bool isContainer = targetItem is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
         if (Settings.SwapImpossibleContainers.Value && isContainer && error.StartsWith("No free room"))
         {
             // Disallow in-raid, unless it's an equipment slot
-            if (Plugin.InRaid() && targetItemContext.Item.Parent.Container.ParentItem is not InventoryEquipment)
+            if (Plugin.InRaid() && targetItem.Parent.Container.ParentItem is not InventoryEquipment)
             {
                 return false;
             }
@@ -111,7 +112,7 @@ public static class SwapPatches
             }
 
             // Check if it would ever fit no matter what, if not try to swap
-            if (!CouldEverFit(itemContext, targetItemContext))
+            if (!CouldEverFit(itemContext, targetItem))
             {
                 return true;
             }
@@ -125,10 +126,10 @@ public static class SwapPatches
         return true;
     }
 
-    private static bool CouldEverFit(DragItemContext itemContext, ItemContextAbstractClass containerItemContext)
+    private static bool CouldEverFit(DragItemContext itemContext, Item containerItem)
     {
         Item item = itemContext.Item;
-        if (containerItemContext.Item is not CompoundItem container)
+        if (containerItem is not CompoundItem container)
         {
             return false;
         }
@@ -148,6 +149,7 @@ public static class SwapPatches
         return false;
     }
 
+    // Grabs the source container of a drag for later use
     public class DetectSwapSourceContainerPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -162,6 +164,7 @@ public static class SwapPatches
         }
     }
 
+    // Releases reference on drag end
     public class CleanupSwapSourceContainerPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -176,6 +179,7 @@ public static class SwapPatches
         }
     }
 
+    // For swapping with items in a grid
     public class GridViewCanAcceptSwapPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -228,7 +232,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
         {
-            if (!ValidPrerequisites(itemContext, targetItemContext, operation))
+            if (!ValidPrerequisites(itemContext, targetItemContext?.Item, operation))
             {
                 return;
             }
@@ -356,6 +360,7 @@ public static class SwapPatches
         }
     }
 
+    // Grab the last hovered GridItemView for later use
     public class RememberSwapGridHoverPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -379,22 +384,25 @@ public static class SwapPatches
             return AccessTools.Method(typeof(DragItemContext), nameof(DragItemContext.CanAccept));
         }
 
+        // Do not use targetItemContext parameter, it's literally just __instance. Thanks, BSG!
         [PatchPostfix]
-        public static void Postfix(DragItemContext __instance, Slot slot, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+        public static void Postfix(
+            DragItemContext __instance,
+            Slot slot,
+            ref IInventoryEventResult operation,
+            TraderControllerClass itemController,
+            bool simulate,
+            ref bool __result)
         {
-            // targetItemContext here is not the target item, it's the *parent* context, i.e. the owner of the slot
             // Do a few more checks
             if (slot.ContainedItem == null || __instance.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(__instance.Item))
             {
                 return;
             }
 
-            using (var containedContext = targetItemContext.CreateChild(slot.ContainedItem))
+            if (!ValidPrerequisites(__instance, slot.ContainedItem, operation))
             {
-                if (!ValidPrerequisites(__instance, containedContext, operation))
-                {
-                    return;
-                }
+                return;
             }
 
             var item = __instance.Item;
@@ -415,6 +423,7 @@ public static class SwapPatches
         }
     }
 
+    // Allow dragging magazines onto weapons and do a mag swap
     public class WeaponApplyPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -422,7 +431,6 @@ public static class SwapPatches
             return AccessTools.Method(typeof(Weapon), nameof(Weapon.Apply));
         }
 
-        // Allow dragging magazines onto weapons and do a mag swap
         [PatchPostfix]
         public static void Postfix(Weapon __instance, TraderControllerClass itemController, Item item, bool simulate, ref ItemOperation __result)
         {
@@ -511,6 +519,7 @@ public static class SwapPatches
         }
     }
 
+    // Since 3.9 EFT handles slots in addition to containers here, they get the wrong error
     public class FixNoGridErrorPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -522,7 +531,6 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct446<GInterface385> __result, Error ___noSpaceError, Error ___noActionsError)
         {
-            // Since 3.9 EFT handles slots in addition to containers here, they get the wrong error
             if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
             {
                 __result = new(___noActionsError);
@@ -579,6 +587,25 @@ public static class SwapPatches
             }
 
             return true;
+        }
+    }
+
+    // Allow splitting on the scav transfer screen. This is needed for partial transfers to not turn into swaps
+    // There's a slightly weird side-effect where multiple stack transfers into a container don't update the owner until you reopen the container
+    public class ScavInventorySplitPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Property(typeof(ItemContextAbstractClass), nameof(ItemContextAbstractClass.SplitAvailable)).GetMethod;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ItemContextAbstractClass __instance, ref bool __result)
+        {
+            if (__instance.ViewType == EItemViewType.ScavInventory)
+            {
+                __result = true;
+            }
         }
     }
 

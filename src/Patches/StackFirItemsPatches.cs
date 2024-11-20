@@ -47,8 +47,7 @@ public static class StackFirItemsPatches
         {
             bool ignoreSpawnedInSession = __instance switch
             {
-                MoneyItemClass _ => Settings.MergeFIRMoney.Value,
-                AmmoItemClass _ => Settings.MergeFIRMoney.Value,
+                AmmoItemClass _ => Settings.MergeFIRAmmo.Value,
                 _ => Settings.MergeFIROther.Value,
             };
 

@@ -119,7 +119,7 @@ public static class ContextMenuShortcutPatches
 
             if (Settings.AddOfferKeyBind.Value.IsDown())
             {
-                TryInteraction(__instance, itemContext, EItemInfoButtonExt.AddOffer);
+                TryInteraction(__instance, itemContext, EItemInfoButton.AddOffer);
             }
 
             Interactions = null;

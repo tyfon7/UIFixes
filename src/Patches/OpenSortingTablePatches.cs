@@ -18,6 +18,7 @@ public static class OpenSortingTablePatches
         new DefaultBindPatch().Enable();
     }
 
+    // If the sorting table isn't open, open it automatically when something is shift-clicked
     public class AutoOpenPatch : ModulePatch
     {
         private static readonly EItemUiContextType[] AllowedScreens = [EItemUiContextType.InventoryScreen, EItemUiContextType.ScavengerInventoryScreen];
@@ -54,12 +55,12 @@ public static class OpenSortingTablePatches
             {
                 if (__instance.ContextType == EItemUiContextType.InventoryScreen)
                 {
-                    Singleton<CommonUI>.Instance.InventoryScreen.method_6();
+                    //Singleton<CommonUI>.Instance.InventoryScreen.method_6();
                     Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
                 }
                 else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
                 {
-                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
+                    //Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
                     Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
                 }
             }
@@ -68,6 +69,7 @@ public static class OpenSortingTablePatches
         }
     }
 
+    // Removes the default shift-click behavior - allows it to not conflict with multiselect
     public class DefaultBindPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

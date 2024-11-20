@@ -212,6 +212,7 @@ public static class BarterOfferPatches
             if (!string.IsNullOrEmpty(value))
             {
                 ___ItemValue.text = value;
+                __instance.CurrentItemValue = value; // There is an insane circular rat's nest of code that requires this to be set too
                 ___ItemValue.fontSize = 16f;
                 ___ItemValue.alignment = TextAlignmentOptions.Left;
 

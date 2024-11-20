@@ -15,6 +15,7 @@ public static class SliderPatches
         new StepSliderPatch().Enable();
     }
 
+    // Change slider values with mouse-wheel
     public class IntSliderPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -29,6 +30,7 @@ public static class SliderPatches
         }
     }
 
+    // Change slider values with mouse-wheel
     public class StepSliderPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

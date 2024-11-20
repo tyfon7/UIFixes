@@ -18,6 +18,7 @@ public static class TagPatches
         new TagsOverCaptionsPatch().Enable();
     }
 
+    // Save the tag when enter is pressed
     public class OnEnterPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -34,6 +35,7 @@ public static class TagPatches
         }
     }
 
+    // On narrow items, prioritize the tag over the caption
     public class TagsOverCaptionsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

@@ -29,7 +29,7 @@ public static class ScrollPatches
         new LightScrollerSpeedPatch().Enable();
 
         new EnhanceHideoutScrollingPatch().Enable();
-        //new EnhanceTaskListScrollingPatch().Enable(); // Changed shape, where's the scroller?
+        new EnhanceTaskListScrollingPatch().Enable();
         new OpenLastTaskPatch().Enable();
     }
 
@@ -96,12 +96,12 @@ public static class ScrollPatches
             {
                 if (Input.GetKeyDown(KeyCode.Home))
                 {
-                    lightScroller.SetScrollPosition(0f);
+                    lightScroller.SetScrollPosition(lightScroller.R().Order == LightScroller.EScrollOrder.Straight ? 0f : 1f);
                     return true;
                 }
                 if (Input.GetKeyDown(KeyCode.End))
                 {
-                    lightScroller.SetScrollPosition(1f);
+                    lightScroller.SetScrollPosition(lightScroller.R().Order == LightScroller.EScrollOrder.Straight ? 1f : 0f);
                     return true;
                 }
             }
@@ -178,6 +178,7 @@ public static class ScrollPatches
         }
     }
 
+    // Improve scrolling on stashes
     public class EnhanceStashScrollingPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -186,8 +187,14 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll)
+        public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll, ItemUiContext ___itemUiContext_0)
         {
+            // Ignore Trading screen, that is handled separately
+            if (___itemUiContext_0?.R().ContextType == EItemUiContextType.TraderScreen)
+            {
+                return;
+            }
+
             // For some reason, sometimes SimpleStashPanel doesn't have a reference to its own ScrollRect? 
             HandleInput(____stashScroll ?? __instance.GetComponentInChildren<ScrollRect>());
         }
@@ -329,20 +336,20 @@ public static class ScrollPatches
         }
     }
 
-    // public class EnhanceTaskListScrollingPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(TasksScreen), nameof(TasksScreen.Awake));
-    //     }
+    public class EnhanceTaskListScrollingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(TasksPanel), nameof(TasksPanel.Show));
+        }
 
-    //     [PatchPostfix]
-    //     public static void Postfix(ScrollRect ____scrollRect)
-    //     {
-    //         var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
-    //         keyScroller.Init(____scrollRect);
-    //     }
-    // }
+        [PatchPostfix]
+        public static void Postfix(ScrollRect ____scrollRect)
+        {
+            var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
+            keyScroller.Init(____scrollRect);
+        }
+    }
 
     public class KeyScroller : MonoBehaviour
     {

@@ -131,7 +131,6 @@ internal class Settings
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
-    public static ConfigEntry<bool> MergeFIRMoney { get; set; }
     public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
@@ -675,15 +674,6 @@ internal class Settings
             true,
             new ConfigDescription(
                 "When sorting containers, first combine stacks of the same type. This will not be undone if the sorting fails.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MergeFIRMoney = config.Bind(
-            InventorySection,
-            "Autostack Money with FiR Money",
-            true,
-            new ConfigDescription(
-                "Allows automatic stacking of Found In Raid money with other money, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
 

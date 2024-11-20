@@ -20,6 +20,7 @@ public static class LimitDragPatches
         new OnDragEventPatch(typeof(UIDragComponent), "UnityEngine.EventSystems.IBeginDragHandler.OnBeginDrag").Enable();
     }
 
+    // Prevent drag events with right mouse, or when shift is down (to avoid multiselect conflicts)
     public class OnDragEventPatch(Type type, string methodName) : ModulePatch
     {
         private readonly string methodName = methodName;

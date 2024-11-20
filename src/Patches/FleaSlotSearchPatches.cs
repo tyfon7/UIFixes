@@ -14,6 +14,7 @@ public static class FleaSlotSearchPatches
         new HandbookWorkaroundPatch().Enable();
     }
 
+    // Ragfair search strings are round-tripped through the handbook, so keeping the added suffix requires these shenanigans
     public class HandbookWorkaroundPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

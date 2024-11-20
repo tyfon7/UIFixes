@@ -51,7 +51,7 @@ public static class R
         AddOfferWindow.InitTypes();
         ItemUiContext.InitTypes();
         Money.InitTypes();
-        TraderScreensGroup.InitTypes();
+        TraderDealScreen.InitTypes();
         TradingItemView.InitTypes();
         GridWindow.InitTypes();
         GridSortPanel.InitTypes();
@@ -70,6 +70,9 @@ public static class R
         MoveOperationResult.InitTypes();
         AddOperationResult.InitTypes();
         FoldOperationResult.InitTypes();
+        DiscardOperationResult.InitTypes();
+        UnbindOperationResult.InitTypes();
+        LightScroller.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -386,7 +389,7 @@ public static class R
             FiltersPanelField = AccessTools.Field(Type, "_filtersPanel");
         }
 
-        public LightScroller Scroller { get { return (LightScroller)ScrollerField.GetValue(Value); } }
+        public EFT.UI.Utilities.LightScroller.LightScroller Scroller { get { return (EFT.UI.Utilities.LightScroller.LightScroller)ScrollerField.GetValue(Value); } }
         public EFT.UI.Ragfair.FiltersPanel FiltersPanel { get { return (EFT.UI.Ragfair.FiltersPanel)FiltersPanelField.GetValue(Value); } }
     }
 
@@ -496,6 +499,7 @@ public static class R
         public static Type Type { get; private set; }
         private static FieldInfo InventoryControllerField;
         private static FieldInfo GridWindowTemplateField;
+        private static FieldInfo ContextTypeField;
         private static PropertyInfo ItemContextProperty;
 
         public static void InitTypes()
@@ -503,11 +507,13 @@ public static class R
             Type = typeof(EFT.UI.ItemUiContext);
             InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryController));
             GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
+            ContextTypeField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(EItemUiContextType));
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
         }
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
         public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
+        public EItemUiContextType ContextType { get { return (EItemUiContextType)ContextTypeField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
     }
 
@@ -525,7 +531,7 @@ public static class R
         public static Dictionary<ECurrencyType, int> GetMoneySums(IEnumerable<Item> items) => (Dictionary<ECurrencyType, int>)GetMoneySumsMethod.Invoke(null, [items]);
     }
 
-    public class TraderScreensGroup(object value) : UIInputNode(value)
+    public class TraderDealScreen(object value) : UIInputNode(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo BuyTabField;
@@ -533,7 +539,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(EFT.UI.TraderScreensGroup);
+            Type = typeof(EFT.UI.TraderDealScreen);
             BuyTabField = AccessTools.Field(Type, "_buyTab");
             SellTabField = AccessTools.Field(Type, "_sellTab");
         }
@@ -861,6 +867,48 @@ public static class R
 
         public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
     }
+
+    public class DiscardOperationResult(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo UnbindResultsField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(DiscardOperation);
+            UnbindResultsField = AccessTools.Field(Type, "list_0");
+        }
+
+        public List<UnbindOperation> UnbindResults { get { return (List<UnbindOperation>)UnbindResultsField.GetValue(Value); } }
+    }
+
+    public class UnbindOperationResult(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        public static FieldInfo ControllerField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(UnbindOperation);
+            ControllerField = AccessTools.Field(Type, "inventoryController_0");
+        }
+
+        public InventoryController Controller { get { return (InventoryController)ControllerField.GetValue(Value); } }
+    }
+
+    public class LightScroller(object value) : UIElement(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo OrderField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.Utilities.LightScroller.LightScroller);
+            OrderField = AccessTools.Field(Type, "_order");
+        }
+
+        public EFT.UI.Utilities.LightScroller.LightScroller.EScrollOrder Order { get { return (EFT.UI.Utilities.LightScroller.LightScroller.EScrollOrder)OrderField.GetValue(Value); } }
+    }
 }
 
 public static class RExtentensions
@@ -881,7 +929,7 @@ public static class RExtentensions
     public static R.ItemMarketPricesPanel R(this ItemMarketPricesPanel value) => new(value);
     public static R.AddOfferWindow R(this AddOfferWindow value) => new(value);
     public static R.ItemUiContext R(this ItemUiContext value) => new(value);
-    public static R.TraderScreensGroup R(this TraderScreensGroup value) => new(value);
+    public static R.TraderDealScreen R(this TraderDealScreen value) => new(value);
     public static R.TradingItemView R(this TradingItemView value) => new(value);
     public static R.GridWindow R(this GridWindow value) => new(value);
     public static R.GridSortPanel R(this GridSortPanel value) => new(value);
@@ -896,4 +944,7 @@ public static class RExtentensions
     public static R.MoveOperationResult R(this MoveOperation value) => new(value);
     public static R.AddOperationResult R(this AddOperation value) => new(value);
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
+    public static R.DiscardOperationResult R(this DiscardOperation value) => new(value);
+    public static R.UnbindOperationResult R(this UnbindOperation value) => new(value);
+    public static R.LightScroller R(this LightScroller value) => new(value);
 }

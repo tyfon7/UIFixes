@@ -23,6 +23,7 @@ public static class ConfirmDialogKeysPatches
         new ClickOutErrorScreenPatch().Enable();
     }
 
+    // Close dialogs with enter/space
     public class DialogWindowPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -48,6 +49,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close dialogs with enter/space
     public class ItemUiContextWindowPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -75,6 +77,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close dialogs with enter/space
     public class ErrorScreenPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -92,6 +95,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Complete add offer dialog with enter/space
     public class AddOfferPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -114,6 +118,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close modal dialogs by clicking outside them
     public class ClickOutPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -142,6 +147,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close modal dialogs by clicking outside them
     public class ClickOutSplitDialogPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -168,6 +174,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close modal dialogs by clicking outside them
     public class ClickOutItemsListPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -195,6 +202,7 @@ public static class ConfirmDialogKeysPatches
         }
     }
 
+    // Close modal dialogs by clicking outside them
     public class ClickOutErrorScreenPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

@@ -18,11 +18,12 @@ public static class QuickAccessPanelPatches
     public static void Enable()
     {
         new FixWeaponBindsDisplayPatch().Enable();
-        new FixVisibilityPatch().Enable();
-        new TranslateCommandHackPatch().Enable();
+        //new FixVisibilityPatch().Enable(); // Appears fixed!
+        //new TranslateCommandHackPatch().Enable(); // ^
         new RotationPatch().Enable();
     }
 
+    // Fix the displayed keybinds being hardcoded to "1", "2", "3"
     public class FixWeaponBindsDisplayPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -49,63 +50,64 @@ public static class QuickAccessPanelPatches
         }
     }
 
-    public class FixVisibilityPatch : ModulePatch
-    {
-        public static bool Ignorable = false;
+    // public class FixVisibilityPatch : ModulePatch
+    // {
+    //     public static bool Ignorable = false;
 
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.method_5));
-        }
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.method_5));
+    //     }
 
-        // This method is a mess. The visibility setting has to be ignored in some cases, respected in others
-        // In most calls, visible=true must be followed regardless of setting preference, e.g. mag selection
-        // When coming from translatecommand, which is when you hit a quickbind key, visible=true can be ignored if the setting is never
-        // Ironically this is also the only time that autohide matters, since the other places will explicitly call hide
-        // visible=false can always be ignored if setting is always
-        [PatchPrefix]
-        public static bool Prefix(InventoryScreenQuickAccessPanel __instance, bool visible)
-        {
-            GameSetting<EVisibilityMode> quickSlotsVisibility = Singleton<SharedGameSettingsClass>.Instance.Game.Settings.QuickSlotsVisibility;
+    //     // This method is a mess. The visibility setting has to be ignored in some cases, respected in others
+    //     // In most calls, visible=true must be followed regardless of setting preference, e.g. mag selection
+    //     // When coming from translatecommand, which is when you hit a quickbind key, visible=true can be ignored if the setting is never
+    //     // Ironically this is also the only time that autohide matters, since the other places will explicitly call hide
+    //     // visible=false can always be ignored if setting is always
+    //     [PatchPrefix]
+    //     public static bool Prefix(InventoryScreenQuickAccessPanel __instance, bool visible)
+    //     {
+    //         GameSetting<EVisibilityMode> quickSlotsVisibility = Singleton<SharedGameSettingsClass>.Instance.Game.Settings.QuickSlotsVisibility;
 
-            bool shouldShow = visible && !__instance.IsDisabled;
-            bool blocked = Ignorable && quickSlotsVisibility == EVisibilityMode.Never;
+    //         bool shouldShow = visible && !__instance.IsDisabled;
+    //         bool blocked = Ignorable && quickSlotsVisibility == EVisibilityMode.Never;
 
-            if (shouldShow && !blocked)
-            {
-                bool autohide = Ignorable && quickSlotsVisibility == EVisibilityMode.Autohide;
-                __instance.AnimatedShow(autohide);
+    //         if (shouldShow && !blocked)
+    //         {
+    //             bool autohide = Ignorable && quickSlotsVisibility == EVisibilityMode.Autohide;
+    //             __instance.AnimatedShow(autohide);
 
-            }
-            else if (!shouldShow && quickSlotsVisibility != EVisibilityMode.Always)
-            {
-                __instance.AnimatedHide();
-            }
+    //         }
+    //         else if (!shouldShow && quickSlotsVisibility != EVisibilityMode.Always)
+    //         {
+    //             __instance.AnimatedHide();
+    //         }
 
-            return false;
-        }
-    }
+    //         return false;
+    //     }
+    // }
 
-    public class TranslateCommandHackPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.TranslateCommand));
-        }
+    // public class TranslateCommandHackPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.TranslateCommand));
+    //     }
 
-        [PatchPrefix]
-        public static void Prefix(ECommand command)
-        {
-            FixVisibilityPatch.Ignorable = QuickBindCommandMap.SlotBySelectCommandDictionary.ContainsKey(command);
-        }
+    //     [PatchPrefix]
+    //     public static void Prefix(ECommand command)
+    //     {
+    //         FixVisibilityPatch.Ignorable = QuickBindCommandMap.SlotBySelectCommandDictionary.ContainsKey(command);
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix()
-        {
-            FixVisibilityPatch.Ignorable = false;
-        }
-    }
+    //     [PatchPostfix]
+    //     public static void Postfix()
+    //     {
+    //         FixVisibilityPatch.Ignorable = false;
+    //     }
+    // }
 
+    // Don't rotate items on the quickbar if they're already square
     public class RotationPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -121,7 +123,7 @@ public static class QuickAccessPanelPatches
                 return;
             }
 
-            // Already square items don't need to be rotated. Still need to be scaled though!
+            // Still need to be scaled though!
             XYCellSizeStruct cellSize = __instance.Item.CalculateCellSize();
             if (cellSize.X == cellSize.Y)
             {

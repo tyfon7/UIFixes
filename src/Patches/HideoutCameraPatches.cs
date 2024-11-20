@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace UIFixes;
 
+// Prevent the hideout camera from moving due to screen-edge when an area is selected
 public class HideoutCameraPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()

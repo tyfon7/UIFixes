@@ -26,6 +26,7 @@ public static class UnloadAmmoPatches
         //new UnloadAmmoBoxPatch().Enable(); // TODO: Was refactored, needs to be examined
     }
 
+    // Adds the unload action to items in the player trading window
     public class TradingPlayerPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -42,6 +43,7 @@ public static class UnloadAmmoPatches
         }
     }
 
+    // Adds the unload action to items in the player transfer window
     public class TransferPlayerPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

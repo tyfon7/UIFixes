@@ -339,12 +339,6 @@ public static class MultiSelectPatches
                 case EItemInfoButton.Unpack:
                     MultiSelect.UnpackAll(___itemUiContext_1, false);
                     return false;
-                // case EItemInfoButton.AddToWishlist:
-                //     MultiSelect.WishlistAll(___itemUiContext_1, __instance, true, false);
-                //     return false;
-                // case EItemInfoButton.RemoveFromWishlist:
-                //     MultiSelect.WishlistAll(___itemUiContext_1, __instance, false, false);
-                //     return false;
                 default:
                     return true;
             }

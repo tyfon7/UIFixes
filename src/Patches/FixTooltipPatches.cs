@@ -16,6 +16,7 @@ public static class FixTooltipPatches
         new ArmorTooltipPatch().Enable();
     }
 
+    // Show parent tooltip when mouse leaves quest checkmark
     public class QuestTooltipPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -31,6 +32,7 @@ public static class FixTooltipPatches
         }
     }
 
+    // Correct hover behavior of armor tooltip to be just the armor icon, not the whole bottom of the item
     public class ArmorTooltipPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

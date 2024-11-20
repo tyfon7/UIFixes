@@ -54,6 +54,7 @@ public static class ContextMenuPatches
         //new TradingWishlistPatch().Enable();
     }
 
+    // Update display strings with multiselect multipliers
     public class ContextMenuNamesPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -102,14 +103,15 @@ public static class ContextMenuPatches
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
             }
-            else if (caption == EItemInfoButton.AddToWishlist.ToString())
-            {
-                count = MultiSelect.InteractionCount(EItemInfoButton.AddToWishlist, ItemUiContext.Instance);
-            }
-            else if (caption == EItemInfoButton.RemoveFromWishlist.ToString())
-            {
-                count = MultiSelect.InteractionCount(EItemInfoButton.RemoveFromWishlist, ItemUiContext.Instance);
-            }
+            // TODO: Reimplement for wishlist support
+            // else if (caption == EItemInfoButton.AddToWishlist.ToString())
+            // {
+            //     count = MultiSelect.InteractionCount(EItemInfoButton.AddToWishlist, ItemUiContext.Instance);
+            // }
+            // else if (caption == EItemInfoButton.RemoveFromWishlist.ToString())
+            // {
+            //     count = MultiSelect.InteractionCount(EItemInfoButton.RemoveFromWishlist, ItemUiContext.Instance);
+            // }
 
             if (count > 0)
             {
@@ -118,6 +120,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Turn Repair and Insure into sub-menus (inventory screen)
     public class DeclareSubInteractionsInventoryPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -143,6 +146,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Create the submenu options (inventory screen)
     public class CreateSubInteractionsInventoryPatch : ModulePatch
     {
         private static bool LoadingInsuranceActions = false;
@@ -206,6 +210,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Give Repair/Insure submenus (trading screen)
     public class DeclareSubInteractionsTradingPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -227,6 +232,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Create submenu options (trading screen)
     public class CreateSubInteractionsTradingPatch : ModulePatch
     {
         private static bool LoadingInsuranceActions = false;
@@ -299,6 +305,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Grab the interaction ID of the last created button for later use
     public class SniffInteractionButtonCreationPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -322,6 +329,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Set the button interaction of the recently created button
     public class ChangeInteractionButtonCreationPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -362,6 +370,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Make Insure check if there are inner items to insure, not just the top item
     public class EnableInsureInnerItemsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -396,6 +405,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // What does Load From Preset mean on a bullet? Remove it
     public class DisableLoadPresetOnBulletsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -421,6 +431,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Allow context menus on empty slots
     public class EmptyModSlotMenuPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -441,6 +452,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // When the empty slot gets an item, remove the old empty-item menu trigger
     public class EmptyModSlotMenuRemovePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -459,6 +471,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Allow context menus on empty slots
     public class EmptySlotMenuPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -480,6 +493,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // When the empty slot gets an item, remove the old empty-item menu trigger
     public class EmptySlotMenuRemovePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -498,6 +512,7 @@ public static class ContextMenuPatches
         }
     }
 
+    // Fix submenus to prefer being on the right. BSG messed up the code that detects the edge case where it should be on the left, and always does it
     public class PositionSubMenuPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

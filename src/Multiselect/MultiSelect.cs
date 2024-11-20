@@ -309,34 +309,6 @@ public class MultiSelect
         return result.Succeed;
     }
 
-    private static Task ExecuteInteraction(DragItemContext itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
-    {
-        // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
-        ItemContextAbstractClass innerContext = itemContext.ItemContextAbstractClass;
-        if (innerContext == null)
-        {
-            return Task.CompletedTask;
-        }
-
-        bool createdContext = false;
-        if (innerContext.Item != itemContext.Item)
-        {
-            // Actual context went away and we're looking at inventory/stash context
-            innerContext = innerContext.CreateChild(itemContext.Item);
-            createdContext = true;
-        }
-
-        var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
-        contextInteractions.ExecuteInteraction(interaction);
-
-        if (createdContext)
-        {
-            innerContext.Dispose();
-        }
-
-        return Task.CompletedTask;
-    }
-
     public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
         if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
@@ -344,7 +316,7 @@ public class MultiSelect
             var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             taskSerializer.Initialize(
                 SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)),
-                ic => ExecuteInteraction(ic, EItemInfoButton.Equip, itemUiContext));
+                ic => itemUiContext.EquipItem(ic.Item));
 
             itemUiContext.Tooltip?.Close();
         }
