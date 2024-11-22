@@ -156,7 +156,7 @@ public static class BarterOfferPatches
 
             return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
                 .Where(item => item.TemplateId == requirement.Item.TemplateId)
-                .Where(item => !requirement.OnlyFunctional || item is not CompoundItem lootItem || !lootItem.MissingVitalParts.Any())
+                .Where(item => !requirement.OnlyFunctional || item is not CompoundItem compoundItem || !compoundItem.MissingVitalParts.Any())
                 .Where(item => item is not GInterface373 encodable || requirement.Item is not GInterface373 || encodable.IsEncoded() == requirement.IsEncoded)
                 .Sum(item => item.StackObjectsCount);
         }

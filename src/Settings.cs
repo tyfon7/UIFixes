@@ -31,13 +31,6 @@ internal enum MultiSelectStrategy
     OriginalSpacing
 }
 
-internal enum SortingTableDisplay
-{
-    New,
-    Old,
-    Both
-}
-
 internal enum AutoFleaPrice
 {
     None,
@@ -143,7 +136,6 @@ internal class Settings
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
-    public static ConfigEntry<SortingTableDisplay> SortingTableButton { get; set; }
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
@@ -161,7 +153,6 @@ internal class Settings
     // In Raid
     public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
     public static ConfigEntry<bool> EnableLoadAmmo { get; set; }
-    public static ConfigEntry<bool> DeterministicGrenades { get; set; }
 
     // Flea Market
     public static ConfigEntry<bool> EnableFleaHistory { get; set; }
@@ -787,15 +778,6 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(SortingTableButton = config.Bind(
-            InventorySection,
-            "Sorting Table Button",
-            SortingTableDisplay.New,
-            new ConfigDescription(
-                "What position to show the sorting table button",
-                null,
-                new ConfigurationManagerAttributes { })));
-
         configEntries.Add(TagsOverCaptions = config.Bind(
             InventorySection,
             "Prioritize Tags Over Names",
@@ -912,15 +894,6 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Allows ammo to be loaded through the magazine context menu",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(DeterministicGrenades = config.Bind(
-            InRaidSection,
-            "Nonrandom Grenades",
-            false,
-            new ConfigDescription(
-                "By default, EFT picks a random grenade when you hit the Grenade key. This removes that behavior",
                 null,
                 new ConfigurationManagerAttributes { })));
 

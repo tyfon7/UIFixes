@@ -23,27 +23,27 @@ public class LoadMagPresetsPatch : ModulePatch
         if (!__result.Contains(inventory.Equipment))
         {
             var vest = inventory.Equipment.GetSlot(EquipmentSlot.TacticalVest);
-            if (vest.ContainedItem is CompoundItem vestLootItem)
+            if (vest.ContainedItem is CompoundItem vestCompoundItem)
             {
-                __result.Add(vestLootItem);
+                __result.Add(vestCompoundItem);
             }
 
             var pockets = inventory.Equipment.GetSlot(EquipmentSlot.Pockets);
-            if (pockets.ContainedItem is CompoundItem pocketsLootItem)
+            if (pockets.ContainedItem is CompoundItem pocketsCompoundItem)
             {
-                __result.Add(pocketsLootItem);
+                __result.Add(pocketsCompoundItem);
             }
 
             var backpack = inventory.Equipment.GetSlot(EquipmentSlot.Backpack);
-            if (backpack.ContainedItem is CompoundItem backpackLootItem)
+            if (backpack.ContainedItem is CompoundItem backpackCompoundItem)
             {
-                __result.Add(backpackLootItem);
+                __result.Add(backpackCompoundItem);
             }
 
             var secureContainer = inventory.Equipment.GetSlot(EquipmentSlot.SecuredContainer);
-            if (secureContainer.ContainedItem is CompoundItem secureContainerLootItem)
+            if (secureContainer.ContainedItem is CompoundItem secureContainerCompoundItem)
             {
-                __result.Add(secureContainerLootItem);
+                __result.Add(secureContainerCompoundItem);
             }
         }
     }

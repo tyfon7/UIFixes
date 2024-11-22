@@ -103,15 +103,6 @@ public static class ContextMenuPatches
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
             }
-            // TODO: Reimplement for wishlist support
-            // else if (caption == EItemInfoButton.AddToWishlist.ToString())
-            // {
-            //     count = MultiSelect.InteractionCount(EItemInfoButton.AddToWishlist, ItemUiContext.Instance);
-            // }
-            // else if (caption == EItemInfoButton.RemoveFromWishlist.ToString())
-            // {
-            //     count = MultiSelect.InteractionCount(EItemInfoButton.RemoveFromWishlist, ItemUiContext.Instance);
-            // }
 
             if (count > 0)
             {

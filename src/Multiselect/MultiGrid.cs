@@ -116,11 +116,11 @@ public static class MultiGrid
 
     private static bool IsMultiGrid(Item item)
     {
-        if (item is not CompoundItem lootItem)
+        if (item is not CompoundItem compoundItem)
         {
             return false;
         }
 
-        return lootItem.Grids.Length > 1;
+        return compoundItem.Grids.Length > 1;
     }
 }

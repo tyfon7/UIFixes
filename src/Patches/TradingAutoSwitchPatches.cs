@@ -118,7 +118,7 @@ public static class TradingAutoSwitchPatches
     }
 
     // BSG has a bug with or without my changes that the Deal button doesn't light up when swapping to Sell and there are items already there
-    // TODO: On switching back and forth, the for sale items aren't grayed out anymore. I can't figure out how they get set/unset
+    // On switching back and forth, the for sale items aren't grayed out anymore. I can't figure out how they get set/unset
     public class RefreshOnSwitchPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

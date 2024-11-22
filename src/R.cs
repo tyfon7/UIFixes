@@ -569,17 +569,17 @@ public static class R
     {
         public static Type Type { get; private set; }
         private static FieldInfo GridSortPanelField;
-        private static FieldInfo LootItemField;
+        private static FieldInfo CompoundItemField;
 
         public static void InitTypes()
         {
             Type = typeof(EFT.UI.GridWindow);
             GridSortPanelField = AccessTools.Field(Type, "_sortPanel");
-            LootItemField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(CompoundItem));
+            CompoundItemField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(CompoundItem));
         }
 
         public EFT.UI.DragAndDrop.GridSortPanel GridSortPanel { get { return (EFT.UI.DragAndDrop.GridSortPanel)GridSortPanelField.GetValue(Value); } }
-        public CompoundItem LootItem { get { return (CompoundItem)LootItemField.GetValue(Value); } }
+        public CompoundItem CompoundItem { get { return (CompoundItem)CompoundItemField.GetValue(Value); } }
     }
 
     public class GridSortPanel(object value) : Wrapper(value)
@@ -738,18 +738,6 @@ public static class R
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
     }
-
-    // public class InventoryInteractions(object value) : Wrapper(value)
-    // {
-    //     public static Type Type { get; private set; }
-    //     public static Type CompleteType { get; private set; }
-
-    //     public static void InitTypes()
-    //     {
-    //         Type = PatchConstants.EftTypes.Single(t => t.GetField("HIDEOUT_WEAPON_MODIFICATION_REQUIRED") != null); // GClass3405
-    //         CompleteType = PatchConstants.EftTypes.Single(t => t != Type && Type.IsAssignableFrom(t)); // GClass3406/GClass3407 // TODO: There are two now??
-    //     }
-    // }
 
     public class TradingInteractions(object value) : Wrapper(value)
     {
