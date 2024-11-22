@@ -21,6 +21,7 @@ public static class AddOfferRememberAutoselectPatches
             if (!enabled)
             {
                 PlayerPrefs.DeleteKey(PlayerPrefKey);
+                PlayerPrefs.Save();
             }
         });
     }
@@ -38,6 +39,7 @@ public static class AddOfferRememberAutoselectPatches
             if (Settings.RememberAutoselectSimilar.Value)
             {
                 PlayerPrefs.SetInt(PlayerPrefKey, value ? 1 : 0);
+                PlayerPrefs.Save();
             }
         }
     }
@@ -55,6 +57,7 @@ public static class AddOfferRememberAutoselectPatches
             if (Settings.RememberAutoselectSimilar.Value && PlayerPrefs.HasKey(PlayerPrefKey))
             {
                 ____autoSelectSimilar.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey) == 1);
+                PlayerPrefs.Save();
             }
         }
     }

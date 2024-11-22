@@ -3,6 +3,7 @@ using EFT.InputSystem;
 using HarmonyLib;
 using JsonType;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ public static class AimToggleHoldPatches
         new AddTwoKeyStatesPatch().Enable();
         new AddOneKeyStatesPatch().Enable();
         new UpdateInputPatch().Enable();
+
+        new ForceTacticalModePatch().Enable();
 
         Settings.ToggleOrHoldAim.SettingChanged += OnSettingChanged;
         Settings.ToggleOrHoldSprint.SettingChanged += OnSettingChanged;
@@ -97,13 +100,45 @@ public static class AimToggleHoldPatches
             return AccessTools.Method(typeof(KeyCombination), nameof(KeyCombination.UpdateInput));
         }
 
+        [PatchPrefix]
+        public static void Prefix(KeyCombination __instance, ref List<GInterface201> inputKeys)
+        {
+            // BSG implemented tactical as an entirely new abomination, so I have to disable the "release tactical" 
+            if (__instance.GameKey == EGameKey.ReleaseTactical && UseToggleHold(EGameKey.Tactical))
+            {
+                inputKeys = [];
+            }
+        }
+
         [PatchPostfix]
         public static void Postfix(KeyCombination __instance)
         {
             if (UseToggleHold(__instance.GameKey))
             {
                 __instance.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
+
             }
+        }
+    }
+
+    // If using toggle/hold tactical, need to force the "tactical device mode" to be press
+    public class ForceTacticalModePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Property(typeof(Class1581), nameof(Class1581.Boolean_0)).GetMethod;
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(ref bool __result)
+        {
+            if (UseToggleHold(EGameKey.Tactical))
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
         }
     }
 

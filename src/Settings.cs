@@ -285,7 +285,7 @@ internal class Settings
             "Use Toggle/Hold Tactical Device",
             false,
             new ConfigDescription(
-                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous",
+                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous. Note that this will override the new 'Tactical device activation mode'",
                 null,
                 new ConfigurationManagerAttributes { })));
 

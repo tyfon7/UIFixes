@@ -89,19 +89,6 @@ public static class ExtraItemViewStatsProperties
     public static void SetHideMods(this ItemViewStats itemViewStats, bool value) => properties.GetOrCreateValue(itemViewStats).HideMods = value;
 }
 
-public static class ExtraItemMarketPricesPanelProperties
-{
-    private static readonly ConditionalWeakTable<ItemMarketPricesPanel, Properties> properties = new();
-
-    private class Properties
-    {
-        public Action OnMarketPricesCallback = null;
-    }
-
-    public static Action GetOnMarketPricesCallback(this ItemMarketPricesPanel panel) => properties.GetOrCreateValue(panel).OnMarketPricesCallback;
-    public static void SetOnMarketPricesCallback(this ItemMarketPricesPanel panel, Action handler) => properties.GetOrCreateValue(panel).OnMarketPricesCallback = handler;
-}
-
 public static class ExtraEventResultProperties
 {
     private static readonly ConditionalWeakTable<ResizeOperation, Properties> properties = new();

@@ -30,7 +30,7 @@ public class Plugin : BaseUnityPlugin
         ScrollPatches.Enable();
         StackFirItemsPatches.Enable();
         SwapPatches.Enable();
-        //SyncScrollPositionPatches.Enable(); // Not working
+        SyncScrollPositionPatches.Enable();
         new TransferConfirmPatch().Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
@@ -38,22 +38,22 @@ public class Plugin : BaseUnityPlugin
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
         //KeepOfferWindowOpenPatches.Enable(); // TODO: Completely refactored
-        //AddOfferClickablePricesPatches.Enable(); // TODO: BSG made them clickable, but forgot to handle bulk
+        AddOfferClickablePricesPatches.Enable();
         new AssortUnlocksPatch().Enable();
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();
         TradingAutoSwitchPatches.Enable();
-        AddOfferRememberAutoselectPatches.Enable(); // Doesn't seem to be saving
+        AddOfferRememberAutoselectPatches.Enable();
         KeepMessagesOpenPatches.Enable();
         TradeQuantityPatches.Enable();
         RememberRepairerPatches.Enable();
         new GridWindowButtonsPatch().Enable();
         new LoadMagPresetsPatch().Enable();
         KeepWindowsOnScreenPatches.Enable();
-        ContextMenuShortcutPatches.Enable();
+        ContextMenuShortcutPatches.Enable(); // TODO: Handle L and P being lock and pin by default
         OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
-        MultiSelectPatches.Enable(); // TODO: Check dragging bag while it's being searched
+        MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
         MultipleWishlistPatches.Enable(); // TODO: Implement
         StackMoveGreedyPatches.Enable();
@@ -61,7 +61,7 @@ public class Plugin : BaseUnityPlugin
         new FixTraderControllerSimulateFalsePatch().Enable();
         new PutToolsBackPatch().Enable();
         new RebindGrenadesPatch().Enable();
-        AimToggleHoldPatches.Enable(); // TODO: Tactical not working
+        AimToggleHoldPatches.Enable();
         ReorderGridsPatches.Enable();
         GPCoinPatches.Enable();
         FleaSlotSearchPatches.Enable();

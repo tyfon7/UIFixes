@@ -3,10 +3,6 @@ global using DragItemContext = ItemContextClass;
 global using InsuranceItem = ItemClass;
 global using ToggleKeyCombination = DeleteNoteDescriptorClass; // automatic name detection isn't without its downsides...
 
-// 3.10 - remove these usings, they have names now
-global using Stackable = StackableItemItemClass;
-global using Helmet = HeadwearItemClass;
-
 // Everything below will change between EFT builds
 global using GridItemAddress = GClass3115;
 global using StashGridItemAddress = StashGridClass.Class2295;

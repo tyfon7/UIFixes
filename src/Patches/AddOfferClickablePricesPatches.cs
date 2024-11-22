@@ -1,211 +1,159 @@
-﻿// using EFT.InventoryLogic;
-// using EFT.UI.Ragfair;
-// using HarmonyLib;
-// using JetBrains.Annotations;
-// using SPT.Reflection.Patching;
-// using System;
-// using System.Linq;
-// using System.Reflection;
-// using TMPro;
-// using UnityEngine;
-// using UnityEngine.EventSystems;
-// using UnityEngine.UI;
+﻿using EFT.InventoryLogic;
+using EFT.UI;
+using EFT.UI.Ragfair;
+using HarmonyLib;
+using JetBrains.Annotations;
+using MonoMod.Utils;
+using SPT.Reflection.Patching;
+using System;
+using System.Linq;
+using System.Reflection;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-// namespace UIFixes;
+namespace UIFixes;
 
-// public static class AddOfferClickablePricesPatches
-// {
-//     public static void Enable()
-//     {
-//         new AddButtonPatch().Enable();
-//         new MarketPriceUpdatePatch().Enable();
-//         new BulkTogglePatch().Enable();
-//         new MultipleStacksPatch().Enable();
-//     }
+public static class AddOfferClickablePricesPatches
+{
+    public static void Enable()
+    {
+        new AutopopulatePricesPatch().Enable();
+        new SetRequirementPatch().Enable();
+        new BulkTogglePatch().Enable();
+        new MultipleStacksPatch().Enable();
+    }
 
-//     public class AddButtonPatch : ModulePatch
-//     {
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
-//         }
+    // Autopopulates a price when the window opens. 
+    public class AutopopulatePricesPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // Called when prices are loaded
+            return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel.method_1));
+        }
 
-//         [PatchPostfix]
-//         public static void Postfix(AddOfferWindow __instance, ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
-//         {
-//             var panel = ____pricesPanel.R();
+        [PatchPostfix]
+        public static void Postfix(ItemMarketPricesPanel __instance)
+        {
+            switch (Settings.AutoOfferPrice.Value)
+            {
+                case AutoFleaPrice.Minimum:
+                    __instance.method_0(__instance.Minimum);
+                    break;
+                case AutoFleaPrice.Average:
+                    __instance.method_0(__instance.Average);
+                    break;
+                case AutoFleaPrice.Maximum:
+                    __instance.method_0(__instance.Maximum);
+                    break;
+                case AutoFleaPrice.None:
+                default:
+                    break;
+            }
+        }
+    }
 
-//             var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
+    // When the price is being set by clicking a price, multiply it by the value if bulk ("List as a pack") 
+    public class SetRequirementPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // The handler for ItemMarketPricesPanel.OnPriceClick
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_2));
+        }
 
-//             Button lowestButton = panel.LowestLabel.GetOrAddComponent<HighlightButton>();
-//             lowestButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Minimum));
-//             ____pricesPanel.AddDisposable(lowestButton.onClick.RemoveAllListeners);
+        [PatchPrefix]
+        public static void Prefix(AddOfferWindow __instance, ref float priceFloat, bool ___bool_0 /* isBulk */)
+        {
+            if (___bool_0)
+            {
+                priceFloat *= __instance.Int32_0; // offer item count
+            }
+        }
+    }
 
-//             Button averageButton = panel.AverageLabel.GetOrAddComponent<HighlightButton>();
-//             averageButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Average));
-//             ____pricesPanel.AddDisposable(averageButton.onClick.RemoveAllListeners);
+    // Update the price when the "List as a pack" option is checked/unchecked
+    public class BulkTogglePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_18));
+        }
 
-//             Button maximumButton = panel.MaximumLabel.GetOrAddComponent<HighlightButton>();
-//             maximumButton.onClick.AddListener(() => SetRequirement(__instance, rublesRequirement, ____pricesPanel.Maximum));
-//             ____pricesPanel.AddDisposable(maximumButton.onClick.RemoveAllListeners);
+        [PatchPostfix]
+        public static void Postfix(AddOfferWindow __instance, bool arg, RequirementView[] ____requirementViews)
+        {
+            if (!Settings.UpdatePriceOnBulk.Value)
+            {
+                return;
+            }
 
-//             ____pricesPanel.SetOnMarketPricesCallback(() => PopulateOfferPrice(__instance, ____pricesPanel, rublesRequirement));
-//         }
-//     }
+            RequirementView rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
+            double currentPrice = rublesRequirement.Requirement.PreciseCount;
+            if (currentPrice <= 0)
+            {
+                return;
+            }
 
-//     public class MarketPriceUpdatePatch : ModulePatch
-//     {
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel.method_1));
-//         }
+            // SetRequirement will multiply (or not), so just need the individual price
+            double individualPrice = arg ? currentPrice : currentPrice / __instance.Int32_0;
+            __instance.method_2((float)individualPrice);
+        }
+    }
 
-//         [PatchPostfix]
-//         public static void Postfix(ItemMarketPricesPanel __instance)
-//         {
-//             var action = __instance.GetOnMarketPricesCallback();
-//             action?.Invoke();
-//         }
-//     }
+    // Called when item selection changes. Handles updating price if bulk is/was checked
+    public class MultipleStacksPatch : ModulePatch
+    {
+        private static bool WasBulk;
 
-//     public class BulkTogglePatch : ModulePatch
-//     {
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_12));
-//         }
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_15));
+        }
 
-//         [PatchPostfix]
-//         public static void Postfix(AddOfferWindow __instance, bool arg, ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
-//         {
-//             if (!Settings.UpdatePriceOnBulk.Value)
-//             {
-//                 return;
-//             }
+        [PatchPrefix]
+        public static void Prefix(bool ___bool_0 /* isBulk */)
+        {
+            WasBulk = ___bool_0;
+        }
 
-//             RequirementView rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
-//             double currentPrice = rublesRequirement.Requirement.PreciseCount;
-//             if (currentPrice <= 0)
-//             {
-//                 return;
-//             }
+        [PatchPostfix]
+        public static void Postfix(
+            AddOfferWindow __instance,
+            Item item,
+            bool selected,
+            RequirementView[] ____requirementViews,
+            bool ___bool_0 /* isBulk */,
+            RagfairOfferSellHelperClass ___ragfairOfferSellHelperClass)
+        {
+            // Bulk can autochange when selecting/deselecting, so bail if this isn't a bulk to bulk change
+            if (!WasBulk || !___bool_0)
+            {
+                return;
+            }
 
-//             // SetRequirement will multiply (or not), so just need the individual price
-//             double individualPrice = arg ? currentPrice : Math.Ceiling(currentPrice / __instance.Int32_0);
-//             SetRequirement(__instance, rublesRequirement, individualPrice);
-//         }
-//     }
+            // BSG doesn't handle the case of bulk staying true when switching between items
+            __instance.method_9(___bool_0);
 
-//     // Called when item selection changes. Handles updating price if bulk is (or was) checked
-//     public class MultipleStacksPatch : ModulePatch
-//     {
-//         private static bool WasBulk;
+            // Bail if option is disabled; if the selected item is null (deselecting/changing items) or if the number of selected itms is 0
+            if (!Settings.UpdatePriceOnBulk.Value || ___ragfairOfferSellHelperClass.SelectedItem == null || __instance.Int32_0 < 1)
+            {
+                return;
+            }
 
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_9));
-//         }
+            var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
+            double currentPrice = rublesRequirement.Requirement.PreciseCount;
 
-//         [PatchPrefix]
-//         public static void Prefix(AddOfferWindow __instance)
-//         {
-//             WasBulk = __instance.R().BulkOffer;
-//         }
+            // Need to figure out the price per item *before* this item was added/removed
+            int oldCount = __instance.Int32_0 + (selected ? -item.StackObjectsCount : item.StackObjectsCount);
+            if (oldCount <= 0)
+            {
+                return;
+            }
 
-//         [PatchPostfix]
-//         public static void Postfix(AddOfferWindow __instance, Item item, bool selected, ItemMarketPricesPanel ____pricesPanel, RequirementView[] ____requirementViews)
-//         {
-//             if (!Settings.UpdatePriceOnBulk.Value || __instance.Int32_0 < 1)
-//             {
-//                 return;
-//             }
-
-//             // Bulk can autochange when selecting/deselecting, so only bail if it wasn't and still isn't bulk
-//             if (!WasBulk && !__instance.R().BulkOffer)
-//             {
-//                 return;
-//             }
-
-//             var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
-//             double currentPrice = rublesRequirement.Requirement.PreciseCount;
-
-//             // Need to figure out the price per item *before* this item was added/removed
-//             int oldCount = __instance.Int32_0 + (selected ? -item.StackObjectsCount : item.StackObjectsCount);
-//             if (oldCount <= 0)
-//             {
-//                 return;
-//             }
-
-//             SetRequirement(__instance, rublesRequirement, currentPrice / oldCount);
-//         }
-//     }
-
-//     private static void SetRequirement(AddOfferWindow window, RequirementView requirement, double price)
-//     {
-//         if (window.R().BulkOffer)
-//         {
-//             price *= window.Int32_0; // offer item count
-//         }
-
-//         requirement.method_0(price.ToString("F0"));
-//     }
-
-//     private static void PopulateOfferPrice(AddOfferWindow window, ItemMarketPricesPanel pricesPanel, RequirementView rublesRequirement)
-//     {
-//         switch (Settings.AutoOfferPrice.Value)
-//         {
-//             case AutoFleaPrice.Minimum:
-//                 SetRequirement(window, rublesRequirement, pricesPanel.Minimum);
-//                 break;
-//             case AutoFleaPrice.Average:
-//                 SetRequirement(window, rublesRequirement, pricesPanel.Average);
-//                 break;
-//             case AutoFleaPrice.Maximum:
-//                 SetRequirement(window, rublesRequirement, pricesPanel.Maximum);
-//                 break;
-//             case AutoFleaPrice.None:
-//             default:
-//                 break;
-//         }
-//     }
-
-
-//     public class HighlightButton : Button
-//     {
-//         private Color originalColor;
-//         bool originalOverrideColorTags;
-
-//         private TextMeshProUGUI _text;
-//         private TextMeshProUGUI Text
-//         {
-//             get
-//             {
-//                 if (_text == null)
-//                 {
-//                     _text = GetComponent<TextMeshProUGUI>();
-//                 }
-
-//                 return _text;
-//             }
-//         }
-
-//         public override void OnPointerEnter([NotNull] PointerEventData eventData)
-//         {
-//             base.OnPointerEnter(eventData);
-
-//             originalColor = Text.color;
-//             originalOverrideColorTags = Text.overrideColorTags;
-
-//             Text.overrideColorTags = true;
-//             Text.color = Color.white;
-//         }
-
-//         public override void OnPointerExit([NotNull] PointerEventData eventData)
-//         {
-//             base.OnPointerExit(eventData);
-
-//             Text.overrideColorTags = originalOverrideColorTags;
-//             Text.color = originalColor;
-//         }
-//     }
-// }
+            __instance.method_2((float)(currentPrice / oldCount));
+        }
+    }
+}

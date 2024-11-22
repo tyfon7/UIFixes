@@ -27,6 +27,13 @@ public class DrawMultiSelect : MonoBehaviour
 
     private static Vector2 Deadzone = new(5f, 5f);
 
+    private readonly List<Type> blockedTypes = [];
+
+    public void Block<T>()
+    {
+        blockedTypes.Add(typeof(T));
+    }
+
     public void Start()
     {
         selectTexture = new Texture2D(1, 1);
@@ -63,8 +70,14 @@ public class DrawMultiSelect : MonoBehaviour
         {
             bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
+            GameObject mouseTarget = GetMouseTarget();
+            if (IsBlocked(mouseTarget))
+            {
+                return;
+            }
+
             // Special case: if selection key is mouse0 (left), don't start selection if over a clickable
-            if (Settings.SelectionBoxKey.Value.MainKey == KeyCode.Mouse0 && !shiftDown && MouseIsOverClickable())
+            if (Settings.SelectionBoxKey.Value.MainKey == KeyCode.Mouse0 && !shiftDown && (MouseIsOverItem() || IsClickable(mouseTarget)))
             {
                 return;
             }
@@ -175,13 +188,8 @@ public class DrawMultiSelect : MonoBehaviour
         return ItemUiContext.Instance.R().ItemContext != null;
     }
 
-    private bool MouseIsOverClickable()
+    private GameObject GetMouseTarget()
     {
-        if (MouseIsOverItem())
-        {
-            return true;
-        }
-
         PointerEventData eventData = new(EventSystem.current)
         {
             position = Input.mousePosition
@@ -191,20 +199,29 @@ public class DrawMultiSelect : MonoBehaviour
         preloaderRaycaster.Raycast(eventData, results); // preload objects are on top, so check that first
         localRaycaster.Raycast(eventData, results);
 
-        GameObject gameObject = results.FirstOrDefault().gameObject;
-        if (gameObject == null)
+        return results.FirstOrDefault().gameObject;
+    }
+
+    private bool IsClickable(GameObject mouseTarget)
+    {
+        if (mouseTarget == null)
         {
             return false;
         }
 
-        var draggables = gameObject.GetComponentsInParent<MonoBehaviour>()
+        var allParents = mouseTarget.GetComponentsInParent<MonoBehaviour>();
+
+        var draggables = allParents
             .Where(c => c is IDragHandler || c is IBeginDragHandler || c is TextMeshProUGUI) // tmp_inputfield is draggable, but textmesh isn't so explicitly include
             .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
             .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
 
-        var clickables = gameObject.GetComponentsInParent<MonoBehaviour>()
+        var clickables = allParents
             .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler)
             .Where(c => c is not EmptySlotMenuTrigger); // ignore empty slots that are right-clickable due to UIFixes
+
+        // When item are being searched, a search icon is on top of them and intercepts the raycast
+        clickables = clickables.Concat(allParents.Where(c => c.name == "Search Icon"));
 
         // Windows are clickable to focus them, but that shouldn't block selection
         var windows = clickables
@@ -221,6 +238,24 @@ public class DrawMultiSelect : MonoBehaviour
         if (draggables.Any() || clickables.Any())
         {
             return true;
+        }
+
+        return false;
+    }
+
+    private bool IsBlocked(GameObject mouseTarget)
+    {
+        if (mouseTarget == null)
+        {
+            return false;
+        }
+
+        foreach (Type type in blockedTypes)
+        {
+            if (mouseTarget.GetComponentInParent(type) != null)
+            {
+                return true;
+            }
         }
 
         return false;

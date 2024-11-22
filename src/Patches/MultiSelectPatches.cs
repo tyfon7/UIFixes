@@ -5,6 +5,7 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Insurance;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
@@ -105,7 +106,10 @@ public static class MultiSelectPatches
                     MultiSelect.Initialize();
                 }
 
-                __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                var inventoryMultiSelect = __instance.InventoryScreen.transform.Find("Items Panel").gameObject.GetOrAddComponent<DrawMultiSelect>();
+                inventoryMultiSelect.enabled = enabled;
+                inventoryMultiSelect.Block<AddOfferWindow>();
+
                 __instance.TransferItemsInRaidScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.TransferItemsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.ScavengerInventoryScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
@@ -611,7 +615,7 @@ public static class MultiSelectPatches
             bool isGridPlacement = targetItem == null;
 
             // If everything selected is the same type and is a stackable type, allow partial success
-            bool allowPartialSuccess = targetItem != null && itemContext.Item is Stackable && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
+            bool allowPartialSuccess = targetItem != null && itemContext.Item is StackableItemItemClass && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
 
             Stack<ItemOperation> operations = new();
             foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts(itemContext))

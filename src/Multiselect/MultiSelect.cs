@@ -563,7 +563,8 @@ public static class MultiSelectExtensions
         }
 
         // Ironically, SelectableSlotItemView is not selectable. Those are for picking as a choice
-        if (itemView is SelectableSlotItemView)
+        // Ragfair items are the left panel of Add Offer - they are also for picking as a choice, but aren't SelectableSlotItemViews
+        if (itemView is SelectableSlotItemView || itemView is RagfairNewOfferItemView)
         {
             return false;
         }

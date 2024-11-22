@@ -15,7 +15,6 @@ public static class SyncScrollPositionPatches
     public static void Enable()
     {
         new SyncStashScrollPatch().Enable();
-        new SyncTraderStashScrollPatch().Enable();
         new SyncOfferStashScrollPatch().Enable();
     }
 
@@ -31,11 +30,13 @@ public static class SyncScrollPositionPatches
             return;
         }
 
-        scrollRect.verticalNormalizedPosition = StashScrollPosition;
-
         scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition);
-        scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
-        //element.R().UI.AddDisposable(() => scrollRect.onValueChanged.RemoveListener(UpdateScrollPosition));
+
+        scrollRect.WaitForEndOfFrame(() =>
+        {
+            scrollRect.verticalNormalizedPosition = StashScrollPosition;
+            scrollRect.onValueChanged.AddListener(UpdateScrollPosition);
+        });
     }
 
     public class SyncStashScrollPatch : ModulePatch
@@ -49,25 +50,6 @@ public static class SyncScrollPositionPatches
         public static void Postfix(SimpleStashPanel __instance)
         {
             SynchronizeScrollRect(__instance);
-        }
-    }
-
-    public class SyncTraderStashScrollPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_6));
-        }
-
-        // TraderDealScreen is a monstrosity that loads multiple times and isn't done loading when Show() is done
-        // method_3 shows the stash grid, if method_5() returned true
-        [PatchPostfix]
-        public static void Postfix(TraderDealScreen __instance, ScrollRect ____stashScroll)
-        {
-            if (__instance.method_8())
-            {
-                SynchronizeScrollRect(__instance, ____stashScroll);
-            }
         }
     }
 

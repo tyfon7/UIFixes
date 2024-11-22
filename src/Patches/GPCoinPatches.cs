@@ -39,16 +39,20 @@ public static class GPCoinPatches
             Transform gpCoinsTransform = __instance.transform.Find("GPCoins");
             if (gpCoinsTransform == null)
             {
-                Transform dollars = __instance.transform.Find("Dollars");
+                Transform dollars = ____dollars.transform.parent;
                 gpCoinsTransform = UnityEngine.Object.Instantiate(dollars, __instance.transform, false);
                 gpCoinsTransform.name = "GPCoins";
 
-                Image icon = gpCoinsTransform.Find("Image").GetComponent<Image>();
+                Image icon = (gpCoinsTransform.Find("Image") ?? gpCoinsTransform.Find("DollarsImage")).GetComponent<Image>();
+                icon.name = "GPImage";
                 icon.sprite = EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(CurrencyInfo.GetCurrencyId(ECurrencyType.GP));
 
                 LayoutElement imageLayout = icon.GetComponent<LayoutElement>();
                 imageLayout.preferredHeight = -1f;
                 imageLayout.preferredWidth = -1f;
+
+                Transform label = gpCoinsTransform.Find("Label") ?? gpCoinsTransform.Find("DollarsText");
+                label.name = "GPLabel";
 
                 Settings.ShowGPCurrency.Subscribe(enabled =>
                 {
@@ -59,7 +63,7 @@ public static class GPCoinPatches
                 });
             }
 
-            TextMeshProUGUI gpCoins = gpCoinsTransform.Find("Label").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI gpLabel = gpCoinsTransform.Find("GPLabel").GetComponent<TextMeshProUGUI>();
 
             var sums = R.Money.GetMoneySums(inventoryItems);
 
@@ -68,7 +72,7 @@ public static class GPCoinPatches
             ____roubles.text = sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
             ____euros.text = sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
             ____dollars.text = sums[ECurrencyType.USD].ToString("N0", numberFormatInfo);
-            gpCoins.text = sums[ECurrencyType.GP].ToString("N0", numberFormatInfo);
+            gpLabel.text = sums[ECurrencyType.GP].ToString("N0", numberFormatInfo);
 
             return false;
         }

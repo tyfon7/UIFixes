@@ -91,7 +91,7 @@ public static class TacticalBindsPatches
             if (nightVisionComponent != null)
             {
                 Item rootItem = boundItem.GetRootItemNotEquipment();
-                if (rootItem is Helmet helmet &&
+                if (rootItem is HeadwearItemClass helmet &&
                     __instance.Inventory.Equipment.GetSlot(EquipmentSlot.Headwear).ContainedItem == helmet)
                 {
                     __instance.InventoryController.TryRunNetworkTransaction(
@@ -131,7 +131,7 @@ public static class TacticalBindsPatches
                 firearmController.SetLightsState([lightState], false);
             }
 
-            if (rootItem is Helmet helmet &&
+            if (rootItem is HeadwearItemClass helmet &&
                 player.Inventory.Equipment.GetSlot(EquipmentSlot.Headwear).ContainedItem == helmet)
             {
                 lightComponent.SetLightState(lightState);
@@ -210,7 +210,7 @@ public static class TacticalBindsPatches
         }
 
         Item rootItem = item.GetRootItemNotEquipment();
-        if (rootItem is Weapon || rootItem is Helmet)
+        if (rootItem is Weapon || rootItem is HeadwearItemClass)
         {
             return inventoryController.Inventory.Equipment.Contains(rootItem);
         }
@@ -247,7 +247,7 @@ public static class TacticalBindsPatches
                 return;
             }
 
-            if (rootItem is Helmet)
+            if (rootItem is HeadwearItemClass)
             {
                 Quickbind.SetType(index, Quickbind.ItemType.Headlight);
                 return;
