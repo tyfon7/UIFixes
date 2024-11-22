@@ -153,6 +153,15 @@ public class MultiSelect
         }
     }
 
+    public static void OnItemLocked(Item item)
+    {
+        MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == item).Key;
+        if (itemContext != null)
+        {
+            Deselect(itemContext);
+        }
+    }
+
     // Occurs when an item is added somewhere. If it's from a move, and that item was multiselected,
     // the context needs to be updated with the new address
     private static void OnItemAdded(GEventArgs2 eventArgs)
@@ -417,6 +426,36 @@ public class MultiSelect
 
             itemUiContext.Tooltip?.Close();
         }
+    }
+
+    public static void PinAll(ItemUiContext itemUiContext)
+    {
+        // Pin them all unless they're all pinned, in which case unpin them
+        bool allPinned = ItemContexts.All(ic => ic.Item.PinLockState == EItemPinLockState.Pinned);
+        EItemPinLockState state = allPinned ? EItemPinLockState.Free : EItemPinLockState.Pinned;
+        EItemInfoButton action = allPinned ? EItemInfoButton.SetUnPin : EItemInfoButton.SetPin;
+
+        var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        taskSerializer.Initialize(
+            SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
+            itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
+
+        itemUiContext.Tooltip?.Close();
+    }
+
+    public static void LockAll(ItemUiContext itemUiContext)
+    {
+        // Pin them all unless they're all lock, in which case unlock them
+        bool allLocked = ItemContexts.All(ic => ic.Item.PinLockState == EItemPinLockState.Locked);
+        EItemPinLockState state = allLocked ? EItemPinLockState.Free : EItemPinLockState.Locked;
+        EItemInfoButton action = allLocked ? EItemInfoButton.SetUnLock : EItemInfoButton.SetLock;
+
+        var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        taskSerializer.Initialize(
+            SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
+            itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
+
+        itemUiContext.Tooltip?.Close();
     }
 
     // public static void WishlistAll(ItemUiContext itemUiContext, BaseItemInfoInteractions interactions, bool add, bool allOrNothing)

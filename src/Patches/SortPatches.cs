@@ -1,150 +1,100 @@
-// using Comfort.Common;
-// using Diz.LanguageExtensions;
-// using EFT.InventoryLogic;
-// using EFT.UI;
-// using EFT.UI.DragAndDrop;
-// using HarmonyLib;
-// using SPT.Reflection.Patching;
-// using System.Linq;
-// using System.Reflection;
-// using System.Threading.Tasks;
-// using UnityEngine;
+using Diz.LanguageExtensions;
+using EFT.InventoryLogic;
+using EFT.UI.DragAndDrop;
+using HarmonyLib;
+using SPT.Reflection.Patching;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
-// namespace UIFixes;
+namespace UIFixes;
 
-// public static class SortPatches
-// {
-//     public static void Enable()
-//     {
-//         new SortPatch().Enable();
-//         new ShiftClickPatch().Enable();
-//         new StackFirstPatch().Enable();
-//     }
+public static class SortPatches
+{
+    public static void Enable()
+    {
+        new StackFirstPatch().Enable();
+    }
 
-//     public class SortPatch : ModulePatch
-//     {
-//         public static bool IncludeContainers = true;
+    public class StackFirstPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridSortPanel), nameof(GridSortPanel.method_1));
+        }
 
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Sort));
-//         }
+        // Normally this method just calls method_2 and eats the exceptions
+        // This reimplements method_2, calling stack before InteractionsHandlerClass.Sort()
+        [PatchPrefix]
+        public static bool Prefix(GridSortPanel __instance, CompoundItem ___compoundItem_0, InventoryController ___inventoryController_0)
+        {
+            if (!Settings.StackBeforeSort.Value)
+            {
+                return true;
+            }
 
-//         [PatchPrefix]
-//         public static bool Prefix(CompoundItem sortingItem, InventoryController controller, bool simulate, ref GStruct446<SortOperation> __result)
-//         {
-//             if (IncludeContainers)
-//             {
-//                 return true;
-//             }
+            Sort(__instance, ___compoundItem_0, ___inventoryController_0).HandleExceptions();
+            return false;
+        }
 
-//             __result = Sorter.Sort(sortingItem, controller, IncludeContainers, simulate);
-//             return false;
-//         }
-//     }
+        private static async Task Sort(GridSortPanel instance, CompoundItem compoundItem, InventoryController inventoryController)
+        {
+            instance.method_3(true);
 
-//     public class ShiftClickPatch : ModulePatch
-//     {
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(GridSortPanel), nameof(GridSortPanel.method_0));
-//         }
+            Error error = await StackAll(compoundItem, inventoryController);
 
-//         [PatchPrefix]
-//         public static bool Prefix(GridSortPanel __instance, bool ___bool_0)
-//         {
-//             bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-//             SortPatch.IncludeContainers = !shiftDown;
+            if (error == null)
+            {
+                var sortOperation = InteractionsHandlerClass.Sort(compoundItem, inventoryController, false);
+                if (sortOperation.Succeeded)
+                {
+                    await inventoryController.TryRunNetworkTransaction(sortOperation);
+                }
+                else
+                {
+                    error = sortOperation.Error;
+                }
+            }
 
-//             if (SortPatch.IncludeContainers || ___bool_0)
-//             {
-//                 return true;
-//             }
+            if (error is InventoryError inventoryError)
+            {
+                NotificationManagerClass.DisplayWarningNotification(inventoryError.GetLocalizedDescription());
+            }
 
-//             ItemUiContext.Instance.ShowMessageWindow("UI/Inventory/SortAcceptConfirmation".Localized(null) + " Containers will not be moved.", __instance.method_1, () => { });
-//             return false;
-//         }
-//     }
+            instance.method_3(false);
+        }
 
-//     public class StackFirstPatch : ModulePatch
-//     {
-//         protected override MethodBase GetTargetMethod()
-//         {
-//             return AccessTools.Method(typeof(GridSortPanel), nameof(GridSortPanel.method_1));
-//         }
+        private static async Task<Error> StackAll(CompoundItem compoundItem, InventoryController inventoryController)
+        {
+            Error error = null;
+            var mergeableItems = compoundItem.Grids.SelectMany(g => g.Items)
+                .Where(i => i.StackObjectsCount < i.StackMaxSize)
+                .Reverse()
+                .ToArray();
 
-//         // Normally this method just calls method_2 and eats the exceptions
-//         // This sidesteps method_2 and calls my Sort, to do stacking
-//         [PatchPrefix]
-//         public static bool Prefix(GridSortPanel __instance, CompoundItem ___lootItemClass, InventoryController ___inventoryControllerClass)
-//         {
-//             if (!Settings.StackBeforeSort.Value)
-//             {
-//                 return true;
-//             }
+            foreach (Item item in mergeableItems)
+            {
+                // Check the item hasn't been merged to full or away yet
+                if (item.StackObjectsCount == 0 || item.StackObjectsCount == item.StackMaxSize)
+                {
+                    continue;
+                }
 
-//             Sort(__instance, ___lootItemClass, ___inventoryControllerClass).HandleExceptions();
-//             return false;
-//         }
+                if (Sorter.FindStackForMerge(compoundItem.Grids, item, out Item targetItem, 1))
+                {
+                    var operation = InteractionsHandlerClass.TransferOrMerge(item, targetItem, inventoryController, true);
+                    if (operation.Succeeded)
+                    {
+                        await inventoryController.TryRunNetworkTransaction(operation);
+                    }
+                    else
+                    {
+                        error = operation.Error;
+                    }
+                }
+            }
 
-//         private static async Task Sort(GridSortPanel instance, CompoundItem lootItem, InventoryController inventoryController)
-//         {
-//             instance.method_3(true);
-
-//             Error error = await StackAll(lootItem, inventoryController);
-
-//             if (error == null)
-//             {
-//                 var sortOperation = InteractionsHandlerClass.Sort(lootItem, inventoryController, false);
-//                 if (sortOperation.Succeeded)
-//                 {
-//                     IResult result = await inventoryController.TryRunNetworkTransaction(sortOperation);
-//                     sortOperation.Value.RaiseEvents(inventoryController, result.Succeed ? CommandStatus.Succeed : CommandStatus.Failed);
-//                 }
-//                 else
-//                 {
-//                     error = sortOperation.Error;
-//                 }
-//             }
-
-//             if (error is InventoryError inventoryError)
-//             {
-//                 NotificationManagerClass.DisplayWarningNotification(inventoryError.GetLocalizedDescription());
-//             }
-
-//             instance.method_3(false);
-//         }
-
-//         private static async Task<Error> StackAll(CompoundItem lootItem, InventoryController inventoryController)
-//         {
-//             Error error = null;
-//             var mergeableItems = lootItem.Grids.SelectMany(g => g.Items)
-//                 .Where(i => i.StackObjectsCount < i.StackMaxSize)
-//                 .ToArray();
-
-//             foreach (Item item in mergeableItems)
-//             {
-//                 // Check the item hasn't been merged to full or away yet
-//                 if (item.StackObjectsCount == 0 || item.StackObjectsCount == item.StackMaxSize)
-//                 {
-//                     continue;
-//                 }
-
-//                 if (Sorter.FindStackForMerge(lootItem.Grids, item, out Item targetItem, 1))
-//                 {
-//                     var operation = InteractionsHandlerClass.TransferOrMerge(item, targetItem, inventoryController, true);
-//                     if (operation.Succeeded)
-//                     {
-//                         await inventoryController.TryRunNetworkTransaction(operation);
-//                     }
-//                     else
-//                     {
-//                         error = operation.Error;
-//                     }
-//                 }
-//             }
-
-//             return error;
-//         }
-//     }
-// }
+            return error;
+        }
+    }
+}

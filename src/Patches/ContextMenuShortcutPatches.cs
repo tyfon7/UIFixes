@@ -122,6 +122,16 @@ public static class ContextMenuShortcutPatches
                 TryInteraction(__instance, itemContext, EItemInfoButton.AddOffer);
             }
 
+            if (Settings.PinKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, itemContext.Item.PinLockState == EItemPinLockState.Pinned ? EItemInfoButton.SetUnPin : EItemInfoButton.SetPin);
+            }
+
+            if (Settings.LockKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, itemContext.Item.PinLockState == EItemPinLockState.Locked ? EItemInfoButton.SetUnLock : EItemInfoButton.SetLock);
+            }
+
             Interactions = null;
         }
 

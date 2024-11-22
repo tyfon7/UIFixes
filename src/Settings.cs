@@ -107,6 +107,8 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> RequiredSearchKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
@@ -475,6 +477,24 @@ internal class Settings
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to list item on the flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PinKeyBind = config.Bind(
+            InputSection,
+            "Pin Item Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to pin an item (not moved during sort)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(LockKeyBind = config.Bind(
+            InputSection,
+            "Lock Item Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to lock an item (cannot be moved, used, modified, sold, turned in, or discarded)",
                 null,
                 new ConfigurationManagerAttributes { })));
 

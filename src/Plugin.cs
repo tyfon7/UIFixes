@@ -37,7 +37,7 @@ public class Plugin : BaseUnityPlugin
         new MoveTaskbarPatch().Enable();
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
-        //KeepOfferWindowOpenPatches.Enable(); // TODO: Completely refactored
+        KeepOfferWindowOpenPatches.Enable();
         AddOfferClickablePricesPatches.Enable();
         new AssortUnlocksPatch().Enable();
         new AutofillQuestItemsPatch().Enable();
@@ -50,12 +50,11 @@ public class Plugin : BaseUnityPlugin
         new GridWindowButtonsPatch().Enable();
         new LoadMagPresetsPatch().Enable();
         KeepWindowsOnScreenPatches.Enable();
-        ContextMenuShortcutPatches.Enable(); // TODO: Handle L and P being lock and pin by default
+        ContextMenuShortcutPatches.Enable();
         OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
         MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
-        MultipleWishlistPatches.Enable(); // TODO: Implement
         StackMoveGreedyPatches.Enable();
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
@@ -66,7 +65,7 @@ public class Plugin : BaseUnityPlugin
         GPCoinPatches.Enable();
         FleaSlotSearchPatches.Enable();
         FilterOutOfStockPatches.Enable();
-        //SortPatches.Enable(); // TODO: Stacking still needed?
+        SortPatches.Enable();
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();

@@ -53,11 +53,11 @@ public static class MultiSelectPatches
         new HandleItemViewKillPatch().Enable();
         new BeginDragPatch().Enable();
         new EndDragPatch().Enable();
+        new DeselectOnLockPatch().Enable();
 
         // Workarounds
         new DisableSplitPatch().Enable();
         new DisableSplitTargetPatch().Enable();
-        // new FixSearchedContextPatch().Enable(); // TODO: Check if still needed, looks like search was refactored
         new DisableMagnifyPatch().Enable();
 
         // Actions
@@ -343,6 +343,14 @@ public static class MultiSelectPatches
                 case EItemInfoButton.Unpack:
                     MultiSelect.UnpackAll(___itemUiContext_1, false);
                     return false;
+                case EItemInfoButton.SetPin:
+                case EItemInfoButton.SetUnPin:
+                    MultiSelect.PinAll(___itemUiContext_1);
+                    return false;
+                case EItemInfoButton.SetLock:
+                case EItemInfoButton.SetUnLock:
+                    MultiSelect.LockAll(___itemUiContext_1);
+                    return false;
                 default:
                     return true;
             }
@@ -471,70 +479,22 @@ public static class MultiSelectPatches
         }
     }
 
-    // public class FixSearchedContextPatch : ModulePatch
-    // {
-    //     private static string CurrentContextSearchingId = null;
+    public class DeselectOnLockPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.SetPinLockState));
+        }
 
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(GridView), nameof(GridView.OnItemAdded));
-    //     }
-
-    //     [PatchPrefix]
-    //     public static void Prefix(GridView __instance, GEventArgs2 eventArgs, TraderControllerClass ___traderControllerClass, ItemUiContext ___itemUiContext_0)
-    //     {
-    //         if (eventArgs.To.Container != __instance.Grid || eventArgs.Status != CommandStatus.Begin)
-    //         {
-    //             return;
-    //         }
-
-    //         Item item = eventArgs.Item;
-    //         if (___itemUiContext_0.ItemContextAbstractClass?.Item != eventArgs.Item)
-    //         {
-    //             return;
-    //         }
-
-    //         LocationInGrid locationInGrid = ((GridItemAddress)eventArgs.To).LocationInGrid;
-
-    //         bool searchable = !(___traderControllerClass != null && ___traderControllerClass.CanSearch && ___traderControllerClass.ID != eventArgs.OwnerId);
-    //         if (!searchable || !locationInGrid.isSearched)
-    //         {
-    //             return;
-    //         }
-
-    //         ItemView itemView = __instance.method_9(item, iv => !iv.IsSearched);
-    //         if (itemView != null)
-    //         {
-    //             CurrentContextSearchingId = item.Id;
-    //         }
-    //     }
-
-    //     [PatchPostfix]
-    //     public static void Postfix(GridView __instance, GEventArgs2 eventArgs, ItemUiContext ___itemUiContext_0, Dictionary<string, ItemView> ___dictionary_0)
-    //     {
-    //         if (eventArgs.To.Container != __instance.Grid)
-    //         {
-    //             return;
-    //         }
-
-    //         if (CurrentContextSearchingId == eventArgs.Item.Id)
-    //         {
-    //             if (eventArgs.Status == CommandStatus.Succeed)
-    //             {
-    //                 if (___dictionary_0.TryGetValue(eventArgs.Item.Id, out ItemView itemView))
-    //                 {
-    //                     ___itemUiContext_0.RegisterCurrentItemContext(itemView.ItemContext);
-    //                 }
-
-    //                 CurrentContextSearchingId = null;
-    //             }
-    //             else if (eventArgs.Status == CommandStatus.Failed)
-    //             {
-    //                 CurrentContextSearchingId = null;
-    //             }
-    //         }
-    //     }
-    // }
+        [PatchPostfix]
+        public static void Postfix(Item item, EItemPinLockState state, bool simulate)
+        {
+            if (state == EItemPinLockState.Locked && !simulate)
+            {
+                MultiSelect.OnItemLocked(item);
+            }
+        }
+    }
 
     // MagnifyIfPossible gets called when a dynamic grid (sorting table) resizes. It causes GridViews to be killed and recreated asynchronously (!)
     // This causes all sorts of issues with multiselect move, as there are race conditions and items get dropped and views duplicated
