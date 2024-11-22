@@ -458,38 +458,6 @@ public class MultiSelect
         itemUiContext.Tooltip?.Close();
     }
 
-    // public static void WishlistAll(ItemUiContext itemUiContext, BaseItemInfoInteractions interactions, bool add, bool allOrNothing)
-    // {
-    //     EItemInfoButton interaction = add ? EItemInfoButton.AddToWishlist : EItemInfoButton.RemoveFromWishlist;
-    //     if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
-    //     {
-    //         var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-    //         taskSerializer.Initialize(ItemContexts.Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
-    //             itemContext =>
-    //             {
-    //                 TaskCompletionSource taskSource = new();
-    //                 void callback()
-    //                 {
-    //                     interactions.RequestRedrawForItem();
-    //                     taskSource.Complete();
-    //                 }
-
-    //                 if (add)
-    //                 {
-    //                     itemUiContext.AddToWishList(itemContext.Item, callback);
-    //                 }
-    //                 else
-    //                 {
-    //                     itemUiContext.RemoveFromWishList(itemContext.Item, callback);
-    //                 }
-
-    //                 return taskSource.Task;
-    //             });
-
-    //         itemUiContext.Tooltip?.Close();
-    //     }
-    // }
-
     private static void ShowSelection(GridItemView itemView)
     {
         GameObject selectedMark = itemView.transform.Find("SelectedMark")?.gameObject;

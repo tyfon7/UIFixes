@@ -48,10 +48,6 @@ public static class ContextMenuPatches
         new EmptyModSlotMenuRemovePatch().Enable();
         new EmptySlotMenuPatch().Enable();
         new EmptySlotMenuRemovePatch().Enable();
-
-        // No longer needed?
-        //new InventoryWishlistPatch().Enable();
-        //new TradingWishlistPatch().Enable();
     }
 
     // Update display strings with multiselect multipliers
@@ -550,54 +546,6 @@ public static class ContextMenuPatches
             PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
         }
     }
-
-    // public class InventoryWishlistPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         // R.InventoryActions.Type is only ever referenced by it's child class, which overrides AvailableInteractions
-    //         Type type = PatchConstants.EftTypes.First(t => t.BaseType == R.InventoryInteractions.Type);
-    //         return AccessTools.DeclaredProperty(type, "AvailableInteractions").GetMethod;
-    //     }
-
-    //     [PatchPostfix]
-    //     public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
-    //     {
-    //         if (!Settings.WishlistContextEverywhere.Value)
-    //         {
-    //             return;
-    //         }
-
-    //         var list = __result.ToList();
-    //         int index = list.IndexOf(EItemInfoButton.Tag);
-    //         list.Insert(index, EItemInfoButton.RemoveFromWishlist);
-    //         list.Insert(index, EItemInfoButton.AddToWishlist);
-    //         __result = list;
-    //     }
-    // }
-
-    // public class TradingWishlistPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.DeclaredProperty(typeof(TradingPlayerInteractions), nameof(TradingPlayerInteractions.AvailableInteractions)).GetMethod;
-    //     }
-
-    //     [PatchPostfix]
-    //     public static void Postfix(ref IEnumerable<EItemInfoButton> __result)
-    //     {
-    //         if (!Settings.WishlistContextEverywhere.Value)
-    //         {
-    //             return;
-    //         }
-
-    //         var list = __result.ToList();
-    //         int index = list.IndexOf(EItemInfoButton.Tag);
-    //         list.Insert(index, EItemInfoButton.RemoveFromWishlist);
-    //         list.Insert(index, EItemInfoButton.AddToWishlist);
-    //         __result = list;
-    //     }
-    // }
 
     private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
     {

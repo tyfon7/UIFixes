@@ -23,9 +23,6 @@ public static class FixFleaPatches
         new ToggleOnOpenPatch().Enable();
         new DropdownHeightPatch().Enable();
 
-        //new AddOfferWindowDoubleScrollPatch().Enable(); // Fixed!
-
-        //new OfferItemFixMaskPatch().Enable(); // Fixed!
         new OfferViewTweaksPatch().Enable();
 
         new SearchFilterPatch().Enable();
@@ -69,24 +66,6 @@ public static class FixFleaPatches
         }
     }
 
-    // public class OfferItemFixMaskPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(OfferItemDescription), nameof(OfferItemDescription.Show));
-    //     }
-
-    //     [PatchPostfix]
-    //     public static void Postfix(TextMeshProUGUI ____offerItemName)
-    //     {
-    //         ____offerItemName.maskable = true;
-    //         foreach (var item in ____offerItemName.GetComponentsInChildren<TMP_SubMeshUI>())
-    //         {
-    //             item.maskable = true;
-    //         }
-    //     }
-    // }
-
     public class OfferViewTweaksPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -110,28 +89,6 @@ public static class FixFleaPatches
             timeLeft.childControlWidth = false;
         }
     }
-
-    // public class AddOfferWindowDoubleScrollPatch : ModulePatch
-    // {
-    //     protected override MethodBase GetTargetMethod()
-    //     {
-    //         return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Awake));
-    //     }
-
-    //     [PatchPostfix]
-    //     public static void Postfix(AddOfferWindow __instance, GameObject ____noOfferPanel, GameObject ____selectedItemPanel)
-    //     {
-    //         // Not sure how they messed it this up, but the widths on some of these are hardcoded
-    //         // badly, so things move around
-    //         Transform stashPart = __instance.transform.Find("Inner/Contents/StashPart");
-    //         var stashLayout = stashPart.gameObject.GetComponent<LayoutElement>();
-    //         stashLayout.preferredWidth = 644f;
-
-    //         var noItemLayout = ____noOfferPanel.GetComponent<LayoutElement>();
-    //         var requirementLayout = ____selectedItemPanel.GetComponent<LayoutElement>();
-    //         requirementLayout.preferredWidth = noItemLayout.preferredWidth = 450f;
-    //     }
-    // }
 
     public class SearchFilterPatch : ModulePatch
     {
