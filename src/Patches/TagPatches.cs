@@ -1,7 +1,9 @@
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using TMPro;
@@ -16,6 +18,9 @@ public static class TagPatches
     {
         new OnEnterPatch().Enable();
         new TagsOverCaptionsPatch().Enable();
+        new AddTagNewItemPatch().Enable();
+        new AddTagParsedItemPatch().Enable();
+        new TagAdditionalTypePatch().Enable();
     }
 
     // Save the tag when enter is pressed
@@ -44,7 +49,7 @@ public static class TagPatches
         }
 
         [PatchPostfix]
-        public static async void Postfix(GridItemView __instance, TextMeshProUGUI ___TagName, TextMeshProUGUI ___Caption, Image ____tagColor, Task __result)
+        public static async void Postfix(GridItemView __instance, TextMeshProUGUI ___TagName, TextMeshProUGUI ___Caption, Image ____tagColor, Image ___MainImage, Task __result)
         {
             await __result;
 
@@ -53,7 +58,7 @@ public static class TagPatches
             ___Caption.gameObject.SetActive(true);
             await Task.Yield();
             RectTransform tagTransform = ____tagColor.rectTransform;
-            float tagSpace = __instance.RectTransform.sizeDelta.x - ___Caption.renderedWidth - 2f;
+            float tagSpace = __instance.RectTransform.rect.width - ___Caption.renderedWidth - 2f;
             if (tagSpace < 40f)
             {
                 tagTransform.sizeDelta = new Vector2(__instance.RectTransform.sizeDelta.x, tagTransform.sizeDelta.y);
@@ -72,6 +77,113 @@ public static class TagPatches
                 float tagSize = Mathf.Clamp(___TagName.preferredWidth + 12f, 40f, tagSpace);
                 tagTransform.sizeDelta = new Vector2(tagSize, ____tagColor.rectTransform.sizeDelta.y);
             }
+
+            // Make sure it's on top of the image
+            if (____tagColor.transform.GetSiblingIndex() < ___MainImage.transform.GetSiblingIndex())
+            {
+                ____tagColor.transform.SetSiblingIndex(___MainImage.transform.GetSiblingIndex() + 1);
+            }
         }
+    }
+
+    public class TagAdditionalTypePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredProperty(typeof(Item), nameof(Item.ItemInteractionButtons)).GetMethod;
+        }
+
+        [PatchPostfix]
+        public static IEnumerable<EItemInfoButton> Postfix(IEnumerable<EItemInfoButton> values, Item __instance)
+        {
+            foreach (var value in values)
+            {
+                yield return value;
+            }
+
+            if (!IsTaggingEnabled(__instance))
+            {
+                yield break;
+            }
+
+            // Ensure this item has a tag component
+            TagComponent tag = __instance.GetItemComponent<TagComponent>();
+            if (tag == null)
+            {
+                yield break;
+            }
+
+            yield return EItemInfoButton.Tag;
+            if (!string.IsNullOrEmpty(tag.Name))
+            {
+                yield return EItemInfoButton.ResetTag;
+            }
+
+            yield break;
+        }
+
+    }
+
+    // Adds a TagComponent to types when they are constructed completely new
+    public class AddTagNewItemPatch : ModulePatch
+    {
+        private static FieldInfo ComponentsField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            ComponentsField = AccessTools.Field(typeof(Item), "Components");
+            return AccessTools.Method(typeof(ItemFactoryClass), nameof(ItemFactoryClass.CreateItem));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Item __result, object itemDiff)
+        {
+            // If itemDiff is null, there's no deserialization, so just create the component
+            if (itemDiff == null && IsTaggingEnabled(__result))
+            {
+                var components = (List<IItemComponent>)ComponentsField.GetValue(__result);
+                components.Add(new TagComponent(__result));
+            }
+        }
+    }
+
+    // Adds a TagComponent to types when they are deserialized from json
+    // Also populate it; BSG does some insane manual reflection here for deserialization and looks for the literal Tag property (which it won't find)
+    public class AddTagParsedItemPatch : ModulePatch
+    {
+        private static FieldInfo ComponentsField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            ComponentsField = AccessTools.Field(typeof(Item), "Components");
+            return AccessTools.Method(typeof(GClass1648), nameof(GClass1648.CreateItem));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Item item, GClass814 properties)
+        {
+            if (IsTaggingEnabled(item))
+            {
+                TagComponent tagComponent;
+                var components = (List<IItemComponent>)ComponentsField.GetValue(item);
+                components.Add(tagComponent = new TagComponent(item));
+
+                var propDictionary = properties.JToken.ToObject<Dictionary<string, GClass814>>();
+                if (propDictionary.TryGetValue("Tag", out GClass814 tagProperty))
+                {
+                    tagProperty.ParseJsonTo(tagComponent.GetType(), tagComponent);
+                }
+            }
+        }
+    }
+
+    private static bool IsTaggingEnabled<T>(T instance)
+    {
+        return instance switch
+        {
+            BackpackItemClass => Settings.TagBackpacks.Value,
+            VestItemClass => Settings.TagVests.Value,
+            _ => false
+        };
     }
 }

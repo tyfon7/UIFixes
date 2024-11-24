@@ -117,7 +117,7 @@ internal class Settings
     public static ConfigEntry<bool> SwapItems { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
-    public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
+    // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
     public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
@@ -131,12 +131,12 @@ internal class Settings
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
     public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
-    public static ConfigEntry<bool> AddOfferContextMenu { get; set; }
-    public static ConfigEntry<bool> WishlistContextEverywhere { get; set; }
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
+    public static ConfigEntry<bool> TagBackpacks { get; set; }
+    public static ConfigEntry<bool> TagVests { get; set; }
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
     // Inspect Panels
@@ -178,7 +178,7 @@ internal class Settings
             "Unlock Cursor",
             true,
             new ConfigDescription(
-                "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take affect.",
+                "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take effect.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -278,7 +278,7 @@ internal class Settings
             "Use Toggle/Hold Tactical Device",
             false,
             new ConfigDescription(
-                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous. Note that this will override the new 'Tactical device activation mode'",
+                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous. Note that this will override Tarkov's new 'Tactical device activation mode'",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -512,7 +512,7 @@ internal class Settings
             "Limit Nonstandard Drags",
             true,
             new ConfigDescription(
-                "Constrain dragging to the left mouse, when shift is not down",
+                "Constrain dragging to the left mouse, when shift is not down. Leave this setting enabled to minimize conflicts with the multiselect box.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
@@ -607,14 +607,14 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
-            InventorySection,
-            "Unload Ammo Boxes In-Place",
-            !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
-            new ConfigDescription(
-                "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
+        // configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
+        //     InventorySection,
+        //     "Unload Ammo Boxes In-Place",
+        //     !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
+        //     new ConfigDescription(
+        //         "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
+        //         null,
+        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(SwapImpossibleContainers = config.Bind(
             InventorySection,
@@ -733,24 +733,6 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(AddOfferContextMenu = config.Bind(
-            InventorySection,
-            "Add Offer Context Menu",
-            true,
-            new ConfigDescription(
-                "Add a context menu to list the item on the flea market",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(WishlistContextEverywhere = config.Bind(
-            InventorySection,
-            "Wishlist Context Menu Everywhere",
-            true,
-            new ConfigDescription(
-                "Add/Remove to wishlist available in the context menu on all screens",
-                null,
-                new ConfigurationManagerAttributes { })));
-
         configEntries.Add(OpenAllContextMenu = config.Bind(
             InventorySection,
             "Open All Context Flyout",
@@ -786,6 +768,25 @@ internal class Settings
                 "When there isn't enough space to show both the tag and the name of an item, show the tag",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TagBackpacks = config.Bind(
+            InventorySection,
+            "Tag Backpacks (requires restart)",
+            true,
+            new ConfigDescription(
+                "Enabling adding tags to backpacks. For reasons, the game client must be restarted for changes to take effect.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(TagVests = config.Bind(
+            InventorySection,
+            "Tag Vests (requires restart)",
+            true,
+            new ConfigDescription(
+                "Enable adding tags to vests. For reasons, the game client must be restarted for changes to take effect.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
 
         configEntries.Add(LoadMagPresetOnBullets = config.Bind(
             InventorySection,
