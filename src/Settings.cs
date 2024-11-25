@@ -447,7 +447,7 @@ internal class Settings
         configEntries.Add(LinkedSearchKeyBind = config.Bind(
             InputSection,
             "Linked Search Shortcut",
-            new KeyboardShortcut(KeyCode.L),
+            new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to search flea market for items linked to this item",
                 null,
