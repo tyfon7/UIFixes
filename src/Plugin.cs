@@ -48,7 +48,7 @@ public class Plugin : BaseUnityPlugin
         TradeQuantityPatches.Enable();
         RememberRepairerPatches.Enable();
         new GridWindowButtonsPatch().Enable();
-        new LoadMagPresetsPatch().Enable();
+        MagPresetsPatches.Enable();
         KeepWindowsOnScreenPatches.Enable();
         ContextMenuShortcutPatches.Enable();
         OpenSortingTablePatches.Enable();
