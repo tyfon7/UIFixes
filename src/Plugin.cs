@@ -77,6 +77,7 @@ public class Plugin : BaseUnityPlugin
         new OperationQueuePatch().Enable();
         SliderPatches.Enable();
         DropdownPatches.Enable();
+        new FixPlayerInspectPatch().Enable();
     }
 
     public static bool InRaid()
