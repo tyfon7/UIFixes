@@ -137,6 +137,7 @@ internal class Settings
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> TagBackpacks { get; set; }
     public static ConfigEntry<bool> TagVests { get; set; }
+    public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
     // Inspect Panels
@@ -787,6 +788,14 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
+        configEntries.Add(RemoveDefaultMagPresetName = config.Bind(
+            InventorySection,
+            "Remove Default Mag Preset Name",
+            true,
+            new ConfigDescription(
+                "Clear the default mag preset name and improve the mag preset UI. Disable this to restore the wonky default UI.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LoadMagPresetOnBullets = config.Bind(
             InventorySection,

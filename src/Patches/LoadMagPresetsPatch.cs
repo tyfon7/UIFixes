@@ -70,6 +70,11 @@ public static class MagPresetsPatches
         [PatchPrefix]
         public static bool Preset(ref string __result)
         {
+            if (!Settings.RemoveDefaultMagPresetName.Value)
+            {
+                return true;
+            }
+
             __result = string.Empty;
             return false;
         }
