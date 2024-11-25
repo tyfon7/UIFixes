@@ -56,37 +56,62 @@ internal enum ModRaidWeapon
 
 internal class Settings
 {
-    // Categories
-    private const string GeneralSection = "1. General";
-    private const string InputSection = "2. Input";
-    private const string InventorySection = "3. Inventory";
-    private const string InspectSection = "4. Inspect Windows";
-    private const string InRaidSection = "5. In Raid";
-    private const string FleaMarketSection = "6. Flea Market";
+    // New categories
+    private const string InterfaceSection = "A. Interface";
+    private const string DialogsSection = "B. Dialogs";
+    private const string GameplaySection = "C. Gameplay";
+    private const string MouseSection = "D. Mouse";
+    private const string InterfaceKeybindsSection = "E. Interface Keybinds";
+    private const string ItemKeybindsSection = "F. Item Keybinds";
+    private const string GameplayKeybindsSection = "G. Gameplay Keybinds";
+    private const string MultiSelectSection = "H. Multiselect";
+    private const string ItemSwappingSection = "I. Item Swapping";
+    private const string ItemStackingSection = "J. Item Stacking";
+    private const string ContainersSection = "K. Containers";
+    private const string InspectWindowsSection = "L. Inspect Windows";
+    private const string StashSection = "M. Stash";
+    private const string TradingSection = "N. Trading";
+    private const string FleaMarketSection = "O. Flea Market";
+    private const string AddOfferSection = "P. Add Offer";
 
-    // General
-    public static ConfigEntry<bool> UnlockCursor { get; set; }
-    public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
-    public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+    // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
-    public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
-    public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
-    public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
+    public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
+    public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
+    public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
+    public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
+    public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
-    // Input
+    // Dialogs
+    public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
+    public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+    public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
+
+    // Gameplay
     public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldSprint { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
-    public static ConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
-    public static ConfigEntry<bool> UseHomeEnd { get; set; }
-    public static ConfigEntry<bool> RebindPageUpDown { get; set; }
+    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
+    public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
+    public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
+    public static ConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
+
+    // Mouse
+    public static ConfigEntry<bool> UnlockCursor { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
     public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
     public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
+
+    // Interface Keybinds
+    public static ConfigEntry<bool> UseHomeEnd { get; set; }
+    public static ConfigEntry<bool> RebindPageUpDown { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
+
+    // Item Keybinds
     public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> ExamineKeyBind { get; set; }
@@ -103,44 +128,43 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
-    public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
-    public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
+    public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
-    // Inventory
+    // Gameplay Keybinds
+    public static ConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
+
+    // Multiselect
     public static ConfigEntry<bool> EnableMultiSelect { get; set; }
     public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
     public static ConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
     public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
     public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
     public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
+
+    // ItemSwapping
     public static ConfigEntry<bool> SwapItems { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
-    // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
-    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
-    public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
-    public static ConfigEntry<bool> ReorderGrids { get; set; }
-    public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
-    public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
+
+    // ItemStacking
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
     public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
-    public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
-    public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
-    public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
+
+    // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
+
+    // Containers
+    public static ConfigEntry<bool> ReorderGrids { get; set; }
+    public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
-    public static ConfigEntry<bool> ShowGPCurrency { get; set; }
-    public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> TagBackpacks { get; set; }
     public static ConfigEntry<bool> TagVests { get; set; }
-    public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
-    public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
-    // Inspect Panels
+    // InspectWindows
     public static ConfigEntry<bool> ShowModStats { get; set; }
     public static ConfigEntry<bool> HighlightEmptySlots { get; set; }
     public static ConfigEntry<bool> RememberInspectSize { get; set; }
@@ -151,58 +175,39 @@ internal class Settings
     public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
     public static ConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
 
-    // In Raid
-    public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
-    public static ConfigEntry<bool> EnableLoadAmmo { get; set; }
+    // Stash
+    public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
+    public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
+    public static ConfigEntry<bool> ShowGPCurrency { get; set; }
 
-    // Flea Market
+    // Trading
+    public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
+    public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
+    public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
+
+    // FleaMarket
     public static ConfigEntry<bool> EnableFleaHistory { get; set; }
     public static ConfigEntry<bool> ShowBarterIcons { get; set; }
     public static ConfigEntry<bool> EnableSlotSearch { get; set; }
     public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
     public static ConfigEntry<bool> AutoExpandCategories { get; set; }
     public static ConfigEntry<bool> ClearFiltersOnSearch { get; set; }
+
+    // AddOffer
     public static ConfigEntry<AutoFleaPrice> AutoOfferPrice { get; set; }
     public static ConfigEntry<bool> UpdatePriceOnBulk { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
-    public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
     public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
     public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
+    // Categories
     public static void Init(ConfigFile config)
     {
         var configEntries = new List<ConfigEntryBase>();
 
-        // General
-        configEntries.Add(UnlockCursor = config.Bind(
-            GeneralSection,
-            "Unlock Cursor",
-            true,
-            new ConfigDescription(
-                "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take effect.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ShowPresetConfirmations = config.Bind(
-            GeneralSection,
-            "Show Weapon Preset Confirmation Dialog",
-            WeaponPresetConfirmationOption.OnClose,
-            new ConfigDescription(
-                "When to show a confirmation dialog when you leave and/or close an unsaved weapon preset",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ShowTransferConfirmations = config.Bind(
-            GeneralSection,
-            "Show Transfer Items Confirmation Dialog",
-            TransferConfirmationOption.Never,
-            new ConfigDescription(
-                "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
-                null,
-                new ConfigurationManagerAttributes { })));
-
+        // Interface
         configEntries.Add(KeepMessagesOpen = config.Bind(
-            GeneralSection,
+            InterfaceSection,
             "Keep Messages Window Open",
             true,
             new ConfigDescription(
@@ -211,7 +216,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AutofillQuestTurnIns = config.Bind(
-            GeneralSection,
+            InterfaceSection,
             "Autofill Quest Item Turn-ins",
             true,
             new ConfigDescription(
@@ -219,514 +224,8 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(AutoSwitchTrading = config.Bind(
-            GeneralSection,
-            "Autoswitch Buy/Sell when Trading",
-            true,
-            new ConfigDescription(
-                "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ClickOutOfDialogs = config.Bind(
-            GeneralSection,
-            "Click Outside of Dialogs to Close",
-            true,
-            new ConfigDescription(
-                "Clicking outside of a popup dialog will close the dialog",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
-            GeneralSection,
-            "Restore Async Scroll Positions",
-            true,
-            new ConfigDescription(
-                "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(OperationQueueTime = config.Bind(
-            GeneralSection,
-            "Server Operation Queue Time",
-            15,
-            new ConfigDescription(
-                "The client waits this long to batch inventory operations before sending them to the server. Vanilla Tarkov is 60 (!)",
-                new AcceptableValueRange<int>(0, 60),
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        // Input
-        configEntries.Add(ToggleOrHoldAim = config.Bind(
-            InputSection,
-            "Use Toggle/Hold Aiming",
-            false,
-            new ConfigDescription(
-                "Tap the aim key to toggle aiming, or hold the key for continuous aiming",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ToggleOrHoldSprint = config.Bind(
-            InputSection,
-            "Use Toggle/Hold Sprint",
-            false,
-            new ConfigDescription(
-                "Tap the sprint key to toggle sprinting, or hold the key for continuous sprinting",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ToggleOrHoldTactical = config.Bind(
-            InputSection,
-            "Use Toggle/Hold Tactical Device",
-            false,
-            new ConfigDescription(
-                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous. Note that this will override Tarkov's new 'Tactical device activation mode'",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ToggleOrHoldHeadlight = config.Bind(
-            InputSection,
-            "Use Toggle/Hold Headlight",
-            false,
-            new ConfigDescription(
-                "Tap the headlight key to toggle your headlight, or hold the key for continuous",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ToggleOrHoldGoggles = config.Bind(
-            InputSection,
-            "Use Toggle/Hold Goggles",
-            false,
-            new ConfigDescription(
-                "Tap the goggles key to toggle night vision/goggles/faceshield, or hold the key for continuous",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(TacticalModeModifier = config.Bind(
-            InputSection,
-            "Change Quickbound Tactical Mode",
-            TacticalBindModifier.Shift,
-            new ConfigDescription(
-                "Holding this modifer when activating a quickbound tactical device will switch its active mode",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UseHomeEnd = config.Bind(
-            InputSection,
-            "Enable Home/End Keys",
-            true,
-            new ConfigDescription(
-                "Use the Home and End keys to scroll to the top and bottom of inventories",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(RebindPageUpDown = config.Bind(
-            InputSection,
-            "Rebind PageUp/PageDown (requires restart)",
-            true,
-            new ConfigDescription(
-                "Change PageUp and PageDown to scroll up and down one page",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MouseScrollMulti = config.Bind(
-            InputSection,
-            "Mousewheel Scrolling Speed",
-            1,
-            new ConfigDescription(
-                "How many rows to scroll with the mousewheel",
-                new AcceptableValueRange<int>(1, 10),
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
-            InputSection,
-            "Use Different Scrolling Speed in Raid",
-            false,
-            new ConfigDescription(
-                "Whether to use a separate mousewheel scroll speed in raid",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(MouseScrollMultiInRaid = config.Bind(
-            InputSection,
-            "Mousewheel Scrolling Speed in Raid",
-            1,
-            new ConfigDescription(
-                "A separate mousewheel scroll speed for in raid",
-                new AcceptableValueRange<int>(1, 10),
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(InspectKeyBind = config.Bind(
-            InputSection,
-            "Inspect Shortcut",
-            new KeyboardShortcut(KeyCode.I),
-            new ConfigDescription(
-                "Keybind to inspect an item",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(OpenKeyBind = config.Bind(
-            InputSection,
-            "Open Shortcut",
-            new KeyboardShortcut(KeyCode.O),
-            new ConfigDescription(
-                "Keybind to open a container",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ExamineKeyBind = config.Bind(
-            InputSection,
-            "Examine/Interact Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to examine an item, fold it, unfold it, turn it on, turn it off, or check a magazine",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(TopUpKeyBind = config.Bind(
-            InputSection,
-            "Top Up Ammo Shortcut",
-            new KeyboardShortcut(KeyCode.T),
-            new ConfigDescription(
-                "Keybind to top up an ammo stack",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UseKeyBind = config.Bind(
-            InputSection,
-            "Use Item Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to use an item, such a consumable",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UseAllKeyBind = config.Bind(
-            InputSection,
-            "Use Item (All) Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to use all of an item, such a consumable. This will still work on items that don't have 'Use All', just 'Use', in their context menu.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ReloadKeyBind = config.Bind(
-            InputSection,
-            "Reload Weapon Shortcut",
-            new KeyboardShortcut(KeyCode.R),
-            new ConfigDescription(
-                "Keybind to reload a weapon. Note that this is solely in the menus, and doesn't affect the normal reload key.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UnloadKeyBind = config.Bind(
-            InputSection,
-            "Unload Mag/Ammo Shortcut",
-            new KeyboardShortcut(KeyCode.U),
-            new ConfigDescription(
-                "Keybind to unload the ammo in a magazine, or a magazine in a gun",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(UnpackKeyBind = config.Bind(
-            InputSection,
-            "Unpack Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to unpack a sealed weapons case, etc",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(FilterByKeyBind = config.Bind(
-            InputSection,
-            "Filter by Item Shortcut",
-            new KeyboardShortcut(KeyCode.F),
-            new ConfigDescription(
-                "Keybind to search flea market for this item",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(LinkedSearchKeyBind = config.Bind(
-            InputSection,
-            "Linked Search Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to search flea market for items linked to this item",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(RequiredSearchKeyBind = config.Bind(
-            InputSection,
-            "Required Search Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to search flea market for items to barter for this item",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(AddOfferKeyBind = config.Bind(
-            InputSection,
-            "Add Offer Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to list item on the flea market",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(PinKeyBind = config.Bind(
-            InputSection,
-            "Pin Item Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to pin an item (not moved during sort)",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(LockKeyBind = config.Bind(
-            InputSection,
-            "Lock Item Shortcut",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to lock an item (cannot be moved, used, modified, sold, turned in, or discarded)",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(SortingTableKeyBind = config.Bind(
-            InputSection,
-            "Transfer to/from Sorting Table",
-            new KeyboardShortcut(KeyCode.None),
-            new ConfigDescription(
-                "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(SearchKeyBind = config.Bind(
-            InputSection,
-            "Highlight Search Box",
-            new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
-            new ConfigDescription(
-                "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(LimitNonstandardDrags = config.Bind(
-            InputSection,
-            "Limit Nonstandard Drags",
-            true,
-            new ConfigDescription(
-                "Constrain dragging to the left mouse, when shift is not down. Leave this setting enabled to minimize conflicts with the multiselect box.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
-           InputSection,
-           "Block Text Inputs on Item Mouseover",
-           true,
-           new ConfigDescription(
-               "In order for keybinds to work and not get mixed up with textboxes, key presses while mousing over an item will not be sent to the currently focused textbox",
-               null,
-               new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        // Inventory
-        configEntries.Add(EnableMultiSelect = config.Bind(
-            InventorySection,
-            "Enable Multiselect",
-            true,
-            new ConfigDescription(
-                "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(EnableMultiSelectInRaid = config.Bind(
-            InventorySection,
-            "Enable Multiselect In Raid",
-            true,
-            new ConfigDescription(
-                "Enable multiselect functionality in raid.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(EnableMultiClick = config.Bind(
-            InventorySection,
-            "Enable Multiselect with Shift-Click",
-            true,
-            new ConfigDescription(
-                "Add items to the selection by shift-clicking them. If you disable this, the only way to multiselect is with the selection box",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(SelectionBoxKey = config.Bind(
-            InventorySection,
-            "Selection Box Key",
-            new KeyboardShortcut(KeyCode.Mouse0),
-            new ConfigDescription(
-                "Mouse button or keyboard key to hold while dragging to create a selection box. Press Reset to use Mouse0 (left mouse button)",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MultiSelectStrat = config.Bind(
-            InventorySection,
-            "Multiselect Item Placement",
-            MultiSelectStrategy.OriginalSpacing,
-            new ConfigDescription(
-                "Controls where multiselected items are placed, relative to the item being dragged",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ShowMultiSelectDebug = config.Bind(
-            InventorySection,
-            "Show Multiselect Debug",
-            false,
-            new ConfigDescription(
-                "Enable multi-select debugging display",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(SwapItems = config.Bind(
-            InventorySection,
-            "Enable In-Place Item Swapping",
-            true,
-            new ConfigDescription(
-                "Drag one item onto another to swap their positions, if possible",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(SwapMags = config.Bind(
-            InventorySection,
-            "Reload Magazines In-Place",
-            true,
-            new ConfigDescription(
-                "When reloading a weapon with a magazine, swap locations with the new magazine if necessary (and possible)",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(AlwaysSwapMags = config.Bind(
-            InventorySection,
-            "Always Reload Magazines In-Place",
-            false,
-            new ConfigDescription(
-                "Always reload magazines in-place, even if there's space not to. Note that in-place reloads are slower.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        // configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
-        //     InventorySection,
-        //     "Unload Ammo Boxes In-Place",
-        //     !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
-        //     new ConfigDescription(
-        //         "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
-
-        configEntries.Add(SwapImpossibleContainers = config.Bind(
-            InventorySection,
-            "Swap with Incompatible Containers",
-            false,
-            new ConfigDescription(
-                "Enable swapping items with containers that could never fit that item due to size or filter restrictions. Disabled in raid to avoid costly mistakes.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ModifyEquippedWeapons = config.Bind(
-            InventorySection,
-            "Modify Equipped Weapons",
-            true,
-            new ConfigDescription(
-                "Enable the modification of equipped weapons, including vital parts, out of raid",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ModifyRaidWeapons = config.Bind(
-            InventorySection,
-            "Modify Weapons In Raid",
-            ModRaidWeapon.Never,
-            new ConfigDescription(
-                "When to enable the modification of vital parts of unequipped weapons, in raid",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ReorderGrids = config.Bind(
-            InventorySection,
-            "Standardize Grid Order",
-            true,
-            new ConfigDescription(
-                "Change internal ordering of grids in rigs/backpacks to be left to right, top to bottom",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(PrioritizeSmallerGrids = config.Bind(
-            InventorySection,
-            "Prioritize Smaller Slots (requires restart)",
-            false,
-            new ConfigDescription(
-                "When adding items to containers with multiple slots, place the item in the smallest slot that can hold it, rather than just the first empty space. Requires Standardize Grid Order.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(SynchronizeStashScrolling = config.Bind(
-            InventorySection,
-            "Synchronize Stash Scroll Position",
-            false,
-            new ConfigDescription(
-                "Remember your scroll position all the places you see your stash - inventory, trading screen, mail screen, etc.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(GreedyStackMove = config.Bind(
-            InventorySection,
-            "Always Move Entire Stacks",
-            true,
-            new ConfigDescription(
-                "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(StackBeforeSort = config.Bind(
-            InventorySection,
-            "Combine Stacks Before Sorting",
-            true,
-            new ConfigDescription(
-                "When sorting containers, first combine stacks of the same type. This will not be undone if the sorting fails.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MergeFIRAmmo = config.Bind(
-            InventorySection,
-            "Autostack Ammo with FiR Ammo",
-            false,
-            new ConfigDescription(
-                "Allows automatic stacking of Found In Raid ammo with other ammo, making container interaction easier",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MergeFIROther = config.Bind(
-            InventorySection,
-            "Autostack Items with FiR Items",
-            false,
-            new ConfigDescription(
-                "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(AutoOpenSortingTable = config.Bind(
-            InventorySection,
-            "Auto-open Sorting Table",
-            false,
-            new ConfigDescription(
-                "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(DefaultSortingTableBind = config.Bind(
-            InventorySection,
-            "Shift-Click to Sorting Table",
-            true,
-            new ConfigDescription(
-                "This setting lets you enable/disable the default Tarkov behavior of shift-clicking items to transfer them to the sorting table.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true })));
-
         configEntries.Add(ContextMenuOnRight = config.Bind(
-            InventorySection,
+            InterfaceSection,
             "Context Menu Flyout on Right",
             true,
             new ConfigDescription(
@@ -734,62 +233,35 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(OpenAllContextMenu = config.Bind(
-            InventorySection,
-            "Open All Context Flyout",
-            true,
+        configEntries.Add(OperationQueueTime = config.Bind(
+            InterfaceSection,
+            "Server Operation Queue Time",
+            15,
             new ConfigDescription(
-                "Add a flyout to the Open context menu to recursively open a stack of containers",
-                null,
-                new ConfigurationManagerAttributes { })));
+                "The client waits this long to batch inventory operations before sending them to the server. Vanilla Tarkov is 60 (!)",
+                new AcceptableValueRange<int>(0, 60),
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        configEntries.Add(ShowGPCurrency = config.Bind(
-            InventorySection,
-            "Show GP Coins in Currency",
+        configEntries.Add(LimitNonstandardDrags = config.Bind(
+            InterfaceSection,
+            "Limit Nonstandard Drags",
             true,
             new ConfigDescription(
-                "Show your GP coins wherever your currency is displayed",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(ShowOutOfStockCheckbox = config.Bind(
-            InventorySection,
-            "Show Out of Stock Toggle",
-            true,
-            new ConfigDescription(
-                "Whether the show the Out of Stock toggle on the trading screen",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(TagsOverCaptions = config.Bind(
-            InventorySection,
-            "Prioritize Tags Over Names",
-            true,
-            new ConfigDescription(
-                "When there isn't enough space to show both the tag and the name of an item, show the tag",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(TagBackpacks = config.Bind(
-            InventorySection,
-            "Tag Backpacks (requires restart)",
-            true,
-            new ConfigDescription(
-                "Enabling adding tags to backpacks. For reasons, the game client must be restarted for changes to take effect.",
+                "Constrain dragging to the left mouse, when shift is not down. Leave this setting enabled to minimize conflicts with the multiselect box.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        configEntries.Add(TagVests = config.Bind(
-            InventorySection,
-            "Tag Vests (requires restart)",
+        configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
+            InterfaceSection,
+            "Restore Async Scroll Positions",
             true,
             new ConfigDescription(
-                "Enable adding tags to vests. For reasons, the game client must be restarted for changes to take effect.",
+                "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(RemoveDefaultMagPresetName = config.Bind(
-            InventorySection,
+            InterfaceSection,
             "Remove Default Mag Preset Name",
             true,
             new ConfigDescription(
@@ -798,7 +270,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LoadMagPresetOnBullets = config.Bind(
-            InventorySection,
+            InterfaceSection,
             "Mag Presets Context Menu on Bullets",
             false,
             new ConfigDescription(
@@ -806,9 +278,551 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // Inspect
+        // Dialogs
+        configEntries.Add(ShowPresetConfirmations = config.Bind(
+            DialogsSection,
+            "Show Weapon Preset Confirmation Dialog",
+            WeaponPresetConfirmationOption.OnClose,
+            new ConfigDescription(
+                "When to show a confirmation dialog when you leave and/or close an unsaved weapon preset",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowTransferConfirmations = config.Bind(
+            DialogsSection,
+            "Show Transfer Items Confirmation Dialog",
+            TransferConfirmationOption.Never,
+            new ConfigDescription(
+                "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ClickOutOfDialogs = config.Bind(
+            DialogsSection,
+            "Click Outside of Dialogs to Close",
+            true,
+            new ConfigDescription(
+                "Clicking outside of a popup dialog will close the dialog",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Gameplay
+        configEntries.Add(ToggleOrHoldAim = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Aiming",
+            false,
+            new ConfigDescription(
+                "Tap the aim key to toggle aiming, or hold the key for continuous aiming",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldSprint = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Sprint",
+            false,
+            new ConfigDescription(
+                "Tap the sprint key to toggle sprinting, or hold the key for continuous sprinting",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldTactical = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Tactical Device",
+            false,
+            new ConfigDescription(
+                "Tap the tactical device key to toggle your tactical device, or hold the key for continuous. Note that this will override Tarkov's new 'Tactical device activation mode'",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldHeadlight = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Headlight",
+            false,
+            new ConfigDescription(
+                "Tap the headlight key to toggle your headlight, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldGoggles = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Goggles",
+            false,
+            new ConfigDescription(
+                "Tap the goggles key to toggle night vision/goggles/faceshield, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ModifyEquippedWeapons = config.Bind(
+            GameplaySection,
+            "Modify Equipped Weapons",
+            true,
+            new ConfigDescription(
+                "Enable the modification of equipped weapons, including vital parts, out of raid",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ModifyRaidWeapons = config.Bind(
+            GameplaySection,
+            "Modify Weapons In Raid",
+            ModRaidWeapon.Never,
+            new ConfigDescription(
+                "When to enable the modification of vital parts of unequipped weapons, in raid",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RemoveDisabledActions = config.Bind(
+            GameplaySection,
+            "Hide Unimplemented Door Actions",
+            true,
+            new ConfigDescription(
+                "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(EnableLoadAmmoInRaid = config.Bind(
+            GameplaySection,
+            "Enable Load Ammo Context Menu",
+            true,
+            new ConfigDescription(
+                "Allows ammo to be loaded through the magazine context menu",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // Mouse
+        configEntries.Add(UnlockCursor = config.Bind(
+            MouseSection,
+            "Unlock Cursor",
+            true,
+            new ConfigDescription(
+                "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take effect.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(MouseScrollMulti = config.Bind(
+            MouseSection,
+            "Mousewheel Scrolling Speed",
+            1,
+            new ConfigDescription(
+                "How many rows to scroll with the mousewheel",
+                new AcceptableValueRange<int>(1, 10),
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
+            MouseSection,
+            "Use Different Scrolling Speed in Raid",
+            false,
+            new ConfigDescription(
+                "Whether to use a separate mousewheel scroll speed in raid",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(MouseScrollMultiInRaid = config.Bind(
+            MouseSection,
+            "Mousewheel Scrolling Speed in Raid",
+            1,
+            new ConfigDescription(
+                "A separate mousewheel scroll speed for in raid",
+                new AcceptableValueRange<int>(1, 10),
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Interface Keybinds
+        configEntries.Add(UseHomeEnd = config.Bind(
+            InterfaceKeybindsSection,
+            "Enable Home/End Keys",
+            true,
+            new ConfigDescription(
+                "Use the Home and End keys to scroll to the top and bottom of inventories",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RebindPageUpDown = config.Bind(
+            InterfaceKeybindsSection,
+            "Rebind PageUp/PageDown (requires restart)",
+            true,
+            new ConfigDescription(
+                "Change PageUp and PageDown to scroll up and down one page",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SearchKeyBind = config.Bind(
+            InterfaceKeybindsSection,
+            "Highlight Search Box",
+            new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
+            new ConfigDescription(
+                "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // Item Keybinds
+        configEntries.Add(InspectKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Inspect Shortcut",
+            new KeyboardShortcut(KeyCode.I),
+            new ConfigDescription(
+                "Keybind to inspect an item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(OpenKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Open Shortcut",
+            new KeyboardShortcut(KeyCode.O),
+            new ConfigDescription(
+                "Keybind to open a container",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ExamineKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Examine/Interact Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to examine an item, fold it, unfold it, turn it on, turn it off, or check a magazine",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TopUpKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Top Up Ammo Shortcut",
+            new KeyboardShortcut(KeyCode.T),
+            new ConfigDescription(
+                "Keybind to top up an ammo stack",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UseKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Use Item Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to use an item, such a consumable",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UseAllKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Use Item (All) Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to use all of an item, such a consumable. This will still work on items that don't have 'Use All', just 'Use', in their context menu.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ReloadKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Reload Weapon Shortcut",
+            new KeyboardShortcut(KeyCode.R),
+            new ConfigDescription(
+                "Keybind to reload a weapon. Note that this is solely in the menus, and doesn't affect the normal reload key.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UnloadKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Unload Mag/Ammo Shortcut",
+            new KeyboardShortcut(KeyCode.U),
+            new ConfigDescription(
+                "Keybind to unload the ammo in a magazine, or a magazine in a gun",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UnpackKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Unpack Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to unpack a sealed weapons case, etc",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(FilterByKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Filter by Item Shortcut",
+            new KeyboardShortcut(KeyCode.F),
+            new ConfigDescription(
+                "Keybind to search flea market for this item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(LinkedSearchKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Linked Search Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to search flea market for items linked to this item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RequiredSearchKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Required Search Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to search flea market for items to barter for this item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AddOfferKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Add Offer Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to list item on the flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PinKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Pin Item Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to pin an item (not moved during sort)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(LockKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Lock Item Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to lock an item (cannot be moved, used, modified, sold, turned in, or discarded)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SortingTableKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Transfer to/from Sorting Table",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(DefaultSortingTableBind = config.Bind(
+            ItemKeybindsSection,
+            "Shift-Click to Sorting Table",
+            true,
+            new ConfigDescription(
+                "This setting lets you enable/disable the default Tarkov behavior of shift-clicking items to transfer them to the sorting table.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
+           ItemKeybindsSection,
+           "Block Text Inputs on Item Mouseover",
+           true,
+           new ConfigDescription(
+               "In order for keybinds to work and not get mixed up with textboxes, key presses while mousing over an item will not be sent to the currently focused textbox",
+               null,
+               new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Gameplay Keybinds
+        configEntries.Add(TacticalModeModifier = config.Bind(
+            GameplayKeybindsSection,
+            "Change Quickbound Tactical Mode",
+            TacticalBindModifier.Shift,
+            new ConfigDescription(
+                "Holding this modifer when activating a quickbound tactical device will switch its active mode",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // Multiselect
+        configEntries.Add(EnableMultiSelect = config.Bind(
+            MultiSelectSection,
+            "Enable Multiselect",
+            true,
+            new ConfigDescription(
+                "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(EnableMultiSelectInRaid = config.Bind(
+            MultiSelectSection,
+            "Enable Multiselect In Raid",
+            true,
+
+            new ConfigDescription(
+                "Enable multiselect functionality in raid.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(EnableMultiClick = config.Bind(
+            MultiSelectSection,
+            "Enable Multiselect with Shift-Click",
+            true,
+            new ConfigDescription(
+                "Add items to the selection by shift-clicking them. If you disable this, the only way to multiselect is with the selection box",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(SelectionBoxKey = config.Bind(
+            MultiSelectSection,
+            "Selection Box Key",
+            new KeyboardShortcut(KeyCode.Mouse0),
+            new ConfigDescription(
+                "Mouse button or keyboard key to hold while dragging to create a selection box. Press Reset to use Mouse0 (left mouse button)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(MultiSelectStrat = config.Bind(
+            MultiSelectSection,
+            "Multiselect Item Placement",
+            MultiSelectStrategy.OriginalSpacing,
+            new ConfigDescription(
+                "Controls where multiselected items are placed, relative to the item being dragged",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowMultiSelectDebug = config.Bind(
+            MultiSelectSection,
+            "Show Multiselect Debug",
+            false,
+            new ConfigDescription(
+                "Enable multi-select debugging display",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Item Swapping
+        configEntries.Add(SwapItems = config.Bind(
+            ItemSwappingSection,
+            "Enable In-Place Item Swapping",
+            true,
+            new ConfigDescription(
+                "Drag one item onto another to swap their positions, if possible",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SwapMags = config.Bind(
+            ItemSwappingSection,
+            "Reload Magazines In-Place",
+            true,
+            new ConfigDescription(
+                "When reloading a weapon with a magazine, swap locations with the new magazine if necessary (and possible)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AlwaysSwapMags = config.Bind(
+            ItemSwappingSection,
+            "Always Reload Magazines In-Place",
+            false,
+            new ConfigDescription(
+                "Always reload magazines in-place, even if there's space not to. Note that in-place reloads are slower.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SwapImpossibleContainers = config.Bind(
+            ItemSwappingSection,
+            "Swap with Incompatible Containers",
+            false,
+            new ConfigDescription(
+                "Enable swapping items with containers that could never fit that item due to size or filter restrictions. Disabled in raid to avoid costly mistakes.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // Item Stacking
+        configEntries.Add(GreedyStackMove = config.Bind(
+            ItemStackingSection,
+            "Always Move Entire Stacks",
+            true,
+            new ConfigDescription(
+                "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(StackBeforeSort = config.Bind(
+            ItemStackingSection,
+            "Combine Stacks Before Sorting",
+            true,
+            new ConfigDescription(
+                "When sorting containers, first combine stacks of the same type. This will not be undone if the sorting fails.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(MergeFIRAmmo = config.Bind(
+            ItemStackingSection,
+            "Autostack Ammo with FiR Ammo",
+            false,
+            new ConfigDescription(
+                "Allows automatic stacking of Found In Raid ammo with other ammo, making container interaction easier",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(MergeFIROther = config.Bind(
+            ItemStackingSection,
+            "Autostack Items with FiR Items",
+            false,
+            new ConfigDescription(
+                "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
+        //     ItemStackingSection,
+        //     "Unload Ammo Boxes In-Place",
+        //     !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
+        //     new ConfigDescription(
+        //         "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
+        //         null,
+        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Containers
+        configEntries.Add(ReorderGrids = config.Bind(
+            ContainersSection,
+            "Standardize Grid Order",
+            true,
+            new ConfigDescription(
+                "Change internal ordering of grids in rigs/backpacks to be left to right, top to bottom",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PrioritizeSmallerGrids = config.Bind(
+            ContainersSection,
+            "Prioritize Smaller Slots (requires restart)",
+            false,
+            new ConfigDescription(
+                "When adding items to containers with multiple slots, place the item in the smallest slot that can hold it, rather than just the first empty space. Requires Standardize Grid Order.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(OpenAllContextMenu = config.Bind(
+            ContainersSection,
+            "Open All Context Flyout",
+            true,
+            new ConfigDescription(
+                "Add a flyout to the Open context menu to recursively open a stack of containers",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TagsOverCaptions = config.Bind(
+            ContainersSection,
+            "Prioritize Tags Over Names",
+            true,
+            new ConfigDescription(
+                "When there isn't enough space to show both the tag and the name of an item, show the tag",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(TagBackpacks = config.Bind(
+            ContainersSection,
+            "Tag Backpacks (requires restart)",
+            true,
+            new ConfigDescription(
+                "Enabling adding tags to backpacks. For reasons, the game client must be restarted for changes to take effect.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(TagVests = config.Bind(
+            ContainersSection,
+            "Tag Vests (requires restart)",
+            true,
+            new ConfigDescription(
+                "Enable adding tags to vests. For reasons, the game client must be restarted for changes to take effect.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Inspect Windows
         configEntries.Add(ShowModStats = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Show Total Stats on Mods",
             true,
             new ConfigDescription(
@@ -817,7 +831,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightEmptySlots = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Highlight Compatible Slots",
             true,
             new ConfigDescription(
@@ -826,7 +840,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RememberInspectSize = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Remember Window Size",
             true,
             new ConfigDescription(
@@ -835,7 +849,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(LockInspectPreviewSize = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Lock Inspect Preview Size",
             true,
             new ConfigDescription(
@@ -844,7 +858,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ExpandDescriptionHeight = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Auto-expand to Fit Description",
             true,
             new ConfigDescription(
@@ -853,7 +867,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SnapLeftKeybind = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Snap Window Left shortcut",
             new KeyboardShortcut(KeyCode.LeftArrow),
             new ConfigDescription(
@@ -862,7 +876,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SnapRightKeybind = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Snap Window Right shortcut",
             new KeyboardShortcut(KeyCode.RightArrow),
             new ConfigDescription(
@@ -871,7 +885,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(StyleItemPanel = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Style Attribute Panels",
             true,
             new ConfigDescription(
@@ -880,7 +894,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(AddContainerButtons = config.Bind(
-            InspectSection,
+            InspectWindowsSection,
             "Add Left/Right Buttons on Containers",
             true,
             new ConfigDescription(
@@ -888,22 +902,59 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // In Raid
-        configEntries.Add(RemoveDisabledActions = config.Bind(
-            InRaidSection,
-            "Hide Unimplemented Door Actions",
-            true,
+        // Stash
+        configEntries.Add(SynchronizeStashScrolling = config.Bind(
+            StashSection,
+            "Synchronize Stash Scroll Position",
+            false,
             new ConfigDescription(
-                "Hides actions you can't actually do, like \"Bang and Clear\", etc from locked doors",
+                "Remember your scroll position all the places you see your stash - inventory, trading screen, mail screen, etc.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(EnableLoadAmmo = config.Bind(
-            InRaidSection,
-            "Enable Load Ammo Context Menu",
+        configEntries.Add(AutoOpenSortingTable = config.Bind(
+            StashSection,
+            "Auto-open Sorting Table",
+            false,
+            new ConfigDescription(
+                "Automatically open the sorting table if it's closed when you shift-click an item. This and Enable Multiselect cannot be used together.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowGPCurrency = config.Bind(
+            StashSection,
+            "Show GP Coins in Currency",
             true,
             new ConfigDescription(
-                "Allows ammo to be loaded through the magazine context menu",
+                "Show your GP coins wherever your currency is displayed",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        // Trading
+        configEntries.Add(AutoSwitchTrading = config.Bind(
+            TradingSection,
+            "Autoswitch Buy/Sell when Trading",
+            true,
+            new ConfigDescription(
+                "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowOutOfStockCheckbox = config.Bind(
+            TradingSection,
+            "Show Out of Stock Toggle",
+            true,
+            new ConfigDescription(
+                "Whether the show the Out of Stock toggle on the trading screen",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PurchaseAllKeybind = config.Bind(
+            TradingSection,
+            "Purchase Dialog ALL Shortcut",
+            new KeyboardShortcut(KeyCode.A),
+            new ConfigDescription(
+                "Keybind to set the quantity to all in the item purchase dialog. Equivalent to clicking the ALL button.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -935,6 +986,15 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        configEntries.Add(ShowRequiredQuest = config.Bind(
+            FleaMarketSection,
+            "Show Required Quest for Locked Offers",
+            true,
+            new ConfigDescription(
+                "For trader items locked behind quest completion, add the name of the quest to the tooltip",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(AutoExpandCategories = config.Bind(
             FleaMarketSection,
             "Auto-expand Categories",
@@ -953,8 +1013,9 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
+        // Add Offer
         configEntries.Add(AutoOfferPrice = config.Bind(
-            FleaMarketSection,
+            AddOfferSection,
             "Autopopulate Offer Price",
             AutoFleaPrice.None,
             new ConfigDescription(
@@ -963,7 +1024,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UpdatePriceOnBulk = config.Bind(
-            FleaMarketSection,
+            AddOfferSection,
             "Update Offer Price on Bulk",
             true,
             new ConfigDescription(
@@ -971,17 +1032,8 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(ShowRequiredQuest = config.Bind(
-            FleaMarketSection,
-            "Show Required Quest for Locked Offers",
-            true,
-            new ConfigDescription(
-                "For trader items locked behind quest completion, add the name of the quest to the tooltip",
-                null,
-                new ConfigurationManagerAttributes { })));
-
         configEntries.Add(KeepAddOfferOpen = config.Bind(
-            FleaMarketSection,
+            AddOfferSection,
             "Keep Add Offer Window Open",
             false,
             new ConfigDescription(
@@ -989,17 +1041,8 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(PurchaseAllKeybind = config.Bind(
-            FleaMarketSection,
-            "Purchase Dialog ALL Shortcut",
-            new KeyboardShortcut(KeyCode.A),
-            new ConfigDescription(
-                "Keybind to set the quantity to all in the item purchase dialog. Equivalent to clicking the ALL button.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
         configEntries.Add(KeepAddOfferOpenIgnoreMaxOffers = config.Bind(
-            FleaMarketSection,
+            AddOfferSection,
             "Keep Add Offer Window Open: Ignore Max Offers",
             false,
             new ConfigDescription(
@@ -1008,7 +1051,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(RememberAutoselectSimilar = config.Bind(
-            FleaMarketSection,
+            AddOfferSection,
             "Remember Add Offer Autoselect Similar",
             true,
             new ConfigDescription(

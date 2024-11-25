@@ -28,7 +28,7 @@ public class LoadAmmoInRaidPatches
         [PatchPrefix]
         public static bool Prefix(EItemInfoButton button, ref bool __result, Item ___item_0)
         {
-            if (button != EItemInfoButton.LoadAmmo || !Plugin.InRaid() || !Settings.EnableLoadAmmo.Value)
+            if (button != EItemInfoButton.LoadAmmo || !Plugin.InRaid() || !Settings.EnableLoadAmmoInRaid.Value)
             {
                 return true;
             }
@@ -49,7 +49,7 @@ public class LoadAmmoInRaidPatches
         [PatchPrefix]
         public static bool Prefix(ItemUiContext __instance, MagazineItemClass magazine, string ammoTemplateId, ref Task __result)
         {
-            if (!Plugin.InRaid() || !Settings.EnableLoadAmmo.Value)
+            if (!Plugin.InRaid() || !Settings.EnableLoadAmmoInRaid.Value)
             {
                 return true;
             }
