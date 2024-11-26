@@ -5,6 +5,7 @@ Quality of life improvements and fixes for SPT
 Tarkov is full of annoyances but we can fix them! Sometimes.
 
 ✨ Recently added
+
 Items that are ~~crossed out~~ have been implemented by BSG!
 
 ## Added features
