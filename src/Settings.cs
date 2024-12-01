@@ -78,6 +78,7 @@ internal class Settings
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
+    public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -232,6 +233,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Open context menu sub-menu to the right, as BSG intended but failed to do",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ContextMenuWhileSearching = config.Bind(
+            InterfaceSection,
+            "Allow Context Menu While Searching",
+            false,
+            new ConfigDescription(
+                "Allow the context menu to work while searching",
                 null,
                 new ConfigurationManagerAttributes { })));
 

@@ -1,5 +1,7 @@
 ﻿using Comfort.Common;
+using EFT;
 using EFT.InventoryLogic;
+using EFT.InventoryLogic.Operations;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -48,6 +50,8 @@ public static class ContextMenuPatches
         new EmptyModSlotMenuRemovePatch().Enable();
         new EmptySlotMenuPatch().Enable();
         new EmptySlotMenuRemovePatch().Enable();
+
+        new OpenWhileSearchingPatch().Enable();
     }
 
     // Update display strings with multiselect multipliers
@@ -552,6 +556,50 @@ public static class ContextMenuPatches
         public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
         {
             PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
+        }
+    }
+
+    public class OpenWhileSearchingPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.ShowContextMenu));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(
+            ItemUiContext __instance,
+            ItemContextAbstractClass itemContext,
+            Vector2 position,
+            TraderControllerClass ___traderControllerClass,
+            ref ItemInfoInteractionsAbstractClass<EItemInfoButton> ___itemInfoInteractionsAbstractClass,
+            Dictionary<EItemInfoButton, string> ___dictionary_0)
+        {
+            if (!Settings.ContextMenuWhileSearching.Value)
+            {
+                return true;
+            }
+
+            // Default impl would have skipped this. Do it anyway
+            if (___traderControllerClass.SearchController is IPlayerSearchController playerSearchController && playerSearchController.SearchOperations.Any())
+            {
+                ___itemInfoInteractionsAbstractClass = __instance.GetItemContextInteractions(itemContext, null);
+
+                // Yes, they really special case add-offer here
+                if (___itemInfoInteractionsAbstractClass.AllInteractions.Contains(EItemInfoButton.AddOffer))
+                {
+                    RagFairClass ragFair = __instance.Session.RagFair;
+                    if (ragFair != null && ragFair.Available)
+                    {
+                        ___dictionary_0[EItemInfoButton.AddOffer] = string.Format("AddOfferButton{0}/{1}".Localized(null), ragFair.MyOffersCount, ragFair.MaxOffersCount);
+                    }
+                }
+
+                __instance.ContextMenu.Show(position, ___itemInfoInteractionsAbstractClass, ___dictionary_0, itemContext.Item);
+                return false;
+            }
+
+            return true;
         }
     }
 
