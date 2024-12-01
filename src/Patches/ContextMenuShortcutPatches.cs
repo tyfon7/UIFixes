@@ -86,6 +86,16 @@ public static class ContextMenuShortcutPatches
                 TryInteraction(__instance, itemContext, EItemInfoButton.Unload, [EItemInfoButton.UnloadAmmo]);
             }
 
+            if (Settings.InstallKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Install);
+            }
+
+            if (Settings.UninstallKeyBind.Value.IsDown())
+            {
+                TryInteraction(__instance, itemContext, EItemInfoButton.Uninstall);
+            }
+
             if (Settings.UnpackKeyBind.Value.IsDown())
             {
                 TryInteraction(__instance, itemContext, EItemInfoButton.Unpack);

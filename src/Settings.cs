@@ -120,6 +120,8 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> ReloadKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UnloadKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> InstallKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UninstallKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
@@ -523,6 +525,24 @@ internal class Settings
             new KeyboardShortcut(KeyCode.U),
             new ConfigDescription(
                 "Keybind to unload the ammo in a magazine, or a magazine in a gun",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(InstallKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Install Mod Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to install an attachment on currently equipped weapon",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(UninstallKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Uninstall Mod Shortcut",
+            new KeyboardShortcut(KeyCode.None),
+            new ConfigDescription(
+                "Keybind to uninstall an attachment",
                 null,
                 new ConfigurationManagerAttributes { })));
 

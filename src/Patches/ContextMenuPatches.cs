@@ -91,6 +91,14 @@ public static class ContextMenuPatches
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.UnloadAmmo, ItemUiContext.Instance);
             }
+            else if (caption == EItemInfoButton.Install.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.Install, ItemUiContext.Instance);
+            }
+            else if (caption == EItemInfoButton.Uninstall.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.Uninstall, ItemUiContext.Instance);
+            }
             else if (caption == EItemInfoButton.ApplyMagPreset.ToString())
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.ApplyMagPreset, ItemUiContext.Instance);

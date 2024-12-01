@@ -1,6 +1,7 @@
 ﻿using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -320,28 +321,12 @@ public class MultiSelect
 
     public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        if (!allOrNothing || InteractionCount(EItemInfoButton.Equip, itemUiContext) == Count)
-        {
-            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            taskSerializer.Initialize(
-                SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Equip, itemUiContext)),
-                ic => itemUiContext.EquipItem(ic.Item));
-
-            itemUiContext.Tooltip?.Close();
-        }
+        ApplyAll(itemUiContext, EItemInfoButton.Equip, context => itemUiContext.EquipItem(context.Item), allOrNothing);
     }
 
     public static void UnequipAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        if (!allOrNothing || InteractionCount(EItemInfoButton.Unequip, itemUiContext) == Count)
-        {
-            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            taskSerializer.Initialize(
-                SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unequip, itemUiContext)),
-                itemContext => itemUiContext.Uninstall(itemContext.ItemContextAbstractClass));
-
-            itemUiContext.Tooltip?.Close();
-        }
+        ApplyAll(itemUiContext, EItemInfoButton.Unequip, context => itemUiContext.Uninstall(context), allOrNothing);
     }
 
     public static Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
@@ -386,6 +371,29 @@ public class MultiSelect
                     IgnoreStopLoading = true;
                     return itemUiContext.UnloadAmmo(itemContext.Item);
                 }).ContinueWith(t => LoadUnloadSerializer = null);
+
+            itemUiContext.Tooltip?.Close();
+        }
+    }
+
+    public static void InstallAll(ItemUiContext itemUiContext, bool allOrNothing)
+    {
+        ApplyAll(itemUiContext, EItemInfoButton.Install, context => itemUiContext.InstallMod(context, itemUiContext.CompoundItem_0), allOrNothing);
+    }
+
+    public static void UninstallAll(ItemUiContext itemUiContext, bool allOrNothing)
+    {
+        ApplyAll(itemUiContext, EItemInfoButton.Uninstall, context => itemUiContext.Uninstall(context), allOrNothing);
+    }
+
+    private static void ApplyAll(ItemUiContext itemUiContext, EItemInfoButton interaction, Func<MultiSelectItemContext, Task> action, bool allOrNothing)
+    {
+        if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
+        {
+            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+            taskSerializer.Initialize(
+                SortedItemContexts().Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
+                ic => action(ic));
 
             itemUiContext.Tooltip?.Close();
         }

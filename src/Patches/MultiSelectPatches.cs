@@ -63,6 +63,7 @@ public static class MultiSelectPatches
         // Actions
         new ItemViewClickPatch().Enable();
         new ContextActionsPatch().Enable();
+        new MoreContextActionsPatch().Enable();
         new StopProcessesPatch().Enable();
 
         // GridView
@@ -340,6 +341,9 @@ public static class MultiSelectPatches
                 case EItemInfoButton.UnloadAmmo:
                     MultiSelect.UnloadAmmoAll(___itemUiContext_1, false);
                     return false;
+                case EItemInfoButton.Uninstall:
+                    MultiSelect.UninstallAll(___itemUiContext_1, false);
+                    return false;
                 case EItemInfoButton.Unpack:
                     MultiSelect.UnpackAll(___itemUiContext_1, false);
                     return false;
@@ -350,6 +354,32 @@ public static class MultiSelectPatches
                 case EItemInfoButton.SetLock:
                 case EItemInfoButton.SetUnLock:
                     MultiSelect.LockAll(___itemUiContext_1);
+                    return false;
+                default:
+                    return true;
+            }
+        }
+    }
+
+    public class MoreContextActionsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InventoryInteractions), nameof(InventoryInteractions.ExecuteInteractionInternal));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(BaseItemInfoInteractions __instance, EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
+        {
+            if (!MultiSelect.Active)
+            {
+                return true;
+            }
+
+            switch (interaction)
+            {
+                case EItemInfoButton.Install:
+                    MultiSelect.InstallAll(___itemUiContext_1, false);
                     return false;
                 default:
                     return true;
