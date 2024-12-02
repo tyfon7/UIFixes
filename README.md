@@ -15,7 +15,7 @@ New UI features enabled by this mod
 -   Multiselect - select multiple items at once with shift-click or dragging a selection box
     -   Move items around as a group, drop them into containers, place them in grids
     -   Ctrl-click and Alt-click to quick move or equip them all. Compatible with Quick Move to Containers!
-    -   Context menu to insure, equip, unequip, unload ammo from, pin, and lock all at once
+    -   Context menu to insure, equip, unequip, load/unload ammo, install/uninstall, pin, and lock all at once
 -   Swap items in place - drag one item over another to swap their locations!
 -   ~~Add offer to the flea market from an item's context menu~~
 -   Flea market history - press the new back button to go back to the previous search
@@ -46,6 +46,7 @@ Existing SPT features made better
 -   Open->All context flyout that will recursively open nested containers to get at that innermost bag
 -   ~~Add/Remove from wishlist everywhere~~
 -   Improve modding/preset dropdown usability
+-   ✨ Enable context menu while searching (off by default)
 
 #### Inspect windows
 
