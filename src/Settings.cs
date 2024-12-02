@@ -1097,6 +1097,7 @@ internal class Settings
 
         MakeExclusive(EnableMultiClick, AutoOpenSortingTable, false);
 
+        MakeRequirement(ReorderGrids, !Plugin.FikaPresent());
         MakeDependent(ReorderGrids, PrioritizeSmallerGrids, false);
     }
 
@@ -1173,6 +1174,22 @@ internal class Settings
             if (!primaryConfig.Value)
             {
                 dependentConfig.Value = false;
+            }
+        };
+    }
+
+    private static void MakeRequirement(ConfigEntry<bool> config, bool requirement)
+    {
+        if (!requirement)
+        {
+            config.Value = false;
+        }
+
+        config.SettingChanged += (_, _) =>
+        {
+            if (!requirement)
+            {
+                config.Value = false;
             }
         };
     }
