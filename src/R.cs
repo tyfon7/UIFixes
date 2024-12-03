@@ -66,7 +66,6 @@ public static class R
         InventoryScreen.InitTypes();
         ScavengerInventoryScreen.InitTypes();
         LocalizedText.InitTypes();
-        GameWorld.InitTypes();
         MoveOperationResult.InitTypes();
         AddOperationResult.InitTypes();
         FoldOperationResult.InitTypes();
@@ -800,20 +799,6 @@ public static class R
         }
     }
 
-    public class GameWorld(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static FieldInfo TraderControllerField;
-
-        public static void InitTypes()
-        {
-            Type = typeof(EFT.GameWorld);
-            TraderControllerField = AccessTools.Field(Type, "traderControllerClass");
-        }
-
-        public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
-    }
-
     public class MoveOperationResult(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
@@ -928,7 +913,6 @@ public static class RExtentensions
     public static R.InventoryScreen R(this InventoryScreen value) => new(value);
     public static R.ScavengerInventoryScreen R(this ScavengerInventoryScreen value) => new(value);
     public static R.LocalizedText R(this LocalizedText value) => new(value);
-    public static R.GameWorld R(this GameWorld value) => new(value);
     public static R.MoveOperationResult R(this MoveOperation value) => new(value);
     public static R.AddOperationResult R(this AddOperation value) => new(value);
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
