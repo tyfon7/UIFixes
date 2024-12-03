@@ -509,6 +509,13 @@ public static class WeaponModdingPatches
     {
         error = null;
 
+        // If itemAddress is null, we're in a bad place
+        if (itemAddress == null)
+        {
+            error = "Item address is null";
+            return false;
+        }
+
         // If it's raidmoddable and not in a vital slot, then it's all good
         if ((item == null || item.RaidModdable) &&
             (!R.SlotItemAddress.Type.IsAssignableFrom(itemAddress.GetType()) || !new R.SlotItemAddress(itemAddress).Slot.Required))
