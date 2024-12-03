@@ -113,7 +113,7 @@ public static class ConfirmDialogKeysPatches
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                __instance.method_1();
+                __instance.method_5();
             }
         }
     }
