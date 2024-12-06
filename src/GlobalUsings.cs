@@ -13,10 +13,6 @@ global using RagfairSearch = GClass3597;
 global using CurrencyInfo = GClass2867;
 global using Scheme = GClass2158;
 global using ItemFilterExtensions = GClass2861;
-global using QuickBindCommandMap = GClass3392;
-global using ItemSorter = GClass3106;
-//global using ItemWithLocation = GClass2521;
-//global using SearchableGrid = GClass2516;
 global using CursorManager = GClass3394;
 global using ContainerCollection = GClass2981;
 global using BuildItemSelector = GClass3186;
@@ -42,12 +38,12 @@ global using GridSpaceTakenError = StashGridClass.GClass3687;
 global using GridModificationsUnavailableError = StashGridClass.GClass3691;
 global using NoRoomError = GClass3693;
 global using NoPossibleActionsError = GClass3694;
-global using CannotSortError = GClass3702;
-global using FailedToSortError = GClass3703;
 global using MoveSameSpaceError = InteractionsHandlerClass.GClass3735;
+global using NotApplicableError = GClass3697;
 global using NotModdableInRaidError = GClass3698;
 global using MultitoolNeededError = GClass3699;
 global using ModVitalPartInRaidError = GClass3700;
+global using CannotApplyError = GClass3701;
 global using SlotNotEmptyError = EFT.InventoryLogic.Slot.GClass3722;
 global using InvalidMagPresetError = MagazineBuildClass.Class3388;
 
@@ -62,7 +58,6 @@ global using NoOpMove = GClass3123;
 global using DiscardOperation = GClass3129;
 global using BindOperation = GClass3152;
 global using UnbindOperation = GClass3153;
-global using SortOperation = GClass3163;
 global using TargetItemOperation = TraderControllerClass.Struct839;
 
 // Interfaces

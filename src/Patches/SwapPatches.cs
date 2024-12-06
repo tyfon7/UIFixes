@@ -93,11 +93,11 @@ public static class SwapPatches
             return false;
         }
 
-        string error = operation.Error.ToString();
+        var error = operation.Error;
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
         bool isContainer = targetItem is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
-        if (Settings.SwapImpossibleContainers.Value && isContainer && error.StartsWith("No free room"))
+        if (Settings.SwapImpossibleContainers.Value && isContainer && error is NoRoomError)
         {
             // Disallow in-raid, unless it's an equipment slot
             if (Plugin.InRaid() && targetItem.Parent.Container.ParentItem is not InventoryEquipment)
@@ -118,12 +118,7 @@ public static class SwapPatches
             }
         }
 
-        if (!error.EndsWith("not applicable") && !(error.StartsWith("Cannot apply") && !error.EndsWith("modified")) && error != "InventoryError/NoPossibleActions")
-        {
-            return false;
-        }
-
-        return true;
+        return error is NotApplicableError or CannotApplyError or NoPossibleActionsError;
     }
 
     private static bool CouldEverFit(DragItemContext itemContext, Item containerItem)
