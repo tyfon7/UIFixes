@@ -16,12 +16,12 @@ public static class KeepWindowsOnScreenPatches
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.EditTag)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenInsuranceWindow)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenRepairWindow)).Enable();
-        new KeepWindowOnScreenPatch(nameof(ItemUiContext.method_2)).Enable(); // grids
+        new KeepWindowOnScreenPatch(nameof(ItemUiContext.method_3)).Enable(); // grids
     }
 
     private static void FixNewestWindow(List<InputNode> windows)
     {
-        UIInputNode newWindow = windows.Last() as UIInputNode;
+        UIInputNode newWindow = windows.LastOrDefault() as UIInputNode;
         newWindow?.CorrectPosition();
     }
 
