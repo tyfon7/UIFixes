@@ -190,47 +190,48 @@ public static class WeaponModdingPatches
                 extraOperation = foldOperation.R().ResizeOperation?.GetMoveOperation();
             }
 
-            if (extraOperation != null)
+            if (extraOperation == null)
             {
-                InPatch = true;
-                __instance.RunNetworkTransaction(extraOperation, extraResult =>
+                return true;
+            }
+
+            InPatch = true;
+
+            __instance.RunNetworkTransaction(extraOperation, extraResult =>
+            {
+                if (extraResult.Failed)
                 {
-                    if (extraResult.Failed)
+                    InPatch = false;
+                    if (callback != null)
+                    {
+                        callback(extraResult);
+                    }
+
+                    return;
+                }
+
+                void Continue(object eventArgs)
+                {
+                    if (__instance.HasActiveEvents)
+                    {
+                        return;
+                    }
+
+                    __instance.ActiveEventsChanged -= Continue;
+                    __instance.RunNetworkTransaction(operationResult, result =>
                     {
                         InPatch = false;
                         if (callback != null)
                         {
-                            callback(extraResult);
+                            callback(result);
                         }
+                    });
+                }
 
-                        return;
-                    }
+                __instance.ActiveEventsChanged += Continue;
+            });
 
-                    void Continue(object eventArgs)
-                    {
-                        if (__instance.HasActiveEvents)
-                        {
-                            return;
-                        }
-
-                        __instance.ActiveEventsChanged -= Continue;
-                        __instance.RunNetworkTransaction(operationResult, result =>
-                        {
-                            InPatch = false;
-                            if (callback != null)
-                            {
-                                callback(result);
-                            }
-                        });
-                    }
-
-                    __instance.ActiveEventsChanged += Continue;
-                });
-
-                return false;
-            }
-
-            return true;
+            return false;
         }
     }
 
