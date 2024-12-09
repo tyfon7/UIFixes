@@ -1,12 +1,12 @@
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -210,14 +210,8 @@ public static class WeaponModdingPatches
                     return;
                 }
 
-                void Continue(object eventArgs)
+                ItemUiContext.Instance.WaitOneFrame(() =>
                 {
-                    if (__instance.HasActiveEvents)
-                    {
-                        return;
-                    }
-
-                    __instance.ActiveEventsChanged -= Continue;
                     __instance.RunNetworkTransaction(operationResult, result =>
                     {
                         InPatch = false;
@@ -226,9 +220,7 @@ public static class WeaponModdingPatches
                             callback(result);
                         }
                     });
-                }
-
-                __instance.ActiveEventsChanged += Continue;
+                });
             });
 
             return false;
