@@ -78,6 +78,7 @@ public class Plugin : BaseUnityPlugin
         SliderPatches.Enable();
         DropdownPatches.Enable();
         new FixPlayerInspectPatch().Enable();
+        QuestKeysPatches.Enable();
     }
 
     public static bool InRaid()
