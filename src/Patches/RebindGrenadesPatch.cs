@@ -1,5 +1,6 @@
 ﻿using EFT;
 using EFT.InventoryLogic;
+using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
@@ -23,7 +24,7 @@ public class RebindGrenadesPatch : ModulePatch
     [PatchPostfix]
     public static void Postfix(CommandStatus status, DiscardOperation ___gclass3129_0)
     {
-        if (status != CommandStatus.Succeed)
+        if (!Settings.RebindGrenades.Value || status != CommandStatus.Succeed)
         {
             return;
         }
@@ -32,16 +33,24 @@ public class RebindGrenadesPatch : ModulePatch
         if (unbindResult != null)
         {
             InventoryController controller = unbindResult.R().Controller;
-            EBoundItem index = unbindResult.Index;
 
-            List<ThrowWeapItemClass> matchingGrenades = [];
-            controller.GetAcceptableItemsNonAlloc(Slots, matchingGrenades, g => g.TemplateId == unbindResult.Item.TemplateId);
-
-            var nextGrenade = matchingGrenades.FirstOrDefault(g => controller.IsAtBindablePlace(g));
-            if (nextGrenade != null)
+            // Don't run the rebind on fika host - the client will run this and send the rebind separately
+            if (controller.GetType().FullName == "Fika.Core.Coop.ObservedClasses.ObservedInventoryController")
             {
-                controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextGrenade, index, true), null);
+                return;
             }
+
+            ItemUiContext.Instance.WaitOneFrame(() =>
+            {
+                List<ThrowWeapItemClass> matchingGrenades = [];
+                controller.GetAcceptableItemsNonAlloc(Slots, matchingGrenades, g => g.TemplateId == unbindResult.Item.TemplateId);
+
+                var nextGrenade = matchingGrenades.FirstOrDefault(g => controller.IsAtBindablePlace(g));
+                if (nextGrenade != null)
+                {
+                    controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextGrenade, unbindResult.Index, true), null);
+                }
+            });
         }
     }
 }

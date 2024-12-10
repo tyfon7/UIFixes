@@ -100,6 +100,7 @@ internal class Settings
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
     public static ConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
+    public static ConfigEntry<bool> RebindGrenades { get; set; }
 
     // Mouse
     public static ConfigEntry<bool> UnlockCursor { get; set; }
@@ -397,6 +398,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Allows ammo to be loaded through the magazine context menu",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RebindGrenades = config.Bind(
+            GameplaySection,
+            "Quickbind Matching Grenade After Throw",
+            true,
+            new ConfigDescription(
+                "After throwing a grenade that had a quickbind, move the quickbind to another grenade of the same type, if you have one",
                 null,
                 new ConfigurationManagerAttributes { })));
 
