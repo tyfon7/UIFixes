@@ -161,6 +161,7 @@ internal class Settings
     // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
 
     // Containers
+    public static ConfigEntry<bool> AddToUnsearchedContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
@@ -397,7 +398,7 @@ internal class Settings
             "Enable Load Ammo Context Menu",
             true,
             new ConfigDescription(
-                "Allows ammo to be loaded through the magazine context menu",
+                "Allows ammo to be loaded through the magazine context menu while in a raid",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -806,6 +807,15 @@ internal class Settings
         //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Containers
+        configEntries.Add(AddToUnsearchedContainers = config.Bind(
+            ContainersSection,
+            "Allow Adding to Unsearched Containers",
+            false,
+            new ConfigDescription(
+                "Allow items to be placed into unsearched containers",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(ReorderGrids = config.Bind(
             ContainersSection,
             "Standardize Grid Order",

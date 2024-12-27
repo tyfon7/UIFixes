@@ -44,6 +44,7 @@ global using NotModdableInRaidError = GClass3698;
 global using MultitoolNeededError = GClass3699;
 global using ModVitalPartInRaidError = GClass3700;
 global using CannotApplyError = GClass3701;
+global using UnsearchedContainerError = GClass3709;
 global using SlotNotEmptyError = EFT.InventoryLogic.Slot.GClass3722;
 global using InvalidMagPresetError = MagazineBuildClass.Class3388;
 
