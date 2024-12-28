@@ -206,10 +206,12 @@ internal class Settings
     public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
     public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
+    public static List<ConfigEntryBase> AllConfigs = [];
+
     // Categories
     public static void Init(ConfigFile config)
     {
-        var configEntries = new List<ConfigEntryBase>();
+        var configEntries = AllConfigs;
 
         // Interface
         configEntries.Add(KeepMessagesOpen = config.Bind(

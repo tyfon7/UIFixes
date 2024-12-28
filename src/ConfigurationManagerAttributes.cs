@@ -100,4 +100,6 @@ internal sealed class ConfigurationManagerAttributes
     /// Custom converter from string to setting type for the built-in editor textboxes.
     /// </summary>
     public System.Func<string, object> StrToObj;
+
+    public bool? Synced;
 }

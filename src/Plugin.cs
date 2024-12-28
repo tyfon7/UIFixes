@@ -11,8 +11,12 @@ namespace UIFixes;
 [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
+    public static Plugin Instance;
+
     public void Awake()
     {
+        Instance = this;
+
         Settings.Init(Config);
 
         R.Init();

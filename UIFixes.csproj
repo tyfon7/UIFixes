@@ -41,6 +41,9 @@
     <Reference Include="CommonExtensions">
       <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="Fika.Core">
+      <HintPath>D:\fika\BepInEx\plugins\Fika.Core.dll</HintPath>
+    </Reference>
     <Reference Include="ItemComponent.Types">
       <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
     </Reference>
@@ -87,8 +90,10 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec
       Command='if $(ConfigurationName) == Debug (
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
-        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
+        xcopy /F /Y "$(TargetPath)" "d:\fika\BepInEx\plugins\"
+        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "d:\fika\BepInEx\plugins\"
+        xcopy /F /Y "$(TargetPath)" "d:\fika2\BepInEx\plugins\"
+        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "d:\fika2\BepInEx\plugins\"
       )
       if $(ConfigurationName) == Release (
         mkdir "$(ProjectDir)dist\BepInEx\plugins"
