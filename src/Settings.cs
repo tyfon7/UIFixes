@@ -98,6 +98,7 @@ internal class Settings
     public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
     public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
+    public static ConfigEntry<bool> ModifyEquippedPlates { get; set; }
     public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
     public static ConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
     public static ConfigEntry<bool> RebindGrenades { get; set; }
@@ -381,6 +382,15 @@ internal class Settings
             ModRaidWeapon.Never,
             new ConfigDescription(
                 "When to enable the modification of vital parts of unequipped weapons, in raid",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ModifyEquippedPlates = config.Bind(
+            GameplaySection,
+            "Modify Equipped Armor Plates In Raid",
+            false,
+            new ConfigDescription(
+                "Allow armor plates to be removed and inserted on equipped armor, in raid",
                 null,
                 new ConfigurationManagerAttributes { })));
 

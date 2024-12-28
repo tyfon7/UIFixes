@@ -1,12 +1,10 @@
 ﻿using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
-using EFT.InventoryLogic.Operations;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +13,6 @@ using TMPro;
 using UnityEngine;
 
 namespace UIFixes;
-
-public static class EItemInfoButtonExt
-{
-    public const EItemInfoButton AddOffer = (EItemInfoButton)77;
-}
 
 public static class ContextMenuPatches
 {

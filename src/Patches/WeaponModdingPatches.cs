@@ -17,7 +17,6 @@ namespace UIFixes;
 public static class WeaponModdingPatches
 {
     private const string MultitoolId = "544fb5454bdc2df8738b456a";
-    private static readonly string[] EquippedSlots = ["FirstPrimaryWeapon", "SecondPrimaryWeapon", "Holster"];
 
     public static void Enable()
     {
@@ -29,8 +28,9 @@ public static class WeaponModdingPatches
         new ModEquippedPatch().Enable();
         new InspectLockedPatch().Enable();
         new ModCanBeMovedPatch().Enable();
-        new ModCanDetachPatch().Enable();
-        new ModCanApplyPatch().Enable();
+        new CanDetachPatch().Enable();
+        new CanApplyPatch().Enable();
+        new ArmorSlotAcceptRaidPatch().Enable();
         new ModRaidModdablePatch().Enable();
         new EmptyVitalPartsPatch().Enable();
     }
@@ -260,11 +260,11 @@ public static class WeaponModdingPatches
                 }
             }
 
-            // These are on mods; normally the context menu is disabled so these are individually not disabled
+            // These are on mods & armor plates; normally the context menu is disabled so these are individually not disabled
             // Need to do the disabling as appropriate
-            if (___item_0 is Mod mod && (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard))
+            if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(mod, out string error))
+                if (!CanModify(___item_0, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
@@ -284,8 +284,13 @@ public static class WeaponModdingPatches
         [PatchPostfix]
         public static void Postfix(ModSlotView __instance, ref bool ___bool_1, CanvasGroup ____canvasGroup)
         {
+            if (__instance.Slot.Locked)
+            {
+                return;
+            }
+
             // Keep it grayed out and warning text if its not draggable, even if context menu is enabled
-            if (__instance.Slot.ContainedItem is Mod mod && CanModify(mod, out string error))
+            if (CanModify(__instance.Slot.ContainedItem, out string error))
             {
                 ___bool_1 = false;
                 ____canvasGroup.alpha = 1f;
@@ -326,7 +331,7 @@ public static class WeaponModdingPatches
         }
     }
 
-    public class ModCanDetachPatch : ModulePatch
+    public class CanDetachPatch : ModulePatch
     {
         private static Type TargetMethodReturnType;
 
@@ -341,18 +346,13 @@ public static class WeaponModdingPatches
         [PatchPostfix]
         public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct448<GClass3759> __result)
         {
-            if (item is not Mod mod)
+            if (item is not Mod && item is not ArmorPlateItemClass)
             {
                 return;
             }
 
-            if (Plugin.InRaid() && __result.Succeeded)
-            {
-                // In raid successes are all fine
-                return;
-            }
 
-            bool canModify = CanModify(mod, out string error) && CanModify(to, out error);
+            bool canModify = CanModify(item, out string error) && CanModify(to, out error);
             if (canModify == __result.Succeeded)
             {
                 // In agreement, just check the error is best to show
@@ -361,7 +361,7 @@ public static class WeaponModdingPatches
                 {
                     // Double check this is an unequipped weapon
                     Weapon weapon = item.GetRootItemNotEquipment() as Weapon ?? to.GetRootItemNotEquipment() as Weapon;
-                    if (weapon != null && !EquippedSlots.Contains(weapon.Parent.Container.ID))
+                    if (weapon != null && itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon))
                     {
                         __result = new MultitoolNeededError(item);
                     }
@@ -381,8 +381,19 @@ public static class WeaponModdingPatches
             }
             else if (__result.Succeeded && !canModify)
             {
-                // Out of raid, likely dragging a mod that was previously non-interactive, need to actually block
-                __result = new VitalPartInHandsError();
+                // Some actions had nothing preventing them except making the slot not block raycasts. Need to supply the error in these cases
+                if (item is Mod)
+                {
+                    __result = new VitalPartInHandsError();
+                }
+                else if (item is ArmorPlateItemClass)
+                {
+                    __result = new ArmorPlatesInRaidError();
+                }
+                else
+                {
+                    __result = new GenericError("UIFixes: Unexpected type failed CanModify");
+                }
             }
         }
 
@@ -390,7 +401,7 @@ public static class WeaponModdingPatches
         {
             public override string GetLocalizedDescription()
             {
-                return "Vital mod weapon in hands".Localized();
+                return ToString().Localized();
             }
 
             public override string ToString()
@@ -398,50 +409,61 @@ public static class WeaponModdingPatches
                 return "Vital mod weapon in hands";
             }
         }
+
+        private class ArmorPlatesInRaidError : InventoryError
+        {
+            public override string GetLocalizedDescription()
+            {
+                return ToString().Localized();
+            }
+
+            public override string ToString()
+            {
+                return "Equipped locked slot";
+            }
+        }
     }
 
-    public class ModCanApplyPatch : ModulePatch
+    public class CanApplyPatch : ModulePatch
     {
+        public static bool SuccessOverride = false;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(CompoundItem), nameof(CompoundItem.Apply));
         }
 
-        // Gets called when dropping mods on top of weapons
         [PatchPrefix]
-        public static void Prefix(CompoundItem __instance, Item item)
+        public static void Prefix(CompoundItem __instance, TraderControllerClass itemController, Item item)
         {
             if (!Plugin.InRaid())
             {
                 return;
             }
 
-            if (__instance is not Weapon weapon || item is not Mod mod || EquippedSlots.Contains(weapon.Parent.Container.ID))
+            // Mods in unequipped weapons; armor is handled in ArmorSlotAcceptRaidPatch
+            if (item is Mod && __instance is Weapon weapon)
             {
-                return;
-            }
+                bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(__instance);
 
-            if (CanModify(mod, out string error))
-            {
-                ModRaidModdablePatch.Override = true;
-                EmptyVitalPartsPatch.Override = true;
+                // No changes to equipped weapons
+                if (!equipped)
+                {
+                    SuccessOverride = CanModify(item, out string error) && CanModify(weapon, out error);
+                }
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(CompoundItem __instance, ref ItemOperation __result)
+        public static void Postfix(CompoundItem __instance, TraderControllerClass itemController, ref ItemOperation __result)
         {
-            ModRaidModdablePatch.Override = false;
-            EmptyVitalPartsPatch.Override = false;
+            SuccessOverride = false;
+
+            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(__instance);
 
             // If setting is multitool, may need to change some errors
-            if (Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
+            if (__instance is Weapon && !equipped && Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
             {
-                if (__instance is not Weapon weapon || EquippedSlots.Contains(weapon.Parent.Container.ID))
-                {
-                    return;
-                }
-
                 if (__result.Error is NotModdableInRaidError || __result.Error is ModVitalPartInRaidError)
                 {
                     __result = new MultitoolNeededError(__instance);
@@ -450,10 +472,28 @@ public static class WeaponModdingPatches
         }
     }
 
+    // Putting plates in during raid ultimately comes to this one function: a sublcass of slot for armor plates
+    // that rejects everything when equipped + inraid
+    public class ArmorSlotAcceptRaidPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(PatchConstants.EftTypes.Single(t => t.IsSubclassOf(typeof(Slot)) && !t.IsNested), "CanAcceptRaid");
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref InventoryError error, ref bool __result)
+        {
+            if (Settings.ModifyEquippedPlates.Value)
+            {
+                error = null;
+                __result = true;
+            }
+        }
+    }
+
     public class ModRaidModdablePatch : ModulePatch
     {
-        public static bool Override = false;
-
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Property(typeof(Mod), nameof(Mod.RaidModdable)).GetMethod;
@@ -462,14 +502,12 @@ public static class WeaponModdingPatches
         [PatchPostfix]
         public static void Postfix(ref bool __result)
         {
-            __result = __result || Override;
+            __result = __result || CanApplyPatch.SuccessOverride;
         }
     }
 
     public class EmptyVitalPartsPatch : ModulePatch
     {
-        public static bool Override = false;
-
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Property(typeof(CompoundItem), nameof(CompoundItem.VitalParts)).GetMethod;
@@ -478,7 +516,7 @@ public static class WeaponModdingPatches
         [PatchPrefix]
         public static bool Prefix(ref IEnumerable<Slot> __result)
         {
-            if (Override)
+            if (CanApplyPatch.SuccessOverride)
             {
                 __result = [];
                 return false;
@@ -488,7 +526,7 @@ public static class WeaponModdingPatches
         }
     }
 
-    private static bool CanModify(Mod item, out string error)
+    private static bool CanModify(Item item, out string error)
     {
         return CanModify(item, item?.Parent, out error);
     }
@@ -498,7 +536,7 @@ public static class WeaponModdingPatches
         return CanModify(null, itemAddress, out error);
     }
 
-    private static bool CanModify(Mod item, ItemAddress itemAddress, out string error)
+    private static bool CanModify(Item item, ItemAddress itemAddress, out string error)
     {
         error = null;
 
@@ -509,21 +547,65 @@ public static class WeaponModdingPatches
             return false;
         }
 
-        // If it's raidmoddable and not in a vital slot, then it's all good
-        if ((item == null || item.RaidModdable) &&
-            (!R.SlotItemAddress.Type.IsAssignableFrom(itemAddress.GetType()) || !new R.SlotItemAddress(itemAddress).Slot.Required))
+        Slot slot = R.SlotItemAddress.Type.IsAssignableFrom(itemAddress.GetType()) ? new R.SlotItemAddress(itemAddress).Slot : null;
+        if (slot == null)
+        {
+            // If there's no slot, it's just a normal grid?
+            return true;
+        }
+
+        // Locked slots: never
+        if (slot.Locked)
+        {
+            return false;
+        }
+
+        // If it's raid moddable and not in a vital slot, then it's all good
+        if (item is Mod mod && mod.RaidModdable && !slot.Required)
         {
             return true;
         }
 
         Item rootItem = itemAddress.GetRootItemNotEquipment();
-        if (rootItem is not Weapon weapon || weapon.CurrentAddress == null)
+        if (rootItem.CurrentAddress == null)
         {
             return true;
         }
 
+        if (item is Mod && rootItem is Weapon weapon)
+        {
+            // If the slot is not a required slot, allow it (item is null here, checking the empty destination slot)
+            if (!slot.Required)
+            {
+                return true;
+            }
+
+            return CanModify(weapon, out error);
+        }
+        else if (item is ArmorPlateItemClass && rootItem is ArmorItemClass or VestItemClass)
+        {
+            if (!Plugin.InRaid())
+            {
+                return true;
+            }
+
+            if (rootItem.Owner is InventoryController inventoryController &&
+                inventoryController.ID == PatchConstants.BackEndSession.Profile.Id &&
+                inventoryController.IsItemEquipped(rootItem))
+            {
+                return Settings.ModifyEquippedPlates.Value;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool CanModify(Weapon weapon, out string error)
+    {
+        error = null;
+
         // Can't modify weapon in player's hands
-        if (weapon.Owner.ID == PatchConstants.BackEndSession.Profile.Id && EquippedSlots.Contains(weapon.Parent.Container.ID))
+        if (weapon.Owner is InventoryController inventoryController && inventoryController.ID == PatchConstants.BackEndSession.Profile.Id && inventoryController.IsItemEquipped(weapon))
         {
             if (Plugin.InRaid())
             {
