@@ -17,6 +17,7 @@ public class Plugin : BaseUnityPlugin
 
         R.Init();
 
+        NetworkTransactionWatcher.Enable();
         ConfirmDialogKeysPatches.Enable();
         new FixMailRecieveAllPatch().Enable();
         FixTooltipPatches.Enable();

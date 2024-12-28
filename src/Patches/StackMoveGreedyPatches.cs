@@ -72,7 +72,9 @@ public static class StackMoveGreedyPatches
             }
 
             stackCount = ic.Item.StackObjectsCount;
-            return __instance.AcceptItem(ic, targetItemContext);
+            Task task = NetworkTransactionWatcher.WatchNextTransaction();
+            __instance.AcceptItem(ic, targetItemContext);
+            return task;
         });
 
         // This won't block the first action from swapping, but will prevent follow up swaps
