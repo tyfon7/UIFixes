@@ -3,7 +3,9 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using TMPro;
@@ -18,9 +20,11 @@ public static class TagPatches
     {
         new OnEnterPatch().Enable();
         new TagsOverCaptionsPatch().Enable();
+
         new AddTagNewItemPatch().Enable();
         new AddTagParsedItemPatch().Enable();
         new TagAdditionalTypePatch().Enable();
+        new KeepTagsLocalPatch().Enable();
     }
 
     // Save the tag when enter is pressed
@@ -114,6 +118,7 @@ public static class TagPatches
             }
 
             yield return EItemInfoButton.Tag;
+
             if (!string.IsNullOrEmpty(tag.Name))
             {
                 yield return EItemInfoButton.ResetTag;
@@ -174,6 +179,32 @@ public static class TagPatches
                     tagProperty.ParseJsonTo(tagComponent.GetType(), tagComponent);
                 }
             }
+        }
+    }
+
+    // For Fika compat: When items are serialized and set to other clients, lots of (normally safe) assumptions are made, like what components items have
+    // If the other client does not have UIFixes, it will puke trying to deserialize a tag component on an item type that doesn't normally have them
+    // So don't serialize the tag. It's no big loss anyway.
+    public class KeepTagsLocalPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(PatchConstants.EftTypes.Single(t => t.GetMethod("DeserializeLootData", BindingFlags.Public | BindingFlags.Static) != null), "smethod_2");
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(IItemComponent component, ref object __result)
+        {
+            if (component is TagComponent tagComponent)
+            {
+                if (tagComponent.Item is BackpackItemClass or VestItemClass)
+                {
+                    __result = null;
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
