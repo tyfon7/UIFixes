@@ -792,7 +792,7 @@ public static class MultiSelectPatches
                 FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                 FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
                 var task = NetworkTransactionWatcher.WatchNextTransaction();
-                __instance.AcceptItem(ic, targetItemContext);
+                __instance.AcceptItem(ic, targetItemContext).CancelWatchIfCanceled();
                 return task;
             });
             //itemContext => __instance.Grid.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
@@ -1025,7 +1025,7 @@ public static class MultiSelectPatches
                 itemContext =>
                 {
                     var task = NetworkTransactionWatcher.WatchNextTransaction();
-                    __instance.AcceptItem(itemContext, targetItemContext);
+                    __instance.AcceptItem(itemContext, targetItemContext).CancelWatchIfCanceled();
                     return task;
                 });
             //itemContext => __instance.Slot.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
