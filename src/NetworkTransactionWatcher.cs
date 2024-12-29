@@ -24,7 +24,24 @@ public static class NetworkTransactionWatcher
         }
 
         Watcher = new();
+        Watcher.Task.ContinueWith(_ => Watcher = null);
         return Watcher.Task;
+    }
+
+    public static void CancelWatch()
+    {
+        Watcher?.Cancel();
+    }
+
+    public static void CancelWatchIfCanceled(this Task task)
+    {
+        task.ContinueWith(t =>
+        {
+            if (t.IsCanceled || t.IsFaulted)
+            {
+                CancelWatch();
+            }
+        });
     }
 
     public class NetworkTransactionPatch : ModulePatch
@@ -58,8 +75,12 @@ public static class NetworkTransactionWatcher
         private void Callback(IResult result)
         {
             innerCallback?.Invoke(result);
-            source.Complete();
-            Watcher = null;
+            source.TryComplete();
+        }
+
+        public void Cancel()
+        {
+            source.TrySetCanceled();
         }
     }
 }

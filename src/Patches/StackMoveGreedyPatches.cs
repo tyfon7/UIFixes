@@ -73,7 +73,7 @@ public static class StackMoveGreedyPatches
 
             stackCount = ic.Item.StackObjectsCount;
             Task task = NetworkTransactionWatcher.WatchNextTransaction();
-            __instance.AcceptItem(ic, targetItemContext);
+            __instance.AcceptItem(ic, targetItemContext).CancelWatchIfCanceled();
             return task;
         });
 
