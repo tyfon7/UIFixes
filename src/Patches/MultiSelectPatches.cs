@@ -791,9 +791,11 @@ public static class MultiSelectPatches
             {
                 FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                 FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
-                return __instance.AcceptItem(ic, targetItemContext);
-            },
-            itemContext => __instance.Grid.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
+                var task = NetworkTransactionWatcher.WatchNextTransaction();
+                __instance.AcceptItem(ic, targetItemContext);
+                return task;
+            });
+            //itemContext => __instance.Grid.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
             // Setting the fallback after initializing means it only applies after the first item is already moved
             GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
@@ -1020,8 +1022,13 @@ public static class MultiSelectPatches
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(),
-                itemContext => __instance.AcceptItem(itemContext, targetItemContext),
-                itemContext => __instance.Slot.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
+                itemContext =>
+                {
+                    var task = NetworkTransactionWatcher.WatchNextTransaction();
+                    __instance.AcceptItem(itemContext, targetItemContext);
+                    return task;
+                });
+            //itemContext => __instance.Slot.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
             __result.ContinueWith(_ => { InPatch = false; });
 
