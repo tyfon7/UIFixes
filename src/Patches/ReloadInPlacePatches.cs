@@ -147,6 +147,11 @@ public static class ReloadInPlacePatches
         [PatchPrefix]
         public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress)
         {
+            if (!__instance.CanStartReload() || __instance.Blindfire)
+            {
+                return false;
+            }
+
             // If itemAddress isn't null, it already found a place for the current mag, so let it run (unless always swap is enabled)
             if (!Settings.SwapMags.Value || (itemAddress != null && !Settings.AlwaysSwapMags.Value))
             {
