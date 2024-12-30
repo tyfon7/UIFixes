@@ -787,15 +787,15 @@ public static class MultiSelectPatches
             }
 
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), ic =>
+            __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), async ic =>
             {
                 FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
                 FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
-                var task = NetworkTransactionWatcher.WatchNextTransaction();
-                __instance.AcceptItem(ic, targetItemContext).CancelWatchIfCanceled();
-                return task;
+
+                using var watcher = NetworkTransactionWatcher.WatchNext();
+                await __instance.AcceptItem(ic, targetItemContext);
+                await watcher.Task;
             });
-            //itemContext => __instance.Grid.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
             // Setting the fallback after initializing means it only applies after the first item is already moved
             GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
@@ -1022,13 +1022,12 @@ public static class MultiSelectPatches
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(),
-                itemContext =>
+                async itemContext =>
                 {
-                    var task = NetworkTransactionWatcher.WatchNextTransaction();
-                    __instance.AcceptItem(itemContext, targetItemContext).CancelWatchIfCanceled();
-                    return task;
+                    using var watcher = NetworkTransactionWatcher.WatchNext();
+                    await __instance.AcceptItem(itemContext, targetItemContext);
+                    await watcher.Task;
                 });
-            //itemContext => __instance.Slot.ParentItem.Owner.SelectEvents(itemContext.Item).All(args => args.Status == CommandStatus.Succeed));
 
             __result.ContinueWith(_ => { InPatch = false; });
 

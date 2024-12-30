@@ -63,18 +63,20 @@ public static class StackMoveGreedyPatches
 
         int stackCount = int.MaxValue;
         var serializer = __instance.gameObject.AddComponent<ItemContextTaskSerializer>();
-        __result = serializer.Initialize(itemContext.RepeatUntilEmpty(), ic =>
+        __result = serializer.Initialize(itemContext.RepeatUntilEmpty(), async ic =>
         {
             if (ic.Item.StackObjectsCount >= stackCount)
             {
                 // Nothing happened, bail out
-                return Task.FromCanceled(new CancellationToken(true));
+                await Task.FromCanceled(new CancellationToken(true));
+                return;
             }
 
             stackCount = ic.Item.StackObjectsCount;
-            Task task = NetworkTransactionWatcher.WatchNextTransaction();
-            __instance.AcceptItem(ic, targetItemContext).CancelWatchIfCanceled();
-            return task;
+
+            using var watcher = NetworkTransactionWatcher.WatchNext();
+            await __instance.AcceptItem(ic, targetItemContext);
+            await watcher.Task;
         });
 
         // This won't block the first action from swapping, but will prevent follow up swaps

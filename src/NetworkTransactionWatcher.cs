@@ -2,49 +2,55 @@ using Comfort.Common;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace UIFixes;
 
-public static class NetworkTransactionWatcher
+public class NetworkTransactionWatcher : IDisposable
 {
-    private static WatchedCallback Watcher;
+    private static readonly Stack<NetworkTransactionWatcher> Watchers = [];
 
     public static void Enable()
     {
         new NetworkTransactionPatch().Enable();
     }
 
-    public static Task WatchNextTransaction()
+    public static NetworkTransactionWatcher WatchNext()
     {
-        if (Watcher != null)
+        var watcher = new NetworkTransactionWatcher();
+        Watchers.Push(watcher);
+        return watcher;
+    }
+
+    private Callback innerCallback;
+    private readonly TaskCompletionSource source = new();
+
+    public Task Task => source.Task;
+
+    protected void Watch(ref Callback callback)
+    {
+        innerCallback = callback;
+        callback = Callback;
+    }
+
+    public void Dispose()
+    {
+        if (Watchers.Count > 0 && Watchers.Peek() == this)
         {
-            throw new InvalidOperationException("UIFixes NetworkTransactionWatcher: Next transaction is already being watched!");
+            Watchers.Pop();
+            source.TrySetCanceled();
         }
-
-        Watcher = new();
-        Watcher.Task.ContinueWith(_ => Watcher = null);
-        return Watcher.Task;
     }
 
-    public static void CancelWatch()
+    private void Callback(IResult result)
     {
-        Watcher?.Cancel();
+        innerCallback?.Invoke(result);
+        source.TryComplete();
     }
 
-    public static void CancelWatchIfCanceled(this Task task)
-    {
-        task.ContinueWith(t =>
-        {
-            if (t.IsCanceled || t.IsFaulted)
-            {
-                CancelWatch();
-            }
-        });
-    }
-
-    public class NetworkTransactionPatch : ModulePatch
+    private class NetworkTransactionPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -55,32 +61,10 @@ public static class NetworkTransactionWatcher
         [HarmonyPriority(Priority.First)]
         public static void Prefix(ref Callback callback)
         {
-            Watcher?.Init(ref callback);
-        }
-    }
-
-    private class WatchedCallback
-    {
-        private Callback innerCallback;
-        private readonly TaskCompletionSource source = new();
-
-        public Task Task => source.Task;
-
-        public void Init(ref Callback callback)
-        {
-            innerCallback = callback;
-            callback = Callback;
-        }
-
-        private void Callback(IResult result)
-        {
-            innerCallback?.Invoke(result);
-            source.TryComplete();
-        }
-
-        public void Cancel()
-        {
-            source.TrySetCanceled();
+            if (Watchers.Count > 0)
+            {
+                Watchers.Pop().Watch(ref callback);
+            }
         }
     }
 }
