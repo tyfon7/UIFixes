@@ -26,8 +26,8 @@
         xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
       )
       if $(ConfigurationName) == Release (
-        mkdir "$(ProjectDir)dist\BepInEx\plugins"
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
+        mkdir "$(SolutionDir)dist\BepInEx\plugins"
+        xcopy /F /Y "$(TargetPath)" "$(SolutionDir)dist\BepInEx\plugins\"
       )' />
   </Target>
 </Project>

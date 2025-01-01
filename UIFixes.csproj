@@ -100,9 +100,9 @@
       if $(ConfigurationName) == Release (
         mkdir "$(ProjectDir)dist\BepInEx\plugins"
         xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
-        xcopy /F /Y /S "$(ProjectDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
-        xcopy /F /Y /S "$(ProjectDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
-        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(ProjectDir)dist\BepInEx $(ProjectDir)dist\user
+        xcopy /F /Y /S "$(SolutionDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
+        xcopy /F /Y /S "$(SolutionDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
+        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
       )' />
   </Target>
 </Project>
