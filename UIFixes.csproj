@@ -4,7 +4,7 @@
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>3.0.2</Version>
+    <Version>3.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release</Configurations>
@@ -94,10 +94,8 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec
       Command='if $(ConfigurationName) == Debug (
-        xcopy /F /Y "$(TargetPath)" "d:\fika\BepInEx\plugins\"
-        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "d:\fika\BepInEx\plugins\"
-        xcopy /F /Y "$(TargetPath)" "d:\fika2\BepInEx\plugins\"
-        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "d:\fika2\BepInEx\plugins\"
+        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
+        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
       )
       if $(ConfigurationName) == Release (
         mkdir "$(ProjectDir)dist\BepInEx\plugins"
