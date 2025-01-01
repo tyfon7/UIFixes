@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
+using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
 using TMPro;
@@ -13,6 +14,8 @@ public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance;
 
+    public new ManualLogSource Logger => base.Logger;
+
     public void Awake()
     {
         Instance = this;
@@ -20,6 +23,11 @@ public class Plugin : BaseUnityPlugin
         Settings.Init(Config);
 
         R.Init();
+
+        if (FikaPresent())
+        {
+            Fika.Sync.Init();
+        }
 
         NetworkTransactionWatcher.Enable();
         ConfirmDialogKeysPatches.Enable();
