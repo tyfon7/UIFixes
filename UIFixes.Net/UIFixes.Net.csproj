@@ -28,8 +28,6 @@
       if $(ConfigurationName) == Release (
         mkdir "$(ProjectDir)dist\BepInEx\plugins"
         xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
-        xcopy /F /Y /S "$(ProjectDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
-        xcopy /F /Y /S "$(ProjectDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
       )' />
   </Target>
 </Project>
