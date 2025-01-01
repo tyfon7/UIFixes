@@ -1,5 +1,4 @@
-﻿using BepInEx.Bootstrap;
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 
 namespace UIFixes;
+
 internal enum WeaponPresetConfirmationOption
 {
     Never,
@@ -75,140 +75,140 @@ internal class Settings
     private const string AddOfferSection = "P. Add Offer";
 
     // Interface
-    public static UIFConfigEntry<bool> KeepMessagesOpen { get; set; }
-    public static UIFConfigEntry<bool> AutofillQuestTurnIns { get; set; }
-    public static UIFConfigEntry<bool> ContextMenuOnRight { get; set; }
-    public static UIFConfigEntry<bool> ContextMenuWhileSearching { get; set; }
-    public static UIFConfigEntry<int> OperationQueueTime { get; set; } // Advanced
-    public static UIFConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
-    public static UIFConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
-    public static UIFConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
-    public static UIFConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
+    public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
+    public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
+    public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
+    public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
+    public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
+    public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
+    public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
+    public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
+    public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
 
     // Dialogs
-    public static UIFConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
-    public static UIFConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
-    public static UIFConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
+    public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
+    public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+    public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
     // Gameplay
-    public static UIFConfigEntry<bool> ToggleOrHoldAim { get; set; }
-    public static UIFConfigEntry<bool> ToggleOrHoldSprint { get; set; }
-    public static UIFConfigEntry<bool> ToggleOrHoldTactical { get; set; }
-    public static UIFConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
-    public static UIFConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
-    public static UIFConfigEntry<bool> ModifyEquippedWeapons { get; set; }
-    public static UIFConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
-    public static UIFConfigEntry<bool> ModifyEquippedPlates { get; set; }
-    public static UIFConfigEntry<bool> RemoveDisabledActions { get; set; }
-    public static UIFConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
-    public static UIFConfigEntry<bool> RebindGrenades { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldSprint { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
+    public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
+    public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
+    public static ConfigEntry<bool> ModifyEquippedPlates { get; set; }
+    public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
+    public static ConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
+    public static ConfigEntry<bool> RebindGrenades { get; set; }
 
     // Mouse
-    public static UIFConfigEntry<bool> UnlockCursor { get; set; }
-    public static UIFConfigEntry<int> MouseScrollMulti { get; set; }
-    public static UIFConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
-    public static UIFConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
+    public static ConfigEntry<bool> UnlockCursor { get; set; }
+    public static ConfigEntry<int> MouseScrollMulti { get; set; }
+    public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
+    public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
     // Interface Keybinds
-    public static UIFConfigEntry<bool> UseHomeEnd { get; set; }
-    public static UIFConfigEntry<bool> RebindPageUpDown { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
+    public static ConfigEntry<bool> UseHomeEnd { get; set; }
+    public static ConfigEntry<bool> RebindPageUpDown { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
 
     // Item Keybinds
-    public static UIFConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> ExamineKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> ReloadKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> UnloadKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> InstallKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> UninstallKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> RequiredSearchKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
-    public static UIFConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
-    public static UIFConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
+    public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> OpenKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> ExamineKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> TopUpKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UseKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UseAllKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> ReloadKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UnloadKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> InstallKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UninstallKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> UnpackKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> FilterByKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> LinkedSearchKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> RequiredSearchKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
+    public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
+    public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
     // Gameplay Keybinds
-    public static UIFConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
+    public static ConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
 
     // Multiselect
-    public static UIFConfigEntry<bool> EnableMultiSelect { get; set; }
-    public static UIFConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
-    public static UIFConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
-    public static UIFConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
-    public static UIFConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
-    public static UIFConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
+    public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+    public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
+    public static ConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
+    public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
+    public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
+    public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
 
     // ItemSwapping
-    public static UIFConfigEntry<bool> SwapItems { get; set; }
-    public static UIFConfigEntry<bool> SwapMags { get; set; }
-    public static UIFConfigEntry<bool> AlwaysSwapMags { get; set; }
-    public static UIFConfigEntry<bool> SwapImpossibleContainers { get; set; }
+    public static ConfigEntry<bool> SwapItems { get; set; }
+    public static ConfigEntry<bool> SwapMags { get; set; }
+    public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
+    public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
 
     // ItemStacking
-    public static UIFConfigEntry<bool> GreedyStackMove { get; set; }
-    public static UIFConfigEntry<bool> StackBeforeSort { get; set; }
-    public static UIFConfigEntry<bool> MergeFIRAmmo { get; set; }
-    public static UIFConfigEntry<bool> MergeFIROther { get; set; }
+    public static ConfigEntry<bool> GreedyStackMove { get; set; }
+    public static ConfigEntry<bool> StackBeforeSort { get; set; }
+    public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
+    public static ConfigEntry<bool> MergeFIROther { get; set; }
 
-    // public static UIFConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
+    // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
 
     // Containers
-    public static UIFConfigEntry<bool> AddToUnsearchedContainers { get; set; }
-    public static UIFConfigEntry<bool> ReorderGrids { get; set; }
-    public static UIFConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
-    public static UIFConfigEntry<bool> OpenAllContextMenu { get; set; }
-    public static UIFConfigEntry<bool> TagsOverCaptions { get; set; }
-    public static UIFConfigEntry<bool> TagBackpacks { get; set; }
-    public static UIFConfigEntry<bool> TagVests { get; set; }
+    public static ConfigEntry<bool> AddToUnsearchedContainers { get; set; }
+    public static ConfigEntry<bool> ReorderGrids { get; set; }
+    public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
+    public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
+    public static ConfigEntry<bool> TagsOverCaptions { get; set; }
+    public static ConfigEntry<bool> TagBackpacks { get; set; }
+    public static ConfigEntry<bool> TagVests { get; set; }
 
     // InspectWindows
-    public static UIFConfigEntry<bool> ShowModStats { get; set; }
-    public static UIFConfigEntry<bool> HighlightEmptySlots { get; set; }
-    public static UIFConfigEntry<bool> RememberInspectSize { get; set; }
-    public static UIFConfigEntry<bool> LockInspectPreviewSize { get; set; }
-    public static UIFConfigEntry<bool> ExpandDescriptionHeight { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> SnapLeftKeybind { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> SnapRightKeybind { get; set; }
-    public static UIFConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
-    public static UIFConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
+    public static ConfigEntry<bool> ShowModStats { get; set; }
+    public static ConfigEntry<bool> HighlightEmptySlots { get; set; }
+    public static ConfigEntry<bool> RememberInspectSize { get; set; }
+    public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
+    public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SnapLeftKeybind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SnapRightKeybind { get; set; }
+    public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
+    public static ConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
 
     // Stash
-    public static UIFConfigEntry<bool> SynchronizeStashScrolling { get; set; }
-    public static UIFConfigEntry<bool> AutoOpenSortingTable { get; set; }
-    public static UIFConfigEntry<bool> ShowGPCurrency { get; set; }
+    public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
+    public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
+    public static ConfigEntry<bool> ShowGPCurrency { get; set; }
 
     // Trading
-    public static UIFConfigEntry<bool> AutoSwitchTrading { get; set; }
-    public static UIFConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
-    public static UIFConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
+    public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
+    public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
+    public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
 
     // FleaMarket
-    public static UIFConfigEntry<bool> EnableFleaHistory { get; set; }
-    public static UIFConfigEntry<bool> ShowBarterIcons { get; set; }
-    public static UIFConfigEntry<bool> EnableSlotSearch { get; set; }
-    public static UIFConfigEntry<bool> ShowRequiredQuest { get; set; }
-    public static UIFConfigEntry<bool> AutoExpandCategories { get; set; }
-    public static UIFConfigEntry<bool> ClearFiltersOnSearch { get; set; }
+    public static ConfigEntry<bool> EnableFleaHistory { get; set; }
+    public static ConfigEntry<bool> ShowBarterIcons { get; set; }
+    public static ConfigEntry<bool> EnableSlotSearch { get; set; }
+    public static ConfigEntry<bool> ShowRequiredQuest { get; set; }
+    public static ConfigEntry<bool> AutoExpandCategories { get; set; }
+    public static ConfigEntry<bool> ClearFiltersOnSearch { get; set; }
 
     // AddOffer
-    public static UIFConfigEntry<AutoFleaPrice> AutoOfferPrice { get; set; }
-    public static UIFConfigEntry<bool> UpdatePriceOnBulk { get; set; }
-    public static UIFConfigEntry<bool> KeepAddOfferOpen { get; set; }
-    public static UIFConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
-    public static UIFConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
+    public static ConfigEntry<AutoFleaPrice> AutoOfferPrice { get; set; }
+    public static ConfigEntry<bool> UpdatePriceOnBulk { get; set; }
+    public static ConfigEntry<bool> KeepAddOfferOpen { get; set; }
+    public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
+    public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
-    public static List<UIFConfigEntryBase> AllConfigs = [];
+    public static List<ConfigEntryBase> AllConfigs = [];
 
-    public static IEnumerable<UIFConfigEntryBase> SyncedConfigs()
+    public static IEnumerable<ConfigEntryBase> SyncedConfigs()
     {
         return AllConfigs.Where(c => c.IsSynced());
     }
@@ -1138,7 +1138,7 @@ internal class Settings
         MakeDependent(ReorderGrids, PrioritizeSmallerGrids, false);
     }
 
-    private static void RecalcOrder(List<UIFConfigEntryBase> configEntries)
+    private static void RecalcOrder(List<ConfigEntryBase> configEntries)
     {
         // Set the Order field for all settings, to avoid unnecessary changes when adding new settings
         int settingOrder = configEntries.Count;
@@ -1153,7 +1153,7 @@ internal class Settings
         }
     }
 
-    private static void MakeExclusive(UIFConfigEntry<bool> priorityConfig, UIFConfigEntry<bool> secondaryConfig, bool allowSecondaryToDisablePrimary = true)
+    private static void MakeExclusive(ConfigEntry<bool> priorityConfig, ConfigEntry<bool> secondaryConfig, bool allowSecondaryToDisablePrimary = true)
     {
         if (priorityConfig.Value)
         {
@@ -1184,7 +1184,7 @@ internal class Settings
         };
     }
 
-    private static void MakeDependent(UIFConfigEntry<bool> primaryConfig, UIFConfigEntry<bool> dependentConfig, bool primaryEnablesDependent = true)
+    private static void MakeDependent(ConfigEntry<bool> primaryConfig, ConfigEntry<bool> dependentConfig, bool primaryEnablesDependent = true)
     {
         if (!primaryConfig.Value)
         {
@@ -1215,7 +1215,7 @@ internal class Settings
         };
     }
 
-    private static void MakeRequirement(UIFConfigEntry<bool> config, bool requirement)
+    private static void MakeRequirement(ConfigEntry<bool> config, bool requirement)
     {
         if (!requirement)
         {
@@ -1236,12 +1236,12 @@ internal class Settings
 
 public static class SettingExtensions
 {
-    public static void Subscribe<T>(this UIFConfigEntry<T> configEntry, Action<T> onChange)
+    public static void Subscribe<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
     {
         configEntry.SettingChanged += (_, _) => onChange(configEntry.Value);
     }
 
-    public static void Bind<T>(this UIFConfigEntry<T> configEntry, Action<T> onChange)
+    public static void Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
     {
         configEntry.Subscribe(onChange);
         onChange(configEntry.Value);
@@ -1261,12 +1261,6 @@ public static class SettingExtensions
     public static bool IsUpIgnoreOthers(this KeyboardShortcut shortcut)
     {
         return Input.GetKeyUp(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
-    }
-
-    public static bool IsSynced(this UIFConfigEntryBase configEntry)
-    {
-        ConfigurationManagerAttributes attributes = configEntry.Description.Tags.OfType<ConfigurationManagerAttributes>().FirstOrDefault();
-        return attributes != null && attributes.Synced.HasValue && attributes.Synced.Value;
     }
 
     public static bool IsSynced(this ConfigEntryBase configEntry)

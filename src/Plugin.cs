@@ -3,6 +3,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
+using System;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -108,12 +109,25 @@ public class Plugin : BaseUnityPlugin
     }
 
     private static bool? IsFikaPresent;
+    private static readonly Version MinimumFikaVersion = new("1.1.3");
 
     public static bool FikaPresent()
     {
         if (!IsFikaPresent.HasValue)
         {
-            IsFikaPresent = Chainloader.PluginInfos.ContainsKey("com.fika.core");
+            if (Chainloader.PluginInfos.TryGetValue("com.fika.core", out BepInEx.PluginInfo pluginInfo))
+            {
+                if (pluginInfo.Metadata.Version < MinimumFikaVersion)
+                {
+                    Instance.Logger.LogError($"Unsupported Fika version! {MinimumFikaVersion} or newer is required");
+                }
+
+                IsFikaPresent = true;
+            }
+            else
+            {
+                IsFikaPresent = false;
+            }
         }
 
         return IsFikaPresent.Value;
