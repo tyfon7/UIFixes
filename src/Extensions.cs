@@ -19,4 +19,9 @@ public static class Extensions
 
         return itemAddress.Container.ParentItem.GetRootItemNotEquipment();
     }
+
+    public static bool IsObserved(this InventoryController controller)
+    {
+        return controller != null && controller.GetType().FullName == "Fika.Core.Coop.ObservedClasses.ObservedInventoryController";
+    }
 }

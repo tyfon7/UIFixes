@@ -34,8 +34,8 @@ public class RebindGrenadesPatch : ModulePatch
         {
             InventoryController controller = unbindResult.R().Controller;
 
-            // Don't run the rebind on fika host - the client will run this and send the rebind separately
-            if (controller.GetType().FullName == "Fika.Core.Coop.ObservedClasses.ObservedInventoryController")
+            // Don't run the rebind on fika remote - the remote client will run this and send the rebind separately
+            if (controller.IsObserved())
             {
                 return;
             }

@@ -176,6 +176,12 @@ public static class TacticalBindsPatches
         [PatchPostfix]
         public static void Postfix(InventoryController controller, Item item, EBoundItem index)
         {
+            // Don't run on fika remote
+            if (controller.IsObserved())
+            {
+                return;
+            }
+
             UpdateQuickbindType(item, index);
 
             // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
@@ -191,8 +197,14 @@ public static class TacticalBindsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryController controller, Item item, EBoundItem index)
+        public static void Postfix(InventoryController controller, EBoundItem index)
         {
+            // Don't run on fika remote
+            if (controller.IsObserved())
+            {
+                return;
+            }
+
             Quickbind.SetType(index, Quickbind.ItemType.Other);
 
             // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
