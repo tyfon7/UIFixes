@@ -94,6 +94,7 @@ public class Plugin : BaseUnityPlugin
         new FixPlayerInspectPatch().Enable();
         QuestKeysPatches.Enable();
         new ModifyUnsearchedContainerPatch().Enable();
+        RemoveAdsPatches.Enable();
     }
 
     public static bool InRaid()
