@@ -37,9 +37,14 @@ public class NetworkTransactionWatcher : IDisposable
 
     public void Dispose()
     {
-        if (Watchers.Count > 0 && Watchers.Peek() == this)
+        if (Watchers.Count > 0)
         {
-            Watchers.Pop();
+            var watcher = Watchers.Pop();
+            if (watcher != this)
+            {
+                throw new InvalidOperationException("NetworkTransactionWatcher disposed out of order");
+            }
+
             source.TrySetCanceled();
         }
     }
@@ -61,7 +66,7 @@ public class NetworkTransactionWatcher : IDisposable
         [HarmonyPriority(Priority.First)]
         public static void Prefix(ref Callback callback)
         {
-            if (Watchers.Count > 0)
+            while (Watchers.Count > 0)
             {
                 Watchers.Pop().Watch(ref callback);
             }

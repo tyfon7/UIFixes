@@ -789,15 +789,17 @@ public static class MultiSelectPatches
             }
 
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            __result = serializer.Initialize(MultiSelect.SortedItemContexts(itemContext), async ic =>
-            {
-                FindOrigin = GetTargetGridAddress(itemContext, ic, hoveredAddress);
-                FindVerticalFirst = ic.ItemRotation == ItemRotation.Vertical;
+            __result = serializer.Initialize(
+                MultiSelect.SortedItemContexts(itemContext),
+                async itemContext =>
+                {
+                    FindOrigin = GetTargetGridAddress(itemContext, itemContext, hoveredAddress);
+                    FindVerticalFirst = itemContext.ItemRotation == ItemRotation.Vertical;
 
-                using var watcher = NetworkTransactionWatcher.WatchNext();
-                await __instance.AcceptItem(ic, targetItemContext);
-                await watcher.Task;
-            });
+                    using var watcher = NetworkTransactionWatcher.WatchNext();
+                    await __instance.AcceptItem(itemContext, targetItemContext);
+                    await watcher.Task;
+                });
 
             // Setting the fallback after initializing means it only applies after the first item is already moved
             GridViewPickTargetPatch.FallbackResult = __instance.Grid.ParentItem;
