@@ -1,3 +1,4 @@
+using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -6,6 +7,8 @@ using SPT.Reflection.Patching;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using UnityEngine;
 
 namespace UIFixes;
 
@@ -25,6 +28,7 @@ public static class ReloadInPlacePatches
 
         // This patches the firearmsController code when you hit R in raid with an external magazine class
         new SwapIfNoSpacePatch().Enable();
+        //new InsertMagDebugPatch().Enable();
     }
 
     public class ReloadInPlacePatch : ModulePatch
@@ -145,7 +149,7 @@ public static class ReloadInPlacePatches
         // This tied to a different animation state machine sequence than Swap(), and is faster than Swap.
         // So only use Swap if *needed*, otherwise its penalizing all reload speeds
         [PatchPrefix]
-        public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress)
+        public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress, Callback callback)
         {
             if (!__instance.CanStartReload() || __instance.Blindfire)
             {
@@ -191,8 +195,47 @@ public static class ReloadInPlacePatches
                 return true;
             }
 
-            controller.TryRunNetworkTransaction(InteractionsHandlerClass.Swap(currentMagazine, itemAddress, magazine, __instance.Weapon.GetMagazineSlot().CreateItemAddress(), controller, true), null);
+            controller.TryRunNetworkTransaction(
+                InteractionsHandlerClass.Swap(currentMagazine, itemAddress, magazine, __instance.Weapon.GetMagazineSlot().CreateItemAddress(), controller, true),
+                callback);
             return false;
+        }
+    }
+
+    // Dumps the animator parameters, lol. Desparate times and all that
+    public class InsertMagDebugPatch : ModulePatch
+    {
+        private static FieldInfo ParameterListField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            ParameterListField = AccessTools.Field(typeof(GClass1355), "animatorControllerParameter_0");
+            return AccessTools.DeclaredMethod(typeof(Player.FirearmController.GClass1773), nameof(Player.FirearmController.GClass1773.Start));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(FirearmsAnimator ___firearmsAnimator_0)
+        {
+            StringBuilder sb = new();
+            if (___firearmsAnimator_0.Animator is GClass1355 animator)
+            {
+                for (int i = 0; i < animator.parameterCount; i++)
+                {
+                    AnimatorParameterInfo paramInfo = animator.GetParameter(i);
+                    string name = animator.GetParameterName(paramInfo.nameHash);
+                    string value = paramInfo.type switch
+                    {
+                        AnimatorControllerParameterType.Bool => animator.GetBool(paramInfo.nameHash).ToString(),
+                        AnimatorControllerParameterType.Float => animator.GetFloat(paramInfo.nameHash).ToString(),
+                        AnimatorControllerParameterType.Int => animator.GetInteger(paramInfo.nameHash).ToString(),
+                        _ => "Unknown",
+                    };
+
+                    sb.AppendLine($"{name} ({paramInfo.type}) = {value}");
+                }
+
+                Plugin.Instance.Logger.LogInfo(sb.ToString());
+            }
         }
     }
 }
