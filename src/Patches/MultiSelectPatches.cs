@@ -791,13 +791,13 @@ public static class MultiSelectPatches
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(itemContext),
-                async itemContext =>
+                async selectedItemContext =>
                 {
-                    FindOrigin = GetTargetGridAddress(itemContext, itemContext, hoveredAddress);
-                    FindVerticalFirst = itemContext.ItemRotation == ItemRotation.Vertical;
+                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
+                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
                     using var watcher = NetworkTransactionWatcher.WatchNext();
-                    await __instance.AcceptItem(itemContext, targetItemContext);
+                    await __instance.AcceptItem(selectedItemContext, targetItemContext);
                     await watcher.Task;
                 });
 
@@ -1026,10 +1026,10 @@ public static class MultiSelectPatches
             var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(),
-                async itemContext =>
+                async selectedItemContext =>
                 {
                     using var watcher = NetworkTransactionWatcher.WatchNext();
-                    await __instance.AcceptItem(itemContext, targetItemContext);
+                    await __instance.AcceptItem(selectedItemContext, targetItemContext);
                     await watcher.Task;
                 });
 
