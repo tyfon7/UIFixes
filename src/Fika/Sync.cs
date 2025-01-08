@@ -101,6 +101,7 @@ public static class Sync
 
     private static void OnGameEnded(FikaGameEndedEvent ev)
     {
+        // TODO: when ExitStatus is available, check if it's transit
         if (ev.IsServer)
         {
             Plugin.Instance.Config.SettingChanged -= OnServerSettingChanged;
