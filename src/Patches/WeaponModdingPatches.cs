@@ -604,8 +604,10 @@ public static class WeaponModdingPatches
     {
         error = null;
 
+        InventoryController inventoryController = weapon.Owner as InventoryController;
+
         // Can't modify weapon in player's hands
-        if (weapon.Owner is InventoryController inventoryController && inventoryController.ID == PatchConstants.BackEndSession.Profile.Id && inventoryController.IsItemEquipped(weapon))
+        if (inventoryController != null && inventoryController.ID == PatchConstants.BackEndSession.Profile.Id && inventoryController.IsItemEquipped(weapon))
         {
             if (Plugin.InRaid())
             {
@@ -633,8 +635,8 @@ public static class WeaponModdingPatches
             return false;
         }
 
-        Player player = Singleton<GameWorld>.Instance.MainPlayer;
-        bool hasMultitool = player.Equipment.GetAllItems().Any(i => i.TemplateId == MultitoolId);
+        bool hasMultitool = inventoryController != null &&
+            inventoryController.Inventory.Equipment.GetAllItems().Any(i => i.TemplateId == MultitoolId);
 
         if (Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool && !hasMultitool)
         {
