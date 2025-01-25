@@ -95,6 +95,7 @@ public class Plugin : BaseUnityPlugin
         QuestKeysPatches.Enable();
         new ModifyUnsearchedContainerPatch().Enable();
         RemoveAdsPatches.Enable();
+        BTRPaymentPatches.Enable();
     }
 
     public static bool InRaid()
