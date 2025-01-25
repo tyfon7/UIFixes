@@ -15,70 +15,85 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PathToSPT Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.10-be</PathToSPT>
-    <PathToSPT Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.10</PathToSPT>
+    <SPTPath Condition="'$(Configuration)'=='Debug'">..\..\..\..\SPT\3.10-be</SPTPath>
+    <SPTPath Condition="'$(Configuration)'=='Release'">..\..\..\..\SPT\3.10</SPTPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <DeployTarget Include="Default">
+      <Path>$(ProjectDir)$(SPTPath)</Path>
+    </DeployTarget>
+    <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
+      <Path>$(ProjectDir)dist</Path>
+    </DeployTarget>
+    <DeployTarget Include="Fika1">
+      <Path>d:\fika</Path>
+    </DeployTarget>
+    <DeployTarget Include="Fika2">
+      <Path>d:\fika2</Path>
+    </DeployTarget>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="spt-common">
-      <HintPath>$(PathToSPT)\BepInEx\plugins\spt\spt-common.dll</HintPath>
+      <HintPath>$(SPTPath)\BepInEx\plugins\spt\spt-common.dll</HintPath>
     </Reference>
     <Reference Include="spt-reflection">
-      <HintPath>$(PathToSPT)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+      <HintPath>$(SPTPath)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
     </Reference>
     <Reference Include="AnimationSystem.Types">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Comfort">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
     </Reference>
     <Reference Include="Comfort.Unity">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
     </Reference>
     <Reference Include="CommonExtensions">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
     </Reference>
     <Reference Include="Fika.Core">
       <HintPath>D:\fika\BepInEx\plugins\Fika.Core.dll</HintPath>
     </Reference>
     <Reference Include="ItemComponent.Types">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Sirenix.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.*" />
@@ -96,16 +111,20 @@
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec
-      Command='if $(ConfigurationName) == Debug (
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
-        xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "$(ProjectDir)$(PathToSPT)\BepInEx\plugins\"
-      )
-      if $(ConfigurationName) == Release (
-        mkdir "$(ProjectDir)dist\BepInEx\plugins"
-        xcopy /F /Y "$(TargetPath)" "$(ProjectDir)dist\BepInEx\plugins\"
-        xcopy /F /Y /S "$(SolutionDir)dist\BepInEx" "$(ProjectDir)$(PathToSPT)\BepInEx"
-        xcopy /F /Y /S "$(SolutionDir)dist\user" "$(ProjectDir)$(PathToSPT)\user"
-        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
-      )' />
+      Command='
+        if $(ConfigurationName) == Release (
+          mkdir "$(ProjectDir)dist\BepInEx\plugins"
+        )
+
+        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
+
+        if $(ConfigurationName) == Debug (
+          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\BepInEx\plugins\"
+        )
+        
+        if $(ConfigurationName) == Release (
+          7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
+        )'
+    />
   </Target>
 </Project>
