@@ -26,6 +26,8 @@ public static class InspectWindowStatsPatches
         new FormatFullValuesPatch().Enable();
         new FixDurabilityBarPatch().Enable();
         new HighlightSlotsPatch().Enable();
+
+        new FixTraderCompatWithPatch().Enable();
     }
 
     public class CalculateModStatsPatch : ModulePatch
@@ -332,6 +334,23 @@ public static class InspectWindowStatsPatches
 
             itemUiContext.RegisterView(itemContext);
             __instance.R().UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
+        }
+    }
+
+    public class FixTraderCompatWithPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.FirstMethod(typeof(ItemUiContext), m => m.Name == "Configure" && m.GetParameters().Any(p => p.Name == "equipment"));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(TraderControllerClass itemController, ref InventoryEquipment equipment)
+        {
+            if (equipment == null && itemController is InventoryController inventoryController)
+            {
+                equipment = inventoryController.Inventory.Equipment;
+            }
         }
     }
 
