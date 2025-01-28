@@ -113,6 +113,7 @@ Fixing bugs that BSG won't or can't
 -   Fix item tooltips disapparing if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
 -   Fix windows appearing partially offscreen
 -   Fix modding/preset UI breaking when you click not allowed (red outlined) items
+-   ✨ Fix trader items not showing "Compatibility" with your items
 
 #### In raid
 
@@ -120,6 +121,7 @@ Fixing bugs that BSG won't or can't
 -   Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot
 -   ~~Fix the quick item bar not respecting "Autohide" and "Never show" setting~~
 -   ✨ Fix issue where clicking the eye at the wrong time during raid load would break your equipment UI for the rest of the raid
+-   ✨ Fix not being able to pay the BTR man with money from your backpack or secure container if you happened to be carrying grenades
 
 #### Mail
 
