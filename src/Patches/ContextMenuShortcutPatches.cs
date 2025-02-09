@@ -1,10 +1,10 @@
-﻿using Comfort.Common;
+﻿using System.Reflection;
+using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -37,11 +37,15 @@ public static class ContextMenuShortcutPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance)
+        public static void Postfix(ItemUiContext __instance, DragItemContext ___itemContextClass)
         {
             // Need an item context to operate on
             ItemContextAbstractClass itemContext = __instance.R().ItemContext;
-            if (itemContext == null)
+
+            // itemContext is what the mouse is over
+            // ___itemContextClass is the currently dragged item
+            // Only do anything if the mouse is over an item and nothing is being dragged
+            if (itemContext == null || ___itemContextClass != null)
             {
                 return;
             }
