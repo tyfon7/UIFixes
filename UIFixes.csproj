@@ -109,22 +109,24 @@
     <ProjectReference Include="UIFixes.Net\UIFixes.Net.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuildDeploy" AfterTargets="PostBuildEvent">
     <Exec
       Command='
-        if $(ConfigurationName) == Release (
-          mkdir "$(ProjectDir)dist\BepInEx\plugins"
-        )
-
         xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
 
         if $(ConfigurationName) == Debug (
           xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\BepInEx\plugins\"
-        )
-        
-        if $(ConfigurationName) == Release (
-          7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
         )'
+    />
+  </Target>
+
+  <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent"
+    Condition="'$(Configuration)'=='Release'">
+    <Exec
+      Command='
+        mkdir "$(ProjectDir)dist\BepInEx\plugins"
+        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
+      '
     />
   </Target>
 </Project>
