@@ -1,8 +1,8 @@
-﻿using BepInEx.Configuration;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace UIFixes;
@@ -132,6 +132,7 @@ internal class Settings
     public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SelectAllOfTypeKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
@@ -644,6 +645,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to lock an item (cannot be moved, used, modified, sold, turned in, or discarded)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SelectAllOfTypeKeyBind = config.Bind(
+            ItemKeybindsSection,
+            "Select All of Type",
+            new KeyboardShortcut(KeyCode.A, KeyCode.LeftControl),
+            new ConfigDescription(
+                "Keybind to select all items of the same type in the current container (requires Multiselect)",
                 null,
                 new ConfigurationManagerAttributes { })));
 

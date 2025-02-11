@@ -1,4 +1,9 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Comfort.Common;
 using EFT;
 using EFT.Communications;
 using EFT.InventoryLogic;
@@ -9,11 +14,6 @@ using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -54,6 +54,7 @@ public static class MultiSelectPatches
         new BeginDragPatch().Enable();
         new EndDragPatch().Enable();
         new DeselectOnLockPatch().Enable();
+        new SelectAllPatch().Enable();
 
         // Workarounds
         new DisableSplitPatch().Enable();
@@ -313,6 +314,33 @@ public static class MultiSelectPatches
                 {
                     operations.Pop().Value?.RollBack();
                 }
+            }
+        }
+    }
+
+    public class SelectAllPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(GridItemView), nameof(GridItemView.Update));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(GridItemView __instance, ItemUiContext ___ItemUiContext)
+        {
+            if (!MultiSelect.Enabled)
+            {
+                return;
+            }
+
+            if (__instance.Item == null || ___ItemUiContext != null && ___ItemUiContext.ItemContextAbstractClass != __instance.ItemContext)
+            {
+                return;
+            }
+
+            if (Settings.SelectAllOfTypeKeyBind.Value.IsDown())
+            {
+                MultiSelect.SelectAll(__instance.Item.TemplateId, __instance.GetComponentInParent<ContainedGridsView>());
             }
         }
     }

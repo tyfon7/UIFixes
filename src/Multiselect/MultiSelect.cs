@@ -1,10 +1,10 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI;
-using EFT.UI.DragAndDrop;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EFT.InventoryLogic;
+using EFT.UI;
+using EFT.UI.DragAndDrop;
 using TMPro;
 using UnityEngine;
 
@@ -317,6 +317,24 @@ public class MultiSelect
         }
 
         return result.Succeed;
+    }
+
+    public static void SelectAll(string templateId, ContainedGridsView gridsView)
+    {
+        if (string.IsNullOrEmpty(templateId) || gridsView == null)
+        {
+            return;
+        }
+
+        Clear();
+
+        foreach (ItemView itemView in gridsView.GridViews.SelectMany(gv => gv.GridItemViews))
+        {
+            if (itemView.Item.TemplateId == templateId && itemView is GridItemView gridItemView)
+            {
+                Select(gridItemView);
+            }
+        }
     }
 
     public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
