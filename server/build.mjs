@@ -38,7 +38,7 @@ import ignore from "ignore";
 import archiver from "archiver";
 import winston from "winston";
 
-const sptPath = "/SPT/3.10-be";
+const sptPaths = ["/SPT/3.10-be", "d:/fika", "d:/fika2"];
 
 // Get the command line arguments to determine whether to use verbose logging.
 const args = process.argv.slice(2);
@@ -117,9 +117,11 @@ async function main() {
 
         // Copy output to SPT installation for testing
         logger.log("info", "Copying output to SPT installation");
-        const sptModPath = path.join(sptPath, "/user/mods/", projectShortName);
-        await fs.copy(projectDir, sptModPath);
-        logger.log("success", `Files successfully copied to ${sptModPath}`);
+        for (const sptPath of sptPaths) {
+            const sptModPath = path.join(sptPath, "/user/mods/", projectShortName);
+            await fs.copy(projectDir, sptModPath);
+            logger.log("success", `Files successfully copied to ${sptModPath}`);
+        }
 
         // Copy output to parent dist folder
         logger.log("info", "Copying output to SPT installation");
