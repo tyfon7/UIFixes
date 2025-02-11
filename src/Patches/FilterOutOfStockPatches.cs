@@ -1,12 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +15,8 @@ namespace UIFixes;
 
 public static class FilterOutOfStockPatches
 {
-    private static bool ShowOutOfStockItems = true;
+    private static readonly string PlayerPrefKey = "UIFixes.OutOfStock.Show";
+
     private static GameObject OutOfStockPanel;
 
     public static void Enable()
@@ -24,7 +25,19 @@ public static class FilterOutOfStockPatches
         new ShowButtonPatch().Enable();
 
         new FilterPanelPatch().Enable();
-        new FilterOutOfStockGridItemsPatch().Enable();
+    }
+
+    private static bool ShowOutOfStockItems
+    {
+        get
+        {
+            return PlayerPrefs.HasKey(PlayerPrefKey) ? PlayerPrefs.GetInt(PlayerPrefKey) == 1 : true;
+        }
+        set
+        {
+            PlayerPrefs.SetInt(PlayerPrefKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+        }
     }
 
     public class CreateButtonPatch : ModulePatch
@@ -65,6 +78,7 @@ public static class FilterOutOfStockPatches
             LocalizedText text = UnityEngine.Object.Instantiate(____updateAssort.transform.Find("TextWhite").GetComponent<LocalizedText>(), OutOfStockPanel.transform, false);
             text.LocalizationKey = "OUT OF STOCK";
             text.R().StringCase = EStringCase.Upper;
+            text.method_1(); // Force refresh to capitalize
 
             TextMeshProUGUI textMesh = text.GetComponent<TextMeshProUGUI>();
             textMesh.enableAutoSizing = false;
@@ -80,7 +94,6 @@ public static class FilterOutOfStockPatches
                 ShowOutOfStockItems = !ShowOutOfStockItems;
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
-                ____traderGridView.SetShowOutOfStock(ShowOutOfStockItems);
                 ____traderGridView.method_14(); // Refreshes the grid
                 ____traderGridView.method_16(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });
@@ -103,8 +116,6 @@ public static class FilterOutOfStockPatches
 
     public class FilterPanelPatch : ModulePatch
     {
-        public static bool ShowOutOfStock = true;
-
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.DeclaredMethod(typeof(HandbookFilterPanel), nameof(HandbookFilterPanel.GetFilteredItems));
@@ -113,32 +124,12 @@ public static class FilterOutOfStockPatches
         [PatchPostfix]
         public static void Postfix(ref IEnumerable<Item> __result)
         {
-            if (ShowOutOfStock)
+            if (ShowOutOfStockItems)
             {
                 return;
             }
 
             __result = __result.Where(item => item.StackObjectsCount > 0);
-            ShowOutOfStock = true;
-        }
-    }
-
-    public class FilterOutOfStockGridItemsPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(TradingGridView), nameof(TraderDealScreen.method_15));
-        }
-
-        [PatchPrefix]
-        public static void Prefix(TradingGridView __instance)
-        {
-            if (!Settings.ShowOutOfStockCheckbox.Value)
-            {
-                return;
-            }
-
-            FilterPanelPatch.ShowOutOfStock = __instance.GetShowOutOfStock();
         }
     }
 }
