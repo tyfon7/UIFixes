@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Comfort.Common;
+using Diz.LanguageExtensions;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -6,10 +11,6 @@ using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace UIFixes;
@@ -24,6 +25,8 @@ public static class WeaponModdingPatches
         new ResizeHelperPatch().Enable();
         new ResizeOperationRollbackPatch().Enable();
         new MoveBeforeNetworkTransactionPatch().Enable();
+
+        new SwapModsPatch().Enable();
 
         new ModEquippedPatch().Enable();
         new InspectLockedPatch().Enable();
@@ -223,6 +226,38 @@ public static class WeaponModdingPatches
                 });
             });
 
+            return false;
+        }
+    }
+
+    public class SwapModsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(GClass3187), nameof(GClass3187.Select));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(GClass3187 __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
+        {
+            if (slot.ContainedItem == null || item == slot.ContainedItem)
+            {
+                return true;
+            }
+
+            var operation = InteractionsHandlerClass.Swap(item, slot.ContainedItem.Parent, slot.ContainedItem, item.Parent, __instance.InventoryController_0, simulate);
+            if (operation.Failed)
+            {
+                return true;
+            }
+
+            if (!simulate)
+            {
+                __instance.InventoryController_0.TryRunNetworkTransaction(operation, null);
+            }
+
+            error = null;
+            __result = true;
             return false;
         }
     }
