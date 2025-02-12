@@ -1,4 +1,9 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
+using Comfort.Common;
 using EFT;
 using EFT.Hideout;
 using EFT.InputSystem;
@@ -9,11 +14,6 @@ using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
 using SPT.Reflection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -500,6 +500,8 @@ public static class R
         private static FieldInfo GridWindowTemplateField;
         private static FieldInfo ContextTypeField;
         private static PropertyInfo ItemContextProperty;
+        private static FieldInfo DragItemContextField;
+
 
         public static void InitTypes()
         {
@@ -508,12 +510,14 @@ public static class R
             GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
             ContextTypeField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(EItemUiContextType));
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
+            DragItemContextField = AccessTools.Field(Type, "itemContextClass");
         }
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
         public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
         public EItemUiContextType ContextType { get { return (EItemUiContextType)ContextTypeField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
+        public DragItemContext DragItemContext { get { return (DragItemContext)DragItemContextField.GetValue(Value); } }
     }
 
     public static class Money

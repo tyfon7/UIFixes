@@ -333,7 +333,10 @@ public static class MultiSelectPatches
                 return;
             }
 
-            if (__instance.Item == null || ___ItemUiContext != null && ___ItemUiContext.ItemContextAbstractClass != __instance.ItemContext)
+            if (__instance.Item == null || //empty 
+                ___ItemUiContext == null || // UI not initialized
+                ___ItemUiContext.ItemContextAbstractClass != __instance.ItemContext || // different item is under cursor
+                ___ItemUiContext.R().DragItemContext != null) // something is being dragged
             {
                 return;
             }
