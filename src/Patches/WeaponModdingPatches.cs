@@ -644,14 +644,7 @@ public static class WeaponModdingPatches
         // Can't modify weapon in player's hands
         if (inventoryController != null && inventoryController.ID == PatchConstants.BackEndSession.Profile.Id && inventoryController.IsItemEquipped(weapon))
         {
-            if (Plugin.InRaid())
-            {
-                error = "Inventory Errors/Not moddable in raid";
-                return false;
-            }
-
-
-            if (!Settings.ModifyEquippedWeapons.Value)
+            if (Plugin.InRaid() || !Settings.ModifyEquippedWeapons.Value)
             {
                 error = "Vital mod weapon in hands";
                 return false;
