@@ -1,8 +1,10 @@
-﻿using EFT.UI;
+﻿using System.Reflection;
+using Comfort.Common;
+using EFT;
+using EFT.UI;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using UnityEngine.EventSystems;
 
 namespace UIFixes;
@@ -13,6 +15,8 @@ public static class WeaponZoomPatches
     {
         new EditBuildScreenZoomPatch().Enable();
         new WeaponModdingScreenZoomPatch().Enable();
+
+        new NoInventoryZoomPatch().Enable();
     }
 
     public class EditBuildScreenZoomPatch : ModulePatch
@@ -56,6 +60,31 @@ public static class WeaponZoomPatches
                     __instance.UpdatePositions();
                 }
             };
+        }
+    }
+
+    public class NoInventoryZoomPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ScopeZoomHandler), nameof(ScopeZoomHandler.Update));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix()
+        {
+            if (!Settings.PreventScopeZoomFromInventory.Value)
+            {
+                return true;
+            }
+
+            Player player = Singleton<GameWorld>.Instance != null ? Singleton<GameWorld>.Instance.MainPlayer : null;
+            if (player != null && player.IsInventoryOpened)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

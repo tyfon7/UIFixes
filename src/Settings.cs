@@ -96,6 +96,7 @@ internal class Settings
     public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
+    public static ConfigEntry<bool> PreventScopeZoomFromInventory { get; set; }
     public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> ModifyEquippedPlates { get; set; }
@@ -372,6 +373,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "Tap the goggles key to toggle night vision/goggles/faceshield, or hold the key for continuous",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PreventScopeZoomFromInventory = config.Bind(
+            GameplaySection,
+            "Prevent Scope Zoom in Inventory",
+            true,
+            new ConfigDescription(
+                "Prevent ",
                 null,
                 new ConfigurationManagerAttributes { })));
 
