@@ -1,11 +1,12 @@
-﻿using EFT.InputSystem;
-using EFT.UI;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EFT.InputSystem;
+using EFT.UI;
+using HarmonyLib;
+using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
 using UnityEngine;
 
 namespace UIFixes;
@@ -49,7 +50,8 @@ public static class KeepWindowsOnScreenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GClass916), nameof(GClass916.CorrectPositionResolution), [typeof(RectTransform), typeof(RectTransform), typeof(MarginsStruct)]);
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass916
+            return AccessTools.Method(type, "CorrectPositionResolution", [typeof(RectTransform), typeof(RectTransform), typeof(MarginsStruct)]);
         }
 
         [PatchPostfix]

@@ -1,13 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -156,12 +157,13 @@ public static class TagPatches
     // Also populate it; BSG does some insane manual reflection here for deserialization and looks for the literal Tag property (which it won't find)
     public class AddTagParsedItemPatch : ModulePatch
     {
-        private static FieldInfo ComponentsField;
+        private static FieldInfo ItemComponentsField;
 
         protected override MethodBase GetTargetMethod()
         {
-            ComponentsField = AccessTools.Field(typeof(Item), "Components");
-            return AccessTools.Method(typeof(GClass1648), nameof(GClass1648.CreateItem));
+            ItemComponentsField = AccessTools.Field(typeof(Item), "Components");
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CreateItem", BindingFlags.Public | BindingFlags.Static) != null); // GClass1648
+            return AccessTools.Method(type, "CreateItem");
         }
 
         [PatchPostfix]
@@ -170,7 +172,7 @@ public static class TagPatches
             if (IsTaggingEnabled(item))
             {
                 TagComponent tagComponent;
-                var components = (List<IItemComponent>)ComponentsField.GetValue(item);
+                var components = (List<IItemComponent>)ItemComponentsField.GetValue(item);
                 components.Add(tagComponent = new TagComponent(item));
 
                 var propDictionary = properties.JToken.ToObject<Dictionary<string, GClass814>>();
