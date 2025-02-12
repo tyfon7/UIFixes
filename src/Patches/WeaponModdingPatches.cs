@@ -240,7 +240,7 @@ public static class WeaponModdingPatches
         [PatchPrefix]
         public static bool Prefix(GClass3187 __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
         {
-            if (slot.ContainedItem == null || item == slot.ContainedItem)
+            if (item == null || slot.ContainedItem == null || item == slot.ContainedItem)
             {
                 return true;
             }
