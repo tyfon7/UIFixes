@@ -166,9 +166,9 @@ public static class MultiSelectPatches
                 return;
             }
 
-            bool ctrlDown = Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl);
-            bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
-            bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
+            bool ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool altDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
 
             // If sorting table is open and default shift-click behavior is enabled, don't multiselect
             bool couldBeSortingTableMove = false;
@@ -222,9 +222,9 @@ public static class MultiSelectPatches
                 return true;
             }
 
-            bool ctrlDown = Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl);
-            bool shiftDown = Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
-            bool altDown = Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt);
+            bool ctrlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool altDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
 
             if (ctrlDown && !shiftDown && !altDown)
             {
