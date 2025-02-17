@@ -17,7 +17,7 @@ namespace UIFixes;
 
 public static class WeaponModdingPatches
 {
-    private const string MultitoolId = "544fb5454bdc2df8738b456a";
+    private const string MultitoolTypeId = "66abb0743f4d8b145b1612c1";
 
     public static void Enable()
     {
@@ -33,6 +33,7 @@ public static class WeaponModdingPatches
         new ModCanBeMovedPatch().Enable();
         new CanDetachPatch().Enable();
         new CanApplyPatch().Enable();
+        new LockedStatePatch().Enable();
         new ArmorSlotAcceptRaidPatch().Enable();
         new ModRaidModdablePatch().Enable();
         new EmptyVitalPartsPatch().Enable();
@@ -343,7 +344,6 @@ public static class WeaponModdingPatches
             return AccessTools.Method(typeof(Mod), nameof(Mod.CanBeMoved));
         }
 
-        // As far as I can tell this never gets called, but hey
         [PatchPostfix]
         public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct448<bool> __result)
         {
@@ -386,8 +386,7 @@ public static class WeaponModdingPatches
                 return;
             }
 
-
-            bool canModify = CanModify(item, out string error) && CanModify(to, out error);
+            bool canModify = CanModify(item, out _) && CanModify(to, out _);
             if (canModify == __result.Succeeded)
             {
                 // In agreement, just check the error is best to show
@@ -396,9 +395,14 @@ public static class WeaponModdingPatches
                 {
                     // Double check this is an unequipped weapon
                     Weapon weapon = item.GetRootItemNotEquipment() as Weapon ?? to.GetRootItemNotEquipment() as Weapon;
-                    if (weapon != null && itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon))
+
+                    if (weapon != null)
                     {
-                        __result = new MultitoolNeededError(item);
+                        bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
+                        if (!equipped)
+                        {
+                            __result = new MultitoolNeededError(item);
+                        }
                     }
                 }
             }
@@ -476,32 +480,91 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            // Mods in unequipped weapons; armor is handled in ArmorSlotAcceptRaidPatch
-            if (item is Mod && __instance is Weapon weapon)
+            // Moving to a weapon
+            Weapon weapon = __instance as Weapon;
+            if (weapon == null)
             {
-                bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(__instance);
+                // From a weapon
+                weapon = item.GetRootItemNotEquipment() as Weapon;
+            }
 
-                // No changes to equipped weapons
-                if (!equipped)
-                {
-                    SuccessOverride = CanModify(item, out string error) && CanModify(weapon, out error);
-                }
+            if (weapon == null)
+            {
+                return;
+            }
+
+            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
+
+            // No changes to equipped weapons
+            if (!equipped)
+            {
+                SuccessOverride = CanModify(weapon, out _);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(CompoundItem __instance, TraderControllerClass itemController, ref ItemOperation __result)
+        public static void Postfix(CompoundItem __instance, TraderControllerClass itemController, Item item, ref ItemOperation __result)
         {
             SuccessOverride = false;
 
-            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(__instance);
+            if (__result.Succeeded)
+            {
+                return;
+            }
+
+            // Moving to a weapon
+            Weapon weapon = __instance as Weapon;
+            if (weapon == null)
+            {
+                // From a weapon
+                weapon = item.GetRootItemNotEquipment() as Weapon;
+            }
+
+            if (weapon == null)
+            {
+                return;
+            }
+
+            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
 
             // If setting is multitool, may need to change some errors
-            if (__instance is Weapon && !equipped && Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
+            if (!equipped && Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
             {
                 if (__result.Error is NotModdableInRaidError || __result.Error is ModVitalPartInRaidError)
                 {
                     __result = new MultitoolNeededError(__instance);
+                }
+            }
+        }
+    }
+
+    public class LockedStatePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_21));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct430> __result)
+        {
+            if (__result.Value.Error == "<color=red>" + "Raid lock".Localized() + "</color>")
+            {
+                if (CanModify(slot, out string error))
+                {
+                    __result = new(EModLockedState.Unlocked, new()
+                    {
+                        Error = string.Empty,
+                        ItemName = __result.Value.ItemName
+                    });
+                }
+                else
+                {
+                    __result = new(EModLockedState.RaidLock, new()
+                    {
+                        Error = "<color=red>" + error.Localized() + "</color>",
+                        ItemName = __result.Value.ItemName
+                    });
                 }
             }
         }
@@ -566,6 +629,11 @@ public static class WeaponModdingPatches
         return CanModify(item, item?.Parent, out error);
     }
 
+    private static bool CanModify(Slot slot, out string error)
+    {
+        return CanModify(slot.ContainedItem, slot.CreateItemAddress(), out error);
+    }
+
     private static bool CanModify(ItemAddress itemAddress, out string error)
     {
         return CanModify(null, itemAddress, out error);
@@ -607,7 +675,7 @@ public static class WeaponModdingPatches
             return true;
         }
 
-        if (item is Mod && rootItem is Weapon weapon)
+        if (rootItem is Weapon weapon)
         {
             // If the slot is not a required slot, allow it (item is null here, checking the empty destination slot)
             if (!slot.Required)
@@ -663,13 +731,16 @@ public static class WeaponModdingPatches
             return false;
         }
 
-        bool hasMultitool = inventoryController != null &&
-            inventoryController.Inventory.Equipment.GetAllItems().Any(i => i.TemplateId == MultitoolId);
-
-        if (Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool && !hasMultitool)
+        if (Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
         {
-            error = "Inventory Errors/Not moddable without multitool";
-            return false;
+            bool hasMultitool = inventoryController != null &&
+                inventoryController.Inventory.Equipment.GetAllItems().Any(i => i.Template.IsChildOf(MultitoolTypeId));
+
+            if (!hasMultitool)
+            {
+                error = "Inventory Errors/Not moddable without multitool";
+                return false;
+            }
         }
 
         return true;
