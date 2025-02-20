@@ -30,6 +30,7 @@ public static class WeaponModdingPatches
 
         new ModEquippedPatch().Enable();
         new InspectLockedPatch().Enable();
+        new MoveCanExecutePatch().Enable();
         new ModCanBeMovedPatch().Enable();
         new CanDetachPatch().Enable();
         new CanApplyPatch().Enable();
@@ -272,7 +273,7 @@ public static class WeaponModdingPatches
 
         // Enable/disable options in the context menu
         [PatchPostfix]
-        public static void Postfix(EItemInfoButton button, ref IResult __result, Item ___item_0)
+        public static void Postfix(EItemInfoButton button, ref IResult __result, Item ___item_0, TraderControllerClass ___traderControllerClass)
         {
             // These two are only visible out of raid, enable them
             if (Settings.ModifyEquippedWeapons.Value && (button == EItemInfoButton.Modding || button == EItemInfoButton.EditBuild))
@@ -300,7 +301,7 @@ public static class WeaponModdingPatches
             // Need to do the disabling as appropriate
             if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(___item_0, out string error))
+                if (!CanModify(___item_0, ___traderControllerClass as InventoryController, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
@@ -318,7 +319,7 @@ public static class WeaponModdingPatches
 
         // Enable context menu on normally unmoddable slots, maybe keep them gray
         [PatchPostfix]
-        public static void Postfix(ModSlotView __instance, ref bool ___bool_1, CanvasGroup ____canvasGroup)
+        public static void Postfix(ModSlotView __instance, ref bool ___bool_1, CanvasGroup ____canvasGroup, TraderControllerClass ___ItemController)
         {
             if (__instance.Slot.Locked)
             {
@@ -326,7 +327,7 @@ public static class WeaponModdingPatches
             }
 
             // Keep it grayed out and warning text if its not draggable, even if context menu is enabled
-            if (CanModify(__instance.Slot.ContainedItem, out string error))
+            if (CanModify(__instance.Slot.ContainedItem, ___ItemController as InventoryController, out string error))
             {
                 ___bool_1 = false;
                 ____canvasGroup.alpha = 1f;
@@ -334,6 +335,28 @@ public static class WeaponModdingPatches
 
             ____canvasGroup.blocksRaycasts = true;
             ____canvasGroup.interactable = true;
+        }
+    }
+
+    public class MoveCanExecutePatch : ModulePatch
+    {
+        public static TraderControllerClass TraderController;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(MoveOperation), nameof(MoveOperation.CanExecute));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(TraderControllerClass itemController)
+        {
+            TraderController = itemController;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            TraderController = null;
         }
     }
 
@@ -352,12 +375,14 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            if (!CanModify(__instance, out string itemError))
+            var inventoryController = MoveCanExecutePatch.TraderController as InventoryController;
+
+            if (!CanModify(__instance, inventoryController, out string itemError))
             {
                 return;
             }
 
-            if (toContainer is not Slot toSlot || !CanModify(R.SlotItemAddress.Create(toSlot), out string slotError))
+            if (toContainer is not Slot toSlot || !CanModify(R.SlotItemAddress.Create(toSlot), inventoryController, out string slotError))
             {
                 return;
             }
@@ -386,7 +411,9 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            bool canModify = CanModify(item, out _) && CanModify(to, out _);
+            var inventoryController = itemController as InventoryController;
+
+            bool canModify = CanModify(item, inventoryController, out _) && CanModify(to, inventoryController, out _);
             if (canModify == __result.Succeeded)
             {
                 // In agreement, just check the error is best to show
@@ -398,11 +425,8 @@ public static class WeaponModdingPatches
 
                     if (weapon != null)
                     {
-                        bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
-                        if (!equipped)
-                        {
-                            __result = new MultitoolNeededError(item);
-                        }
+                        bool equipped = inventoryController != null && inventoryController.ID == weapon.Owner.ID && inventoryController.IsItemEquipped(weapon);
+                        __result = equipped ? new VitalPartInHandsError() : new MultitoolNeededError(item);
                     }
                 }
             }
@@ -493,12 +517,13 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
+            var inventoryController = itemController as InventoryController;
+            bool equipped = inventoryController != null && inventoryController.ID == weapon.Owner.ID && inventoryController.IsItemEquipped(weapon);
 
             // No changes to equipped weapons
             if (!equipped)
             {
-                SuccessOverride = CanModify(weapon, out _);
+                SuccessOverride = CanModify(weapon, inventoryController, out _);
             }
         }
 
@@ -525,7 +550,7 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            bool equipped = itemController is InventoryController inventoryController && inventoryController.IsItemEquipped(weapon);
+            bool equipped = itemController is InventoryController inventoryController && inventoryController.ID == weapon.Owner.ID && inventoryController.IsItemEquipped(weapon);
 
             // If setting is multitool, may need to change some errors
             if (!equipped && Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
@@ -546,11 +571,11 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct430> __result)
+        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct430> __result, TraderControllerClass ___traderControllerClass)
         {
             if (__result.Value.Error == "<color=red>" + "Raid lock".Localized() + "</color>")
             {
-                if (CanModify(slot, out string error))
+                if (CanModify(slot, ___traderControllerClass as InventoryController, out string error))
                 {
                     __result = new(EModLockedState.Unlocked, new()
                     {
@@ -624,22 +649,22 @@ public static class WeaponModdingPatches
         }
     }
 
-    private static bool CanModify(Item item, out string error)
+    private static bool CanModify(Item item, InventoryController inventoryController, out string error)
     {
-        return CanModify(item, item?.Parent, out error);
+        return CanModify(item, item?.Parent, inventoryController, out error);
     }
 
-    private static bool CanModify(Slot slot, out string error)
+    private static bool CanModify(Slot slot, InventoryController inventoryController, out string error)
     {
-        return CanModify(slot.ContainedItem, slot.CreateItemAddress(), out error);
+        return CanModify(slot.ContainedItem, slot.CreateItemAddress(), inventoryController, out error);
     }
 
-    private static bool CanModify(ItemAddress itemAddress, out string error)
+    private static bool CanModify(ItemAddress itemAddress, InventoryController inventoryController, out string error)
     {
-        return CanModify(null, itemAddress, out error);
+        return CanModify(null, itemAddress, inventoryController, out error);
     }
 
-    private static bool CanModify(Item item, ItemAddress itemAddress, out string error)
+    private static bool CanModify(Item item, ItemAddress itemAddress, InventoryController inventoryController, out string error)
     {
         error = null;
 
@@ -683,7 +708,7 @@ public static class WeaponModdingPatches
                 return true;
             }
 
-            return CanModify(weapon, out error);
+            return CanModify(weapon, inventoryController, out error);
         }
         else if (item is ArmorPlateItemClass && rootItem is ArmorItemClass or VestItemClass)
         {
@@ -692,9 +717,7 @@ public static class WeaponModdingPatches
                 return true;
             }
 
-            if (rootItem.Owner is InventoryController inventoryController &&
-                inventoryController.ID == PatchConstants.BackEndSession.Profile.Id &&
-                inventoryController.IsItemEquipped(rootItem))
+            if (inventoryController != null && inventoryController.ID == rootItem.Owner.ID && inventoryController.IsItemEquipped(rootItem))
             {
                 return Settings.ModifyEquippedPlates.Value;
             }
@@ -703,14 +726,12 @@ public static class WeaponModdingPatches
         return true;
     }
 
-    private static bool CanModify(Weapon weapon, out string error)
+    private static bool CanModify(Weapon weapon, InventoryController inventoryController, out string error)
     {
         error = null;
 
-        InventoryController inventoryController = weapon.Owner as InventoryController;
-
         // Can't modify weapon in player's hands
-        if (inventoryController != null && inventoryController.ID == PatchConstants.BackEndSession.Profile.Id && inventoryController.IsItemEquipped(weapon))
+        if (inventoryController != null && inventoryController.ID == weapon.Owner.ID && inventoryController.IsItemEquipped(weapon))
         {
             if (Plugin.InRaid() || !Settings.ModifyEquippedWeapons.Value)
             {
