@@ -16,6 +16,7 @@ global using ItemFilterExtensions = GClass2861;
 global using CursorManager = GClass3394;
 global using ContainerCollection = GClass2981;
 global using BuildItemSelector = GClass3186;
+global using ModdingItemSelector = GClass3187;
 
 // Context menus
 global using InventoryInteractions = GClass3405; // There are two child versions?
@@ -32,6 +33,7 @@ global using JsonItem = GClass1301;
 
 // Errors
 global using GenericError = GClass3757;
+global using EmptyError = GClass3759;
 global using DestroyError = GClass3726;
 global using GridNoRoomError = StashGridClass.GClass3686;
 global using GridSpaceTakenError = StashGridClass.GClass3687;

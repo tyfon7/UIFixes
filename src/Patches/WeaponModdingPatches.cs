@@ -236,11 +236,11 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GClass3187), nameof(GClass3187.Select));
+            return AccessTools.DeclaredMethod(typeof(ModdingItemSelector), nameof(ModdingItemSelector.Select));
         }
 
         [PatchPrefix]
-        public static bool Prefix(GClass3187 __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
+        public static bool Prefix(ModdingItemSelector __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
         {
             if (item == null || slot.ContainedItem == null || item == slot.ContainedItem)
             {
@@ -404,7 +404,7 @@ public static class WeaponModdingPatches
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct448<GClass3759> __result)
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct448<EmptyError> __result)
         {
             if (item is not Mod && item is not ArmorPlateItemClass)
             {
