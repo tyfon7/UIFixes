@@ -1,14 +1,15 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
+using EFT.InventoryLogic;
+using EFT.UI;
+using EFT.UI.DragAndDrop;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,7 +26,9 @@ public static class InspectWindowStatsPatches
         new FormatCompactValuesPatch().Enable();
         new FormatFullValuesPatch().Enable();
         new FixDurabilityBarPatch().Enable();
+
         new HighlightSlotsPatch().Enable();
+        new HighlightFilledSlotsPatch().Enable();
 
         new FixTraderCompatWithPatch().Enable();
     }
@@ -334,6 +337,33 @@ public static class InspectWindowStatsPatches
 
             itemUiContext.RegisterView(itemContext);
             __instance.R().UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
+        }
+    }
+
+    public class HighlightFilledSlotsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_2));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SlotView __instance, DragItemContext dragItemContext)
+        {
+            if (!Settings.HighlightFilledSlots.Value)
+            {
+                return;
+            }
+
+            if (__instance.Slot == null || dragItemContext == null || __instance.Slot.ContainedItem == null)
+            {
+                return;
+            }
+
+            Slot originalSlot = __instance.Slot;
+            __instance.Slot = new Slot(originalSlot, originalSlot.ParentItem as CompoundItem);
+            __instance.HighlightItemViewPosition(dragItemContext, null, true);
+            __instance.Slot = originalSlot;
         }
     }
 

@@ -175,6 +175,7 @@ internal class Settings
     // InspectWindows
     public static ConfigEntry<bool> ShowModStats { get; set; }
     public static ConfigEntry<bool> HighlightEmptySlots { get; set; }
+    public static ConfigEntry<bool> HighlightFilledSlots { get; set; }
     public static ConfigEntry<bool> RememberInspectSize { get; set; }
     public static ConfigEntry<bool> LockInspectPreviewSize { get; set; }
     public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
@@ -922,7 +923,16 @@ internal class Settings
             "Highlight Compatible Slots",
             true,
             new ConfigDescription(
-                "In addition to the default behavior of compatible components shading green, empty slots that can accept the mod will have a green border",
+                "In addition to the default behavior of compatible components shading green, slots that can accept the mod will have a green border",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HighlightFilledSlots = config.Bind(
+            InspectWindowsSection,
+            "Highlight Filled Slots",
+            true,
+            new ConfigDescription(
+                "Slots that can accept and item or mod will show a green border even if they are already filled",
                 null,
                 new ConfigurationManagerAttributes { })));
 
