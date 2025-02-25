@@ -87,6 +87,7 @@ internal class Settings
 
     // Dialogs
     public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
+    public static ConfigEntry<bool> OneClickPresetSave { get; set; }
     public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
     public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
@@ -310,6 +311,15 @@ internal class Settings
             WeaponPresetConfirmationOption.OnClose,
             new ConfigDescription(
                 "When to show a confirmation dialog when you leave and/or close an unsaved weapon preset",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(OneClickPresetSave = config.Bind(
+            DialogsSection,
+            "One Click Save Weapon Presets",
+            true,
+            new ConfigDescription(
+                "Save weapon presets without being prompted to confirm the name of the preset. Save As will prompt as normal.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
