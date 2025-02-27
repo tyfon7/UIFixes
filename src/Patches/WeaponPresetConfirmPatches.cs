@@ -96,7 +96,7 @@ public static class WeaponPresetConfirmPatches
         [PatchPrefix]
         public static bool Prefix(string savedName, ref GClass3480 __result)
         {
-            if (!InstantSavePreset || !Settings.OneClickPresetSave.Value)
+            if (string.IsNullOrEmpty(savedName) || !InstantSavePreset || !Settings.OneClickPresetSave.Value)
             {
                 return true;
             }
