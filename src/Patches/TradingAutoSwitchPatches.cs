@@ -1,10 +1,10 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Reflection;
+using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -130,6 +130,11 @@ public static class TradingAutoSwitchPatches
         [PatchPostfix]
         public static void Postfix(TraderDealScreen __instance, TraderClass ___traderClass_1)
         {
+            if (___traderClass_1.CurrentAssortment == null)
+            {
+                return;
+            }
+
             // Normally this is invoked on selected item change, etc. 
             ___traderClass_1.CurrentAssortment.PreparedItemsChanged.Invoke();
             ___traderClass_1.CurrentAssortment.PreparedSumChanged.Invoke();
