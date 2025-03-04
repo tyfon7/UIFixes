@@ -1,6 +1,6 @@
 import { DateTime } from "@spt/models/enums/DateTime";
 import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 export declare class WeatherHelper {
@@ -10,7 +10,7 @@ export declare class WeatherHelper {
     protected weatherConfig: IWeatherConfig;
     constructor(logger: ILogger, timeUtil: TimeUtil, configServer: ConfigServer);
     /**
-     * Get the current in-raid time
+     * Get the current in-raid time - does not include an accurate date, only time
      * @param currentDate (new Date())
      * @returns Date object of current in-raid time
      */

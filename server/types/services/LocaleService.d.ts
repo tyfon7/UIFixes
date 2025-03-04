@@ -1,5 +1,5 @@
 import { ILocaleConfig } from "@spt/models/spt/config/ILocaleConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 /**
@@ -44,7 +44,7 @@ export declare class LocaleService {
      * Get the full locale of the computer running the server lowercased e.g. en-gb / pt-pt
      * @returns string
      */
-    protected getPlatformForServerLocale(): string;
+    getPlatformForServerLocale(): string;
     /**
      * Get the locale of the computer running the server
      * @returns langage part of locale e.g. 'en' part of 'en-US'

@@ -29,16 +29,15 @@
  * @version v1.0.0
  */
 
-import fs from "fs-extra";
-import os from "os";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import ignore from "ignore";
 import archiver from "archiver";
+import fs from "fs-extra";
+import ignore from "ignore";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import winston from "winston";
 
-const sptPaths = ["/SPT/3.10-be", "d:/fika", "d:/fika2"];
+const sptPaths = ["/SPT/3.10-be"]; //, "d:/fika", "d:/fika2"];
 
 // Get the command line arguments to determine whether to use verbose logging.
 const args = process.argv.slice(2);
@@ -68,7 +67,11 @@ const logger = winston.createLogger({
             return `${info.level}: ${info.message}`;
         })
     ),
-    transports: [new winston.transports.Console({ level: verbose ? "info" : "success" })]
+    transports: [
+        new winston.transports.Console({
+            level: verbose ? "info" : "success"
+        })
+    ]
 });
 
 /**
@@ -150,7 +153,7 @@ async function main() {
         logger.log("success", "------------------------------------");
         logger.log("success", "Build script completed successfully!");
         logger.log("success", "Your mod package has been created in the 'dist' directory:");
-        logger.log("success", `${path.relative(process.cwd(), path.join(distDir, `${projectName}.zip`))}`);
+        logger.log("success", `/${path.relative(process.cwd(), path.join(distDir, `${projectName}.zip`))}`);
         logger.log("success", "------------------------------------");
         if (!verbose) {
             logger.log("success", "To see a detailed build log, use `npm run buildinfo`.");
@@ -180,7 +183,7 @@ async function main() {
  * @returns {string} The absolute path of the current working directory.
  */
 function getCurrentDirectory() {
-    return dirname(fileURLToPath(import.meta.url));
+    return path.dirname(fileURLToPath(import.meta.url));
 }
 
 /**

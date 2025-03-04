@@ -18,15 +18,18 @@ import { ILocations } from "@spt/models/spt/server/ILocations";
 import { IServerBase } from "@spt/models/spt/server/IServerBase";
 import { ISettingsBase } from "@spt/models/spt/server/ISettingsBase";
 import { ITemplates } from "@spt/models/spt/templates/ITemplates";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { HashUtil } from "@spt/utils/HashUtil";
 export declare class DatabaseService {
     protected logger: ILogger;
     protected databaseServer: DatabaseServer;
     protected localisationService: LocalisationService;
+    protected hashUtil: HashUtil;
     protected locationConfig: ILocationConfig;
-    constructor(logger: ILogger, databaseServer: DatabaseServer, localisationService: LocalisationService);
+    protected isDataValid: boolean;
+    constructor(logger: ILogger, databaseServer: DatabaseServer, localisationService: LocalisationService, hashUtil: HashUtil);
     /**
      * @returns assets/database/
      */
@@ -82,7 +85,7 @@ export declare class DatabaseService {
      */
     getCustomization(): Record<string, ICustomizationItem>;
     /**
-     * @returns assets/database/templates/items.json
+     * @returns assets/database/templates/handbook.json
      */
     getHandbook(): IHandbookBase;
     /**
@@ -98,7 +101,7 @@ export declare class DatabaseService {
      */
     getProfiles(): IProfileTemplates;
     /**
-     * @returns assets/database/templates/items.json
+     * @returns assets/database/templates/quests.json
      */
     getQuests(): Record<string, IQuest>;
     /**
@@ -115,4 +118,20 @@ export declare class DatabaseService {
      * @returns assets/database/locationServices/
      */
     getLocationServices(): ILocationServices;
+    /**
+     * Validates that the database doesn't contain invalid ID data
+     */
+    validateDatabase(): void;
+    /**
+     * Validate that the given table only contains valid MongoIDs
+     * @param table Table to validate for MongoIDs
+     * @param tableType The type of table, used in output message
+     * @returns True if the table only contains valid data
+     */
+    private validateTable;
+    /**
+     * Check if the database is valid
+     * @returns True if the database contains valid data, false otherwise
+     */
+    isDatabaseValid(): boolean;
 }
