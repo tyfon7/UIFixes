@@ -1,9 +1,9 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
-using System;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -96,6 +96,7 @@ public class Plugin : BaseUnityPlugin
         new ModifyUnsearchedContainerPatch().Enable();
         RemoveAdsPatches.Enable();
         BTRPaymentPatches.Enable();
+        FilterStockPresetsPatches.Enable();
     }
 
     public static bool InRaid()
