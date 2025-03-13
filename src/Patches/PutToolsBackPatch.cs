@@ -1,11 +1,11 @@
-﻿using EFT;
-using EFT.InventoryLogic;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EFT;
+using EFT.InventoryLogic;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 
 namespace UIFixes;
 
@@ -13,7 +13,7 @@ public class PutToolsBackPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(R.ItemReceiver.Type, "method_9"); // GClass2055
+        return AccessTools.Method(R.ItemReceiver.Type, "method_9");
     }
 
     // The patched method can't handle new items that aren't in stash root.

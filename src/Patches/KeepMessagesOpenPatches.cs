@@ -1,9 +1,9 @@
-﻿using EFT.UI;
+﻿using System.Reflection;
+using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Screens;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 
 namespace UIFixes;
 
@@ -38,11 +38,11 @@ public static class KeepMessagesOpenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MainMenuController), nameof(MainMenuController.method_0));
+            return AccessTools.Method(typeof(MainMenuControllerClass), nameof(MainMenuControllerClass.method_0));
         }
 
         [PatchPostfix]
-        public static void Postfix(MainMenuController __instance, EEftScreenType eftScreenType)
+        public static void Postfix(MainMenuControllerClass __instance, EEftScreenType eftScreenType)
         {
             if (Settings.KeepMessagesOpen.Value && eftScreenType != EEftScreenType.TransferItems && ReopenMessages)
             {

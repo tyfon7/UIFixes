@@ -1,11 +1,11 @@
-﻿using EFT.InputSystem;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -1,11 +1,11 @@
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Diz.LanguageExtensions;
 using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace UIFixes;
 

@@ -1,10 +1,10 @@
-﻿using Comfort.Common;
+﻿using System.Linq;
+using System.Reflection;
+using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -55,12 +55,10 @@ public static class OpenSortingTablePatches
             {
                 if (__instance.ContextType == EItemUiContextType.InventoryScreen)
                 {
-                    //Singleton<CommonUI>.Instance.InventoryScreen.method_6();
                     Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
                 }
                 else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
                 {
-                    //Singleton<CommonUI>.Instance.ScavengerInventoryScreen.method_7();
                     Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
                 }
             }

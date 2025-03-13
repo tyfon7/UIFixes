@@ -1,8 +1,8 @@
-﻿using EFT.UI;
+﻿using System.Reflection;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 
@@ -49,10 +49,10 @@ public static class FixTooltipPatches
             if (trigger == null)
             {
                 trigger = ___ItemValue.gameObject.AddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_33();
+                trigger.OnHoverStart += eventData => __instance.method_32();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_34();
+                    __instance.method_33();
                     __instance.ShowTooltip();
                 };
 

@@ -1,7 +1,7 @@
-﻿using EFT.UI;
+﻿using System.Reflection;
+using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using TMPro;
 using UnityEngine.EventSystems;
 

@@ -1,7 +1,7 @@
+using System.Reflection;
 using Diz.LanguageExtensions;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 
 namespace UIFixes;
 
@@ -9,7 +9,7 @@ public class ModifyUnsearchedContainerPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_20));
+        return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_22));
     }
 
     [PatchPostfix]

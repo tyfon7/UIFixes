@@ -1,4 +1,8 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT;
 using EFT.InventoryLogic;
@@ -7,10 +11,6 @@ using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -317,7 +317,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // GClass3147
+            return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // SwapOperation
         }
 
         [PatchPostfix]
@@ -457,7 +457,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_12));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_11));
         }
 
         [PatchPrefix]
@@ -502,7 +502,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2524
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2928
             return AccessTools.Method(type, "CheckItemFilter");
         }
 
@@ -519,12 +519,12 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null);
+            Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null); // InteractionsHandlerClass.Class2347
             return AccessTools.Method(type, "method_1");
         }
 
         [PatchPostfix]
-        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct446<GInterface385> __result, Error ___noSpaceError, Error ___noActionsError)
+        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct455<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
         {
             if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
             {
@@ -633,7 +633,7 @@ public static class SwapPatches
             }
             ___bool_0 = true;
             ___firearmsAnimator_0.SetupMod(false);
-            GameObject gameObject = Singleton<PoolManager>.Instance.CreateItem(___item_0, true);
+            GameObject gameObject = Singleton<PoolManagerClass>.Instance.CreateItem(___item_0, true);
             ___weaponManagerClass.SetupMod(___slot_0, gameObject);
             ___firearmsAnimator_0.Fold(___weapon_0.Folded);
             __instance.State = Player.EOperationState.Finished;

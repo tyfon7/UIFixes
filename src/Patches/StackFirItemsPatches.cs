@@ -1,10 +1,10 @@
-﻿using EFT.InventoryLogic;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EFT.InventoryLogic;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 
 namespace UIFixes;
 
@@ -18,13 +18,9 @@ public static class StackFirItemsPatches
 
     public class ContainerStackPatch : ModulePatch
     {
-        private static Type MergeableItemType;
-
         protected override MethodBase GetTargetMethod()
         {
-            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
-            MergeableItemType = method.GetParameters()[2].ParameterType.GetElementType(); // parameter is a ref type, get underlying type, GClass2751
-            return method;
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
         }
 
         [PatchPrefix]

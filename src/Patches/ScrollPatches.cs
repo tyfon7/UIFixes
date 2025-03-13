@@ -1,13 +1,13 @@
-﻿using EFT.Hideout;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using EFT.Hideout;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;

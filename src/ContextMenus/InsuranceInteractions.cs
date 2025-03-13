@@ -1,9 +1,9 @@
-﻿using Comfort.Common;
-using EFT.InventoryLogic;
-using EFT.UI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Comfort.Common;
+using EFT.InventoryLogic;
+using EFT.UI;
 
 namespace UIFixes;
 

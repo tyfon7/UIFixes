@@ -1291,7 +1291,7 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null);
+            Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null); // InteractionsHandlerClass.Class2347
             return AccessTools.Method(type, "method_1");
         }
 
@@ -1432,7 +1432,7 @@ public static class MultiSelectPatches
         }
     }
 
-    // method_10 is called to find a spot, first with horizontal rotation then with vertical
+    // method_6 is called to find a spot, first with horizontal rotation then with vertical
     // Based on the FindRotation, changing the value can effectively switch the order it searches in
     public class FindSpotKeepRotationPatch : ModulePatch
     {

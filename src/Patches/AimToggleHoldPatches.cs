@@ -1,13 +1,13 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Comfort.Common;
 using EFT.InputSystem;
 using HarmonyLib;
 using JsonType;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace UIFixes;
 
@@ -101,7 +101,7 @@ public static class AimToggleHoldPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(KeyCombination __instance, ref List<GInterface201> inputKeys)
+        public static void Prefix(KeyCombination __instance, ref List<IInputKey> inputKeys)
         {
             // BSG implemented tactical as an entirely new abomination, so I have to disable the "release tactical" 
             if (__instance.GameKey == EGameKey.ReleaseTactical && UseToggleHold(EGameKey.Tactical))
@@ -126,7 +126,7 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(Class1581), nameof(Class1581.Boolean_0)).GetMethod;
+            return AccessTools.Property(typeof(FirearmInputHandler), nameof(FirearmInputHandler.Boolean_0)).GetMethod;
         }
 
         [PatchPrefix]
@@ -175,7 +175,7 @@ public static class AimToggleHoldPatches
 
     private static void OnSettingChanged(object sender, EventArgs args)
     {
-        // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
+        // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
         Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
     }
 }

@@ -128,7 +128,7 @@ public static class TradingAutoSwitchPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderDealScreen __instance, TraderClass ___traderClass_1)
+        public static void Postfix(TraderClass ___traderClass_1)
         {
             if (___traderClass_1.CurrentAssortment == null)
             {
