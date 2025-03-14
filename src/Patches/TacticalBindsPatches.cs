@@ -205,7 +205,7 @@ public static class TacticalBindsPatches
                 return;
             }
 
-            Quickbind.SetType(index, Quickbind.ItemType.Other);
+            UpdateQuickbindType(null, index);
 
             // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
@@ -243,6 +243,7 @@ public static class TacticalBindsPatches
 
     private static void UpdateQuickbindType(Item item, EBoundItem index)
     {
+        // TODO: Enable/disable toggle/hold functionality if appropriate
         if (item == null)
         {
             Quickbind.SetType(index, Quickbind.ItemType.Other);
