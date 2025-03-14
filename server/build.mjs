@@ -37,7 +37,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import winston from "winston";
 
-const sptPaths = ["/SPT/3.10-be"]; //, "d:/fika", "d:/fika2"];
+const sptPaths = ["/SPT/3.11"]; //, "d:/fika", "d:/fika2"];
 
 // Get the command line arguments to determine whether to use verbose logging.
 const args = process.argv.slice(2);
