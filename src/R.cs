@@ -61,7 +61,6 @@ public static class R
         RagfairNewOfferItemView.InitTypes();
         TradingTableGridView.InitTypes();
         ItemReceiver.InitTypes();
-        //InventoryInteractions.InitTypes();
         TradingInteractions.InitTypes();
         InventoryScreen.InitTypes();
         ScavengerInventoryScreen.InitTypes();
@@ -69,8 +68,6 @@ public static class R
         MoveOperationResult.InitTypes();
         AddOperationResult.InitTypes();
         FoldOperationResult.InitTypes();
-        DiscardOperationResult.InitTypes();
-        UnbindOperationResult.InitTypes();
         LightScroller.InitTypes();
     }
 
@@ -291,7 +288,7 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(EFT.UI.DragAndDrop.GridView);
-            TraderControllerField = AccessTools.Field(Type, "traderControllerClass");
+            TraderControllerField = AccessTools.Field(Type, "_itemController");
             NonInteractableField = AccessTools.Field(Type, "_nonInteractable");
             HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
             ValidMoveColorField = AccessTools.Field(Type, "ValidMoveColor");
@@ -623,8 +620,8 @@ public static class R
         public static void InitTypes()
         {
             Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface37
-            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) == null); // GClass885
-            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0", BindingFlags.Instance | BindingFlags.NonPublic) != null); // GClass884
+            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") == null); // GClass885
+            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") != null); // GClass884
             RepairersProperty = AccessTools.Property(Type, "Repairers");
             CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
             HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
@@ -724,19 +721,15 @@ public static class R
         public TraderAssortmentControllerClass TraderAssortmentController { get { return (TraderAssortmentControllerClass)TraderAssortmentControllerField.GetValue(Value); } }
     }
 
-    public class ItemReceiver(object value) : Wrapper(value) // GClass2098
+    public class ItemReceiver(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo InventoryControllerField;
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t =>
-            {
-                FieldInfo field = t.GetField("localQuestControllerClass", BindingFlags.NonPublic | BindingFlags.Instance);
-                return field != null && field.IsInitOnly;
-            });
-            InventoryControllerField = Type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => typeof(InventoryController).IsAssignableFrom(f.FieldType));
+            Type = PatchConstants.EftTypes.Single(t => t.IsClass && t.GetMethod("UpdateProfile", [typeof(ProfileChangesPocoClass)]) != null); // GClass2098
+            InventoryControllerField = Type.GetFields().Single(f => typeof(InventoryController).IsAssignableFrom(f.FieldType));
         }
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
@@ -810,7 +803,7 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(MoveOperation);
-            AddOperationField = AccessTools.Field(Type, "gclass3126_0");
+            AddOperationField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(AddOperation));
         }
 
         public AddOperation AddOperation { get { return (AddOperation)AddOperationField.GetValue(Value); } }
@@ -824,7 +817,7 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(AddOperation);
-            ResizeOperationField = AccessTools.Field(Type, "gclass3137_0");
+            ResizeOperationField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(ResizeOperation));
         }
 
         public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
@@ -838,38 +831,10 @@ public static class R
         public static void InitTypes()
         {
             Type = typeof(FoldOperation);
-            ResizeOperationField = AccessTools.Field(Type, "gclass3137_0");
+            ResizeOperationField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(ResizeOperation));
         }
 
         public ResizeOperation ResizeOperation { get { return (ResizeOperation)ResizeOperationField.GetValue(Value); } }
-    }
-
-    public class DiscardOperationResult(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static FieldInfo UnbindResultsField;
-
-        public static void InitTypes()
-        {
-            Type = typeof(DiscardOperation);
-            UnbindResultsField = AccessTools.Field(Type, "list_0");
-        }
-
-        public List<UnbindOperation> UnbindResults { get { return (List<UnbindOperation>)UnbindResultsField.GetValue(Value); } }
-    }
-
-    public class UnbindOperationResult(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        public static FieldInfo ControllerField;
-
-        public static void InitTypes()
-        {
-            Type = typeof(UnbindOperation);
-            ControllerField = AccessTools.Field(Type, "inventoryController_0");
-        }
-
-        public InventoryController Controller { get { return (InventoryController)ControllerField.GetValue(Value); } }
     }
 
     public class LightScroller(object value) : UIElement(value)
@@ -919,7 +884,5 @@ public static class RExtentensions
     public static R.MoveOperationResult R(this MoveOperation value) => new(value);
     public static R.AddOperationResult R(this AddOperation value) => new(value);
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
-    public static R.DiscardOperationResult R(this DiscardOperation value) => new(value);
-    public static R.UnbindOperationResult R(this UnbindOperation value) => new(value);
     public static R.LightScroller R(this LightScroller value) => new(value);
 }

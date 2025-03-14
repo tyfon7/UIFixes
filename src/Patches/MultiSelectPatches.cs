@@ -322,13 +322,13 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(GridItemView), nameof(GridItemView.Update));
+            return AccessTools.DeclaredMethod(typeof(ItemView), nameof(ItemView.Update));
         }
 
         [PatchPostfix]
-        public static void Postfix(GridItemView __instance, ItemUiContext ___ItemUiContext)
+        public static void Postfix(ItemView __instance, ItemUiContext ___ItemUiContext)
         {
-            if (!MultiSelect.Enabled)
+            if (!MultiSelect.Enabled || __instance is not GridItemView gridItemView || !gridItemView.IsSearched)
             {
                 return;
             }
@@ -465,7 +465,7 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemView), nameof(ItemView.Init));
+            return AccessTools.DeclaredMethod(typeof(ItemView), nameof(ItemView.Init));
         }
 
         [PatchPostfix]

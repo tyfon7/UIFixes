@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -94,6 +95,7 @@ public static class FilterOutOfStockPatches
                 ShowOutOfStockItems = !ShowOutOfStockItems;
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
+                Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
                 ____traderGridView.method_14(); // Refreshes the grid
                 ____traderGridView.method_16(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using BepInEx.Configuration;
 using Comfort.Common;
 using EFT.Communications;
@@ -6,8 +9,6 @@ using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
 using Fika.Core.Networking;
 using LiteNetLib;
-using System.Collections.Generic;
-using System.Linq;
 using UIFixes.Net;
 
 namespace UIFixes.Fika;
@@ -22,10 +23,12 @@ public static class Sync
     {
         Plugin.Instance.Logger.LogInfo("Fika detected, initializing settings sync");
 
-        FikaEventDispatcher.SubscribeEvent<FikaNetworkManagerCreatedEvent>(OnFikaNetworkManagerCreated);
-        FikaEventDispatcher.SubscribeEvent<PeerConnectedEvent>(OnPeerConnected);
-        FikaEventDispatcher.SubscribeEvent<FikaRaidStartedEvent>(OnRaidStarted);
-        FikaEventDispatcher.SubscribeEvent<FikaGameEndedEvent>(OnGameEnded);
+        // Calling new Action() myself is required. Otherwise the compiler will generate a static class to cache the action, and that class
+        // is walked by tarkov at load, forcing a fika dll load, which pukes when fika is missing!
+        FikaEventDispatcher.SubscribeEvent(new Action<FikaNetworkManagerCreatedEvent>(OnFikaNetworkManagerCreated));
+        FikaEventDispatcher.SubscribeEvent(new Action<PeerConnectedEvent>(OnPeerConnected));
+        FikaEventDispatcher.SubscribeEvent(new Action<FikaRaidStartedEvent>(OnRaidStarted));
+        FikaEventDispatcher.SubscribeEvent(new Action<FikaGameEndedEvent>(OnGameEnded));
     }
 
     private static void OnPeerConnected(PeerConnectedEvent ev)
@@ -47,11 +50,12 @@ public static class Sync
         switch (ev.Manager)
         {
             case FikaServer server:
-                Plugin.Instance.Config.SettingChanged += OnServerSettingChanged;
+                // Manual call to new EventHandler() required, see comment above about new Action.
+                Plugin.Instance.Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(OnServerSettingChanged);
                 break;
             case FikaClient client:
-                Plugin.Instance.Config.SettingChanged += OnClientSettingChanged;
-                client.RegisterPacket<ConfigPacket>(HandlePacketClient);
+                Plugin.Instance.Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(OnClientSettingChanged);
+                client.RegisterPacket(new Action<ConfigPacket>(HandlePacketClient));
                 break;
         }
     }
@@ -104,11 +108,11 @@ public static class Sync
         // TODO: when ExitStatus is available, check if it's transit
         if (ev.IsServer)
         {
-            Plugin.Instance.Config.SettingChanged -= OnServerSettingChanged;
+            Plugin.Instance.Config.SettingChanged -= new EventHandler<SettingChangedEventArgs>(OnServerSettingChanged);
         }
         else
         {
-            Plugin.Instance.Config.SettingChanged -= OnClientSettingChanged;
+            Plugin.Instance.Config.SettingChanged -= new EventHandler<SettingChangedEventArgs>(OnClientSettingChanged);
 
             foreach (var config in SettingOverrides)
             {

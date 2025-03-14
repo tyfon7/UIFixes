@@ -3,14 +3,14 @@
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
     <AssemblyName>Tyfon.UIFixes.Net</AssemblyName>
-    <Version>3.1.0</Version>
+    <Version>4.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
-    <SPTPath>..\..\..\..\..\SPT\3.10-be</SPTPath>
+    <SPTPath>..\..\..\..\..\SPT\3.11</SPTPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,12 +20,12 @@
     <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
       <Path>$(ProjectDir)dist</Path>
     </DeployTarget>
-    <DeployTarget Include="Fika1">
+    <!-- <DeployTarget Include="Fika1">
       <Path>d:\fika</Path>
     </DeployTarget>
     <DeployTarget Include="Fika2">
       <Path>d:\fika2</Path>
-    </DeployTarget>
+    </DeployTarget> -->
   </ItemGroup>
 
   <ItemGroup>
