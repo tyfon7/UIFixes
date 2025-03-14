@@ -45,8 +45,7 @@
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <!-- <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath> -->
-      <HintPath>C:\Users\bhaml\git\spt\Modules\project\Shared\Hollowed\hollowed.dll</HintPath>
+      <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Comfort">
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
