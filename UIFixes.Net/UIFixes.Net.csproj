@@ -18,7 +18,7 @@
       <Path>$(ProjectDir)$(SPTPath)</Path>
     </DeployTarget>
     <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
-      <Path>$(ProjectDir)dist</Path>
+      <Path>$(ProjectDir)..\dist</Path>
     </DeployTarget>
     <!-- <DeployTarget Include="Fika1">
       <Path>d:\fika</Path>
@@ -37,10 +37,6 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec
       Command='
-        if $(ConfigurationName) == Release (
-          mkdir "$(ProjectDir)dist\BepInEx\plugins"
-        )
-
         xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
 
         if $(ConfigurationName) == Debug (
