@@ -1,10 +1,10 @@
-﻿using BepInEx.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using BepInEx.Configuration;
 using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -216,31 +216,24 @@ public class DrawMultiSelect : MonoBehaviour
             .Where(c => c is not ScrollRectNoDrag) // this disables scrolling, it doesn't add it
             .Where(c => c.name != "Inner"); // there's a random DragTrigger sitting in ItemInfoWindows
 
+        // When item are being searched, a search icon is on top of them and intercepts the raycast
         var clickables = allParents
-            .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler)
+            .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler || c.name == "Search Icon")
             .Where(c => c is not EmptySlotMenuTrigger); // ignore empty slots that are right-clickable due to UIFixes
 
-        // When item are being searched, a search icon is on top of them and intercepts the raycast
-        clickables = clickables.Concat(allParents.Where(c => c.name == "Search Icon"));
-
         // Windows are clickable to focus them, but that shouldn't block selection
-        var windows = clickables
+        var windows = allParents
             .Where(c => c is UIInputNode) // Windows<>'s parent, cheap check
             .Where(c =>
             {
-                // Most window types implement IPointerClickHandler and inherit directly from Window<>
                 Type baseType = c.GetType().BaseType;
                 return baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Window<>);
             });
 
         clickables = clickables.Except(windows);
+        draggables = draggables.Except(windows);
 
-        if (draggables.Any() || clickables.Any())
-        {
-            return true;
-        }
-
-        return false;
+        return draggables.Any() || clickables.Any();
     }
 
     private bool IsBlocked(GameObject mouseTarget)
