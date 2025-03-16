@@ -174,10 +174,10 @@ public static class TacticalBindsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryController controller, Item item, EBoundItem index)
+        public static void Postfix(InventoryController controller, Item item, EBoundItem index, bool simulate)
         {
             // Don't run on fika remote
-            if (controller.IsObserved())
+            if (simulate || controller.IsObserved())
             {
                 return;
             }
@@ -197,10 +197,10 @@ public static class TacticalBindsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryController controller, EBoundItem index)
+        public static void Postfix(InventoryController controller, EBoundItem index, bool simulate)
         {
             // Don't run on fika remote
-            if (controller.IsObserved())
+            if (simulate || controller.IsObserved())
             {
                 return;
             }

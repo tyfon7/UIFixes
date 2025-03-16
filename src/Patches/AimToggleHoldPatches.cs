@@ -5,9 +5,7 @@ using System.Reflection;
 using Comfort.Common;
 using EFT.InputSystem;
 using HarmonyLib;
-using JsonType;
 using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
 
 namespace UIFixes;
 
@@ -41,14 +39,7 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand disableCommand, KeyCombination.KeyCombinationState[] ___keyCombinationState_1)
         {
-            bool useToggleHold = gameKey switch
-            {
-                EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
-                EGameKey.Sprint => Settings.ToggleOrHoldSprint.Value,
-                _ => false
-            };
-
-            if (!useToggleHold)
+            if (!UseToggleHold(gameKey))
             {
                 return;
             }
@@ -116,7 +107,6 @@ public static class AimToggleHoldPatches
             if (UseToggleHold(__instance.GameKey))
             {
                 __instance.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
-
             }
         }
     }
