@@ -2,11 +2,9 @@
 
 Quality of life improvements and fixes for SPT
 
-Tarkov is full of annoyances but we can fix them! Sometimes.
+_Tarkov is full of annoyances, but we can fix them! Sometimes._
 
 ✨ Recently added
-
-Items that are ~~crossed out~~ have been implemented by BSG!
 
 ## Added features
 
@@ -17,7 +15,6 @@ New UI features enabled by this mod
     -   Ctrl-click and Alt-click to quick move or equip them all. Compatible with Quick Move to Containers!
     -   Context menu to insure, equip, unequip, load/unload ammo, install/uninstall, pin, and lock all at once
 -   Swap items in place - drag one item over another to swap their locations!
--   ~~Add offer to the flea market from an item's context menu~~
 -   Flea market history - press the new back button to go back to the previous search
 -   Linked flea search from empty slots - find mods that fit that specific slot
 -   Keybinds for most context menu actions
@@ -35,18 +32,17 @@ Existing SPT features made better
 -   Customizable mouse scrolling speed
 -   Moving stacks into containers always moves entire stack
 -   Items made stackable by other mods follow normal stacking behavior
--   Allow found in raid ~~money~~ and ammo automatically stack with non-found-in-raid items
+-   Allow found in raid ammo automatically stack with non-found-in-raid items
 -   Synchronize stash scroll position everywhere your stash is visible
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
 -   Load ammo preset will pull ammo from inventory, not just stash
 -   Multi-grid vest and backpack grids reordered to be left to right, top to bottom
--   ✨ Vests and backpacks are taggable
+-   Vests and backpacks are taggable
 -   Sorting will stack and combine stacks of items
 -   Open->All context flyout that will recursively open nested containers to get at that innermost bag
--   ~~Add/Remove from wishlist everywhere~~
 -   Improve modding/preset dropdown usability
--   ✨ Enable context menu while searching (off by default)
+-   Enable context menu while searching (off by default)
 
 #### Inspect windows
 
@@ -57,6 +53,7 @@ Existing SPT features made better
 -   Move left and move right buttons + keybinds to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
 -   Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 -   Quickbinds will not be removed from items you keep when you die
+-   ✨ Compatible slots are now outlined in green, like the paper doll already does
 
 #### Traders
 
@@ -79,6 +76,7 @@ Existing SPT features made better
 -   Weapons can grow left or up, not just right and down
 -   Enable zooming with mousewheel
 -   Skip needless unsaved changes warnings when not actually closing the screen
+-   ✨ Saving the current preset is now one-click; you don't have to confirm the name. That's what Save As... is for.
 
 #### Hideout
 
@@ -91,7 +89,6 @@ Existing SPT features made better
 -   Option to make unequipped weapons moddable in raid, optionally with multitool
 -   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room
 -   Grenade quickbinds will transfer to the next grenade of the same type after throwing
--   ~~Option to change the behavior of the grenade key from selecting a random grenade to a deterministic one~~
 
 #### Mail
 
@@ -113,15 +110,15 @@ Fixing bugs that BSG won't or can't
 -   Fix item tooltips disapparing if your mouse goes through the Quest/FoundInRaid icon (great for MoreCheckmarks)
 -   Fix windows appearing partially offscreen
 -   Fix modding/preset UI breaking when you click not allowed (red outlined) items
--   ✨ Fix trader items not showing "Compatibility" with your items
+-   Fix trader items not showing "Compatible with Available" with your items
+-   ✨ Fix selected barter items not being highlighted correctly
 
 #### In raid
 
 -   Remove the unimplemented door actions like "Bang & clear" that are never going to happen
 -   Fix the keybind for weapons always showing up as 1, 2, and 3. Now shows your actual keybind like every other slot
--   ~~Fix the quick item bar not respecting "Autohide" and "Never show" setting~~
--   ✨ Fix issue where clicking the eye at the wrong time during raid load would break your equipment UI for the rest of the raid
--   ✨ Fix not being able to pay the BTR man with money from your backpack or secure container if you happened to be carrying grenades
+-   Fix issue where clicking the eye at the wrong time during raid load would break your equipment UI for the rest of the raid
+-   Fix not being able to pay the BTR man with money from your backpack or secure container if you happened to be carrying grenades
 
 #### Mail
 
