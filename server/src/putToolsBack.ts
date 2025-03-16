@@ -3,9 +3,13 @@ import type { DependencyContainer } from "tsyringe";
 import type { HideoutHelper } from "@spt/helpers/HideoutHelper";
 import type { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import type { ItemHelper } from "@spt/helpers/ItemHelper";
+import type { IPmcData } from "@spt/models/eft/common/IPmcData";
+import type { IItem } from "@spt/models/eft/common/tables/IItem";
 import type { IHideoutSingleProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutSingleProductionStartRequestData";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
+
+const returnToProperty = "uifixes.returnTo";
 
 export const putToolsBack = (container: DependencyContainer) => {
     const logger = container.resolve<ILogger>("PrimaryLogger");
@@ -37,7 +41,7 @@ export const putToolsBack = (container: DependencyContainer) => {
                                 continue;
                             }
 
-                            tools[i]["uifixes.returnTo"] = [originalTool.parentId, originalTool.slotId];
+                            tools[i][returnToProperty] = [originalTool.parentId, originalTool.slotId];
                         }
                     }
                 } catch (error) {
@@ -61,55 +65,44 @@ export const putToolsBack = (container: DependencyContainer) => {
 
                 // If a tool marked with uifixes is there, try to return it to its original container
                 const tool = itemWithModsToAddClone[0];
-                if (tool["uifixes.returnTo"]) {
+                if (tool[returnToProperty]) {
                     try {
-                        const [containerId, slotId] = tool["uifixes.returnTo"];
+                        const [containerId, slotId] = tool[returnToProperty];
 
-                        const container = pmcData.Inventory.items.find(x => x._id === containerId);
-                        if (container) {
-                            const [foundTemplate, containerTemplate] = itemHelper.getItem(container._tpl);
-                            if (foundTemplate && containerTemplate) {
-                                const containerFS2D = inventoryHelper.getContainerMap(
-                                    containerTemplate._props.Grids[0]._props.cellsH,
-                                    containerTemplate._props.Grids[0]._props.cellsV,
-                                    pmcData.Inventory.items,
-                                    containerId
-                                );
+                        // Clean the item
+                        delete tool[returnToProperty];
 
-                                // will change the array so clone it
-                                if (
-                                    inventoryHelper.canPlaceItemInContainer(
-                                        cloner.clone(containerFS2D),
-                                        itemWithModsToAddClone
-                                    )
-                                ) {
-                                    // At this point everything should succeed
-                                    inventoryHelper.placeItemInContainer(
-                                        containerFS2D,
-                                        itemWithModsToAddClone,
-                                        containerId,
-                                        slotId
-                                    );
+                        const [foundContainerFS2D, foundSlotId] = findGridFS2DForItems(
+                            inventoryHelper,
+                            containerId,
+                            slotId,
+                            itemWithModsToAddClone,
+                            pmcData
+                        );
 
-                                    // protected function, bypass typescript
-                                    inventoryHelper["setFindInRaidStatusForItem"](
-                                        itemWithModsToAddClone,
-                                        request.foundInRaid
-                                    );
+                        if (foundContainerFS2D) {
+                            // At this point everything should succeed
+                            inventoryHelper.placeItemInContainer(
+                                foundContainerFS2D,
+                                itemWithModsToAddClone,
+                                containerId,
+                                foundSlotId
+                            );
 
-                                    // Add item + mods to output and profile inventory
-                                    output.profileChanges[sessionId].items.new.push(...itemWithModsToAddClone);
-                                    pmcData.Inventory.items.push(...itemWithModsToAddClone);
+                            // protected function, bypass typescript
+                            inventoryHelper["setFindInRaidStatusForItem"](itemWithModsToAddClone, request.foundInRaid);
 
-                                    logger.debug(
-                                        `Added ${itemWithModsToAddClone[0].upd?.StackObjectsCount ?? 1} item: ${
-                                            itemWithModsToAddClone[0]._tpl
-                                        } with: ${itemWithModsToAddClone.length - 1} mods to ${containerId}`
-                                    );
+                            // Add item + mods to output and profile inventory
+                            output.profileChanges[sessionId].items.new.push(...itemWithModsToAddClone);
+                            pmcData.Inventory.items.push(...itemWithModsToAddClone);
 
-                                    return;
-                                }
-                            }
+                            logger.debug(
+                                `Added ${itemWithModsToAddClone[0].upd?.StackObjectsCount ?? 1} item: ${
+                                    itemWithModsToAddClone[0]._tpl
+                                } with: ${itemWithModsToAddClone.length - 1} mods to ${containerId}`
+                            );
+
+                            return;
                         }
                     } catch (error) {
                         logger.error(`UIFixes: Encounted an error trying to put tool back.\n ${error}`);
@@ -123,4 +116,51 @@ export const putToolsBack = (container: DependencyContainer) => {
         },
         { frequency: "Always" }
     );
+
+    function findGridFS2DForItems(
+        inventoryHelper: InventoryHelper,
+        containerId: string,
+        startingGrid: string,
+        items: IItem[],
+        pmcData: IPmcData
+    ): [number[][], string] | undefined {
+        const container = pmcData.Inventory.items.find(x => x._id === containerId);
+        if (!container) {
+            return;
+        }
+
+        const [foundTemplate, containerTemplate] = itemHelper.getItem(container._tpl);
+        if (!foundTemplate || !containerTemplate) {
+            return;
+        }
+
+        let originalGridIndex = containerTemplate._props.Grids.findIndex(g => g._name === startingGrid);
+        if (originalGridIndex < 0) {
+            originalGridIndex = 0;
+        }
+
+        // Loop through grids, starting from the original grid
+        for (
+            let gridIndex = originalGridIndex;
+            gridIndex < containerTemplate._props.Grids.length + originalGridIndex;
+            gridIndex++
+        ) {
+            const grid = containerTemplate._props.Grids[gridIndex % containerTemplate._props.Grids.length];
+            const gridItems = pmcData.Inventory.items.filter(
+                x => x.parentId === containerId && x.slotId === grid._name
+            );
+
+            const containerFS2D = inventoryHelper.getContainerMap(
+                grid._props.cellsH,
+                grid._props.cellsV,
+                gridItems,
+                containerId
+            );
+
+            // will change the array so clone it
+            if (inventoryHelper.canPlaceItemInContainer(cloner.clone(containerFS2D), items)) {
+                return [containerFS2D, grid._name];
+            }
+        }
+    }
 };
