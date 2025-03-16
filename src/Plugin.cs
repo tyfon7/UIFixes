@@ -99,6 +99,7 @@ public class Plugin : BaseUnityPlugin
         new ModifyUnsearchedContainerPatch().Enable();
         RemoveAdsPatches.Enable();
         BTRPaymentPatches.Enable();
+        TradingHighlightPatches.Enable();
     }
 
     public static bool InRaid()
