@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Configuration;
 using Comfort.Common;
+using EFT;
 using EFT.Communications;
 using Fika.Core.Coop.Utils;
 using Fika.Core.Modding;
@@ -105,7 +106,11 @@ public static class Sync
 
     private static void OnGameEnded(FikaGameEndedEvent ev)
     {
-        // TODO: when ExitStatus is available, check if it's transit
+        if (ev.ExitStatus == ExitStatus.Transit)
+        {
+            return;
+        }
+
         if (ev.IsServer)
         {
             Plugin.Instance.Config.SettingChanged -= new EventHandler<SettingChangedEventArgs>(OnServerSettingChanged);
