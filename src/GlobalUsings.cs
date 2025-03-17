@@ -23,6 +23,7 @@ global using RaidPlayer = GClass1341;
 global using AnimatorWrapper = GClass1375;
 global using NaiveAcceptable = GClass3550;
 global using FirearmInputHandler = Class1604;
+global using TradingScreenController = EFT.UI.TraderScreensGroup.GClass3599;
 
 // Context menus
 global using InventoryInteractions = GClass3471; // There are two child versions?

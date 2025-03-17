@@ -192,6 +192,7 @@ internal class Settings
 
     // Trading
     public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
+    public static ConfigEntry<bool> RememberLastTrader { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
 
@@ -1044,6 +1045,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RememberLastTrader = config.Bind(
+            TradingSection,
+            "Remember Last Trader",
+            false,
+            new ConfigDescription(
+                "The trading screen will start at the last trader you visited, even after completely closing the trading screen",
                 null,
                 new ConfigurationManagerAttributes { })));
 
