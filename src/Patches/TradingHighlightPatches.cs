@@ -23,7 +23,10 @@ public static class TradingHighlightPatches
         [PatchPostfix]
         public static void Postfix(TradingGridView __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass)
         {
-            ___traderAssortmentControllerClass.RequisiteChanged += __instance.method_17;
+            if (___traderAssortmentControllerClass != null)
+            {
+                ___traderAssortmentControllerClass.RequisiteChanged += __instance.method_17;
+            }
         }
     }
 
@@ -37,7 +40,10 @@ public static class TradingHighlightPatches
         [PatchPrefix]
         public static void Prefix(TradingGridView __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass)
         {
-            ___traderAssortmentControllerClass.RequisiteChanged -= __instance.method_17;
+            if (___traderAssortmentControllerClass != null)
+            {
+                ___traderAssortmentControllerClass.RequisiteChanged -= __instance.method_17;
+            }
         }
     }
 }
