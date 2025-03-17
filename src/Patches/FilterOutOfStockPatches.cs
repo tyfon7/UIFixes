@@ -77,9 +77,8 @@ public static class FilterOutOfStockPatches
             check.gameObject.SetActive(ShowOutOfStockItems);
 
             LocalizedText text = UnityEngine.Object.Instantiate(____updateAssort.transform.Find("TextWhite").GetComponent<LocalizedText>(), OutOfStockPanel.transform, false);
-            text.LocalizationKey = "OUT OF STOCK";
             text.R().StringCase = EStringCase.Upper;
-            text.method_1(); // Force refresh to capitalize
+            text.LocalizationKey = "OUT OF STOCK";
 
             TextMeshProUGUI textMesh = text.GetComponent<TextMeshProUGUI>();
             textMesh.enableAutoSizing = false;
