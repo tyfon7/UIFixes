@@ -45,6 +45,7 @@ public static class TraderAvatarPatches
 
                 var group = clone.GetComponentInParent<VerticalLayoutGroup>();
                 group.childAlignment = TextAnchor.UpperCenter;
+                group.spacing = -5f;
                 var groupRect = group.RectTransform();
                 groupRect.anchorMin = new Vector2(1f, 1f);
                 groupRect.localPosition = new Vector3(groupRect.localPosition.x - 15f, groupRect.localPosition.y, groupRect.localPosition.z);
