@@ -88,7 +88,7 @@ internal class Settings
     // Dialogs
     public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
     public static ConfigEntry<bool> OneClickPresetSave { get; set; }
-    public static ConfigEntry<bool> HideStockPresets { get; set; }
+    public static ConfigEntry<bool> ShowStockPresets { get; set; }
     public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
     public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
@@ -327,12 +327,12 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(HideStockPresets = config.Bind(
+        configEntries.Add(ShowStockPresets = config.Bind(
             DialogsSection,
-            "Hide Stock Weapon Presets",
+            "Show Stock Weapon Presets",
             true,
             new ConfigDescription(
-                "Hide the built-in stock presets from the list of available presets",
+                "Shows the built-in stock presets from the list of available build presets",
                 null,
                 new ConfigurationManagerAttributes { })));
 

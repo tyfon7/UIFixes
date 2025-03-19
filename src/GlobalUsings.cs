@@ -26,6 +26,7 @@ global using FirearmInputHandler = Class1604;
 global using TradingScreenController = EFT.UI.TraderScreensGroup.GClass3599;
 global using DailyQuest = GClass3691;
 global using CurrentyHelper = GClass2934;
+global using EntityNodeDictionary = GClass3865;
 
 // Context menus
 global using InventoryInteractions = GClass3471; // There are two child versions?
