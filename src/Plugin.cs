@@ -101,6 +101,7 @@ public class Plugin : BaseUnityPlugin
         BTRPaymentPatches.Enable();
         TradingHighlightPatches.Enable();
         QuestItemWarningPatches.Enable();
+        TraderAvatarPatches.Enable();
     }
 
     public static bool InRaid()

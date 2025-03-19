@@ -524,7 +524,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null);
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null); // GClass3169
             GetMoneySumsMethod = AccessTools.Method(Type, "GetMoneySums");
         }
 

@@ -24,6 +24,8 @@ global using AnimatorWrapper = GClass1375;
 global using NaiveAcceptable = GClass3550;
 global using FirearmInputHandler = Class1604;
 global using TradingScreenController = EFT.UI.TraderScreensGroup.GClass3599;
+global using DailyQuest = GClass3691;
+global using CurrentyHelper = GClass2934;
 
 // Context menus
 global using InventoryInteractions = GClass3471; // There are two child versions?
