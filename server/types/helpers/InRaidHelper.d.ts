@@ -5,10 +5,10 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IInRaidConfig } from "@spt/models/spt/config/IInRaidConfig";
 import { ILostOnDeathConfig } from "@spt/models/spt/config/ILostOnDeathConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { ProfileHelper } from "./ProfileHelper";
 import { QuestHelper } from "./QuestHelper";
 export declare class InRaidHelper {
@@ -65,13 +65,6 @@ export declare class InRaidHelper {
      * @param secureContainerSlotId Container slot id to find items for and remove FiR from
      */
     removeFiRStatusFromItemsInContainer(sessionId: string, pmcData: IPmcData, secureContainerSlotId: string): void;
-    /**
-     * Deletes quest conditions from pickup tasks given a list of quest items being carried by a PMC.
-     * @param carriedQuestItems Items carried by PMC at death, usually gotten from "CarriedQuestItems"
-     * @param sessionId Current sessionId
-     * @param pmcProfile Pre-raid profile that is being handled with raid information
-     */
-    removePickupQuestConditions(carriedQuestItems: string[], sessionId: string, pmcProfile: IPmcData): void;
     /**
      * Get an array of items from a profile that will be lost on death
      * @param pmcProfile Profile to get items from

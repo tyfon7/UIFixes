@@ -1,13 +1,13 @@
-﻿using EFT.UI;
-using EFT.UI.Ragfair;
-using EFT.UI.Utilities.LightScroller;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT.UI;
+using EFT.UI.Ragfair;
+using EFT.UI.Utilities.LightScroller;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -321,7 +321,7 @@ public static class FleaPrevSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_11));
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_12));
         }
 
         [PatchPostfix]

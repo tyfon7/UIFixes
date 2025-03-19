@@ -1,10 +1,10 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Globalization;
+using System.Linq;
+using Comfort.Common;
 using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
-using System;
-using System.Globalization;
-using System.Linq;
 
 namespace UIFixes;
 

@@ -16,7 +16,7 @@ public class FixPlayerInspectPatch : ModulePatch
     }
 
     [PatchPrefix]
-    public static bool Prefix(GClass1323 raidPlayer)
+    public static bool Prefix(RaidPlayer raidPlayer)
     {
         var equipment = raidPlayer.PlayerVisualRepresentation.Equipment;
         if (equipment.CurrentAddress.GetOwnerOrNull() is Player.PlayerOwnerInventoryController)

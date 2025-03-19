@@ -50,7 +50,7 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_21));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_20));
         }
 
         [PatchPostfix]
@@ -157,26 +157,22 @@ public static class TagPatches
     // Also populate it; BSG does some insane manual reflection here for deserialization and looks for the literal Tag property (which it won't find)
     public class AddTagParsedItemPatch : ModulePatch
     {
-        private static FieldInfo ItemComponentsField;
-
         protected override MethodBase GetTargetMethod()
         {
-            ItemComponentsField = AccessTools.Field(typeof(Item), "Components");
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CreateItem", BindingFlags.Public | BindingFlags.Static) != null); // GClass1648
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CreateItem", BindingFlags.Public | BindingFlags.Static) != null); // GClass1682
             return AccessTools.Method(type, "CreateItem");
         }
 
         [PatchPostfix]
-        public static void Postfix(Item item, GClass814 properties)
+        public static void Postfix(Item item, ItemProperties properties)
         {
             if (IsTaggingEnabled(item))
             {
-                TagComponent tagComponent;
-                var components = (List<IItemComponent>)ItemComponentsField.GetValue(item);
-                components.Add(tagComponent = new TagComponent(item));
+                TagComponent tagComponent = new(item);
+                item.Components.Add(tagComponent);
 
-                var propDictionary = properties.JToken.ToObject<Dictionary<string, GClass814>>();
-                if (propDictionary.TryGetValue("Tag", out GClass814 tagProperty))
+                var propDictionary = properties.JToken.ToObject<Dictionary<string, ItemProperties>>();
+                if (propDictionary.TryGetValue("Tag", out ItemProperties tagProperty))
                 {
                     tagProperty.ParseJsonTo(tagComponent.GetType(), tagComponent);
                 }
@@ -191,7 +187,7 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(PatchConstants.EftTypes.Single(t => t.GetMethod("DeserializeLootData", BindingFlags.Public | BindingFlags.Static) != null), "smethod_2");
+            return AccessTools.Method(typeof(EFTItemSerializerClass), nameof(EFTItemSerializerClass.smethod_2));
         }
 
         [PatchPrefix]

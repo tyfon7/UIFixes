@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Reflection;
 using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT.InventoryLogic;
@@ -6,8 +9,6 @@ using EFT.UI.DragAndDrop;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -160,13 +161,18 @@ public static class DropdownPatches
 
     public class EmptySlotClickPatch : ModulePatch
     {
+        private static FieldInfo ModdingContextField;
+
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(EmptyItemView), nameof(EmptyItemView.Show));
+            Type type = typeof(EmptyItemView);
+            ModdingContextField = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => f.FieldType == typeof(ModdingItemContext));
+
+            return AccessTools.DeclaredMethod(type, nameof(EmptyItemView.Show));
         }
 
         [PatchPostfix]
-        public static void Postfix(EmptyItemView __instance, ref bool ___bool_0, GClass3176 ___gclass3176_0)
+        public static void Postfix(EmptyItemView __instance, ref bool ___bool_0)
         {
             // initialize bool_0 since BSG can't be bothered to
             ___bool_0 = true;
@@ -175,7 +181,8 @@ public static class DropdownPatches
             {
                 if (__instance.Interactable) // normal behavior
                 {
-                    ___gclass3176_0.ToggleSelection();
+                    var moddingItemContext = ModdingContextField.GetValue(__instance) as ModdingItemContext;
+                    moddingItemContext?.ToggleSelection();
                 }
                 else // Patched behavior
                 {
@@ -222,7 +229,7 @@ public static class DropdownPatches
                 }
             }
 
-            GStruct446<AddOperation> addOperation = default;
+            GStruct455<AddOperation> addOperation = default;
             if (item != null)
             {
                 addOperation = InteractionsHandlerClass.Add(

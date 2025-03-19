@@ -1,7 +1,7 @@
-﻿using EFT.UI.Ragfair;
+﻿using System.Reflection;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 
 namespace UIFixes;
 

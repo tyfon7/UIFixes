@@ -193,6 +193,9 @@ internal class Settings
 
     // Trading
     public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
+    public static ConfigEntry<bool> DailyQuestIcon { get; set; }
+    public static ConfigEntry<bool> HandOverQuestItemsIcon { get; set; }
+    public static ConfigEntry<bool> RememberLastTrader { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
 
@@ -1054,6 +1057,33 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Click a trader's item, switch to buy mode. Control-click your item, switch to sell mode.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(DailyQuestIcon = config.Bind(
+            TradingSection,
+            "Show Daily Quest Icon on Traders",
+            true,
+            new ConfigDescription(
+                "When a trader only has new operational quests, show a different icon than when they have new quests",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HandOverQuestItemsIcon = config.Bind(
+            TradingSection,
+            "Show Hand Over Items Icon on Traders",
+            true,
+            new ConfigDescription(
+                "Show a new icon on traders when you have quest items in your stash to hand over",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RememberLastTrader = config.Bind(
+            TradingSection,
+            "Remember Last Trader",
+            false,
+            new ConfigDescription(
+                "The trading screen will start at the last trader you visited, even after completely closing the trading screen",
                 null,
                 new ConfigurationManagerAttributes { })));
 

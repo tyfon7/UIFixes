@@ -19,7 +19,7 @@ public static class KeepWindowsOnScreenPatches
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.EditTag)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenInsuranceWindow)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenRepairWindow)).Enable();
-        new KeepWindowOnScreenPatch(nameof(ItemUiContext.method_3)).Enable(); // grids
+        new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenItem)).Enable(); // grids
 
         new KeepTopOnScreenPatch().Enable();
     }
@@ -50,7 +50,7 @@ public static class KeepWindowsOnScreenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass916
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass926
             return AccessTools.Method(type, "CorrectPositionResolution", [typeof(RectTransform), typeof(RectTransform), typeof(MarginsStruct)]);
         }
 

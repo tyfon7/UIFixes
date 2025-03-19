@@ -51,7 +51,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct446<GInterface368> __result)
+        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct455<IResizeResult> __result)
         {
             if (__result.Succeeded || InPatch)
             {
@@ -135,7 +135,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ref GStruct446<ResizeOperation> __result)
+        public static void Postfix(ref GStruct455<ResizeOperation> __result)
         {
             if (__result.Failed || __result.Value == null)
             {
@@ -368,7 +368,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct448<bool> __result)
+        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct457<bool> __result)
         {
             if (__result.Succeeded)
             {
@@ -404,7 +404,7 @@ public static class WeaponModdingPatches
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct448<EmptyError> __result)
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct457<EmptyError> __result)
         {
             if (item is not Mod && item is not ArmorPlateItemClass)
             {
@@ -571,7 +571,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct430> __result, TraderControllerClass ___traderControllerClass)
+        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct437> __result, TraderControllerClass ___traderControllerClass)
         {
             if (__result.Value.Error == "<color=red>" + "Raid lock".Localized() + "</color>")
             {

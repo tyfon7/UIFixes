@@ -16,7 +16,7 @@ public static class WeaponPresetConfirmPatches
     public static void Enable()
     {
         // Two patches are required for the edit preset screen - one to grab the value of moveForward from CloseScreenInterruption(), and one to use it.
-        // This is because BSG didn't think to pass the argument in to method_35
+        // This is because BSG didn't think to pass the argument in to.method_35
         new DetectWeaponPresetCloseTypePatch().Enable();
         new ConfirmDiscardWeaponPresetChangesPatch().Enable();
 
@@ -30,7 +30,7 @@ public static class WeaponPresetConfirmPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3151
+            Type type = typeof(EditBuildScreen).GetNestedTypes().Single(x => x.GetMethod("CloseScreenInterruption") != null); // EditBuildScreen.GClass3591
             return AccessTools.Method(type, "CloseScreenInterruption");
         }
 
@@ -70,6 +70,7 @@ public static class WeaponPresetConfirmPatches
     {
         protected override MethodBase GetTargetMethod()
         {
+            // TODO: This was rewritten, probably doesn't work
             return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.method_20));
         }
 
@@ -94,14 +95,14 @@ public static class WeaponPresetConfirmPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(string savedName, ref GClass3480 __result)
+        public static bool Prefix(string savedName, ref NaiveAcceptable __result)
         {
             if (string.IsNullOrEmpty(savedName) || !InstantSavePreset || !Settings.OneClickPresetSave.Value)
             {
                 return true;
             }
 
-            __result = new GClass3480();
+            __result = new NaiveAcceptable();
             __result.TaskCompletionSource_1.SetResult(savedName); // Don't use Accept(), it's stupid
             Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonClick);
             return false;

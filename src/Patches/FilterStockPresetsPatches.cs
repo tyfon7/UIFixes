@@ -26,7 +26,7 @@ public static class FilterStockPresetsPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ref GClass3768 nodes, ref GClass3768 filteredNodes)
+        public static void Prefix(ref GClass3865 nodes, ref GClass3865 filteredNodes)
         {
             if (!Settings.HideStockPresets.Value)
             {
@@ -34,7 +34,7 @@ public static class FilterStockPresetsPatches
             }
 
             // These entity node things are a disaster, the only way to filter to is to competely clone the whole tree
-            GClass3768 root = new(new Dictionary<string, EntityNodeClass>());
+            GClass3865 root = new(new Dictionary<string, EntityNodeClass>());
             foreach (var node in nodes.Values)
             {
                 // CreateDummy is in fact dummy and doesn't set child count properly; then I manually clone add children
@@ -45,7 +45,7 @@ public static class FilterStockPresetsPatches
             }
 
             nodes = root;
-            filteredNodes = new GClass3768(nodes);
+            filteredNodes = new GClass3865(nodes);
         }
 
         private static void CloneAndFilter(EntityNodeClass parent)

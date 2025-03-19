@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using Comfort.Common;
 using EFT.UI;
@@ -20,6 +21,10 @@ public static class TradingAutoSwitchPatches
         new GetBuySellTabsPatch().Enable();
         new SwitchOnClickPatch().Enable();
         new RefreshOnSwitchPatch().Enable();
+
+        new RestoreTraderPatch().Enable();
+        new RestoreTabPatch().Enable();
+        new RememberTraderAndTabPatch().Enable();
     }
 
     // Get references to the buy/sell tabs
@@ -128,7 +133,7 @@ public static class TradingAutoSwitchPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderDealScreen __instance, TraderClass ___traderClass_1)
+        public static void Postfix(TraderClass ___traderClass_1)
         {
             if (___traderClass_1.CurrentAssortment == null)
             {
@@ -138,6 +143,67 @@ public static class TradingAutoSwitchPatches
             // Normally this is invoked on selected item change, etc. 
             ___traderClass_1.CurrentAssortment.PreparedItemsChanged.Invoke();
             ___traderClass_1.CurrentAssortment.PreparedSumChanged.Invoke();
+        }
+    }
+
+    private static string LastTraderId = null;
+    private static TraderScreensGroup.ETraderMode LastTraderMode = TraderScreensGroup.ETraderMode.Trade;
+
+    public class RestoreTraderPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.Show));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(TradingScreenController controller)
+        {
+            // controller.Trader is null when first opening the trader screen, it's set when returning to it as a previous screen
+            if (controller.Trader == null && Settings.RememberLastTrader.Value && !string.IsNullOrEmpty(LastTraderId))
+            {
+                controller.Trader = controller.TradersList.Single(t => t.Id == LastTraderId);
+            }
+
+            if (controller.Trader == null && !Settings.RememberLastTrader.Value)
+            {
+                // First opening screen and setting is off, clear the last tab as well
+                LastTraderMode = TraderScreensGroup.ETraderMode.Trade;
+            }
+        }
+    }
+
+    public class RestoreTabPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            // method_4 is called near the end of TraderScreensGroup.Show(), right before method_6, which sets the trader and tab
+            return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.method_4));
+        }
+
+        [PatchPrefix]
+        public static void Postfix(TraderScreensGroup __instance, ref TraderScreensGroup.ETraderMode ___etraderMode_0)
+        {
+            if (LastTraderMode != TraderScreensGroup.ETraderMode.Trade)
+            {
+                ___etraderMode_0 = LastTraderMode;
+                __instance.method_3(___etraderMode_0);
+            }
+        }
+    }
+
+    public class RememberTraderAndTabPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.Close));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(TraderScreensGroup __instance, TraderScreensGroup.ETraderMode ___etraderMode_0)
+        {
+            LastTraderId = __instance.TraderClass.Id;
+            LastTraderMode = ___etraderMode_0;
         }
     }
 }

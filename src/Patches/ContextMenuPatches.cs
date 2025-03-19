@@ -1,14 +1,14 @@
-﻿using Comfort.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 
@@ -257,7 +257,7 @@ public static class ContextMenuPatches
             {
                 int playerRubles = GetPlayerRubles(___itemUiContext_0);
 
-                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a TradingPlayerInteractions
                 Item item = wrappedInstance.Item;
 
                 CurrentInsuranceInteractions = new(item, ___itemUiContext_0, playerRubles);
@@ -284,7 +284,7 @@ public static class ContextMenuPatches
             {
                 int playerRubles = GetPlayerRubles(___itemUiContext_0);
 
-                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a GClass3054
+                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a TradingPlayerInteractions
                 Item item = wrappedInstance.Item;
 
                 CurrentRepairInteractions = new(item, ___itemUiContext_0, playerRubles);
@@ -406,7 +406,7 @@ public static class ContextMenuPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct448<Item> __result)
+        public static bool Prefix(Item selectedItem, ref GStruct457<Item> __result)
         {
             if (Settings.LoadMagPresetOnBullets.Value)
             {

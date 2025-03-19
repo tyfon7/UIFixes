@@ -1,13 +1,13 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Comfort.Common;
 using EFT;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UIFixes;
@@ -145,11 +145,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MainMenuController), nameof(MainMenuController.method_5));
+            return AccessTools.Method(typeof(MainMenuControllerClass), nameof(MainMenuControllerClass.method_5));
         }
 
         [PatchPostfix]
-        public static async void Postfix(MainMenuController __instance, Task __result)
+        public static async void Postfix(MainMenuControllerClass __instance, Task __result)
         {
             await __result;
 
@@ -161,7 +161,7 @@ public static class TacticalBindsPatches
                 }
             }
 
-            // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }
@@ -174,17 +174,17 @@ public static class TacticalBindsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryController controller, Item item, EBoundItem index)
+        public static void Postfix(InventoryController controller, Item item, EBoundItem index, bool simulate)
         {
             // Don't run on fika remote
-            if (controller.IsObserved())
+            if (simulate || controller.IsObserved())
             {
                 return;
             }
 
             UpdateQuickbindType(item, index);
 
-            // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }
@@ -197,17 +197,17 @@ public static class TacticalBindsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryController controller, EBoundItem index)
+        public static void Postfix(InventoryController controller, EBoundItem index, bool simulate)
         {
             // Don't run on fika remote
-            if (controller.IsObserved())
+            if (simulate || controller.IsObserved())
             {
                 return;
             }
 
-            Quickbind.SetType(index, Quickbind.ItemType.Other);
+            UpdateQuickbindType(null, index);
 
-            // Will "save" control settings, running GClass1911.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }
@@ -243,6 +243,7 @@ public static class TacticalBindsPatches
 
     private static void UpdateQuickbindType(Item item, EBoundItem index)
     {
+        // TODO: Enable/disable toggle/hold functionality if appropriate
         if (item == null)
         {
             Quickbind.SetType(index, Quickbind.ItemType.Other);

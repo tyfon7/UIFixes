@@ -1,13 +1,13 @@
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Text;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace UIFixes;
@@ -57,7 +57,7 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_6));
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_16));
         }
 
         [PatchPostfix]
@@ -75,12 +75,12 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("currentMagazine") != null); // ItemUiContext.Class2728
+            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("currentMagazine") != null); // ItemUiContext.Class2775
             return AccessTools.Method(type, "method_0");
         }
 
         [PatchPrefix]
-        public static void Prefix(StashGridClass grid, ref GStruct446<RemoveOperation> __state)
+        public static void Prefix(StashGridClass grid, ref GStruct455<RemoveOperation> __state)
         {
             if (!Settings.SwapMags.Value)
             {
@@ -94,7 +94,7 @@ public static class ReloadInPlacePatches
         }
 
         [PatchPostfix]
-        public static void Postfix(GStruct446<RemoveOperation> __state)
+        public static void Postfix(GStruct455<RemoveOperation> __state)
         {
             if (!Settings.SwapMags.Value || __state.Value == null)
             {
@@ -112,7 +112,7 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("func_3") != null); // ItemUiContext.Class2718
+            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("func_3") != null); // ItemUiContext.Class2755
             return AccessTools.Method(type, "method_4");
         }
 
@@ -209,15 +209,15 @@ public static class ReloadInPlacePatches
 
         protected override MethodBase GetTargetMethod()
         {
-            ParameterListField = AccessTools.Field(typeof(GClass1355), "animatorControllerParameter_0");
-            return AccessTools.DeclaredMethod(typeof(Player.FirearmController.GClass1773), nameof(Player.FirearmController.GClass1773.Start));
+            ParameterListField = AccessTools.Field(typeof(AnimatorWrapper), "animatorControllerParameter_0");
+            return AccessTools.DeclaredMethod(typeof(FirearmInsertedMagState), nameof(FirearmInsertedMagState.Start));
         }
 
         [PatchPrefix]
         public static void Prefix(FirearmsAnimator ___firearmsAnimator_0)
         {
             StringBuilder sb = new();
-            if (___firearmsAnimator_0.Animator is GClass1355 animator)
+            if (___firearmsAnimator_0.Animator is AnimatorWrapper animator)
             {
                 for (int i = 0; i < animator.parameterCount; i++)
                 {

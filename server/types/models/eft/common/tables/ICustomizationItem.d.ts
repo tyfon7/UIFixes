@@ -11,6 +11,7 @@ export interface IProps {
     Name: string;
     ShortName: string;
     Description: string;
+    Game: string[];
     Side: string[];
     BodyPart: string;
     AvailableAsDefault?: boolean;
@@ -18,6 +19,7 @@ export interface IProps {
     Hands: string;
     Feet: string;
     Prefab: IPrefab;
+    ProfileVersions: string[];
     WatchPrefab: IPrefab;
     IntegratedArmorVest: boolean;
     WatchPosition: Ixyz;

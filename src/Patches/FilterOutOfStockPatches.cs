@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -76,9 +77,8 @@ public static class FilterOutOfStockPatches
             check.gameObject.SetActive(ShowOutOfStockItems);
 
             LocalizedText text = UnityEngine.Object.Instantiate(____updateAssort.transform.Find("TextWhite").GetComponent<LocalizedText>(), OutOfStockPanel.transform, false);
-            text.LocalizationKey = "OUT OF STOCK";
             text.R().StringCase = EStringCase.Upper;
-            text.method_1(); // Force refresh to capitalize
+            text.LocalizationKey = "OUT OF STOCK";
 
             TextMeshProUGUI textMesh = text.GetComponent<TextMeshProUGUI>();
             textMesh.enableAutoSizing = false;
@@ -94,6 +94,7 @@ public static class FilterOutOfStockPatches
                 ShowOutOfStockItems = !ShowOutOfStockItems;
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
+                Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
                 ____traderGridView.method_14(); // Refreshes the grid
                 ____traderGridView.method_16(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });

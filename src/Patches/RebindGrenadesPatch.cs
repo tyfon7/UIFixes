@@ -1,12 +1,12 @@
-﻿using EFT;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 namespace UIFixes;
 
@@ -14,25 +14,29 @@ public class RebindGrenadesPatch : ModulePatch
 {
     private static readonly EquipmentSlot[] Slots = [EquipmentSlot.Pockets, EquipmentSlot.TacticalVest, EquipmentSlot.Backpack, EquipmentSlot.SecuredContainer, EquipmentSlot.ArmBand];
 
+    private static FieldInfo DiscardOperationField;
+
     protected override MethodBase GetTargetMethod()
     {
-        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("gclass3129_0", BindingFlags.NonPublic | BindingFlags.Instance) != null);
+        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("throwWeapItemClass", BindingFlags.NonPublic | BindingFlags.Instance) != null);
+        DiscardOperationField = AccessTools.GetDeclaredFields(type).Single(f => f.FieldType == typeof(DiscardOperation));
         return AccessTools.Method(type, "RaiseEvents");
     }
 
     // This is a grenade specific event emitter that has all the info needed to do this
     [PatchPostfix]
-    public static void Postfix(CommandStatus status, DiscardOperation ___gclass3129_0)
+    public static void Postfix(object __instance, CommandStatus status)
     {
         if (!Settings.RebindGrenades.Value || status != CommandStatus.Succeed)
         {
             return;
         }
 
-        var unbindResult = ___gclass3129_0.R().UnbindResults.FirstOrDefault();
+        DiscardOperation discardOperation = (DiscardOperation)DiscardOperationField.GetValue(__instance);
+        var unbindResult = discardOperation.list_0.FirstOrDefault();
         if (unbindResult != null)
         {
-            InventoryController controller = unbindResult.R().Controller;
+            InventoryController controller = unbindResult.inventoryController_0;
 
             // Don't run the rebind on fika remote - the remote client will run this and send the rebind separately
             if (controller.IsObserved())

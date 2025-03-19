@@ -1,12 +1,12 @@
-﻿using EFT.Hideout;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine.UI;
 
 namespace UIFixes;
@@ -98,7 +98,7 @@ public static class HideoutSearchPatches
         public static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
         {
             // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
-            if (__instance.method_9().Count() > 2)
+            if (__instance.method_10().Count() > 2)
             {
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
                 LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
@@ -113,21 +113,21 @@ public static class HideoutSearchPatches
         }
     }
 
-    // method_9 gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
+    //method_10 gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
     public class FastHideoutSearchPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_9));
+            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_10));
         }
 
-        // Copied directly from method_9
+        // Copied directly from method_10
         [PatchPrefix]
         public static bool Prefix(ProductionPanel __instance, ref IEnumerable<Scheme> __result, ValidationInputField ____searchInputField)
         {
             __result = __instance.R().ProductionBuilds.OfType<Scheme>().Where(scheme => !scheme.locked)
                 .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
-                .ThenBy(__instance.method_19)
+                .ThenBy(__instance.method_20)
                 .ThenBy(scheme => scheme.FavoriteIndex)
                 .ThenBy(scheme => scheme.Level);
 
@@ -135,18 +135,18 @@ public static class HideoutSearchPatches
         }
     }
 
-    // method_14 activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
+    // method_16 activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
     public class FixHideoutSearchAgainPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_14));
+            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_16));
         }
 
         [PatchPrefix]
         public static void Prefix(ProductionPanel __instance)
         {
-            __instance.method_13(); // update sort order
+            __instance.method_14(); // update sort order
         }
     }
 
