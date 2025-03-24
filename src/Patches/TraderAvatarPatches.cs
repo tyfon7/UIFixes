@@ -51,8 +51,8 @@ public static class TraderAvatarPatches
                 groupRect.localPosition = new Vector3(groupRect.localPosition.x - 15f, groupRect.localPosition.y, groupRect.localPosition.z);
             }
 
-            Transform HandInQuests = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
-            if (HandInQuests == null && Settings.HandOverQuestItemsIcon.Value)
+            Transform handInQuests = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
+            if (handInQuests == null && Settings.HandOverQuestItemsIcon.Value)
             {
                 var clone = UnityEngine.Object.Instantiate(____availableToFinishQuestsIcon, ____availableToFinishQuestsIcon.transform.parent, false);
                 clone.name = "AvailableHandInQuests";
@@ -78,12 +78,8 @@ public static class TraderAvatarPatches
             TraderAvatar __instance,
             Profile.TraderInfo ___traderInfo_0,
             AbstractQuestControllerClass ___abstractQuestControllerClass,
-            GameObject ____availableToStartQuestsIcon,
-            GameObject ____availableToFinishQuestsIcon)
+            GameObject ____availableToStartQuestsIcon)
         {
-            Transform operationalQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableOperationsQuests");
-            Transform handInQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
-
             var quests = ___abstractQuestControllerClass.Quests;
             var traderQuests = quests.method_11(___traderInfo_0.Id);
 
@@ -104,11 +100,19 @@ public static class TraderAvatarPatches
                 }
             }
 
-            operationalQuestsIcon.gameObject.SetActive(showDailyIcon);
+            Transform operationalQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableOperationsQuests");
+            if (operationalQuestsIcon != null)
+            {
+                operationalQuestsIcon.gameObject.SetActive(showDailyIcon);
+            }
 
             // Show quests that have turn-ins available
             bool handInsAvailable = Settings.HandOverQuestItemsIcon.Value && QuestHandInAvailable(traderQuests, ___abstractQuestControllerClass.inventoryController_0.Inventory);
-            handInQuestsIcon.gameObject.SetActive(handInsAvailable);
+            Transform handInQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
+            if (handInQuestsIcon != null)
+            {
+                handInQuestsIcon.gameObject.SetActive(handInsAvailable);
+            }
         }
 
         private static bool QuestHandInAvailable(IEnumerable<QuestClass> quests, Inventory inventory)
