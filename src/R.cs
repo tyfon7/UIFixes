@@ -28,7 +28,6 @@ public static class R
         UIElement.InitUITypes();
         UIInputNode.InitUITypes();
 
-        UIContext.InitTypes();
         DialogWindow.InitTypes();
         ControlSettings.InitTypes();
         ProductionPanel.InitTypes();
@@ -85,7 +84,7 @@ public static class R
             UIField = AccessTools.Field(typeof(EFT.UI.UIElement), "UI");
         }
 
-        public UIContext UI { get { return new UIContext(UIField.GetValue(Value)); } }
+        public AddViewListClass UI { get { return (AddViewListClass)UIField.GetValue(Value); } }
     }
 
     public class UIInputNode(object value) : Wrapper(value)
@@ -97,21 +96,7 @@ public static class R
             UIField = AccessTools.Field(typeof(EFT.UI.UIInputNode), "UI");
         }
 
-        public UIContext UI { get { return new UIContext(UIField.GetValue(Value)); } }
-    }
-
-    public class UIContext(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static MethodInfo AddDisposableActionMethod;
-
-        public static void InitTypes()
-        {
-            Type = AccessTools.Field(typeof(EFT.UI.UIElement), "UI").FieldType;
-            AddDisposableActionMethod = AccessTools.Method(Type, "AddDisposable", [typeof(Action)]);
-        }
-
-        public void AddDisposable(Action destroy) => AddDisposableActionMethod.Invoke(Value, [destroy]);
+        public AddViewListClass UI { get { return (AddViewListClass)UIField.GetValue(Value); } }
     }
 
     public class DialogWindow(object value) : UIInputNode(value)
