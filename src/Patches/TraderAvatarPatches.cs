@@ -120,13 +120,15 @@ public static class TraderAvatarPatches
             var inProgressQuests = quests.Where(q => q.QuestStatus == EQuestStatus.Started);
             foreach (var quest in inProgressQuests)
             {
-                var finishConditions = quest.Conditions[EQuestStatus.AvailableForFinish];
-                var childConditions = ConditionalObjectivesView<QuestObjectiveView>.GetChildConditions(finishConditions);
-                var conditions = finishConditions.Where(c => !childConditions.Contains(c) && quest.CheckVisibilityStatus(c) && !quest.IsConditionDone(c));
-
-                if (conditions.Any(c => ConditionHandInAvailable(c, inventory)))
+                if (quest.Conditions.TryGetValue(EQuestStatus.AvailableForFinish, out var finishConditions))
                 {
-                    return true;
+                    var childConditions = ConditionalObjectivesView<QuestObjectiveView>.GetChildConditions(finishConditions);
+                    var conditions = finishConditions.Where(c => !childConditions.Contains(c) && quest.CheckVisibilityStatus(c) && !quest.IsConditionDone(c));
+
+                    if (conditions.Any(c => ConditionHandInAvailable(c, inventory)))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -137,7 +139,18 @@ public static class TraderAvatarPatches
         {
             if (condition is ConditionHandoverItem conditionHandoverItem)
             {
-                if (Singleton<ItemFactoryClass>.Instance.ItemTemplates[conditionHandoverItem.target.First()] is MoneyTemplateClass)
+                var targetItem = conditionHandoverItem.target.FirstOrDefault();
+                if (string.IsNullOrEmpty(targetItem))
+                {
+                    return false;
+                }
+
+                if (!Singleton<ItemFactoryClass>.Instance.ItemTemplates.TryGetValue(targetItem, out var template))
+                {
+                    return false;
+                }
+
+                if (template is MoneyTemplateClass)
                 {
                     var sums = R.Money.GetMoneySums(inventory.Stash.Grid.ContainedItems.Keys);
                     ECurrencyType currencyTypeById = CurrentyHelper.GetCurrencyTypeById(conditionHandoverItem.target[0]);
