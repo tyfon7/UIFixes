@@ -1,9 +1,9 @@
-﻿using EFT.UI.DragAndDrop;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using EFT.UI.DragAndDrop;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 using UnityEngine;
 
 namespace UIFixes;
@@ -54,7 +54,7 @@ public static class StackMoveGreedyPatches
     // Keeps transfering a stack into a container until the stack is gone or the operation didn't move anything (meaning the container is full)
     private static bool AcceptStackable<T>(T __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result) where T : MonoBehaviour, IContainer
     {
-        if (!Settings.GreedyStackMove.Value || InPatch || itemContext.Item.StackObjectsCount <= 1 || targetItemContext == null)
+        if (!Settings.GreedyStackMove.Value || InPatch || itemContext.Item.StackObjectsCount <= 1 || targetItemContext == null || targetItemContext.Item is MagazineItemClass)
         {
             return true;
         }
