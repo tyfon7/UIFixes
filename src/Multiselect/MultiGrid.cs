@@ -82,7 +82,7 @@ public static class MultiGrid
         {
             if (gridOffsets.ContainsKey(gridView.Grid.ID))
             {
-                Plugin.Instance.Logger.LogError($"Item template {parent.TemplateId} has multiple grids with the same ID: {gridView.Grid.ID}. Expect weirdness.");
+                Plugin.Instance.Logger.LogWarning($"Item template {parent.TemplateId} has multiple grids with the same ID: {gridView.Grid.ID}. Expect weirdness.");
                 continue;
             }
 
@@ -106,6 +106,12 @@ public static class MultiGrid
                 var rowGrids = gridsByLocation[x + i];
                 for (int j = 0; j < gridView.Grid.GridHeight; j++)
                 {
+                    if (rowGrids.ContainsKey(y + j))
+                    {
+                        Plugin.Instance.Logger.LogWarning($"Item template {parent.TemplateId} has overlapping grids! Expect weirdness.");
+                        continue;
+                    }
+
                     rowGrids.Add(y + j, gridView.Grid.ID);
                 }
             }
