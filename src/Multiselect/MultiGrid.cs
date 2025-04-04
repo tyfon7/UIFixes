@@ -1,8 +1,8 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI.DragAndDrop;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using EFT.InventoryLogic;
+using EFT.UI.DragAndDrop;
 using UnityEngine;
 
 namespace UIFixes;
@@ -80,6 +80,12 @@ public static class MultiGrid
 
         foreach (GridView gridView in parentView.GetComponentsInChildren<GridView>())
         {
+            if (gridOffsets.ContainsKey(gridView.Grid.ID))
+            {
+                Plugin.Instance.Logger.LogError($"Item template {parent.TemplateId} has multiple grids with the same ID: {gridView.Grid.ID}. Expect weirdness.");
+                continue;
+            }
+
             // Get absolute offsets
             float xOffset = gridView.transform.position.x - parentPosition.x;
             float yOffset = -(gridView.transform.position.y - parentPosition.y); // invert y since grid coords are upper-left origin
