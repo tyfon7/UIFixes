@@ -405,7 +405,7 @@ internal class Settings
             "Prevent Scope Zoom in Inventory",
             true,
             new ConfigDescription(
-                "Prevent ",
+                "Prevent mousewheel actions in the inventory from affecting your scope zoom",
                 null,
                 new ConfigurationManagerAttributes { })));
 
