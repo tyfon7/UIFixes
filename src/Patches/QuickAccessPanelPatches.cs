@@ -1,13 +1,9 @@
-﻿using Bsg.GameSettings;
-using Comfort.Common;
+﻿using System.Reflection;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
-using EFT.UI;
 using EFT.UI.DragAndDrop;
-using EFT.UI.Settings;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
