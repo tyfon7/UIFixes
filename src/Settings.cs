@@ -79,6 +79,7 @@ internal class Settings
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
+    public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -260,6 +261,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "Allow the context menu to work while searching",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShortenKeyBinds = config.Bind(
+            InterfaceSection,
+            "Hide Long Quickbar Keybinds",
+            true,
+            new ConfigDescription(
+                "Keybinds with display names longer than 2 characters will be shortened to '...' with a hover tooltip",
                 null,
                 new ConfigurationManagerAttributes { })));
 
