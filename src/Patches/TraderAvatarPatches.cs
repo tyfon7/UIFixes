@@ -8,6 +8,8 @@ using EFT.Quests;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using SPT.Reflection.Utils;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +21,7 @@ public static class TraderAvatarPatches
     {
         new CreateIconsPatch().Enable();
         new ShowIconsPatch().Enable();
+        new QuestListItemPatch().Enable();
     }
 
     public class CreateIconsPatch : ModulePatch
@@ -114,60 +117,103 @@ public static class TraderAvatarPatches
                 handInQuestsIcon.gameObject.SetActive(handInsAvailable);
             }
         }
+    }
 
-        private static bool QuestHandInAvailable(IEnumerable<QuestClass> quests, Inventory inventory)
+    public class QuestListItemPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
         {
-            var inProgressQuests = quests.Where(q => q.QuestStatus == EQuestStatus.Started);
-            foreach (var quest in inProgressQuests)
-            {
-                if (quest.Conditions.TryGetValue(EQuestStatus.AvailableForFinish, out var finishConditions))
-                {
-                    var childConditions = ConditionalObjectivesView<QuestObjectiveView>.GetChildConditions(finishConditions);
-                    var conditions = finishConditions.Where(c => !childConditions.Contains(c) && quest.CheckVisibilityStatus(c) && !quest.IsConditionDone(c));
-
-                    if (conditions.Any(c => ConditionHandInAvailable(c, inventory)))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return AccessTools.Method(typeof(QuestListItem), nameof(QuestListItem.UpdateView));
         }
 
-        private static bool ConditionHandInAvailable(Condition condition, Inventory inventory)
+        [PatchPostfix]
+        public static void Postfix(QuestListItem __instance, Image ____lockedIcon)
         {
-            if (condition is ConditionHandoverItem conditionHandoverItem)
+            Inventory inventory = PatchConstants.BackEndSession?.Profile?.Inventory;
+            if (inventory == null)
             {
-                var targetItem = conditionHandoverItem.target.FirstOrDefault();
-                if (string.IsNullOrEmpty(targetItem))
-                {
-                    return false;
-                }
-
-                if (!Singleton<ItemFactoryClass>.Instance.ItemTemplates.TryGetValue(targetItem, out var template))
-                {
-                    return false;
-                }
-
-                if (template is MoneyTemplateClass)
-                {
-                    var sums = R.Money.GetMoneySums(inventory.Stash.Grid.ContainedItems.Keys);
-                    ECurrencyType currencyTypeById = CurrentyHelper.GetCurrencyTypeById(conditionHandoverItem.target[0]);
-                    return sums[currencyTypeById] > 0;
-                }
-                else
-                {
-                    return AbstractQuestControllerClass.GetItemsForCondition(inventory, conditionHandoverItem).Any();
-                }
-            }
-            else if (condition is ConditionWeaponAssembly conditionWeaponAssembly)
-            {
-                int count = Inventory.GetWeaponAssembly(inventory.GetPlayerItems(EPlayerItems.NonQuestItemsExceptHideoutStashes), conditionWeaponAssembly).Count;
-                return count >= conditionWeaponAssembly.value;
+                return;
             }
 
-            return false;
+            var iconTransform = ____lockedIcon.transform.parent.Find("AvailableHandInIcon");
+            if (Settings.QuestHandOverQuestItemsIcon.Value &&
+                __instance.Quest.QuestStatus == EQuestStatus.Started &&
+                QuestHandInAvailable([__instance.Quest], inventory))
+            {
+                if (iconTransform == null)
+                {
+                    var handInIcon = UnityEngine.Object.Instantiate(____lockedIcon, ____lockedIcon.transform.parent, false);
+                    handInIcon.name = "AvailableHandInIcon";
+
+                    var image = handInIcon.GetComponent<Image>();
+                    image.sprite = EFTHardSettings.Instance.StaticIcons.QuestIconTypeSprites[EQuestIconType.PickUp];
+                    image.color = Color.cyan;
+                    //image.rectTransform.sizeDelta = new Vector2(22f, 22f);
+
+                    iconTransform = handInIcon.transform;
+                }
+
+                iconTransform.gameObject.SetActive(true);
+            }
+            else if (iconTransform != null)
+            {
+                iconTransform.gameObject.SetActive(false);
+            }
         }
+    }
+
+    private static bool QuestHandInAvailable(IEnumerable<QuestClass> quests, Inventory inventory)
+    {
+        var inProgressQuests = quests.Where(q => q.QuestStatus == EQuestStatus.Started);
+        foreach (var quest in inProgressQuests)
+        {
+            if (quest.Conditions.TryGetValue(EQuestStatus.AvailableForFinish, out var finishConditions))
+            {
+                var childConditions = ConditionalObjectivesView<QuestObjectiveView>.GetChildConditions(finishConditions);
+                var conditions = finishConditions.Where(c => !childConditions.Contains(c) && quest.CheckVisibilityStatus(c) && !quest.IsConditionDone(c));
+
+                if (conditions.Any(c => ConditionHandInAvailable(c, inventory)))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ConditionHandInAvailable(Condition condition, Inventory inventory)
+    {
+        if (condition is ConditionHandoverItem conditionHandoverItem)
+        {
+            var targetItem = conditionHandoverItem.target.FirstOrDefault();
+            if (string.IsNullOrEmpty(targetItem))
+            {
+                return false;
+            }
+
+            if (!Singleton<ItemFactoryClass>.Instance.ItemTemplates.TryGetValue(targetItem, out var template))
+            {
+                return false;
+            }
+
+            if (template is MoneyTemplateClass)
+            {
+                var sums = R.Money.GetMoneySums(inventory.Stash.Grid.ContainedItems.Keys);
+                ECurrencyType currencyTypeById = CurrentyHelper.GetCurrencyTypeById(conditionHandoverItem.target[0]);
+                return sums[currencyTypeById] > 0;
+            }
+            else
+            {
+                return AbstractQuestControllerClass.GetItemsForCondition(inventory, conditionHandoverItem).Any();
+            }
+        }
+        else if (condition is ConditionWeaponAssembly conditionWeaponAssembly)
+        {
+            int count = Inventory.GetWeaponAssembly(inventory.GetPlayerItems(EPlayerItems.NonQuestItemsExceptHideoutStashes), conditionWeaponAssembly).Count;
+            return count >= conditionWeaponAssembly.value;
+        }
+
+        return false;
     }
 }

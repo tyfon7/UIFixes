@@ -196,6 +196,7 @@ internal class Settings
     public static ConfigEntry<bool> AutoSwitchTrading { get; set; }
     public static ConfigEntry<bool> DailyQuestIcon { get; set; }
     public static ConfigEntry<bool> HandOverQuestItemsIcon { get; set; }
+    public static ConfigEntry<bool> QuestHandOverQuestItemsIcon { get; set; }
     public static ConfigEntry<bool> RememberLastTrader { get; set; }
     public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
     public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
@@ -1085,6 +1086,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Show a new icon on traders when you have quest items in your stash to hand over",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(QuestHandOverQuestItemsIcon = config.Bind(
+            TradingSection,
+            "Show Hand Over Items Icon on Quests",
+            true,
+            new ConfigDescription(
+                "Show a new icon on the trader's quest list when you have quest items in your stash to hand over",
                 null,
                 new ConfigurationManagerAttributes { })));
 
