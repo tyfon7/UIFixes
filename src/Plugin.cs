@@ -114,6 +114,7 @@ public class Plugin : BaseUnityPlugin
     public static bool TextboxActive()
     {
         return EventSystem.current?.currentSelectedGameObject != null &&
+            EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
             EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 
