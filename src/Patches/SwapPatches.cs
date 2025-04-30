@@ -256,6 +256,21 @@ public static class SwapPatches
 
             // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
             var targetGridItemAddress = targetItemAddress as GridItemAddress;
+
+            // LootRadius workaround - if the item is on the ground, the address is NOT a GridItemAddress
+            if (targetGridItemAddress == null)
+            {
+                // _1 is the root item, i.e. the stash
+                if (targetItemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
+                {
+                    targetGridItemAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[targetItem]);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             ItemAddress itemToAddress = new StashGridItemAddress(targetGridItemAddress.Grid, itemToLocation);
 
             ItemAddress targetToAddress;
@@ -269,6 +284,11 @@ public static class SwapPatches
             else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
             {
                 targetToAddress = R.SlotItemAddress.Create(new R.SlotItemAddress(itemAddress).Slot);
+            }
+            else if (itemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+            {
+                // LootRadius workaround
+                targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
             }
             else
             {
@@ -412,6 +432,20 @@ public static class SwapPatches
                 return;
             }
 
+            // Make sure it's a grid or a slot we're sending the target to - LootRadius workaround
+            if (targetToAddress is not GridItemAddress && !R.SlotItemAddress.Type.IsInstanceOfType(targetToAddress))
+            {
+                // _1 is the root item (i.e. the stash)
+                if (__instance.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+                {
+                    targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
             operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
             __result = result.Succeeded;
@@ -447,7 +481,22 @@ public static class SwapPatches
 
             Slot magazineSlot = __instance.GetMagazineSlot();
 
-            __result = InteractionsHandlerClass.Swap(item, magazineSlot.ContainedItem.Parent, magazineSlot.ContainedItem, item.Parent, itemController, simulate);
+            ItemAddress itemAddress = item.Parent;
+
+            // LootRadius workaround
+            if (SourceContainer is GridView gridView && itemAddress is not GridItemAddress)
+            {
+                if (gridView.Grid.ItemCollection.ContainsKey(item))
+                {
+                    itemAddress = gridView.Grid.CreateItemAddress(gridView.Grid.ItemCollection[item]);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            __result = InteractionsHandlerClass.Swap(item, magazineSlot.ContainedItem.Parent, magazineSlot.ContainedItem, itemAddress, itemController, simulate);
         }
     }
 
