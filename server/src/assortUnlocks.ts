@@ -27,8 +27,8 @@ export const assortUnlocks = (container: DependencyContainer) => {
                         const questId = trader.questassort[questStatus][assortId];
 
                         if (!quests[questId]) {
-                            logger.error(
-                                `UIFixes: Trader ${traderId} questassort references unknown quest ${JSON.stringify(questId)}!`
+                            logger.warning(
+                                `UIFixes: Trader ${traderId} questassort references unknown quest ${JSON.stringify(questId)}! Check that whatever mod added that trader and/or quest is installed correctly.`
                             );
                             continue;
                         }
