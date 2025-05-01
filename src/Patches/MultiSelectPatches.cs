@@ -813,7 +813,7 @@ public static class MultiSelectPatches
             LocationInGrid hoveredLocation = __instance.CalculateItemLocation(itemContext);
             GridItemAddress hoveredAddress = new StashGridItemAddress(__instance.Grid, hoveredLocation);
 
-            if (__instance.Grid.ParentItem is SortingTableItemClass)
+            if (targetItemContext == null && __instance.Grid.ParentItem is SortingTableItemClass)
             {
                 // Sorting table will need a targetItemContext. Dunno if this is the right type but all it needs is the .Item property
                 targetItemContext = new GenericItemContext(__instance.Grid.ParentItem, EItemViewType.Empty);
