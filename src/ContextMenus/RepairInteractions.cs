@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Comfort.Common;
@@ -12,9 +13,12 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 {
     private readonly RepairControllerClass repairController;
     private readonly int playerRubles;
-    private readonly R.RepairStrategy repairStrategy;
+    private readonly IEnumerable<R.RepairStrategy> repairStrategies;
+    private readonly IEnumerable<IRepairer> repairers;
 
-    public RepairInteractions(Item item, ItemUiContext uiContext, int playerRubles) : base(uiContext)
+    public RepairInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
+
+    public RepairInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : base(uiContext)
     {
         repairController = uiContext.Session.RepairController;
 
@@ -23,39 +27,56 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
         this.playerRubles = playerRubles;
 
-        repairStrategy = R.RepairStrategy.Create(item, repairController);
+        repairStrategies = items.Select(i => R.RepairStrategy.Create(i, repairController));
+        repairers = repairStrategies.SelectMany(rs => rs.Repairers).DistinctBy(r => r.RepairerId);
 
         Load();
     }
 
     private void Load()
     {
-        foreach (IRepairer repairer in repairStrategy.Repairers)
+        foreach (IRepairer repairer in repairers)
         {
-            repairStrategy.CurrentRepairer = repairer;
+            double totalKitAmount = 0f;
+            int totalPrice = 0;
 
-            float repairAmount = GetClampedRepairAmount(repairStrategy);
+            foreach (var repairStrategy in repairStrategies)
+            {
+                repairStrategy.CurrentRepairer = repairer;
+
+                float repairAmount = GetClampedRepairAmount(repairStrategy);
+                if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+                {
+                    continue;
+                }
+                else if (R.RepairKit.Type.IsInstanceOfType(repairer))
+                {
+                    var repairKit = new R.RepairKit(repairer);
+                    totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
+                }
+                else
+                {
+                    totalPrice += repairStrategy.GetCurrencyPrice(repairAmount);
+                }
+            }
 
             string text;
-            if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
-            {
-                text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
-            }
-            else if (R.RepairKit.Type.IsInstanceOfType(repairer))
+            if (totalKitAmount > double.Epsilon)
             {
                 var repairKit = new R.RepairKit(repairer);
                 float pointsLeft = repairKit.GetRepairPoints();
-                double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
 
-                string costColor = amount > pointsLeft ? "#FF0000" : "#ADB8BC";
-                text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} {3})</color></b>", repairer.LocalizedName, costColor, Math.Round(amount, 2).ToString(CultureInfo.InvariantCulture), "RP".Localized());
+                string costColor = totalKitAmount > pointsLeft ? "#FF0000" : "#ADB8BC";
+                text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} {3})</color></b>", repairer.LocalizedName, costColor, Math.Round(totalKitAmount, 2).ToString(CultureInfo.InvariantCulture), "RP".Localized());
+            }
+            else if (totalPrice > 0)
+            {
+                string priceColor = totalPrice > playerRubles ? "#FF0000" : "#ADB8BC";
+                text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", repairer.LocalizedName, priceColor, totalPrice);
             }
             else
             {
-                int price = repairStrategy.GetCurrencyPrice(repairAmount);
-
-                string priceColor = price > playerRubles ? "#FF0000" : "#ADB8BC";
-                text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", repairer.LocalizedName, priceColor, price);
+                text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
             }
 
             base.method_2(MakeInteractionId(repairer.RepairerId), text, () => this.Repair(repairer.RepairerId));
@@ -75,64 +96,96 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
     private async void Repair(string repairerId)
     {
-        repairStrategy.CurrentRepairer = repairStrategy.Repairers.Single(r => r.RepairerId == repairerId);
-        IResult result = await repairStrategy.RepairItem(repairStrategy.HowMuchRepairScoresCanAccept(), null);
-        if (result.Succeed)
+        bool anySuccess = false;
+        foreach (var repairStrategy in repairStrategies)
+        {
+            var repairer = repairStrategy.Repairers.FirstOrDefault(r => r.RepairerId == repairerId);
+            if (repairer == null)
+            {
+                continue;
+            }
+
+            repairStrategy.CurrentRepairer = repairer;
+            IResult result = await repairStrategy.RepairItem(repairStrategy.HowMuchRepairScoresCanAccept(), null);
+            if (result.Succeed)
+            {
+                anySuccess = true;
+                NotificationManagerClass.DisplayMessageNotification(string.Format("{0} {1:F1}", "Item successfully repaired to".Localized(null), repairStrategy.Durability()), ENotificationDurationType.Default, ENotificationIconType.Default, null);
+            }
+        }
+
+        if (anySuccess)
         {
             Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.RepairComplete);
-            NotificationManagerClass.DisplayMessageNotification(string.Format("{0} {1:F1}", "Item successfully repaired to".Localized(null), repairStrategy.Durability()), ENotificationDurationType.Default, ENotificationIconType.Default, null);
         }
     }
 
     public IResult GetButtonInteraction(string interactionId)
     {
         string repairerId = interactionId.Split(':')[1];
-        IRepairer repairer = repairStrategy.Repairers.Single(r => r.RepairerId == repairerId);
-        repairStrategy.CurrentRepairer = repairer;
+        IRepairer repairer = repairers.Single(r => r.RepairerId == repairerId);
 
-        if (!repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+        if (!repairStrategies.Any(rs => rs.CanRepair(repairer, repairer.Targets)))
         {
             return new FailedResult(ERepairStatusWarning.ExceptionRepairItem.ToString());
         }
 
-        float repairAmount = GetClampedRepairAmount(repairStrategy);
+        double totalKitAmount = 0f;
+        int totalPrice = 0;
 
-        if (R.RepairKit.Type.IsInstanceOfType(repairer))
+        foreach (var repairStrategy in repairStrategies)
         {
-            var repairKit = new R.RepairKit(repairer);
-            float pointsLeft = repairKit.GetRepairPoints();
-            double amount = repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
-            if (amount > pointsLeft)
-            {
-                return new FailedResult(ERepairStatusWarning.NotEnoughRepairPoints.ToString());
-            }
+            repairStrategy.CurrentRepairer = repairer;
 
+            float repairAmount = GetClampedRepairAmount(repairStrategy);
+            if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+            {
+                continue;
+            }
+            else if (R.RepairKit.Type.IsInstanceOfType(repairer))
+            {
+                var repairKit = new R.RepairKit(repairer);
+                totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
+            }
+            else
+            {
+                totalPrice += repairStrategy.GetCurrencyPrice(repairAmount);
+            }
+        }
+
+        if (totalKitAmount > double.Epsilon && R.RepairKit.Type.IsInstanceOfType(repairer))
+        {
             // This check is only for repair kits
-            if (repairStrategy.IsNoCorrespondingArea())
+            if (repairStrategies.Any(rs => rs.IsNoCorrespondingArea()))
             {
                 return new FailedResult(ERepairStatusWarning.NoCorrespondingArea.ToString());
             }
+
+            var repairKit = new R.RepairKit(repairer);
+            float pointsLeft = repairKit.GetRepairPoints();
+            if (totalKitAmount > pointsLeft)
+            {
+                return new FailedResult(ERepairStatusWarning.NotEnoughRepairPoints.ToString());
+            }
         }
-        else
+        else if (totalPrice > 0)
         {
-            int price = repairStrategy.GetCurrencyPrice(repairAmount);
-            if (price > playerRubles)
+            if (totalPrice > playerRubles)
             {
                 return new FailedResult(ERepairStatusWarning.NotEnoughMoney.ToString());
             }
         }
-
-        if (repairAmount < float.Epsilon)
+        else
         {
             return new FailedResult(ERepairStatusWarning.NothingToRepair.ToString());
         }
 
         // BrokenItemError is not actually an error, they just implemented it that way - it shows a bunch of red text but it doesn't prevent repair
         // Leaving this here to remember
-        /*if (repairStrategy.BrokenItemError())
-        {
-            return new FailedResult(ERepairStatusWarning.BrokenItem.ToString());
-        }*/
+        // if (repairStrategy.BrokenItemError())
+        // {
+        //     return new FailedResult(ERepairStatusWarning.BrokenItem.ToString());
+        // }
 
         return SuccessfulResult.New;
     }

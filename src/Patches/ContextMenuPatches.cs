@@ -74,6 +74,10 @@ public static class ContextMenuPatches
                     .Count();
 
             }
+            else if (caption == EItemInfoButton.Repair.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.Repair, ItemUiContext.Instance);
+            }
             else if (caption == EItemInfoButton.Equip.ToString())
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);
@@ -188,7 +192,10 @@ public static class ContextMenuPatches
             {
                 int playerRubles = GetPlayerRubles(___itemUiContext_1);
 
-                CurrentRepairInteractions = new(___item_0, ___itemUiContext_1, playerRubles);
+                CurrentRepairInteractions = MultiSelect.Active ?
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), ___itemUiContext_1, playerRubles) :
+                    new(___item_0, ___itemUiContext_1, playerRubles);
+
                 subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
                 return false;
