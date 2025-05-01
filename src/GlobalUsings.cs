@@ -32,6 +32,8 @@ global using EntityNodeDictionary = GClass3865;
 global using InventoryInteractions = GClass3471; // There are two child versions?
 global using TradingPlayerInteractions = GClass3481;
 global using TransferPlayerInteractions = GClass3484;
+global using ModdingItemInteractions = GClass3476;
+global using WishListInteractions = GClass3496;
 
 // State machine states
 global using FirearmReadyState = EFT.Player.FirearmController.GClass1806;

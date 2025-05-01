@@ -45,6 +45,8 @@ public static class ContextMenuPatches
         new EmptySlotMenuRemovePatch().Enable();
 
         new OpenWhileSearchingPatch().Enable();
+
+        new ModdingItemContextPatch().Enable();
     }
 
     // Update display strings with multiselect multipliers
@@ -516,21 +518,7 @@ public static class ContextMenuPatches
         [PatchPostfix]
         public static void Postfix(ISubInteractions subInteractionsWrapper)
         {
-            if (subInteractionsWrapper is not InteractionButtonsContainer buttonsContainer)
-            {
-                return;
-            }
-
-            var wrappedContainer = buttonsContainer.R();
-            SimpleContextMenuButton button = wrappedContainer.ContextMenuButton;
-            SimpleContextMenu flyoutMenu = wrappedContainer.ContextMenu;
-
-            if (button == null || flyoutMenu == null)
-            {
-                return;
-            }
-
-            PositionContextMenuFlyout(button, flyoutMenu);
+            PositionContextMenuFlyout(subInteractionsWrapper);
         }
     }
 
@@ -594,6 +582,69 @@ public static class ContextMenuPatches
 
             return true;
         }
+    }
+
+    public class ModdingItemContextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            var moddingContextOptions = ModdingItemInteractions.ienumerable_2 as List<EItemInfoButton>;
+            moddingContextOptions.Add(EItemInfoButton.AddToWishlist);
+
+            return AccessTools.Method(typeof(ModdingItemContext), nameof(ModdingItemContext.GetItemContextInteractions));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(ModdingItemContext __instance, Action closeAction, ref ItemInfoInteractionsAbstractClass<EItemInfoButton> __result)
+        {
+            __result = new ExtraModdingItemInteractions(__instance, ItemUiContext.Instance, closeAction);
+            return false;
+        }
+
+        public class ExtraModdingItemInteractions(ModdingItemContext itemContext, ItemUiContext itemUiContext, Action closeAction)
+            : ModdingItemInteractions(itemContext, itemUiContext, closeAction)
+        {
+            public override IEnumerable<EItemInfoButton> SubInteractions
+            {
+                get
+                {
+                    return base.SubInteractions.Append(EItemInfoButton.AddToWishlist);
+                }
+            }
+
+            public override void CreateSubInteractions(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper)
+            {
+                if (parentInteraction == EItemInfoButton.AddToWishlist)
+                {
+                    subInteractionsWrapper.SetSubInteractions(new WishListInteractions(itemContextAbstractClass, itemUiContext_1));
+                }
+                else
+                {
+                    base.CreateSubInteractions(parentInteraction, subInteractionsWrapper);
+                }
+
+                PositionContextMenuFlyout(subInteractionsWrapper);
+            }
+        }
+    }
+
+    private static void PositionContextMenuFlyout(ISubInteractions subInteractions)
+    {
+        if (subInteractions is not InteractionButtonsContainer buttonsContainer)
+        {
+            return;
+        }
+
+        var wrappedContainer = buttonsContainer.R();
+        SimpleContextMenuButton button = wrappedContainer.ContextMenuButton;
+        SimpleContextMenu flyoutMenu = wrappedContainer.ContextMenu;
+
+        if (button == null || flyoutMenu == null)
+        {
+            return;
+        }
+
+        PositionContextMenuFlyout(button, flyoutMenu);
     }
 
     private static void PositionContextMenuFlyout(SimpleContextMenuButton button, SimpleContextMenu flyoutMenu)
