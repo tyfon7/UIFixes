@@ -323,6 +323,13 @@ public static class WeaponModdingPatches
         {
             if (__instance.Slot.Locked)
             {
+                // Soft armor slots - make them interactable for basic functionality (still can't be moved)
+                if (__instance.method_16(out _, out _))
+                {
+                    ____canvasGroup.blocksRaycasts = true;
+                    ____canvasGroup.interactable = true;
+                }
+
                 return;
             }
 

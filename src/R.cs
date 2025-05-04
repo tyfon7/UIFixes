@@ -68,6 +68,7 @@ public static class R
         AddOperationResult.InitTypes();
         FoldOperationResult.InitTypes();
         LightScroller.InitTypes();
+        ModSlotView.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -835,6 +836,24 @@ public static class R
 
         public EFT.UI.Utilities.LightScroller.LightScroller.EScrollOrder Order { get { return (EFT.UI.Utilities.LightScroller.LightScroller.EScrollOrder)OrderField.GetValue(Value); } }
     }
+
+    public class ModSlotView(object value) : UIElement(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo ErrorStructInfo;
+        private static FieldInfo ErrorStructErrorInfo;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.DragAndDrop.ModSlotView);
+
+            Type errorStructType = typeof(EFT.UI.DragAndDrop.ModSlotView).GetNestedTypes().Single(t => t.GetField("Error") != null);
+            ErrorStructInfo = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == errorStructType);
+            ErrorStructErrorInfo = AccessTools.Field(errorStructType, "Error");
+        }
+
+        public string Error { get { return (string)ErrorStructErrorInfo.GetValue(ErrorStructInfo.GetValue(Value)); } }
+    }
 }
 
 public static class RExtentensions
@@ -870,4 +889,5 @@ public static class RExtentensions
     public static R.AddOperationResult R(this AddOperation value) => new(value);
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
     public static R.LightScroller R(this LightScroller value) => new(value);
+    public static R.ModSlotView R(this ModSlotView value) => new(value);
 }

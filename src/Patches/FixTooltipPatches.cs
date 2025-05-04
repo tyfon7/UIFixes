@@ -14,6 +14,7 @@ public static class FixTooltipPatches
     {
         new QuestTooltipPatch().Enable();
         new ArmorTooltipPatch().Enable();
+        new SoftArmorTooltipPatch().Enable();
     }
 
     // Show parent tooltip when mouse leaves quest checkmark
@@ -66,6 +67,32 @@ public static class FixTooltipPatches
                 // Remove old hover handler that covered the whole info panel
                 UnityEngine.Object.Destroy(____valuePointerEventsProxy);
             }
+        }
+    }
+
+    public class SoftArmorTooltipPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(GridItemView), nameof(GridItemView.ShowTooltip));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(GridItemView __instance, ItemUiContext ___ItemUiContext)
+        {
+            var modSlotView = __instance.GetComponentInParent<ModSlotView>();
+            if (modSlotView == null)
+            {
+                return true;
+            }
+
+            if (modSlotView.method_16(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
+            {
+                ___ItemUiContext.Tooltip.Show(ArmorFormatter.FormatArmorPlateTooltip(armor, armorSlot, modSlotView.R().Error), null, 0.6f, null);
+                return false;
+            }
+
+            return true;
         }
     }
 }
