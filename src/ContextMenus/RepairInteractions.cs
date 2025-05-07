@@ -27,7 +27,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
         this.playerRubles = playerRubles;
 
-        repairStrategies = items.Select(i => R.RepairStrategy.Create(i, repairController));
+        repairStrategies = items.Where(IsRepairable).Select(i => R.RepairStrategy.Create(i, repairController));
         repairers = repairStrategies.SelectMany(rs => rs.Repairers).DistinctBy(r => r.RepairerId);
 
         Load();
@@ -44,8 +44,13 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             {
                 repairStrategy.CurrentRepairer = repairer;
 
+                if (!repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+                {
+                    continue;
+                }
+
                 float repairAmount = GetClampedRepairAmount(repairStrategy);
-                if (repairAmount < float.Epsilon || !repairStrategy.CanRepair(repairStrategy.CurrentRepairer, repairStrategy.CurrentRepairer.Targets))
+                if (repairAmount < float.Epsilon)
                 {
                     continue;
                 }
@@ -81,6 +86,12 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
             base.method_2(MakeInteractionId(repairer.RepairerId), text, () => this.Repair(repairer.RepairerId));
         }
+    }
+
+    private static bool IsRepairable(Item item)
+    {
+        return item.GetItemComponent<RepairableComponent>() != null ||
+            (item.TryGetItemComponent(out ArmorHolderComponent armorHolderComponent) && armorHolderComponent.ArmorPlates.Any());
     }
 
     private static float GetClampedRepairAmount(R.RepairStrategy repairStrategy)
