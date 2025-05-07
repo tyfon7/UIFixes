@@ -37,6 +37,7 @@ public static class ContextMenuPatches
 
         new EnableInsureInnerItemsPatch().Enable();
 
+        new DisableInsureOnUninsurable().Enable();
         new DisableLoadPresetOnBulletsPatch().Enable();
 
         new EmptyModSlotMenuPatch().Enable();
@@ -380,21 +381,19 @@ public static class ContextMenuPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(object __instance, EItemInfoButton button, ref IResult __result, Item ___item_0)
+        public static bool Prefix(object __instance, EItemInfoButton button, ref IResult __result, Item ___item_0, InsuranceCompanyClass ___insuranceCompanyClass)
         {
             if (button != EItemInfoButton.Insure)
             {
                 return true;
             }
 
-            InsuranceCompanyClass insurance = new R.ContextMenuHelper(__instance).InsuranceCompany;
-
             IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [___item_0];
             IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
-            IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
-                .Flatten(insurance.GetItemChildren)
+            IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(___insuranceCompanyClass.GetItemChildren)
+                .Flatten(___insuranceCompanyClass.GetItemChildren)
                 .Concat(InsuranceItemes)
-                .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
+                .Where(i => ___insuranceCompanyClass.ItemTypeAvailableForInsurance(i) && !___insuranceCompanyClass.InsuredItems.Contains(i));
 
             if (insurableItems.Any())
             {
@@ -403,6 +402,29 @@ public static class ContextMenuPatches
             }
 
             return true;
+        }
+    }
+
+    public class DisableInsureOnUninsurable : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(R.ContextMenuHelper.Type, "IsActive");
+        }
+
+        [PatchPostfix]
+        public static void Postfix(object __instance, EItemInfoButton button, ref bool __result, Item ___item_0, InsuranceCompanyClass ___insuranceCompanyClass)
+        {
+            if (button != EItemInfoButton.Insure || !__result)
+            {
+                return;
+            }
+
+            // This check is taken directly from IsInteractive, why they didn't check this here in IsActive I have no idea
+            if (___insuranceCompanyClass == null || !___insuranceCompanyClass.ItemTypeAvailableForInsurance(___item_0))
+            {
+                __result = false;
+            }
         }
     }
 
