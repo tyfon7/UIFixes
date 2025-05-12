@@ -40,12 +40,8 @@ public static class BarterOfferPatches
         public static void Postfix(
             OfferItemPriceBarter __instance,
             IExchangeRequirement requirement,
-            ItemTooltip tooltip,
-            Offer offer,
             InventoryController inventoryController,
             ItemUiContext itemUiContext,
-            InsuranceCompanyClass insuranceCompany,
-            int index,
             bool expanded,
             GameObject ____barterIcon,
             TextMeshProUGUI ____requirementName,
