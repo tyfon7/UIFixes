@@ -57,7 +57,7 @@ public static class QuickAccessPanelPatches
         [PatchPostfix]
         public static void Postfix(BoundItemView __instance, ItemUiContext itemUiContext, TextMeshProUGUI ___HotKey)
         {
-            if (___HotKey == null)
+            if (___HotKey == null || ___HotKey.text == null)
             {
                 return;
             }
