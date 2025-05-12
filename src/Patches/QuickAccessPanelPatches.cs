@@ -72,7 +72,14 @@ public static class QuickAccessPanelPatches
                 ___HotKey.transform.localPosition = new Vector3(12, -6, 0);
 
                 var hoverTrigger = bindPanel.GetOrAddComponent<HoverTrigger>();
-                hoverTrigger.OnHoverStart += _ => itemUiContext.Tooltip.Show(originalText);
+                hoverTrigger.OnHoverStart += _ =>
+                {
+                    if (itemUiContext.Tooltip != null)
+                    {
+                        itemUiContext.Tooltip.Show(originalText);
+                    }
+                };
+
                 hoverTrigger.OnHoverEnd += _ =>
                 {
                     if (itemUiContext.Tooltip != null)
