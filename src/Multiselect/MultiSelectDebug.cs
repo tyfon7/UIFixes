@@ -51,6 +51,16 @@ public class MultiSelectDebug : MonoBehaviour
             }
         }
 
+        if (MultiSelect.TaskSerializer != null)
+        {
+            builder.Append("TaskSerializer active\n");
+        }
+
+        if (MultiSelect.LoadUnloadSerializer != null)
+        {
+            builder.Append("Load/Unload TaskSerializer active\n");
+        }
+
         guiContent.text = builder.ToString();
 
         guiRect.size = guiStyle.CalcSize(guiContent);

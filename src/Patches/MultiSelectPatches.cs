@@ -819,7 +819,7 @@ public static class MultiSelectPatches
                 targetItemContext = new GenericItemContext(__instance.Grid.ParentItem, EItemViewType.Empty);
             }
 
-            var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+            var serializer = MultiSelect.CreateTaskSerializer(__instance.gameObject);
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(itemContext),
                 async selectedItemContext =>
@@ -1054,7 +1054,7 @@ public static class MultiSelectPatches
 
             InPatch = true;
 
-            var serializer = __instance.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+            var serializer = MultiSelect.CreateTaskSerializer(__instance.gameObject);
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(),
                 async selectedItemContext =>

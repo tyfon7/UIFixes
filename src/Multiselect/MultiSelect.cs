@@ -18,7 +18,9 @@ public class MultiSelect
     private static readonly Dictionary<MultiSelectItemContext, GridItemView> SelectedItems = [];
     private static readonly Dictionary<MultiSelectItemContext, GridItemView> SecondaryItems = [];
 
-    private static MultiSelectItemContextTaskSerializer LoadUnloadSerializer = null;
+    public static MultiSelectItemContextTaskSerializer LoadUnloadSerializer { get; private set; }
+
+    public static MultiSelectItemContextTaskSerializer TaskSerializer { get; private set; }
 
     public static bool Enabled
     {
@@ -213,6 +215,18 @@ public class MultiSelect
         }
 
         SecondaryItems.Clear();
+    }
+
+    public static MultiSelectItemContextTaskSerializer CreateTaskSerializer(GameObject gameObject)
+    {
+        // I never null this out, but for once Unity's weird behavior of overriding == null is useful
+        if (TaskSerializer != null)
+        {
+            Plugin.Instance.Logger.LogError("Multiple multi-select task serializers active!");
+        }
+
+        TaskSerializer = gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        return TaskSerializer;
     }
 
     public static IEnumerable<MultiSelectItemContext> ItemContexts
@@ -433,7 +447,7 @@ public class MultiSelect
     {
         if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
         {
-            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+            var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
             taskSerializer.Initialize(
                 SortedItemContexts().Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
                 ic => action(ic));
@@ -466,7 +480,7 @@ public class MultiSelect
     {
         if (!allOrNothing || InteractionCount(EItemInfoButton.Unpack, itemUiContext) == Count)
         {
-            var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+            var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
             taskSerializer.Initialize(
                 SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unpack, itemUiContext)),
                 itemContext =>
@@ -486,7 +500,7 @@ public class MultiSelect
         EItemPinLockState state = allPinned ? EItemPinLockState.Free : EItemPinLockState.Pinned;
         EItemInfoButton action = allPinned ? EItemInfoButton.SetUnPin : EItemInfoButton.SetPin;
 
-        var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
         taskSerializer.Initialize(
             SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
             itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
@@ -501,7 +515,7 @@ public class MultiSelect
         EItemPinLockState state = allLocked ? EItemPinLockState.Free : EItemPinLockState.Locked;
         EItemInfoButton action = allLocked ? EItemInfoButton.SetUnLock : EItemInfoButton.SetLock;
 
-        var taskSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
         taskSerializer.Initialize(
             SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
             itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
@@ -639,6 +653,8 @@ public static class MultiSelectExtensions
         return true;
     }
 
+    // Be Careful!!
+    // This enum will never end unless things are actively moving/checking. Calling Count() on this will live-lock the app!!
     public static IEnumerable<T> RepeatUntilEmpty<T>(this T itemContext) where T : ItemContextAbstractClass
     {
         while (itemContext.Item.StackObjectsCount > 0)

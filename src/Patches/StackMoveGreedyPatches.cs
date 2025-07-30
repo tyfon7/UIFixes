@@ -26,7 +26,7 @@ public static class StackMoveGreedyPatches
         }
 
         [PatchPrefix]
-        [HarmonyPriority(Priority.LowerThanNormal)]
+        [HarmonyPriority(Priority.High)] // Needs to run before the multi-select patch
         public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref Task __result)
         {
             return AcceptStackable(__instance, itemContext, targetItemContext, ref __result);
