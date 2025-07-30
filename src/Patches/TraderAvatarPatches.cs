@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Comfort.Common;
 using EFT;
 using EFT.InventoryLogic;
@@ -9,7 +10,6 @@ using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +22,7 @@ public static class TraderAvatarPatches
         new CreateIconsPatch().Enable();
         new ShowIconsPatch().Enable();
         new QuestListItemPatch().Enable();
+        new HandoverPatch().Enable();
     }
 
     public class CreateIconsPatch : ModulePatch
@@ -158,6 +159,27 @@ public static class TraderAvatarPatches
             else if (iconTransform != null)
             {
                 iconTransform.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    public class HandoverPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(LocalQuestControllerClass), nameof(LocalQuestControllerClass.HandoverItem));
+        }
+
+        [PatchPostfix]
+        public static async void Postfix(QuestClass quest, Task<IResult> __result)
+        {
+            var result = await __result;
+
+            // quest.method_0 will trigger AbstractQuestClass.OnStatusChanged.
+            // The status possibly didn't change, but it will still cause the trader avatar to update
+            if (result.Succeed)
+            {
+                quest.method_0(quest, false);
             }
         }
     }
