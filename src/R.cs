@@ -271,6 +271,7 @@ public static class R
         private static FieldInfo HighlightPanelField;
         private static FieldInfo ValidMoveColorField;
         private static FieldInfo InvalidOperationColorField;
+        private static FieldInfo ItemViewsField;
         public static void InitTypes()
         {
             Type = typeof(EFT.UI.DragAndDrop.GridView);
@@ -279,6 +280,7 @@ public static class R
             HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
             ValidMoveColorField = AccessTools.Field(Type, "ValidMoveColor");
             InvalidOperationColorField = AccessTools.Field(Type, "InvalidOperationColor");
+            ItemViewsField = AccessTools.Field(Type, "ItemViews");
         }
 
         public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
@@ -286,6 +288,7 @@ public static class R
         public Image HighlightPanel { get { return (Image)HighlightPanelField.GetValue(Value); } }
         public static Color ValidMoveColor { get { return (Color)ValidMoveColorField.GetValue(null); } }
         public static Color InvalidOperationColor { get { return (Color)InvalidOperationColorField.GetValue(null); } }
+        public Dictionary<string, ItemView> ItemViews { get { return (Dictionary<string, ItemView>)ItemViewsField.GetValue(Value); } }
     }
 
     public class SwapOperation(object value) : Wrapper(value)

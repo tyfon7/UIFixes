@@ -328,11 +328,36 @@ public class MultiSelect
 
         Clear();
 
-        foreach (ItemView itemView in gridsView.GridViews.SelectMany(gv => gv.GridItemViews))
+        // explicitly create item views for every item, so that ones off screen have one
+        foreach (GridView gridView in gridsView.GridViews)
         {
-            if (itemView.Item.TemplateId == templateId && itemView is GridItemView gridItemView)
+            foreach (Item item in gridView.Grid.Items)
             {
-                Select(gridItemView);
+                if (item.TemplateId != templateId)
+                {
+                    continue;
+                }
+
+                var itemViews = gridView.R().ItemViews;
+                if (itemViews.TryGetValue(item.Id, out ItemView itemView) && itemView is GridItemView gridItemView)
+                {
+                    Select(gridItemView);
+                }
+                else
+                {
+                    if (item.CurrentAddress is not GridItemAddress gridAddress)
+                    {
+                        // weird
+                        continue;
+                    }
+
+                    // I don't think I need to clean this up, method_4 adds it to the gridview's collection so it's not orphaned or anything
+                    var newItemView = gridView.method_4(item, gridAddress.LocationInGrid, ItemUiContext.Instance, item.Parent.GetOwnerOrNull());
+                    if (newItemView is GridItemView newGridItemView)
+                    {
+                        Select(newGridItemView);
+                    }
+                }
             }
         }
     }
