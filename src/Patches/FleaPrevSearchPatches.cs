@@ -1,8 +1,11 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT.Animations.NewRecoil;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
@@ -29,6 +32,7 @@ public static class FleaPrevSearchPatches
     public static void Enable()
     {
         new RagfairScreenShowPatch().Enable();
+        new OnPurchaseClickedUpdatePatch().Enable();
         new OfferViewListCategoryPickedPatch().Enable();
         new OfferViewListDoneLoadingPatch().Enable();
         new ChangedViewListTypePatch().Enable();
@@ -260,6 +264,20 @@ public static class FleaPrevSearchPatches
         }
     }
 
+    public class OnPurchaseClickedUpdatePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_18));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref InventoryController ___inventoryController_0)
+        {
+            ItemCacheHelper.UpdateAllItemsCache(___inventoryController_0);
+        }
+    }
+
     public class RagfairScreenShowPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -288,11 +306,13 @@ public static class FleaPrevSearchPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton, PreviousFilterButton __state)
+        public static void Postfix(RagfairScreen __instance, InventoryController inventoryController, ISession session, DefaultUIButton ____addOfferButton, PreviousFilterButton __state)
         {
             // Delete the upper right display options, since they aren't even implemented
             var tabs = __instance.transform.Find("TopRightPanel/Tabs");
             tabs?.gameObject.SetActive(false);
+
+            ItemCacheHelper.UpdateAllItemsCache(inventoryController);
 
             if (!Settings.EnableFleaHistory.Value)
             {

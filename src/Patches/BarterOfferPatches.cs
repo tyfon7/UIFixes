@@ -69,6 +69,9 @@ public static class BarterOfferPatches
 
             RagfairOfferItemView itemView = ItemViewFactory.CreateFromPool<RagfairOfferItemView>("ragfair_offer_layout");
             itemView.transform.SetParent(__instance.transform, false);
+
+            int ownedCount = GetOwnedCount(requirement, inventoryController);
+
             if (!expanded)
             {
                 itemView.SetSizeOverride(smallSizeDelta);
@@ -88,10 +91,9 @@ public static class BarterOfferPatches
                     itemView.SetInscription("LVLKILLLIST".Localized() + " " + handoverRequirement.Level);
                 }
 
-                int ownedCount = GetOwnedCount(requirement, inventoryController);
                 itemView.SetCount(string.Format("<color=#{2}><b>{0}</b></color>/{1}", ownedCount.FormatSeparate(" "), requirement.IntCount.FormatSeparate(" "), "C5C3B2"));
             }
-
+            
             if (isDogtag)
             {
                 itemView.SetTooltip(string.Concat(
@@ -109,13 +111,24 @@ public static class BarterOfferPatches
             LayoutElement layoutElement = itemView.GetComponent<LayoutElement>();
             layoutElement.preferredWidth = layoutElement.minWidth = sizeDelta.x;
             layoutElement.preferredHeight = layoutElement.minHeight = sizeDelta.y;
-
             itemView.Show(null, requirement.Item, ItemRotation.Horizontal, false, inventoryController, requirement.Item.Owner, itemUiContext, null);
 
             ItemViewManager itemViewManager = __instance.GetOrAddComponent<ItemViewManager>();
             itemViewManager.Init(itemView);
+            
+            if (ownedCount >= requirement.IntCount)
+            {
+                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.green);
+            }
+            else if (requirement.IntCount - ownedCount == 1)
+            {
+                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.yellow);
+            }
+            else
+            {
+                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.red);
+            }
 
-            ____barterIcon.SetActive(false);
             ____separator?.SetActive(false);
 
             if (expanded)
@@ -130,10 +143,7 @@ public static class BarterOfferPatches
 
         private static int GetOwnedCount(IExchangeRequirement requirement, InventoryController inventoryController)
         {
-            List<Item> allItems = [];
-            inventoryController.Inventory.Stash.GetAllAssembledItemsNonAlloc(allItems);
-            inventoryController.Inventory.QuestStashItems.GetAllAssembledItemsNonAlloc(allItems);
-            inventoryController.Inventory.QuestRaidItems.GetAllAssembledItemsNonAlloc(allItems);
+            List<Item> allItems = ItemCacheHelper.GetAllItemsCache();
 
             if (requirement is not HandoverRequirement handoverRequirement)
             {
