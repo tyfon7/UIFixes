@@ -80,6 +80,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
+    public static ConfigEntry<bool> ForceAutoWishlist { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -271,6 +272,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Keybinds with display names longer than 2 characters will be shortened to '...' with a hover tooltip",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ForceAutoWishlist = config.Bind(
+            InterfaceSection,
+            "Force Auto Wishlist of Upgrades",
+            true,
+            new ConfigDescription(
+                "If you have enabled auto-wishlisting of hideout upgrades, force them to be wishlisted even if you lack other upgrade requirements (like rep, or other hideout areas)",
                 null,
                 new ConfigurationManagerAttributes { })));
 

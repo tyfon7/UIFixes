@@ -29,6 +29,7 @@ global using CurrentyHelper = GClass2934;
 global using EntityNodeDictionary = GClass3865;
 global using ArmorSlot = GClass2929;
 global using ArmorFormatter = GClass2936;
+global using WishlistManager = GClass1836;
 
 // Context menus
 global using InventoryInteractions = GClass3471; // There are two child versions?

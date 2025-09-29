@@ -103,6 +103,7 @@ public class Plugin : BaseUnityPlugin
         QuestItemWarningPatches.Enable();
         TraderAvatarPatches.Enable();
         FilterStockPresetsPatches.Enable();
+        WishlistPatches.Enable();
     }
 
     public static bool InRaid()
