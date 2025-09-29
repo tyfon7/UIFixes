@@ -54,6 +54,15 @@ internal enum ModRaidWeapon
     Always
 }
 
+internal enum AutoWishlistBehavior
+{
+    Normal,
+    [Description("Visible Upgrades")]
+    Visible,
+    [Description("All Upgrades")]
+    All
+}
+
 internal class Settings
 {
     // New categories
@@ -80,7 +89,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
-    public static ConfigEntry<bool> ForceAutoWishlist { get; set; }
+    public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -275,12 +284,15 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(ForceAutoWishlist = config.Bind(
+        configEntries.Add(AutoWishlistUpgrades = config.Bind(
             InterfaceSection,
-            "Force Auto Wishlist of Upgrades",
-            true,
+            "Hideout Upgrade Wishlisting",
+            AutoWishlistBehavior.Normal,
             new ConfigDescription(
-                "If you have enabled auto-wishlisting of hideout upgrades, force them to be wishlisted even if you lack other upgrade requirements (like rep, or other hideout areas)",
+                "Change the behavior of auto-wishlisting hideout upgrades, if you have that EFT feature enabled:\n" +
+                "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
+                "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
+                "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
                 null,
                 new ConfigurationManagerAttributes { })));
 
