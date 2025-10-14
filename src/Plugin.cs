@@ -56,7 +56,7 @@ public class Plugin : BaseUnityPlugin
         FleaPrevSearchPatches.Enable();
         KeepOfferWindowOpenPatches.Enable();
         AddOfferClickablePricesPatches.Enable();
-        new AssortUnlocksPatch().Enable();
+        //new AssortUnlocksPatch().Enable(); // TODO: Implement server side
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();
         TradingAutoSwitchPatches.Enable();
@@ -72,10 +72,10 @@ public class Plugin : BaseUnityPlugin
         LoadAmmoInRaidPatches.Enable();
         MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
-        StackMoveGreedyPatches.Enable();
+        // StackMoveGreedyPatches.Enable(); // TODO: Double check but I think they implemented this?!
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
-        new PutToolsBackPatch().Enable();
+        // new PutToolsBackPatch().Enable(); // TODO: Implement server side
         new RebindGrenadesPatch().Enable();
         AimToggleHoldPatches.Enable();
         ReorderGridsPatches.Enable();
@@ -100,7 +100,7 @@ public class Plugin : BaseUnityPlugin
         RemoveAdsPatches.Enable();
         BTRPaymentPatches.Enable();
         TradingHighlightPatches.Enable();
-        QuestItemWarningPatches.Enable();
+        //QuestItemWarningPatches.Enable(); // TODO: Remove, BSG added it (weirdly, but they did)
         TraderAvatarPatches.Enable();
         FilterStockPresetsPatches.Enable();
         WishlistPatches.Enable();

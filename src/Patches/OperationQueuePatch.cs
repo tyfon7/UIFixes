@@ -13,12 +13,12 @@ public class OperationQueuePatch : ModulePatch
     }
 
     [PatchPrefix]
-    public static void Prefix(ref float ___float_0)
+    public static void Prefix(ref float ___Float_0)
     {
         // The target method is hardcoded to 60 seconds. Rather than try to change that, just lie to it about when it last sent
-        if (Time.realtimeSinceStartup - ___float_0 > Settings.OperationQueueTime.Value)
+        if (Time.realtimeSinceStartup - ___Float_0 > Settings.OperationQueueTime.Value)
         {
-            ___float_0 = 0;
+            ___Float_0 = 0;
         }
     }
 }

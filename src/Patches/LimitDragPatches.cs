@@ -16,8 +16,8 @@ public static class LimitDragPatches
         new OnDragEventPatch(typeof(DragTrigger), nameof(DragTrigger.OnBeginDrag)).Enable();
         new OnDragEventPatch(typeof(DragTrigger), nameof(DragTrigger.OnEndDrag)).Enable();
 
-        new OnDragEventPatch(typeof(UIDragComponent), "UnityEngine.EventSystems.IDragHandler.OnDrag").Enable();
-        new OnDragEventPatch(typeof(UIDragComponent), "UnityEngine.EventSystems.IBeginDragHandler.OnBeginDrag").Enable();
+        new OnDragEventPatch(typeof(UIDragComponent), nameof(UIDragComponent.OnDrag)).Enable();
+        new OnDragEventPatch(typeof(UIDragComponent), nameof(UIDragComponent.OnBeginDrag)).Enable();
     }
 
     // Prevent drag events with right mouse, or when shift is down (to avoid multiselect conflicts)

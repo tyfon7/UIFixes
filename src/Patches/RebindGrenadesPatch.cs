@@ -18,7 +18,7 @@ public class RebindGrenadesPatch : ModulePatch
 
     protected override MethodBase GetTargetMethod()
     {
-        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("throwWeapItemClass", BindingFlags.NonPublic | BindingFlags.Instance) != null);
+        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("ThrowWeapItemClass", BindingFlags.Public | BindingFlags.Instance) != null);
         DiscardOperationField = AccessTools.GetDeclaredFields(type).Single(f => f.FieldType == typeof(DiscardOperation));
         return AccessTools.Method(type, "RaiseEvents");
     }

@@ -56,7 +56,6 @@ public static class R
         GridSortPanel.InitTypes();
         RepairStrategy.InitTypes();
         RepairKit.InitTypes();
-        ContextMenuHelper.InitTypes();
         RagfairNewOfferItemView.InitTypes();
         TradingTableGridView.InitTypes();
         ItemReceiver.InitTypes();
@@ -488,7 +487,8 @@ public static class R
         private static FieldInfo ContextTypeField;
         private static PropertyInfo ItemContextProperty;
         private static FieldInfo DragItemContextField;
-
+        private static FieldInfo ItemInfoInteractionsField;
+        private static FieldInfo DelayTypeWindowField;
 
         public static void InitTypes()
         {
@@ -498,6 +498,8 @@ public static class R
             ContextTypeField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(EItemUiContextType));
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
             DragItemContextField = AccessTools.Field(Type, "itemContextClass");
+            ItemInfoInteractionsField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>));
+            DelayTypeWindowField = AccessTools.Field(Type, "_delayTypeWindow");
         }
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
@@ -505,6 +507,12 @@ public static class R
         public EItemUiContextType ContextType { get { return (EItemUiContextType)ContextTypeField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
         public DragItemContext DragItemContext { get { return (DragItemContext)DragItemContextField.GetValue(Value); } }
+        public ItemInfoInteractionsAbstractClass<EItemInfoButton> ItemInfoInteractions
+        {
+            get { return (ItemInfoInteractionsAbstractClass<EItemInfoButton>)ItemInfoInteractionsField.GetValue(Value); }
+            set { ItemInfoInteractionsField.SetValue(Value, value); }
+        }
+        public DelayTypeWindow DelayTypeWindow { get { return (DelayTypeWindow)DelayTypeWindowField.GetValue(Value); } }
     }
 
     public static class Money
@@ -610,8 +618,8 @@ public static class R
         public static void InitTypes()
         {
             Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface37
-            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") == null); // GClass885
-            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") != null); // GClass884
+            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("RepairableComponent_0") == null); // GClass906
+            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("RepairableComponent_0") != null); // GClass905
             RepairersProperty = AccessTools.Property(Type, "Repairers");
             CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
             HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
@@ -665,19 +673,6 @@ public static class R
 
         public float GetRepairPoints() => (float)GetRepairPointsMethod.Invoke(Value, []);
 
-    }
-    public class ContextMenuHelper(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static FieldInfo InsuranceCompanyField;
-
-        public static void InitTypes()
-        {
-            Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3503
-            InsuranceCompanyField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(InsuranceCompanyClass));
-        }
-
-        public InsuranceCompanyClass InsuranceCompany { get { return (InsuranceCompanyClass)InsuranceCompanyField.GetValue(Value); } }
     }
 
     public class RagfairNewOfferItemView(object value) : Wrapper(value)

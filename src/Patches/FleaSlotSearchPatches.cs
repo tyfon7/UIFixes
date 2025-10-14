@@ -23,7 +23,7 @@ public static class FleaSlotSearchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(RagfairSearch[] searches, ref string __state, HandbookClass ___handbookClass)
+        public static void Prefix(RagFairClass __instance, RagfairSearch[] searches, ref string __state)
         {
             if (!Settings.EnableSlotSearch.Value)
             {
@@ -34,7 +34,7 @@ public static class FleaSlotSearchPatches
             if (search != null)
             {
                 __state = search.StringValue.Split(':')[0];
-                EntityNodeClass node = ___handbookClass[__state];
+                EntityNodeClass node = __instance.HandbookClass[__state];
                 if (node != null)
                 {
                     // If the id is in the handbook (any mod slots on actual items), 
@@ -44,23 +44,23 @@ public static class FleaSlotSearchPatches
                 else
                 {
                     // If the id is not, like equipment slots, inject a dummy node
-                    HandbookData dummyData = new HandbookData()
+                    HandbookData dummyData = new()
                     {
                         Id = search.StringValue
                     };
-                    EntityNodeClass dummyNode = new EntityNodeClass()
+                    EntityNodeClass dummyNode = new()
                     {
                         Data = dummyData,
                         IsDummy = true
                     };
-                    ___handbookClass.StructuredItems.AddVirtual(__state, dummyNode);
+                    __instance.HandbookClass.StructuredItems.AddVirtual(__state, dummyNode);
                 }
                 searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(ref string __state, HandbookClass ___handbookClass)
+        public static void Postfix(RagFairClass __instance, ref string __state)
         {
             if (!Settings.EnableSlotSearch.Value)
             {
@@ -69,11 +69,11 @@ public static class FleaSlotSearchPatches
 
             if (__state != null)
             {
-                EntityNodeClass node = ___handbookClass[__state];
+                EntityNodeClass node = __instance.HandbookClass[__state];
                 if (node.IsDummy)
                 {
                     // We injected this dummy node, remove it
-                    ___handbookClass.StructuredItems.RemoveVirtual(__state);
+                    __instance.HandbookClass.StructuredItems.RemoveVirtual(__state);
                 }
                 else
                 {

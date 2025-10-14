@@ -19,7 +19,7 @@ public class PutToolsBackPatch : ModulePatch
     // Find items that are in subcontainers and handle them first - the patched method will ignore items that have a CurrentAddress
     // This is a subset of the original method - doesn't handle slots, equipment containers, etc.
     [PatchPrefix]
-    public static void Prefix(object __instance, ref JsonItem[] newItems, Profile ___profile_0, ItemFactoryClass ___itemFactoryClass)
+    public static void Prefix(object __instance, ref FlatItemsDataClass[] newItems, Profile ___profile_0, ItemFactoryClass ___itemFactoryClass)
     {
         if (!newItems.Any())
         {

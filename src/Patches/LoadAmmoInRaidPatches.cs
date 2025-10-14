@@ -22,18 +22,18 @@ public class LoadAmmoInRaidPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.ContextMenuHelper.Type, "IsActive");
+            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
         }
 
         [PatchPrefix]
-        public static bool Prefix(EItemInfoButton button, ref bool __result, Item ___item_0)
+        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
         {
             if (button != EItemInfoButton.LoadAmmo || !Plugin.InRaid() || !Settings.EnableLoadAmmoInRaid.Value)
             {
                 return true;
             }
 
-            __result = MagazineBuildClass.TryFindPresetSource(___item_0).Succeeded;
+            __result = MagazineBuildClass.TryFindPresetSource(__instance.Item_0).Succeeded;
             return false;
         }
     }

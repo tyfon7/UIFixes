@@ -1,8 +1,7 @@
+using System.Reflection;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace UIFixes;
@@ -14,7 +13,6 @@ public static class QuestKeysPatches
     public static void Enable()
     {
         new BigButtonPatch().Enable();
-        new QuestMessagePatch().Enable();
     }
 
     // Hook up listener to Accept/Complete button
@@ -33,43 +31,14 @@ public static class QuestKeysPatches
         }
     }
 
-    // Track whether the message popup is visible
-    public class QuestMessagePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(QuestView), nameof(QuestView.ShowQuestMessage));
-        }
-
-        [PatchPrefix]
-        public static void Prefix(QuestView __instance, ref Action callback)
-        {
-            QuestMessageVisible = true;
-
-            Action originalCallback = callback;
-            callback = () =>
-            {
-                if (originalCallback != null)
-                {
-                    originalCallback();
-                }
-
-                // Need to wait a frame because the Listener might still run this frame, and handle the keydown
-                __instance.WaitOneFrame(() =>
-                {
-                    QuestMessageVisible = false;
-                });
-            };
-        }
-    }
-
     private class ButtonListener : MonoBehaviour
     {
         public DefaultUIButton Button { get; set; }
 
         public void Update()
         {
-            if (!QuestMessageVisible && Button.Interactable && Input.GetKeyDown(KeyCode.Return))
+            bool questDialogVisible = ItemUiContext.Instance.R().DelayTypeWindow.gameObject.activeSelf;
+            if (!questDialogVisible && Button.Interactable && Input.GetKeyDown(KeyCode.Return))
             {
                 Button.OnClick.Invoke();
             }

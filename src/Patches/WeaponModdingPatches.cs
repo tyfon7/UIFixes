@@ -268,12 +268,12 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.ContextMenuHelper.Type, "IsInteractive");
+            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsInteractive));
         }
 
         // Enable/disable options in the context menu
         [PatchPostfix]
-        public static void Postfix(EItemInfoButton button, ref IResult __result, Item ___item_0, TraderControllerClass ___traderControllerClass)
+        public static void Postfix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
         {
             // These two are only visible out of raid, enable them
             if (Settings.ModifyEquippedWeapons.Value && (button == EItemInfoButton.Modding || button == EItemInfoButton.EditBuild))
@@ -301,7 +301,7 @@ public static class WeaponModdingPatches
             // Need to do the disabling as appropriate
             if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(___item_0, ___traderControllerClass as InventoryController, out string error))
+                if (!CanModify(__instance.Item_0, __instance.TraderControllerClass as InventoryController, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
@@ -411,7 +411,7 @@ public static class WeaponModdingPatches
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct156<EmptyError> __result)
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct156<UnsetError> __result)
         {
             if (item is not Mod && item is not ArmorPlateItemClass)
             {

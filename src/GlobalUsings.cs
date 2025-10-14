@@ -7,10 +7,8 @@ global using ToggleKeyCombination = DeleteNoteDescriptorClass; // automatic name
 global using ItemProperties = GClass846;  // GClass825;
 global using GridItemAddress = GClass3393; //  GClass3186;
 global using StashGridItemAddress = StashGridClass.Class2458; // StashGridClass.Class2343;
-global using BaseItemInfoInteractions = ContextInteractionsAbstractClass; // GClass3468;
 global using GenericItemContext = GClass3453; // GClass3243;
 global using ModdingItemContext = GClass3456; // GClass3246;
-global using KeyCombination = KeyBindingClass; // GClass2172;
 global using RagfairSearch = GClass3943; // GClass3653;
 global using CurrencyInfo = GClass3130; // GClass2934;
 global using Scheme = GClass2440; // GClass2202;
@@ -19,7 +17,6 @@ global using CursorManager = GClass3746; // GClass3460;
 global using ContainerCollection = GClass3248; // GClass3050;
 global using BuildItemSelector = GClass3468; // GClass3257;
 global using ModdingItemSelector = GClass3469; // GClass3258;
-global using RaidPlayer = GroupPlayerViewModelClass; // GClass1341;
 global using AnimatorWrapper = GClass1446; // GClass1375;
 global using NaiveAcceptable = GClass3838; // GClass3550;
 global using FirearmInputHandler = Class1730; // Class1604;
@@ -45,7 +42,6 @@ global using FirearmInsertedMagState = EFT.Player.FirearmController.GClass2039; 
 
 // JSON
 global using LocationJsonParser = GClass1911; // GClass1682;
-global using JsonItem = FlatItemsDataClass; // GClass1319;
 
 // Errors
 global using GenericError = GClass1522; // GClass3854;
@@ -65,6 +61,7 @@ global using CannotApplyError = GClass1557; // GClass3797;
 global using UnsearchedContainerError = GClass1565; // GClass3805;
 global using SlotNotEmptyError = EFT.InventoryLogic.Slot.GClass1578; // EFT.InventoryLogic.Slot.GClass3818;
 global using InvalidMagPresetError = MagazineBuildClass.Class1022; // MagazineBuildClass.Class3460;
+global using UnsetError = GClass1616; // This is a weird thing that is the generic type of some returns (e.g. GStructXXX<UnsetError>) that is always overridden
 
 // Operations
 global using ItemOperation = GStruct153; // GStruct454;

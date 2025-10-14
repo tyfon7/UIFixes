@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Ragfair;
-using HarmonyLib;
 
 namespace UIFixes;
 
-public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext, Action closeAction) : BaseItemInfoInteractions(itemContext, itemUiContext, closeAction)
+public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext, Action closeAction) : ContextInteractionsAbstractClass(itemContext, itemUiContext, closeAction)
 {
     private static readonly List<EItemInfoButton> Actions = [EItemInfoButton.LinkedSearch];
 

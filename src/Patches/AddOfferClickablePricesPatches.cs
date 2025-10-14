@@ -1,17 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using EFT.InventoryLogic;
-using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using JetBrains.Annotations;
-using MonoMod.Utils;
 using SPT.Reflection.Patching;
-using TMPro;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace UIFixes;
 
