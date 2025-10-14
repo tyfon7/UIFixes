@@ -147,6 +147,7 @@ public static class MultiSelectPatches
                 __instance.TraderScreensGroup.transform.Find("TraderDealScreen").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.HideoutMannequinEquipmentScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.HideoutCircleOfCultistsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                __instance.HideoutAreaTransferItemsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
             });
         }
     }

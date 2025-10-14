@@ -13,7 +13,7 @@ public static class FixTooltipPatches
     {
         new QuestTooltipPatch().Enable();
         new ArmorTooltipPatch().Enable();
-        // new SoftArmorTooltipPatch().Enable(); // TODO: Not needed?
+        new SoftArmorTooltipPatch().Enable();
     }
 
     // Show parent tooltip when mouse leaves quest checkmark

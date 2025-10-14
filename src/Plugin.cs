@@ -72,7 +72,6 @@ public class Plugin : BaseUnityPlugin
         LoadAmmoInRaidPatches.Enable();
         MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
-        // StackMoveGreedyPatches.Enable(); // TODO: Double check but I think they implemented this?!
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
         // new PutToolsBackPatch().Enable(); // TODO: Implement server side
@@ -100,7 +99,6 @@ public class Plugin : BaseUnityPlugin
         RemoveAdsPatches.Enable();
         BTRPaymentPatches.Enable();
         TradingHighlightPatches.Enable();
-        //QuestItemWarningPatches.Enable(); // TODO: Remove, BSG added it (weirdly, but they did)
         TraderAvatarPatches.Enable();
         FilterStockPresetsPatches.Enable();
         WishlistPatches.Enable();

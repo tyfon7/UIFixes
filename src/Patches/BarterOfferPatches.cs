@@ -73,8 +73,11 @@ public static class BarterOfferPatches
             {
                 itemView.SetSizeOverride(smallSizeDelta);
 
-                ItemViewStats itemViewStats = itemView.GetComponent<ItemViewStats>();
-                itemViewStats.SetHideMods(true);
+                ItemViewStats itemViewStats = itemView.GetComponentInChildren<ItemViewStats>();
+                if (itemViewStats != null)
+                {
+                    itemViewStats.SetHideMods(true);
+                }
             }
             else
             {
