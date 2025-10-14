@@ -39,7 +39,7 @@ public static class RememberRepairerPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.method_3));
+            return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.method_7));
         }
 
         [PatchPostfix]

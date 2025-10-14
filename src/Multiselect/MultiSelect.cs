@@ -426,7 +426,7 @@ public class MultiSelect
                     }
 
                     IgnoreStopLoading = true;
-                    return itemUiContext.UnloadAmmo(itemContext.Item);
+                    return itemUiContext.UnloadAmmo(itemContext);
                 }).ContinueWith(t => LoadUnloadSerializer = null);
 
             itemUiContext.Tooltip?.Close();

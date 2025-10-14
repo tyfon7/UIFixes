@@ -51,15 +51,15 @@ public static class OpenSortingTablePatches
             }
 
             SortingTableItemClass sortingTable = __instance.R().InventoryController.Inventory.SortingTable;
-            if (sortingTable != null && !sortingTable.IsVisible)
+            if (sortingTable != null && !sortingTable.IsNotEmpty)
             {
                 if (__instance.ContextType == EItemUiContextType.InventoryScreen)
                 {
-                    Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
+                    Singleton<CommonUI>.Instance.InventoryScreen.R().SimpleStashPanel.method_8(true);
                 }
                 else if (__instance.ContextType == EItemUiContextType.ScavengerInventoryScreen)
                 {
-                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.ChangeSortingTableTabState(true);
+                    Singleton<CommonUI>.Instance.ScavengerInventoryScreen.R().SimpleStashPanel.method_8(true);
                 }
             }
 

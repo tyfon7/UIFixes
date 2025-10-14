@@ -58,6 +58,7 @@ public static class UnloadAmmoPatches
     // The scav inventory screen has two inventory controllers, the player's and the scav's. Unload always uses the player's, which causes issues
     // because the bullets are never marked as "known" by the scav, so if you click back/next they show up as unsearched, with no way to search
     // This patch forces unload to use the controller of whoever owns the magazine.
+    // TODO: This new "equipmentBlocked" flag is interesting - it appears to be set only during matching, but might be useful here?
     public class UnloadScavTransferPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -66,7 +67,7 @@ public static class UnloadAmmoPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(InventoryController __instance, MagazineItemClass magazine, ref Task<IResult> __result)
+        public static bool Prefix(InventoryController __instance, MagazineItemClass magazine, bool equipmentBlocked, ref Task<IResult> __result)
         {
             if (ItemUiContext.Instance.ContextType != EItemUiContextType.ScavengerInventoryScreen)
             {
@@ -78,7 +79,7 @@ public static class UnloadAmmoPatches
                 return true;
             }
 
-            __result = ownerInventoryController.UnloadMagazine(magazine);
+            __result = ownerInventoryController.UnloadMagazine(magazine, equipmentBlocked);
             return false;
         }
     }

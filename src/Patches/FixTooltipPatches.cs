@@ -50,10 +50,10 @@ public static class FixTooltipPatches
             if (trigger == null)
             {
                 trigger = ___ItemValue.gameObject.AddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_32();
+                trigger.OnHoverStart += eventData => __instance.method_34();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_33();
+                    __instance.method_36();
                     __instance.ShowTooltip();
                 };
 
@@ -86,7 +86,7 @@ public static class FixTooltipPatches
                 return true;
             }
 
-            if (modSlotView.method_16(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
+            if (modSlotView.method_15(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
             {
                 ___ItemUiContext.Tooltip.Show(ArmorFormatter.FormatArmorPlateTooltip(armor, armorSlot, modSlotView.R().Error), null, 0.6f, null);
                 return false;

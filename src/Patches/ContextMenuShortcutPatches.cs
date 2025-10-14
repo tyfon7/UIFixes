@@ -175,7 +175,9 @@ public static class ContextMenuShortcutPatches
             SortingTableItemClass sortingTable = controller.Inventory.SortingTable;
             bool isInSortingTable = sortingTable != null && item.Parent.Container.ParentItem == sortingTable;
 
-            var operation = isInSortingTable ? itemUiContext.QuickFindAppropriatePlace(itemContext, controller, false, true, true) : itemUiContext.QuickMoveToSortingTable(item, true);
+            var operation = isInSortingTable ?
+                itemUiContext.QuickFindAppropriatePlace(itemContext, controller, false, true, true) :
+                itemUiContext.QuickMoveToSortingTable(itemContext, controller, true);
             if (operation.Succeeded && controller.CanExecute(operation.Value))
             {
                 if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)

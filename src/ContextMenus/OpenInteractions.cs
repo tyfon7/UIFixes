@@ -1,10 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace UIFixes;
 
@@ -19,12 +19,12 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
             return;
         }
 
-        var taskSerializer = itemUiContext_0.gameObject.AddComponent<NestedContainerTaskSerializer>();
+        var taskSerializer = ItemUiContext_0.gameObject.AddComponent<NestedContainerTaskSerializer>();
         taskSerializer.Initialize(GetNestedContainers(itemContext), containerContext =>
         {
             if (containerContext != null)
             {
-                itemUiContext_0.OpenItem(containerContext.Item as CompoundItem, containerContext);
+                ItemUiContext_0.OpenItem(containerContext.Item as CompoundItem, containerContext);
             }
 
             return Task.CompletedTask;

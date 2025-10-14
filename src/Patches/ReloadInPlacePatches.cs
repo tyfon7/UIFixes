@@ -57,7 +57,7 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_16));
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_18));
         }
 
         [PatchPostfix]
@@ -80,7 +80,7 @@ public static class ReloadInPlacePatches
         }
 
         [PatchPrefix]
-        public static void Prefix(StashGridClass grid, ref GStruct455<RemoveOperation> __state)
+        public static void Prefix(StashGridClass grid, ref GStruct154<RemoveOperation> __state)
         {
             if (!Settings.SwapMags.Value)
             {
@@ -94,7 +94,7 @@ public static class ReloadInPlacePatches
         }
 
         [PatchPostfix]
-        public static void Postfix(GStruct455<RemoveOperation> __state)
+        public static void Postfix(GStruct154<RemoveOperation> __state)
         {
             if (!Settings.SwapMags.Value || __state.Value == null)
             {
@@ -113,7 +113,7 @@ public static class ReloadInPlacePatches
         protected override MethodBase GetTargetMethod()
         {
             Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("func_3") != null); // ItemUiContext.Class2755
-            return AccessTools.Method(type, "method_4");
+            return AccessTools.Method(type, "method_5");
         }
 
         [PatchPostfix]

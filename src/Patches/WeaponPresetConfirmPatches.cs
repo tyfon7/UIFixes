@@ -8,6 +8,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
+
 public static class WeaponPresetConfirmPatches
 {
     public static bool MoveForward;

@@ -69,6 +69,7 @@ public static class R
         FoldOperationResult.InitTypes();
         LightScroller.InitTypes();
         ModSlotView.InitTypes();
+        ItemContext.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -299,8 +300,8 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct455<GClass3218>
-            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct454, parameter is a ref type, get underlying type
+            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct154<GClass3218>
+            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct153, parameter is a ref type, get underlying type
             ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptType);
         }
 
@@ -857,6 +858,27 @@ public static class R
 
         public string Error { get { return (string)ErrorStructErrorInfo.GetValue(ErrorStructInfo.GetValue(Value)); } }
     }
+
+    // Workaround for the same-named property and field in ItemContextAbstractClass
+    public class ItemContext(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static PropertyInfo ItemContextProperty;
+        private static FieldInfo ItemContextField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(ItemContextAbstractClass);
+
+            ItemContextField = AccessTools.Field(Type, "ItemContextAbstractClass_1");
+            ItemContextProperty = AccessTools.Property(Type, "ItemContextAbstractClass_1");
+        }
+
+        public ItemContextAbstractClass GetParentContext()
+        {
+            return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value);
+        }
+    }
 }
 
 public static class RExtentensions
@@ -893,4 +915,5 @@ public static class RExtentensions
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
     public static R.LightScroller R(this LightScroller value) => new(value);
     public static R.ModSlotView R(this ModSlotView value) => new(value);
+    public static R.ItemContext R(this ItemContextAbstractClass value) => new(value);
 }

@@ -95,8 +95,8 @@ public static class FilterOutOfStockPatches
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
                 Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                ____traderGridView.method_14(); // Refreshes the grid
-                ____traderGridView.method_16(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
+                ____traderGridView.method_16(); // Refreshes the grid
+                ____traderGridView.method_18(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });
         }
     }

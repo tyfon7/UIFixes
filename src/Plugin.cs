@@ -119,18 +119,6 @@ public class Plugin : BaseUnityPlugin
             EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 
-    private void CheckForTypeChanges()
-    {
-        foreach (var type in PatchConstants.EftTypes)
-        {
-            var attr = type.GetCustomAttribute<SPTRenamedClassAttribute>();
-            if (attr != null && attr.HasChangesFromPreviousVersion)
-            {
-                Logger.LogInfo($"Type: {type.Name} has had changes!");
-            }
-        }
-    }
-
     private static bool? IsFikaPresent;
     private static readonly Version MinimumFikaVersion = new("1.1.3");
 

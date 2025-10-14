@@ -50,7 +50,7 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_20));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_22));
         }
 
         [PatchPostfix]

@@ -178,7 +178,7 @@ public static class MultiSelectPatches
                 ___ItemController is InventoryController inventoryController)
             {
                 SortingTableItemClass sortingTable = inventoryController.Inventory.SortingTable;
-                if (sortingTable != null && sortingTable.IsVisible && !Plugin.InRaid())
+                if (sortingTable != null && sortingTable.IsNotEmpty && !Plugin.InRaid())
                 {
                     couldBeSortingTableMove = true;
                 }
@@ -263,7 +263,7 @@ public static class MultiSelectPatches
             foreach (var selectedItemContext in MultiSelect.SortedItemContexts())
             {
                 ItemOperation operation = moveToSortingTable ?
-                    itemUiContext.QuickMoveToSortingTable(selectedItemContext.Item, false /*simulate*/) :
+                    itemUiContext.QuickMoveToSortingTable(selectedItemContext, itemController, false /*simulate*/) :
                     itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                 if (operation.Succeeded && itemController.CanExecute(operation.Value))
                 {
@@ -697,13 +697,13 @@ public static class MultiSelectPatches
 
                     if (targetItem is SortingTableItemClass)
                     {
-                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
+                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext, wrappedInstance.TraderController, false /* simulate */);
                     }
                     else
                     {
                         operation = targetItem != null ?
                             wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
                     }
 
                     FindOrigin = null;
@@ -851,7 +851,7 @@ public static class MultiSelectPatches
         {
             var itemController = gridView.R().TraderController;
 
-            ItemOperation operation = itemUiContext.QuickMoveToSortingTable(itemContext.Item, true);
+            ItemOperation operation = itemUiContext.QuickMoveToSortingTable(itemContext, itemController, true);
             if (operation.Failed || !itemController.CanExecute(operation.Value))
             {
                 return;
@@ -970,7 +970,7 @@ public static class MultiSelectPatches
             {
                 if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
                 {
-                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
+                    __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
                     if (operation.Succeeded)
                     {
                         operations.Push(operation);
@@ -999,7 +999,7 @@ public static class MultiSelectPatches
                         }
 
                         stackCount = itemContext.Item.StackObjectsCount;
-                        __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
+                        __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
                         if (operation.Succeeded)
                         {
                             operations.Push(operation);

@@ -229,7 +229,7 @@ public static class DropdownPatches
                 }
             }
 
-            GStruct455<AddOperation> addOperation = default;
+            GStruct154<AddOperation> addOperation = default;
             if (item != null)
             {
                 addOperation = InteractionsHandlerClass.Add(

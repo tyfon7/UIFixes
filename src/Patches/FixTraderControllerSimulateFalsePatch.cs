@@ -37,7 +37,7 @@ public class FixTraderControllerSimulateFalsePatch : ModulePatch
 
         TargetItemOperation opStruct;
         opStruct.targetItem = targetItem;
-        opStruct.traderControllerClass = __instance;
+        opStruct.TraderControllerClass = __instance;
         opStruct.simulate = simulate;
         opStruct.item = itemContext.Item;
 

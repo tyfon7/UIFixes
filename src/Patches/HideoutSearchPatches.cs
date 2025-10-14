@@ -98,7 +98,7 @@ public static class HideoutSearchPatches
         public static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
         {
             // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
-            if (__instance.method_10().Count() > 2)
+            if (__instance.method_10(true).Count() > 2)
             {
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
                 LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
@@ -127,7 +127,7 @@ public static class HideoutSearchPatches
         {
             __result = __instance.R().ProductionBuilds.OfType<Scheme>().Where(scheme => !scheme.locked)
                 .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
-                .ThenBy(__instance.method_20)
+                .ThenBy(__instance.method_19)
                 .ThenBy(scheme => scheme.FavoriteIndex)
                 .ThenBy(scheme => scheme.Level);
 

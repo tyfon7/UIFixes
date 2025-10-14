@@ -261,7 +261,7 @@ public static class SwapPatches
             if (targetGridItemAddress == null)
             {
                 // _1 is the root item, i.e. the stash
-                if (targetItemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
+                if (targetItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
                 {
                     targetGridItemAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[targetItem]);
                 }
@@ -285,7 +285,7 @@ public static class SwapPatches
             {
                 targetToAddress = R.SlotItemAddress.Create(new R.SlotItemAddress(itemAddress).Slot);
             }
-            else if (itemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+            else if (itemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
             {
                 // LootRadius workaround
                 targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
@@ -436,7 +436,7 @@ public static class SwapPatches
             if (targetToAddress is not GridItemAddress && !R.SlotItemAddress.Type.IsInstanceOfType(targetToAddress))
             {
                 // _1 is the root item (i.e. the stash)
-                if (__instance.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+                if (__instance.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
                 {
                     targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
                 }
@@ -506,7 +506,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_11));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_13));
         }
 
         [PatchPrefix]
@@ -528,7 +528,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_2));
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_1));
 
         }
 
@@ -573,7 +573,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct455<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
+        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct154<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
         {
             if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
             {
@@ -594,7 +594,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
         {
-            if (itemUnderCursor?.Item == __instance.Item)
+            if (itemUnderCursor?.Item == __instance.ItemContext.Item)
             {
                 return;
             }
@@ -604,7 +604,7 @@ public static class SwapPatches
                 ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
                 if (panel != null)
                 {
-                    Slot slot = new R.SlotItemAddress(__instance.ItemAddress).Slot;
+                    Slot slot = new R.SlotItemAddress(__instance.ItemContext.ItemAddress).Slot;
 
                     // DragItemContext must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
                     using DragItemContext itemUnderCursorContext = itemUnderCursor != null ? new DragItemContext(itemUnderCursor, ItemRotation.Horizontal) : null;

@@ -437,7 +437,7 @@ public static class ContextMenuPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct457<Item> __result)
+        public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
         {
             if (Settings.LoadMagPresetOnBullets.Value)
             {
@@ -617,7 +617,7 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            var moddingContextOptions = ModdingItemInteractions.ienumerable_2 as List<EItemInfoButton>;
+            var moddingContextOptions = ModdingItemInteractions.Ienumerable_2 as List<EItemInfoButton>;
             moddingContextOptions.Add(EItemInfoButton.AddToWishlist);
 
             return AccessTools.Method(typeof(ModdingItemContext), nameof(ModdingItemContext.GetItemContextInteractions));
@@ -645,7 +645,7 @@ public static class ContextMenuPatches
             {
                 if (parentInteraction == EItemInfoButton.AddToWishlist)
                 {
-                    subInteractionsWrapper.SetSubInteractions(new WishListInteractions(itemContextAbstractClass, itemUiContext_1));
+                    subInteractionsWrapper.SetSubInteractions(new WishListInteractions(ItemContextAbstractClass, ItemUiContext_1));
                 }
                 else
                 {
