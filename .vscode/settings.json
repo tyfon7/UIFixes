@@ -2,7 +2,6 @@
     "files.exclude": {
         "**/bin/**/net471/[!T]*": true,
         "**/bin/**/net471/T[!y]*": true,
-        "**/obj/": true,
-        "server/node_modules": true
+        "**/obj/": true
     }
 }
