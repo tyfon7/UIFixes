@@ -713,7 +713,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.IsClass && t.GetMethod("UpdateProfile", [typeof(ProfileChangesPocoClass)]) != null); // GClass2098
+            Type = PatchConstants.EftTypes.Single(t => t.IsClass && t.GetMethod("UpdateProfile", [typeof(ProfileChangesPocoClass)]) != null); // GClass2331
             InventoryControllerField = Type.GetFields().Single(f => typeof(InventoryController).IsAssignableFrom(f.FieldType));
         }
 
@@ -727,8 +727,8 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(TradingPlayerInteractions); // GClass3481
-            ItemField = AccessTools.Field(Type, "item_0"); // On base
+            Type = typeof(TradingPlayerInteractions); // GClass3767
+            ItemField = AccessTools.Field(Type, "Item_0"); // On base
         }
 
         public Item Item { get { return (Item)ItemField.GetValue(Value); } }

@@ -40,11 +40,10 @@ public static class ContextMenuPatches
         new DisableInsureOnUninsurable().Enable();
         new DisableLoadPresetOnBulletsPatch().Enable();
 
-        // TODO: Implement server side
-        // new EmptyModSlotMenuPatch().Enable();
-        // new EmptyModSlotMenuRemovePatch().Enable();
-        // new EmptySlotMenuPatch().Enable();
-        // new EmptySlotMenuRemovePatch().Enable();
+        new EmptyModSlotMenuPatch().Enable();
+        new EmptyModSlotMenuRemovePatch().Enable();
+        new EmptySlotMenuPatch().Enable();
+        new EmptySlotMenuRemovePatch().Enable();
 
         new OpenWhileSearchingPatch().Enable();
 

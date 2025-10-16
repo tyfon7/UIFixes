@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Reflection;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using Comfort.Common;
 using EFT;
-using SPT;
-using SPT.Reflection.Utils;
 using TMPro;
 using UnityEngine.EventSystems;
 
@@ -56,7 +53,7 @@ public class Plugin : BaseUnityPlugin
         FleaPrevSearchPatches.Enable();
         KeepOfferWindowOpenPatches.Enable();
         AddOfferClickablePricesPatches.Enable();
-        //new AssortUnlocksPatch().Enable(); // TODO: Implement server side
+        new AssortUnlocksPatch().Enable(); // TODO: Implement server side
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();
         TradingAutoSwitchPatches.Enable();
@@ -74,7 +71,7 @@ public class Plugin : BaseUnityPlugin
         LoadMultipleMagazinesPatches.Enable();
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
-        // new PutToolsBackPatch().Enable(); // TODO: Implement server side
+        new PutToolsBackPatch().Enable();
         new RebindGrenadesPatch().Enable();
         AimToggleHoldPatches.Enable();
         ReorderGridsPatches.Enable();
@@ -102,6 +99,7 @@ public class Plugin : BaseUnityPlugin
         TraderAvatarPatches.Enable();
         FilterStockPresetsPatches.Enable();
         WishlistPatches.Enable();
+        new LinkedSlotSearchPatch().Enable();
     }
 
     public static bool InRaid()

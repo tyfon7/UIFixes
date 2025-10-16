@@ -12,21 +12,21 @@ public class PutToolsBackPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(R.ItemReceiver.Type, "method_9");
+        return AccessTools.Method(typeof(ItemReceiver), nameof(ItemReceiver.method_9));
     }
 
     // The patched method can't handle new items that aren't in stash root.
     // Find items that are in subcontainers and handle them first - the patched method will ignore items that have a CurrentAddress
     // This is a subset of the original method - doesn't handle slots, equipment containers, etc.
     [PatchPrefix]
-    public static void Prefix(object __instance, ref FlatItemsDataClass[] newItems, Profile ___profile_0, ItemFactoryClass ___itemFactoryClass)
+    public static void Prefix(ItemReceiver __instance, ref FlatItemsDataClass[] newItems)
     {
         if (!newItems.Any())
         {
             return;
         }
 
-        Inventory inventory = ___profile_0.Inventory;
+        Inventory inventory = __instance.Profile_0.Inventory;
         StashItemClass stash = inventory.Stash;
         if (inventory == null || stash == null)
         {
@@ -59,7 +59,7 @@ public class PutToolsBackPatch : ModulePatch
 
         InventoryController inventoryController = new R.ItemReceiver(__instance).InventoryController;
 
-        var tree = ___itemFactoryClass.FlatItemsToTree(unhandledItems.ToArray(), true, null);
+        var tree = __instance.ItemFactoryClass.FlatItemsToTree(unhandledItems.ToArray(), true, null);
         foreach (Item item in tree.Items.Values.Where(i => i.CurrentAddress == null))
         {
             var newItem = unhandledItems.First(i => i._id == item.Id);

@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);UIFixes.Test\**;UIFixes.Net\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);UIFixes.Test\**;UIFixes.Net\**;UIFixes.Server\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -122,10 +122,6 @@
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent"
     Condition="'$(Configuration)'=='Release'">
     <Exec
-      Command='
-        mkdir "$(ProjectDir)dist\BepInEx\plugins"
-        7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\user
-      '
-    />
+      Command='7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\SPT' />
   </Target>
 </Project>
