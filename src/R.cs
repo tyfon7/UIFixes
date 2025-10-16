@@ -29,7 +29,6 @@ public static class R
         UIInputNode.InitUITypes();
 
         DialogWindow.InitTypes();
-        ControlSettings.InitTypes();
         ProductionPanel.InitTypes();
         ProductionPanelShowSubclass.InitTypes();
         Scheme.InitTypes();
@@ -114,20 +113,6 @@ public static class R
         public void Accept() => AcceptMethod.Invoke(Value, []);
     }
 
-    public class ControlSettings(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static MethodInfo GetKeyNameMethod;
-
-        public static void InitTypes()
-        {
-            Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass1054
-            GetKeyNameMethod = AccessTools.Method(Type, "GetKeyName");
-        }
-
-        public string GetKeyName(EGameKey key) => (string)GetKeyNameMethod.Invoke(Value, [key]);
-    }
-
     public class ProductionPanel(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
@@ -166,7 +151,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass2202
+            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass2440
             EndProductField = AccessTools.Field(Type, "endProduct");
         }
 
@@ -251,7 +236,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(Slot).GetNestedTypes().Single(t => typeof(ItemAddress).IsAssignableFrom(t)); // Slot.Class2341 (GClass3184)
+            Type = typeof(Slot).GetNestedTypes().Single(t => typeof(ItemAddress).IsAssignableFrom(t)); // Slot.Class2456 (GClass3391)
             SlotField = AccessTools.Field(Type, "Slot");
         }
 
@@ -299,7 +284,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct154<GClass3218>
+            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct154<GClass3426>
             CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct153, parameter is a ref type, get underlying type
             ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptType);
         }
@@ -433,7 +418,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3709
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass4014
             InstanceProperty = AccessTools.Property(Type, "Instance");
             GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
         }
@@ -522,7 +507,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null); // GClass3169
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null); // GClass3373
             GetMoneySumsMethod = AccessTools.Method(Type, "GetMoneySums");
         }
 
@@ -667,7 +652,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass883
+            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass904
             GetRepairPointsMethod = AccessTools.Method(Type, "GetRepairPoints");
         }
 

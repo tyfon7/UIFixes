@@ -25,23 +25,22 @@ public static class QuickAccessPanelPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.ControlSettings.Type, "GetBoundItemNames");
+            return AccessTools.Method(typeof(ControlSettingsClass), nameof(ControlSettingsClass.GetBoundItemNames));
         }
 
         [PatchPostfix]
-        public static void Postfix(object __instance, EBoundItem boundItem, ref string __result)
+        public static void Postfix(ControlSettingsClass __instance, EBoundItem boundItem, ref string __result)
         {
-            var instance = new R.ControlSettings(__instance);
             switch (boundItem)
             {
                 case EBoundItem.Item1:
-                    __result = instance.GetKeyName(EGameKey.SecondaryWeapon);
+                    __result = __instance.GetKeyName(EGameKey.SecondaryWeapon);
                     break;
                 case EBoundItem.Item2:
-                    __result = instance.GetKeyName(EGameKey.PrimaryWeaponFirst);
+                    __result = __instance.GetKeyName(EGameKey.PrimaryWeaponFirst);
                     break;
                 case EBoundItem.Item3:
-                    __result = instance.GetKeyName(EGameKey.PrimaryWeaponSecond);
+                    __result = __instance.GetKeyName(EGameKey.PrimaryWeaponSecond);
                     break;
             }
         }
