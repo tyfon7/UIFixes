@@ -134,7 +134,7 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(EmptyItemView), "UnityEngine.EventSystems.IPointerDownHandler.OnPointerDown");
+            return AccessTools.Method(typeof(EmptyItemView), nameof(EmptyItemView.OnPointerDown));
         }
 
         [PatchPrefix]
@@ -229,7 +229,7 @@ public static class DropdownPatches
                 }
             }
 
-            GStruct455<AddOperation> addOperation = default;
+            GStruct154<AddOperation> addOperation = default;
             if (item != null)
             {
                 addOperation = InteractionsHandlerClass.Add(

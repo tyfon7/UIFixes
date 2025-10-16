@@ -76,8 +76,11 @@ public static class BarterOfferPatches
             {
                 itemView.SetSizeOverride(smallSizeDelta);
 
-                ItemViewStats itemViewStats = itemView.GetComponent<ItemViewStats>();
-                itemViewStats.SetHideMods(true);
+                ItemViewStats itemViewStats = itemView.GetComponentInChildren<ItemViewStats>();
+                if (itemViewStats != null)
+                {
+                    itemViewStats.SetHideMods(true);
+                }
             }
             else
             {
@@ -200,7 +203,7 @@ public static class BarterOfferPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(RagfairOfferItemView __instance, TextMeshProUGUI ___Caption, TextMeshProUGUI ___ItemInscription, TextMeshProUGUI ___ItemValue)
+        public static void Postfix(RagfairOfferItemView __instance, TextMeshProUGUI ___Caption)
         {
             if (__instance.GetShowCaption())
             {
@@ -210,23 +213,23 @@ public static class BarterOfferPatches
             string inscription = __instance.GetInscription();
             if (!string.IsNullOrEmpty(inscription))
             {
-                ___ItemInscription.text = inscription;
-                ___ItemInscription.gameObject.SetActive(true);
+                __instance.TextMeshProUGUI_0.text = inscription;
+                __instance.TextMeshProUGUI_0.gameObject.SetActive(true);
             }
 
             string value = __instance.GetCount();
             if (!string.IsNullOrEmpty(value))
             {
-                ___ItemValue.text = value;
+                __instance.ItemValue.text = value;
                 __instance.CurrentItemValue = value; // There is an insane circular rat's nest of code that requires this to be set too
-                ___ItemValue.fontSize = 16f;
-                ___ItemValue.alignment = TextAlignmentOptions.Left;
+                __instance.ItemValue.fontSize = 16f;
+                __instance.ItemValue.alignment = TextAlignmentOptions.Left;
 
-                RectTransform rectTransform = ___ItemValue.RectTransform();
+                RectTransform rectTransform = __instance.ItemValue.RectTransform();
                 rectTransform.pivot = new Vector2(0f, 0.5f);
                 rectTransform.anchorMin = rectTransform.anchorMax = new Vector2(1f, 0.5f);
                 rectTransform.anchoredPosition = new Vector2(5f, 0f);
-                ___ItemValue.gameObject.SetActive(true);
+                __instance.ItemValue.gameObject.SetActive(true);
             }
         }
     }

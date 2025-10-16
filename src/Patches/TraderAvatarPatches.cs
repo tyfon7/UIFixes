@@ -111,7 +111,7 @@ public static class TraderAvatarPatches
             }
 
             // Show quests that have turn-ins available
-            bool handInsAvailable = Settings.HandOverQuestItemsIcon.Value && QuestHandInAvailable(traderQuests, ___abstractQuestControllerClass.inventoryController_0.Inventory);
+            bool handInsAvailable = Settings.HandOverQuestItemsIcon.Value && QuestHandInAvailable(traderQuests, ___abstractQuestControllerClass.InventoryController_0.Inventory);
             Transform handInQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
             if (handInQuestsIcon != null)
             {

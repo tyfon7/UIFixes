@@ -344,7 +344,7 @@ public static class InspectWindowStatsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_2));
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_1));
         }
 
         [PatchPostfix]

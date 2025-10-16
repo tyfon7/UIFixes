@@ -28,59 +28,53 @@ public static class AimToggleHoldPatches
 
     public class AddTwoKeyStatesPatch : ModulePatch
     {
-        private static FieldInfo StateMachineArray;
-
         protected override MethodBase GetTargetMethod()
         {
-            StateMachineArray = AccessTools.Field(typeof(KeyCombination), "keyCombinationState_1");
             return AccessTools.GetDeclaredConstructors(typeof(ToggleKeyCombination)).Single();
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand disableCommand, KeyCombination.KeyCombinationState[] ___keyCombinationState_1)
+        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand disableCommand)
         {
             if (!UseToggleHold(gameKey))
             {
                 return;
             }
 
-            List<KeyCombination.KeyCombinationState> states = new(___keyCombinationState_1)
+            List<KeyBindingClass.KeyCombinationState> states = new(__instance.KeyCombinationState_1)
             {
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance, disableCommand)
             };
 
-            StateMachineArray.SetValue(__instance, states.ToArray());
+            __instance.KeyCombinationState_1 = states.ToArray();
         }
     }
 
     public class AddOneKeyStatesPatch : ModulePatch
     {
-        private static FieldInfo StateMachineArray;
-
         protected override MethodBase GetTargetMethod()
         {
-            StateMachineArray = AccessTools.Field(typeof(KeyCombination), "keyCombinationState_1");
-            return AccessTools.GetDeclaredConstructors(typeof(KeyCombination)).Single();
+            return AccessTools.GetDeclaredConstructors(typeof(KeyBindingClass)).Single();
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand command, KeyCombination.KeyCombinationState[] ___keyCombinationState_1)
+        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand command)
         {
             if (!UseToggleHold(gameKey))
             {
                 return;
             }
 
-            List<KeyCombination.KeyCombinationState> states = new(___keyCombinationState_1)
+            List<KeyBindingClass.KeyCombinationState> states = new(__instance.KeyCombinationState_1)
             {
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance, command)
             };
 
-            StateMachineArray.SetValue(__instance, states.ToArray());
+            __instance.KeyCombinationState_1 = states.ToArray();
         }
     }
 
@@ -88,11 +82,11 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(KeyCombination), nameof(KeyCombination.UpdateInput));
+            return AccessTools.Method(typeof(KeyBindingClass), nameof(KeyBindingClass.UpdateInput));
         }
 
         [PatchPrefix]
-        public static void Prefix(KeyCombination __instance, ref List<IInputKey> inputKeys)
+        public static void Prefix(KeyBindingClass __instance, ref List<IInputKey> inputKeys)
         {
             // BSG implemented tactical as an entirely new abomination, so I have to disable the "release tactical" 
             if (__instance.GameKey == EGameKey.ReleaseTactical && UseToggleHold(EGameKey.Tactical))
@@ -102,11 +96,11 @@ public static class AimToggleHoldPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(KeyCombination __instance)
+        public static void Postfix(KeyBindingClass __instance)
         {
             if (UseToggleHold(__instance.GameKey))
             {
-                __instance.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
+                __instance.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
             }
         }
     }
@@ -165,7 +159,7 @@ public static class AimToggleHoldPatches
 
     private static void OnSettingChanged(object sender, EventArgs args)
     {
-        // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+        // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
         Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
     }
 }

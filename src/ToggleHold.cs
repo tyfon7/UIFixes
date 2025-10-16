@@ -9,7 +9,7 @@ public enum ToggleHoldState
     Holding = 15
 }
 
-public class ToggleHoldIdleState(KeyCombination keyCombination) : KeyCombination.KeyCombinationState(keyCombination)
+public class ToggleHoldIdleState(KeyBindingClass keyCombination) : KeyBindingClass.KeyCombinationState(keyCombination)
 {
     public override ECommand GetCommand(float deltaTime)
     {
@@ -19,7 +19,7 @@ public class ToggleHoldIdleState(KeyCombination keyCombination) : KeyCombination
         }
 
         HandleKeys(false);
-        KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.ClickOrHold);
+        KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.ClickOrHold);
         return GetCommandInternal();
     }
 
@@ -29,7 +29,7 @@ public class ToggleHoldIdleState(KeyCombination keyCombination) : KeyCombination
     }
 }
 
-public class ToggleHoldClickOrHoldState(KeyCombination keyCombination) : KeyCombination.KeyCombinationState(keyCombination)
+public class ToggleHoldClickOrHoldState(KeyBindingClass keyCombination) : KeyBindingClass.KeyCombinationState(keyCombination)
 {
     public override void Enter()
     {
@@ -45,7 +45,7 @@ public class ToggleHoldClickOrHoldState(KeyCombination keyCombination) : KeyComb
                 HandleKeys(false);
                 if (LongEnough(deltaTime))
                 {
-                    KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Holding);
+                    KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Holding);
                 }
 
                 return ECommand.None;
@@ -53,7 +53,7 @@ public class ToggleHoldClickOrHoldState(KeyCombination keyCombination) : KeyComb
         }
 
         UnhandleKeys(null);
-        KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
+        KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
         return ECommand.None;
     }
 
@@ -66,7 +66,7 @@ public class ToggleHoldClickOrHoldState(KeyCombination keyCombination) : KeyComb
     private float timer;
 }
 
-public class ToggleHoldHoldState(KeyCombination keyCombination, ECommand disableCommand) : KeyCombination.KeyCombinationState(keyCombination)
+public class ToggleHoldHoldState(KeyBindingClass keyCombination, ECommand disableCommand) : KeyBindingClass.KeyCombinationState(keyCombination)
 {
     private readonly ECommand disableCommand = disableCommand;
 
@@ -79,7 +79,7 @@ public class ToggleHoldHoldState(KeyCombination keyCombination, ECommand disable
         }
 
         UnhandleKeys(null);
-        KeyCombination.method_0((KeyCombination.EKeyState)ToggleHoldState.Idle);
+        KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
         return disableCommand;
     }
 }

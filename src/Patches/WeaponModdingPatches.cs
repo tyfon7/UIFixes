@@ -51,7 +51,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct455<IResizeResult> __result)
+        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct154<IResizeResult> __result)
         {
             if (__result.Succeeded || InPatch)
             {
@@ -135,7 +135,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ref GStruct455<ResizeOperation> __result)
+        public static void Postfix(ref GStruct154<ResizeOperation> __result)
         {
             if (__result.Failed || __result.Value == null)
             {
@@ -268,12 +268,12 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.ContextMenuHelper.Type, "IsInteractive");
+            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsInteractive));
         }
 
         // Enable/disable options in the context menu
         [PatchPostfix]
-        public static void Postfix(EItemInfoButton button, ref IResult __result, Item ___item_0, TraderControllerClass ___traderControllerClass)
+        public static void Postfix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
         {
             // These two are only visible out of raid, enable them
             if (Settings.ModifyEquippedWeapons.Value && (button == EItemInfoButton.Modding || button == EItemInfoButton.EditBuild))
@@ -301,7 +301,7 @@ public static class WeaponModdingPatches
             // Need to do the disabling as appropriate
             if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(___item_0, ___traderControllerClass as InventoryController, out string error))
+                if (!CanModify(__instance.Item_0, __instance.TraderControllerClass as InventoryController, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
@@ -314,7 +314,7 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ModSlotView), nameof(ModSlotView.method_14));
+            return AccessTools.Method(typeof(ModSlotView), nameof(ModSlotView.method_13));
         }
 
         // Enable context menu on normally unmoddable slots, maybe keep them gray
@@ -324,7 +324,7 @@ public static class WeaponModdingPatches
             if (__instance.Slot.Locked)
             {
                 // Soft armor slots - make them interactable for basic functionality (still can't be moved)
-                if (__instance.method_16(out _, out _))
+                if (__instance.method_15(out _, out _))
                 {
                     ____canvasGroup.blocksRaycasts = true;
                     ____canvasGroup.interactable = true;
@@ -375,7 +375,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct457<bool> __result)
+        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct156<bool> __result)
         {
             if (__result.Succeeded)
             {
@@ -404,14 +404,14 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_1));
+            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_3));
             TargetMethodReturnType = method.ReturnType;
             return method;
         }
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct457<EmptyError> __result)
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct156<UnsetError> __result)
         {
             if (item is not Mod && item is not ArmorPlateItemClass)
             {
@@ -578,7 +578,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct437> __result, TraderControllerClass ___traderControllerClass)
+        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct448> __result, TraderControllerClass ___traderControllerClass)
         {
             if (__result.Value.Error == "<color=red>" + "Raid lock".Localized() + "</color>")
             {

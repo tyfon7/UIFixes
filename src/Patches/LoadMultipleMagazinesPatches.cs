@@ -79,14 +79,14 @@ public static class LoadMultipleMagazinesPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(string ammoTemplateId, ref Task __result, ItemUiContext ___itemUiContext_0)
+        public static bool Prefix(string ammoTemplateId, ref Task __result, ItemUiContext ___ItemUiContext_0)
         {
             if (!MultiSelect.Active)
             {
                 return true;
             }
 
-            __result = MultiSelect.LoadAmmoAll(___itemUiContext_0, ammoTemplateId, false);
+            __result = MultiSelect.LoadAmmoAll(___ItemUiContext_0, ammoTemplateId, false);
             return false;
         }
     }
@@ -128,7 +128,7 @@ public static class LoadMultipleMagazinesPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___itemUiContext_1)
+        public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___ItemUiContext_1)
         {
             if (!MultiSelect.Active)
             {
@@ -141,7 +141,7 @@ public static class LoadMultipleMagazinesPatches
             }
 
             var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineItemClass>();
-            ___itemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
+            ___ItemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
 
             return false;
         }

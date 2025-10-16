@@ -261,7 +261,7 @@ public static class SwapPatches
             if (targetGridItemAddress == null)
             {
                 // _1 is the root item, i.e. the stash
-                if (targetItemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
+                if (targetItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
                 {
                     targetGridItemAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[targetItem]);
                 }
@@ -285,7 +285,7 @@ public static class SwapPatches
             {
                 targetToAddress = R.SlotItemAddress.Create(new R.SlotItemAddress(itemAddress).Slot);
             }
-            else if (itemContext.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+            else if (itemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
             {
                 // LootRadius workaround
                 targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
@@ -436,7 +436,7 @@ public static class SwapPatches
             if (targetToAddress is not GridItemAddress && !R.SlotItemAddress.Type.IsInstanceOfType(targetToAddress))
             {
                 // _1 is the root item (i.e. the stash)
-                if (__instance.ItemContextAbstractClass_1?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+                if (__instance.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
                 {
                     targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
                 }
@@ -506,7 +506,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_11));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_13));
         }
 
         [PatchPrefix]
@@ -528,7 +528,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_2));
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_1));
 
         }
 
@@ -573,7 +573,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct455<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
+        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct154<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
         {
             if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
             {
@@ -594,7 +594,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
         {
-            if (itemUnderCursor?.Item == __instance.Item)
+            if (itemUnderCursor?.Item == __instance.ItemContext.Item)
             {
                 return;
             }
@@ -604,7 +604,7 @@ public static class SwapPatches
                 ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
                 if (panel != null)
                 {
-                    Slot slot = new R.SlotItemAddress(__instance.ItemAddress).Slot;
+                    Slot slot = new R.SlotItemAddress(__instance.ItemContext.ItemAddress).Slot;
 
                     // DragItemContext must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
                     using DragItemContext itemUnderCursorContext = itemUnderCursor != null ? new DragItemContext(itemUnderCursor, ItemRotation.Horizontal) : null;
@@ -664,45 +664,35 @@ public static class SwapPatches
         // Unpatched, it fires off the success callback before returning to ready state
         // Patched to not be that stupid
         [PatchPrefix]
-        public static bool Prefix(
-            FirearmAddingModState __instance,
-            bool ___bool_0,
-            FirearmsAnimator ___firearmsAnimator_0,
-            Item ___item_0,
-            WeaponManagerClass ___weaponManagerClass,
-            Slot ___slot_0,
-            Weapon ___weapon_0,
-            Callback ___callback_0,
-            Player ___player_0,
-            Player.FirearmController ___firearmController_0)
+        public static bool Prefix(FirearmAddingModState __instance)
         {
-            if (___bool_0)
+            if (__instance.Bool_0)
             {
                 return false;
             }
-            ___bool_0 = true;
-            ___firearmsAnimator_0.SetupMod(false);
-            GameObject gameObject = Singleton<PoolManagerClass>.Instance.CreateItem(___item_0, true);
-            ___weaponManagerClass.SetupMod(___slot_0, gameObject);
-            ___firearmsAnimator_0.Fold(___weapon_0.Folded);
+            __instance.Bool_0 = true;
+            __instance.FirearmsAnimator_0.SetupMod(false);
+            GameObject gameObject = Singleton<PoolManagerClass>.Instance.CreateItem(__instance.Item_0, true);
+            __instance.WeaponManagerClass.SetupMod(__instance.Slot_0, gameObject);
+            __instance.FirearmsAnimator_0.Fold(__instance.Weapon_0.Folded);
             __instance.State = Player.EOperationState.Finished;
 
             // Begin change (moved from bottom)
-            ___firearmController_0.InitiateOperation<FirearmReadyState>().Start(null);
+            __instance.FirearmController_0.InitiateOperation<FirearmReadyState>().Start(null);
             __instance.method_5(gameObject);
             // End change
 
-            ___callback_0.Succeed();
+            __instance.Callback_0.Succeed();
 
-            ___player_0.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, (float)___weapon_0.CalculateCellSize().X);
-            ___player_0.UpdateFirstPersonGrip(GripPose.EGripType.Common, ___firearmController_0.HandsHierarchy);
+            __instance.Player_0.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, (float)__instance.Weapon_0.CalculateCellSize().X);
+            __instance.Player_0.UpdateFirstPersonGrip(GripPose.EGripType.Common, __instance.FirearmController_0.HandsHierarchy);
 
-            if (___item_0 is Mod mod && mod.HasLightComponent)
+            if (__instance.Item_0 is Mod mod && mod.HasLightComponent)
             {
-                ___player_0.SendWeaponLightPacket();
+                __instance.Player_0.SendWeaponLightPacket();
             }
 
-            ___firearmController_0.WeaponModified();
+            __instance.FirearmController_0.WeaponModified();
 
             return false;
         }

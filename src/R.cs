@@ -29,7 +29,6 @@ public static class R
         UIInputNode.InitUITypes();
 
         DialogWindow.InitTypes();
-        ControlSettings.InitTypes();
         ProductionPanel.InitTypes();
         ProductionPanelShowSubclass.InitTypes();
         Scheme.InitTypes();
@@ -56,7 +55,6 @@ public static class R
         GridSortPanel.InitTypes();
         RepairStrategy.InitTypes();
         RepairKit.InitTypes();
-        ContextMenuHelper.InitTypes();
         RagfairNewOfferItemView.InitTypes();
         TradingTableGridView.InitTypes();
         ItemReceiver.InitTypes();
@@ -69,6 +67,7 @@ public static class R
         FoldOperationResult.InitTypes();
         LightScroller.InitTypes();
         ModSlotView.InitTypes();
+        ItemContext.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -114,20 +113,6 @@ public static class R
         public void Accept() => AcceptMethod.Invoke(Value, []);
     }
 
-    public class ControlSettings(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static MethodInfo GetKeyNameMethod;
-
-        public static void InitTypes()
-        {
-            Type = PatchConstants.EftTypes.Single(x => x.GetMethod("GetBoundItemNames") != null); // GClass1054
-            GetKeyNameMethod = AccessTools.Method(Type, "GetKeyName");
-        }
-
-        public string GetKeyName(EGameKey key) => (string)GetKeyNameMethod.Invoke(Value, [key]);
-    }
-
     public class ProductionPanel(object value) : Wrapper(value)
     {
         public static Type Type { get; private set; }
@@ -166,7 +151,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass2202
+            Type = PatchConstants.EftTypes.Single(t => t.GetField("endProduct") != null); // GClass2440
             EndProductField = AccessTools.Field(Type, "endProduct");
         }
 
@@ -251,7 +236,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(Slot).GetNestedTypes().Single(t => typeof(ItemAddress).IsAssignableFrom(t)); // Slot.Class2341 (GClass3184)
+            Type = typeof(Slot).GetNestedTypes().Single(t => typeof(ItemAddress).IsAssignableFrom(t)); // Slot.Class2456 (GClass3391)
             SlotField = AccessTools.Field(Type, "Slot");
         }
 
@@ -299,8 +284,8 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct455<GClass3218>
-            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct454, parameter is a ref type, get underlying type
+            Type = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Swap)).ReturnType; // GStruct154<GClass3426>
+            CanAcceptType = AccessTools.Method(typeof(EFT.UI.DragAndDrop.GridView), "CanAccept").GetParameters()[2].ParameterType.GetElementType(); // GStruct153, parameter is a ref type, get underlying type
             ImplicitCastToGridViewCanAcceptOperationMethod = Type.GetMethods().Single(m => m.Name == "op_Implicit" && m.ReturnType == CanAcceptType);
         }
 
@@ -433,7 +418,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass3709
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetAllQuestTemplates") != null); // GClass4014
             InstanceProperty = AccessTools.Property(Type, "Instance");
             GetAllQuestTemplatesMethod = AccessTools.Method(Type, "GetAllQuestTemplates");
         }
@@ -487,7 +472,8 @@ public static class R
         private static FieldInfo ContextTypeField;
         private static PropertyInfo ItemContextProperty;
         private static FieldInfo DragItemContextField;
-
+        private static FieldInfo ItemInfoInteractionsField;
+        private static FieldInfo DelayTypeWindowField;
 
         public static void InitTypes()
         {
@@ -497,6 +483,8 @@ public static class R
             ContextTypeField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(EItemUiContextType));
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
             DragItemContextField = AccessTools.Field(Type, "itemContextClass");
+            ItemInfoInteractionsField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>));
+            DelayTypeWindowField = AccessTools.Field(Type, "_delayTypeWindow");
         }
 
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
@@ -504,6 +492,12 @@ public static class R
         public EItemUiContextType ContextType { get { return (EItemUiContextType)ContextTypeField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
         public DragItemContext DragItemContext { get { return (DragItemContext)DragItemContextField.GetValue(Value); } }
+        public ItemInfoInteractionsAbstractClass<EItemInfoButton> ItemInfoInteractions
+        {
+            get { return (ItemInfoInteractionsAbstractClass<EItemInfoButton>)ItemInfoInteractionsField.GetValue(Value); }
+            set { ItemInfoInteractionsField.SetValue(Value, value); }
+        }
+        public DelayTypeWindow DelayTypeWindow { get { return (DelayTypeWindow)DelayTypeWindowField.GetValue(Value); } }
     }
 
     public static class Money
@@ -513,7 +507,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null); // GClass3169
+            Type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetMoneySums", BindingFlags.Public | BindingFlags.Static) != null); // GClass3373
             GetMoneySumsMethod = AccessTools.Method(Type, "GetMoneySums");
         }
 
@@ -609,8 +603,8 @@ public static class R
         public static void InitTypes()
         {
             Type = PatchConstants.EftTypes.Single(t => t.IsInterface && t.GetMethod("HowMuchRepairScoresCanAccept") != null); // GInterface37
-            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") == null); // GClass885
-            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("repairableComponent_0") != null); // GClass884
+            ArmorStrategyType = PatchConstants.EftTypes.Single(t => t.IsClass && Type.IsAssignableFrom(t) && t.GetField("RepairableComponent_0") == null); // GClass906
+            DefaultStrategyType = PatchConstants.EftTypes.Single(t => Type.IsAssignableFrom(t) && t.GetField("RepairableComponent_0") != null); // GClass905
             RepairersProperty = AccessTools.Property(Type, "Repairers");
             CurrentRepairerProperty = AccessTools.Property(Type, "CurrentRepairer");
             HowMuchRepairScoresCanAcceptMethod = AccessTools.Method(Type, "HowMuchRepairScoresCanAccept");
@@ -658,25 +652,12 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass883
+            Type = R.RepairStrategy.Type.GetMethod("GetRepairPrice").GetParameters()[1].ParameterType; // GClass904
             GetRepairPointsMethod = AccessTools.Method(Type, "GetRepairPoints");
         }
 
         public float GetRepairPoints() => (float)GetRepairPointsMethod.Invoke(Value, []);
 
-    }
-    public class ContextMenuHelper(object value) : Wrapper(value)
-    {
-        public static Type Type { get; private set; }
-        private static FieldInfo InsuranceCompanyField;
-
-        public static void InitTypes()
-        {
-            Type = PatchConstants.EftTypes.Single(t => t.GetProperty("IsOwnedByPlayer") != null); // GClass3503
-            InsuranceCompanyField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(InsuranceCompanyClass));
-        }
-
-        public InsuranceCompanyClass InsuranceCompany { get { return (InsuranceCompanyClass)InsuranceCompanyField.GetValue(Value); } }
     }
 
     public class RagfairNewOfferItemView(object value) : Wrapper(value)
@@ -717,7 +698,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = PatchConstants.EftTypes.Single(t => t.IsClass && t.GetMethod("UpdateProfile", [typeof(ProfileChangesPocoClass)]) != null); // GClass2098
+            Type = PatchConstants.EftTypes.Single(t => t.IsClass && t.GetMethod("UpdateProfile", [typeof(ProfileChangesPocoClass)]) != null); // GClass2331
             InventoryControllerField = Type.GetFields().Single(f => typeof(InventoryController).IsAssignableFrom(f.FieldType));
         }
 
@@ -731,8 +712,8 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(TradingPlayerInteractions); // GClass3481
-            ItemField = AccessTools.Field(Type, "item_0"); // On base
+            Type = typeof(TradingPlayerInteractions); // GClass3767
+            ItemField = AccessTools.Field(Type, "Item_0"); // On base
         }
 
         public Item Item { get { return (Item)ItemField.GetValue(Value); } }
@@ -857,6 +838,27 @@ public static class R
 
         public string Error { get { return (string)ErrorStructErrorInfo.GetValue(ErrorStructInfo.GetValue(Value)); } }
     }
+
+    // Workaround for the same-named property and field in ItemContextAbstractClass
+    public class ItemContext(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static PropertyInfo ItemContextProperty;
+        private static FieldInfo ItemContextField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(ItemContextAbstractClass);
+
+            ItemContextField = AccessTools.Field(Type, "ItemContextAbstractClass_1");
+            ItemContextProperty = AccessTools.Property(Type, "ItemContextAbstractClass_1");
+        }
+
+        public ItemContextAbstractClass GetParentContext()
+        {
+            return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value);
+        }
+    }
 }
 
 public static class RExtentensions
@@ -893,4 +895,5 @@ public static class RExtentensions
     public static R.FoldOperationResult R(this FoldOperation value) => new(value);
     public static R.LightScroller R(this LightScroller value) => new(value);
     public static R.ModSlotView R(this ModSlotView value) => new(value);
+    public static R.ItemContext R(this ItemContextAbstractClass value) => new(value);
 }

@@ -19,10 +19,10 @@ public static class TradeQuantityPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BarterSchemePanel), nameof(BarterSchemePanel.method_10));
+            return AccessTools.Method(typeof(BarterSchemePanel), nameof(BarterSchemePanel.method_0));
         }
 
-        // Gets called on the TransactionChanged event. 
+        // Gets called on the ValidityChanged event. 
         // The reason quantity isn't focused on the 2nd+ purchase is that BSG calls ActivateInputField() and Select() before the transaction is finished
         // During the transaction, the whole canvas group is not interactable, and these methods don't work on non-interactable fields
         [PatchPostfix]

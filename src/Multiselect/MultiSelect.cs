@@ -426,7 +426,7 @@ public class MultiSelect
                     }
 
                     IgnoreStopLoading = true;
-                    return itemUiContext.UnloadAmmo(itemContext.Item);
+                    return itemUiContext.UnloadAmmo(itemContext);
                 }).ContinueWith(t => LoadUnloadSerializer = null);
 
             itemUiContext.Tooltip?.Close();
@@ -510,7 +510,7 @@ public class MultiSelect
 
     public static void LockAll(ItemUiContext itemUiContext)
     {
-        // Pin them all unless they're all lock, in which case unlock them
+        // Lock them all unless they're all lock, in which case unlock them
         bool allLocked = ItemContexts.All(ic => ic.Item.PinLockState == EItemPinLockState.Locked);
         EItemPinLockState state = allLocked ? EItemPinLockState.Free : EItemPinLockState.Locked;
         EItemInfoButton action = allLocked ? EItemInfoButton.SetUnLock : EItemInfoButton.SetLock;
@@ -648,6 +648,14 @@ public static class MultiSelectExtensions
             {
                 return false;
             }
+        }
+
+        // The player's dogtag is not selectable
+        // BSG implements this in the most convoluted way possidble, by setting an empty View on the item context, and then
+        // relying on the fact that this empty view no-ops most interactions. 
+        if (itemView.ItemContext == null || itemView.ItemContext.ViewType == EItemViewType.Empty)
+        {
+            return false;
         }
 
         return true;

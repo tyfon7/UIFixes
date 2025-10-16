@@ -3,7 +3,6 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
-using TMPro;
 using UnityEngine;
 
 namespace UIFixes;
@@ -43,29 +42,29 @@ public static class FixTooltipPatches
 
         // BSG loves to implement the same stuff in totally different ways, and this way is bad and also wrong
         [PatchPostfix]
-        public static void Postfix(GridItemView __instance, TextMeshProUGUI ___ItemValue, PointerEventsProxy ____valuePointerEventsProxy, QuestItemViewPanel ____questsItemViewPanel)
+        public static void Postfix(GridItemView __instance)
         {
             // Add hover events to the correct place
-            HoverTrigger trigger = ___ItemValue.GetComponent<HoverTrigger>();
+            HoverTrigger trigger = __instance.ItemValue.GetComponent<HoverTrigger>();
             if (trigger == null)
             {
-                trigger = ___ItemValue.gameObject.AddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_32();
+                trigger = __instance.ItemValue.gameObject.AddComponent<HoverTrigger>();
+                trigger.OnHoverStart += eventData => __instance.method_34();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_33();
+                    __instance.method_36();
                     __instance.ShowTooltip();
                 };
 
                 // Need a child component for some reason, copying how the quest item tooltip does it
-                Transform hover = ____questsItemViewPanel?.transform.Find("Hover");
+                Transform hover = __instance.QuestItemViewPanel_0?.transform.Find("Hover");
                 if (hover != null)
                 {
                     UnityEngine.Object.Instantiate(hover, trigger.transform, false);
                 }
 
                 // Remove old hover handler that covered the whole info panel
-                UnityEngine.Object.Destroy(____valuePointerEventsProxy);
+                UnityEngine.Object.Destroy(__instance.PointerEventsProxy_0);
             }
         }
     }
@@ -86,7 +85,7 @@ public static class FixTooltipPatches
                 return true;
             }
 
-            if (modSlotView.method_16(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
+            if (modSlotView.method_15(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
             {
                 ___ItemUiContext.Tooltip.Show(ArmorFormatter.FormatArmorPlateTooltip(armor, armorSlot, modSlotView.R().Error), null, 0.6f, null);
                 return false;

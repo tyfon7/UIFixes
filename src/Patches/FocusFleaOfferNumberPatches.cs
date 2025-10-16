@@ -27,7 +27,7 @@ public static class FocusFleaOfferNumberPatches
         public static void Postfix(HandoverRagfairMoneyWindow __instance, TMP_InputField ____inputField)
         {
             AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-            allKeybind.Init(__instance.method_9);
+            allKeybind.Init(__instance.method_11);
 
             ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
             ____inputField.ActivateInputField();
@@ -46,7 +46,7 @@ public static class FocusFleaOfferNumberPatches
         public static void Postfix(HandoverExchangeableItemsWindow __instance, TMP_InputField ____inputField)
         {
             AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-            allKeybind.Init(__instance.method_16);
+            allKeybind.Init(__instance.method_15);
 
             ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
             ____inputField.ActivateInputField();

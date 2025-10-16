@@ -161,7 +161,7 @@ public static class TacticalBindsPatches
                 }
             }
 
-            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }
@@ -184,7 +184,7 @@ public static class TacticalBindsPatches
 
             UpdateQuickbindType(item, index);
 
-            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }
@@ -207,7 +207,7 @@ public static class TacticalBindsPatches
 
             UpdateQuickbindType(null, index);
 
-            // Will "save" control settings, running KeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
             Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
         }
     }

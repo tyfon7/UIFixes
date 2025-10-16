@@ -17,7 +17,7 @@ public static class TradingHighlightPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TradingGridView), nameof(TradingGridView.method_13));
+            return AccessTools.Method(typeof(TradingGridView), nameof(TradingGridView.method_15));
         }
 
         [PatchPostfix]
@@ -25,7 +25,7 @@ public static class TradingHighlightPatches
         {
             if (___traderAssortmentControllerClass != null)
             {
-                ___traderAssortmentControllerClass.RequisiteChanged += __instance.method_17;
+                ___traderAssortmentControllerClass.RequisiteChanged += __instance.method_19;
             }
         }
     }
@@ -42,7 +42,7 @@ public static class TradingHighlightPatches
         {
             if (___traderAssortmentControllerClass != null)
             {
-                ___traderAssortmentControllerClass.RequisiteChanged -= __instance.method_17;
+                ___traderAssortmentControllerClass.RequisiteChanged -= __instance.method_19;
             }
         }
     }

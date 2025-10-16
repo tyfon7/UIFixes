@@ -19,7 +19,7 @@ public class GridWindowButtonsPatch : ModulePatch
     public static void Postfix(GridWindow __instance)
     {
         var wrappedInstance = __instance.R();
-        if (Settings.AddContainerButtons.Value && wrappedInstance.CompoundItem.Int32_0 > 3) // Greater than 3 cells wide
+        if (Settings.AddContainerButtons.Value && wrappedInstance.CompoundItem.TotalGridWidth > 3) // Greater than 3 cells wide
         {
             Transform closeButton = __instance.transform.Find("Caption Panel/Close Button");
             Image sortBackground = __instance.transform.Find("Caption Panel/Sort Button")?.GetComponent<Image>();

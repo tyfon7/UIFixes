@@ -18,7 +18,7 @@ public class RebindGrenadesPatch : ModulePatch
 
     protected override MethodBase GetTargetMethod()
     {
-        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("throwWeapItemClass", BindingFlags.NonPublic | BindingFlags.Instance) != null);
+        Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("ThrowWeapItemClass", BindingFlags.Public | BindingFlags.Instance) != null);
         DiscardOperationField = AccessTools.GetDeclaredFields(type).Single(f => f.FieldType == typeof(DiscardOperation));
         return AccessTools.Method(type, "RaiseEvents");
     }
@@ -33,10 +33,10 @@ public class RebindGrenadesPatch : ModulePatch
         }
 
         DiscardOperation discardOperation = (DiscardOperation)DiscardOperationField.GetValue(__instance);
-        var unbindResult = discardOperation.list_0.FirstOrDefault();
+        var unbindResult = discardOperation.List_0.FirstOrDefault();
         if (unbindResult != null)
         {
-            InventoryController controller = unbindResult.inventoryController_0;
+            InventoryController controller = unbindResult.InventoryController_0;
 
             // Don't run the rebind on fika remote - the remote client will run this and send the rebind separately
             if (controller.IsObserved())

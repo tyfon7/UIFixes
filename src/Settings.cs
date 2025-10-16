@@ -54,6 +54,15 @@ internal enum ModRaidWeapon
     Always
 }
 
+internal enum AutoWishlistBehavior
+{
+    Normal,
+    [Description("Visible Upgrades")]
+    Visible,
+    [Description("All Upgrades")]
+    All
+}
+
 internal class Settings
 {
     // New categories
@@ -80,6 +89,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
+    public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -271,6 +281,18 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Keybinds with display names longer than 2 characters will be shortened to '...' with a hover tooltip",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AutoWishlistUpgrades = config.Bind(
+            InterfaceSection,
+            "Hideout Upgrade Wishlisting",
+            AutoWishlistBehavior.Normal,
+            new ConfigDescription(
+                "Change the behavior of auto-wishlisting hideout upgrades, if you have that EFT feature enabled:\n" +
+                "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
+                "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
+                "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
                 null,
                 new ConfigurationManagerAttributes { })));
 

@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace UIFixes;
+
 internal static class InspectWindowResizePatches
 {
     private static float SavedPreferredWidth = -1f;

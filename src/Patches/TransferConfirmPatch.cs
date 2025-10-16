@@ -10,7 +10,7 @@ public class TransferConfirmPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(TransferItemsScreen), nameof(TransferItemsScreen.method_4));
+        return AccessTools.Method(typeof(TransferItemsScreen), nameof(TransferItemsScreen.method_5));
     }
 
     [PatchPrefix]

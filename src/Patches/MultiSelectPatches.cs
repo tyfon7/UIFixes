@@ -147,6 +147,7 @@ public static class MultiSelectPatches
                 __instance.TraderScreensGroup.transform.Find("TraderDealScreen").gameObject.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.HideoutMannequinEquipmentScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
                 __instance.HideoutCircleOfCultistsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
+                __instance.HideoutAreaTransferItemsScreen.GetOrAddComponent<DrawMultiSelect>().enabled = enabled;
             });
         }
     }
@@ -178,7 +179,7 @@ public static class MultiSelectPatches
                 ___ItemController is InventoryController inventoryController)
             {
                 SortingTableItemClass sortingTable = inventoryController.Inventory.SortingTable;
-                if (sortingTable != null && sortingTable.IsVisible && !Plugin.InRaid())
+                if (sortingTable != null && sortingTable.IsNotEmpty && !Plugin.InRaid())
                 {
                     couldBeSortingTableMove = true;
                 }
@@ -263,7 +264,7 @@ public static class MultiSelectPatches
             foreach (var selectedItemContext in MultiSelect.SortedItemContexts())
             {
                 ItemOperation operation = moveToSortingTable ?
-                    itemUiContext.QuickMoveToSortingTable(selectedItemContext.Item, false /*simulate*/) :
+                    itemUiContext.QuickMoveToSortingTable(selectedItemContext, itemController, false /*simulate*/) :
                     itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                 if (operation.Succeeded && itemController.CanExecute(operation.Value))
                 {
@@ -352,11 +353,11 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BaseItemInfoInteractions), nameof(BaseItemInfoInteractions.ExecuteInteractionInternal));
+            return AccessTools.Method(typeof(ContextInteractionsAbstractClass), nameof(ContextInteractionsAbstractClass.ExecuteInteractionInternal));
         }
 
         [PatchPrefix]
-        public static bool Prefix(BaseItemInfoInteractions __instance, EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
+        public static bool Prefix(ContextInteractionsAbstractClass __instance, EItemInfoButton interaction)
         {
             if (!MultiSelect.Active)
             {
@@ -366,27 +367,27 @@ public static class MultiSelectPatches
             switch (interaction)
             {
                 case EItemInfoButton.Equip:
-                    MultiSelect.EquipAll(___itemUiContext_1, false);
+                    MultiSelect.EquipAll(__instance.ItemUiContext_1, false);
                     return false;
                 case EItemInfoButton.Unequip:
-                    MultiSelect.UnequipAll(___itemUiContext_1, false);
+                    MultiSelect.UnequipAll(__instance.ItemUiContext_1, false);
                     return false;
                 case EItemInfoButton.UnloadAmmo:
-                    MultiSelect.UnloadAmmoAll(___itemUiContext_1, false);
+                    MultiSelect.UnloadAmmoAll(__instance.ItemUiContext_1, false);
                     return false;
                 case EItemInfoButton.Uninstall:
-                    MultiSelect.UninstallAll(___itemUiContext_1, false);
+                    MultiSelect.UninstallAll(__instance.ItemUiContext_1, false);
                     return false;
                 case EItemInfoButton.Unpack:
-                    MultiSelect.UnpackAll(___itemUiContext_1, false);
+                    MultiSelect.UnpackAll(__instance.ItemUiContext_1, false);
                     return false;
                 case EItemInfoButton.SetPin:
                 case EItemInfoButton.SetUnPin:
-                    MultiSelect.PinAll(___itemUiContext_1);
+                    MultiSelect.PinAll(__instance.ItemUiContext_1);
                     return false;
                 case EItemInfoButton.SetLock:
                 case EItemInfoButton.SetUnLock:
-                    MultiSelect.LockAll(___itemUiContext_1);
+                    MultiSelect.LockAll(__instance.ItemUiContext_1);
                     return false;
                 default:
                     return true;
@@ -402,7 +403,7 @@ public static class MultiSelectPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(BaseItemInfoInteractions __instance, EItemInfoButton interaction, ItemUiContext ___itemUiContext_1)
+        public static bool Prefix(ContextInteractionsAbstractClass __instance, EItemInfoButton interaction)
         {
             if (!MultiSelect.Active)
             {
@@ -412,7 +413,7 @@ public static class MultiSelectPatches
             switch (interaction)
             {
                 case EItemInfoButton.Install:
-                    MultiSelect.InstallAll(___itemUiContext_1, false);
+                    MultiSelect.InstallAll(__instance.ItemUiContext_1, false);
                     return false;
                 default:
                     return true;
@@ -697,13 +698,13 @@ public static class MultiSelectPatches
 
                     if (targetItem is SortingTableItemClass)
                     {
-                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext.Item, false /* simulate */);
+                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext, wrappedInstance.TraderController, false /* simulate */);
                     }
                     else
                     {
                         operation = targetItem != null ?
                             wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, __instance.SourceContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
                     }
 
                     FindOrigin = null;
@@ -851,7 +852,7 @@ public static class MultiSelectPatches
         {
             var itemController = gridView.R().TraderController;
 
-            ItemOperation operation = itemUiContext.QuickMoveToSortingTable(itemContext.Item, true);
+            ItemOperation operation = itemUiContext.QuickMoveToSortingTable(itemContext, itemController, true);
             if (operation.Failed || !itemController.CanExecute(operation.Value))
             {
                 return;
@@ -970,7 +971,7 @@ public static class MultiSelectPatches
             {
                 if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
                 {
-                    __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
+                    __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
                     if (operation.Succeeded)
                     {
                         operations.Push(operation);
@@ -999,7 +1000,7 @@ public static class MultiSelectPatches
                         }
 
                         stackCount = itemContext.Item.StackObjectsCount;
-                        __result = itemContext.CanAccept(__instance.Slot, __instance.ParentItemContext, ___ItemController, out operation, false /* simulate */);
+                        __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
                         if (operation.Succeeded)
                         {
                             operations.Push(operation);
@@ -1273,7 +1274,9 @@ public static class MultiSelectPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(ItemContextAbstractClass), typeof(ItemAddress), typeof(bool), typeof(bool)]);
+            return AccessTools.Method(
+                typeof(TraderControllerClass),
+                nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(ItemAddress), typeof(bool), typeof(bool)]);
         }
 
         [PatchPrefix]
