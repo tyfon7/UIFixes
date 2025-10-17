@@ -33,7 +33,7 @@ public class LoadAmmoInRaidPatches
                 return true;
             }
 
-            __result = MagazineBuildClass.TryFindPresetSource(__instance.Item_0).Succeeded;
+            __result = MagazineBuildClass.TryFindPresetSource(__instance.Item_0_1).Succeeded;
             return false;
         }
     }
