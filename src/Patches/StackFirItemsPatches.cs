@@ -41,11 +41,7 @@ public static class StackFirItemsPatches
         [PatchPrefix]
         public static bool Prefix(Item __instance, Item other, ref bool __result)
         {
-            bool ignoreSpawnedInSession = __instance switch
-            {
-                AmmoItemClass _ => Settings.MergeFIRAmmo.Value,
-                _ => Settings.MergeFIROther.Value,
-            };
+            bool ignoreSpawnedInSession = Settings.MergeFIROther.Value;
 
             __result = __instance.TemplateId == other.TemplateId && __instance.Id != other.Id && (ignoreSpawnedInSession || __instance.SpawnedInSession == other.SpawnedInSession);
             return false;

@@ -171,7 +171,6 @@ internal class Settings
     // ItemStacking
     public static ConfigEntry<bool> GreedyStackMove { get; set; }
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
-    public static ConfigEntry<bool> MergeFIRAmmo { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
 
     // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
@@ -870,15 +869,6 @@ internal class Settings
             true,
             new ConfigDescription(
                 "When sorting containers, first combine stacks of the same type. This will not be undone if the sorting fails.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(MergeFIRAmmo = config.Bind(
-            ItemStackingSection,
-            "Autostack Ammo with FiR Ammo",
-            false,
-            new ConfigDescription(
-                "Allows automatic stacking of Found In Raid ammo with other ammo, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
 

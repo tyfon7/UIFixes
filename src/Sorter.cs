@@ -15,11 +15,7 @@ public static class Sorter
             minimumStackSpace = itemToMerge.StackObjectsCount;
         }
 
-        bool ignoreSpawnedInSession = itemToMerge switch
-        {
-            AmmoItemClass _ => Settings.MergeFIRAmmo.Value,
-            _ => Settings.MergeFIROther.Value,
-        };
+        bool ignoreSpawnedInSession = Settings.MergeFIROther.Value;
 
         mergeableItem = containers.SelectMany(x => x.Items)
             .Where(x => x != itemToMerge)
