@@ -27,6 +27,9 @@ public static class BarterOfferPatches
         new NoPointerEnterPatch().Enable();
         new NoPointerExitPatch().Enable();
         new NoPointerClickPatch().Enable();
+
+        new RagfairScreenShowPatch().Enable();
+        new OnPurchaseClickedUpdatePatch().Enable();
     }
 
     public class IconsPatch : ModulePatch
@@ -72,6 +75,9 @@ public static class BarterOfferPatches
 
             int ownedCount = GetOwnedCount(requirement, inventoryController);
 
+            var border = itemView.transform.Find("Border");
+            border.GetComponent<CanvasRenderer>().SetColor(ownedCount >= requirement.IntCount ? Color.green : Color.red);
+
             if (!expanded)
             {
                 itemView.SetSizeOverride(smallSizeDelta);
@@ -96,7 +102,7 @@ public static class BarterOfferPatches
 
                 itemView.SetCount(string.Format("<color=#{2}><b>{0}</b></color>/{1}", ownedCount.FormatSeparate(" "), requirement.IntCount.FormatSeparate(" "), "C5C3B2"));
             }
-            
+
             if (isDogtag)
             {
                 itemView.SetTooltip(string.Concat(
@@ -118,20 +124,8 @@ public static class BarterOfferPatches
 
             ItemViewManager itemViewManager = __instance.GetOrAddComponent<ItemViewManager>();
             itemViewManager.Init(itemView);
-            
-            if (ownedCount >= requirement.IntCount)
-            {
-                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.green);
-            }
-            else if (requirement.IntCount - ownedCount == 1)
-            {
-                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.yellow);
-            }
-            else
-            {
-                ____barterIcon.GetComponent<CanvasRenderer>().SetColor(Color.red);
-            }
 
+            ____barterIcon.SetActive(false);
             ____separator?.SetActive(false);
 
             if (expanded)
@@ -323,6 +317,34 @@ public static class BarterOfferPatches
         public static bool Prefix()
         {
             return !Settings.ShowBarterIcons.Value;
+        }
+    }
+
+    public class RagfairScreenShowPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(InventoryController inventoryController)
+        {
+            ItemCacheHelper.UpdateAllItemsCache(inventoryController);
+        }
+    }
+
+    public class OnPurchaseClickedUpdatePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_18));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref InventoryController ___inventoryController_0)
+        {
+            ItemCacheHelper.UpdateAllItemsCache(___inventoryController_0);
         }
     }
 

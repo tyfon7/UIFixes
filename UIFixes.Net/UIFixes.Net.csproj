@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <Reference Include="Fika.Core">
-      <HintPath>D:\ref\Fika.Core.dll</HintPath>
+      <HintPath>d:\fika\BepInEx\plugins\Fika.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 
