@@ -301,7 +301,7 @@ public static class WeaponModdingPatches
             // Need to do the disabling as appropriate
             if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(__instance.Item_0, __instance.TraderControllerClass as InventoryController, out string error))
+                if (!CanModify(__instance.Item_0_1, __instance.TraderControllerClass as InventoryController, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
