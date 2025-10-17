@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
     <Version>5.0.0</Version>
@@ -56,7 +56,7 @@
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
     </Reference>
     <Reference Include="Fika.Core">
-      <HintPath>D:\fika\BepInEx\plugins\Fika.Core.dll</HintPath>
+      <HintPath>D:\fika\BepInEx\plugins\Fika\Fika.Core.dll</HintPath>
     </Reference>
     <Reference Include="ItemComponent.Types">
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>

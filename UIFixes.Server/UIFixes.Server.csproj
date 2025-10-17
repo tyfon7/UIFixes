@@ -22,6 +22,12 @@
     <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
       <Path>$(ProjectDir)..\dist</Path>
     </DeployTarget>
+    <DeployTarget Include="Fika1">
+      <Path>d:\fika</Path>
+    </DeployTarget>
+    <DeployTarget Include="Fika2">
+      <Path>d:\fika2</Path>
+    </DeployTarget>
   </ItemGroup>
 
   <ItemGroup>

@@ -5,11 +5,11 @@ using BepInEx.Configuration;
 using Comfort.Common;
 using EFT;
 using EFT.Communications;
-using Fika.Core.Coop.Utils;
+using Fika.Core.Main.Utils;
 using Fika.Core.Modding;
 using Fika.Core.Modding.Events;
 using Fika.Core.Networking;
-using LiteNetLib;
+using Fika.Core.Networking.LiteNetLib;
 using UIFixes.Net;
 
 namespace UIFixes.Fika;
@@ -43,7 +43,7 @@ public static class Sync
         ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, settings.ToArray());
 
         Plugin.Instance.Logger.LogInfo($"Peer connected; sending Fika sync packet to peer {ev.Peer.Id}");
-        Singleton<FikaServer>.Instance.SendDataToPeer(ev.Peer, ref packet, DeliveryMethod.ReliableUnordered);
+        Singleton<FikaServer>.Instance.SendDataToPeer(ref packet, DeliveryMethod.ReliableUnordered, ev.Peer);
     }
 
     private static void OnFikaNetworkManagerCreated(FikaNetworkManagerCreatedEvent ev)
@@ -72,7 +72,7 @@ public static class Sync
         ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, settings.ToArray());
 
         Plugin.Instance.Logger.LogInfo("Synced setting changed; sending Fika sync packet to all peers");
-        Singleton<FikaServer>.Instance.SendDataToAll(ref packet, DeliveryMethod.ReliableUnordered);
+        Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableUnordered);
     }
 
     // Prevents clients from changing synced settings

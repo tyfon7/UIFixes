@@ -138,7 +138,7 @@ public static class ReloadInPlacePatches
         {
             if (Plugin.FikaPresent())
             {
-                Type type = Type.GetType("Fika.Core.Coop.ClientClasses.CoopClientFirearmController, Fika.Core");
+                Type type = Type.GetType("Fika.Core.Main.ClientClasses.HandsControllers.FikaClientFirearmController, Fika.Core");
                 return AccessTools.Method(type, "ReloadMag");
             }
 

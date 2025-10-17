@@ -1,4 +1,4 @@
-using LiteNetLib.Utils;
+using Fika.Core.Networking.LiteNetLib.Utils;
 
 namespace UIFixes.Net;
 
