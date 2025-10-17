@@ -32,7 +32,6 @@ Existing SPT features made better
 -   Customizable mouse scrolling speed
 -   Moving stacks into containers always moves entire stack
 -   Items made stackable by other mods follow normal stacking behavior
--   Allow found in raid ammo automatically stack with non-found-in-raid items
 -   Synchronize stash scroll position everywhere your stash is visible
 -   Insure and repair items directly from the context menu
 -   Load ammo via context menu _in raid_
