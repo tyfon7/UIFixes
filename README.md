@@ -53,15 +53,15 @@ Existing SPT features made better
 -   Move left and move right buttons + keybinds to quickly snap inspect windows to the left or right half of the screen, for easy comparisons
 -   Auto-expand descriptions when possible (great for showing extra text from mods like Item Info)
 -   Quickbinds will not be removed from items you keep when you die
--   ✨ Compatible slots are now outlined in green, like the paper doll already does
+-   Compatible slots are now outlined in green, like the paper doll already does
 
 #### Traders
 
 -   Autoswitch between buy and sell when you click trader items or control-click your own items
 -   Autoselect quest items when turning in
 -   Repair window remembers last used repairer, and actually updates the repair amount when you switch repairers
--   ✨ More icons on trader avatars - when their only new quests are operational (dailies/weeklies) and when you have items you could turn in
--   ✨ Trader window remembers which tab you had open, and can optionally remember which trader you last looked at even when you completely close the trading screen
+-   More icons on trader avatars - when their only new quests are operational (dailies/weeklies) and when you have items you could turn in
+-   Trader window remembers which tab you had open, and can optionally remember which trader you last looked at even when you completely close the trading screen
 
 #### Flea market
 
@@ -70,7 +70,7 @@ Existing SPT features made better
 -   Option to keep the Add Offer window open after placing your offer
 -   Set prices in the Add Offer window by clicking the min/avg/max market prices (multiplies for bulk orders)
 -   Autoselect Similar checkbox is remembered across sessions and application restarts
--   Replace barter offers icons with actual item images, plus owned/required counts on expansion
+-   Replace barter offers icons with actual item images, plus owned/required counts on expansion, ✨ color-coded if you own the items needed
 -   Clears filters for you when you type in search bar and there's no match
 
 #### Weapon modding/presets
@@ -78,8 +78,8 @@ Existing SPT features made better
 -   Weapons can grow left or up, not just right and down
 -   Enable zooming with mousewheel
 -   Skip needless unsaved changes warnings when not actually closing the screen
--   ✨ Saving the current preset is now one-click; you don't have to confirm the name. That's what Save As... is for.
--   ✨ Open build window can filter out stock presets so you only see yours
+-   Saving the current preset is now one-click; you don't have to confirm the name. That's what Save As... is for.
+-   Open build window can filter out stock presets so you only see yours
 
 #### Hideout
 
@@ -92,7 +92,7 @@ Existing SPT features made better
 -   Option to make unequipped weapons moddable in raid, optionally with multitool
 -   Reloading will swap magazines in-place, instead of dropping them on the ground when there's no room
 -   Grenade quickbinds will transfer to the next grenade of the same type after throwing
--   ✨ Warning on character select screen when your PMC is carrying quest items
+-   Warning on character select screen when your PMC is carrying quest items
 
 #### Mail
 
@@ -115,7 +115,7 @@ Fixing bugs that BSG won't or can't
 -   Fix windows appearing partially offscreen
 -   Fix modding/preset UI breaking when you click not allowed (red outlined) items
 -   Fix trader items not showing "Compatible with Available" with your items
--   ✨ Fix selected barter items not being highlighted correctly
+-   Fix selected barter items not being highlighted correctly
 
 #### In raid
 
