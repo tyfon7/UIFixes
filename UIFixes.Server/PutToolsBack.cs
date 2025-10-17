@@ -77,11 +77,11 @@ public class PutToolsBack : IOnLoad
                     // If the tool is in the stash itself, skip it
                     if (originalTool.ParentId == pmcData.Inventory.Stash && originalTool.SlotId == "hideout")
                     {
-                        logger.Info("UIFixes: Tool is in root of stash, ignoring");
+                        logger.Debug("UIFixes: Tool is in root of stash, ignoring");
                         continue;
                     }
 
-                    logger.Info($"UIFixes: Remembering tool at {originalTool.ParentId}:{originalTool.SlotId}");
+                    logger.Debug($"UIFixes: Remembering tool at {originalTool.ParentId}:{originalTool.SlotId}");
                     tool.ExtensionData[ReturnToParentId] = originalTool.ParentId;
                     tool.ExtensionData[ReturnToSlotId] = originalTool.SlotId;
                 }
@@ -119,7 +119,7 @@ public class PutToolsBack : IOnLoad
             {
                 var containerId = tool.ExtensionData[ReturnToParentId] as string;
                 var slotId = tool.ExtensionData[ReturnToSlotId] as string;
-                logger.Info($"UIFixes: Restoring tool to original position:{containerId}:{slotId}");
+                logger.Debug($"UIFixes: Restoring tool to original position:{containerId}:{slotId}");
 
                 tool.ExtensionData.Remove(ReturnToParentId);
                 tool.ExtensionData.Remove(ReturnToSlotId);
@@ -134,7 +134,7 @@ public class PutToolsBack : IOnLoad
 
                 if (foundContainerFS2D == null)
                 {
-                    logger.Info($"UIFixes: No room, falling back to default behavior");
+                    logger.Debug($"UIFixes: No room, falling back to default behavior");
                     return true;
                 }
 
@@ -161,9 +161,8 @@ public class PutToolsBack : IOnLoad
             output.ProfileChanges[sessionId].Items.NewItems.AddRange(itemWithModsToAddClone);
             pmcData.Inventory.Items.AddRange(itemWithModsToAddClone);
 
-            logger.Success("UIFixes: Tool location restored");
             logger.Debug(
-                $"Added: {itemWithModsToAddClone[0].Upd?.StackObjectsCount ?? 1} item: {itemWithModsToAddClone[0].Template} with: {itemWithModsToAddClone.Count - 1} mods to inventory"
+                $"UIFixes: Added: {itemWithModsToAddClone[0].Upd?.StackObjectsCount ?? 1} item: {itemWithModsToAddClone[0].Template} with: {itemWithModsToAddClone.Count - 1} mods to inventory"
             );
 
             return false;
