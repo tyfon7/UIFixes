@@ -8,7 +8,7 @@ using SPTarkov.Server.Core.Services;
 namespace UIFixes.Server;
 
 [Injectable]
-public class AssortUnlocksCallbacks(ISptLogger<AssortUnlocks> logger, DatabaseService databaseService)
+public class AssortUnlocksCallbacks(ISptLogger<AssortUnlocksCallbacks> logger, DatabaseService databaseService)
 {
     public ValueTask<Dictionary<string, string>> LoadAssorts()
     {
