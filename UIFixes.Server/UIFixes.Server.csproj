@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Tyfon.UIFixes.Server</AssemblyName>
-    <Version>5.0.1</Version>
+    <Version>5.0.2</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <OutputType>Library</OutputType>
@@ -31,24 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SPTarkov.Common">
-      <HintPath>$(SPTPath)\SPT\SPTarkov.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="SPTarkov.DI">
-      <HintPath>$(SPTPath)\SPT\SPTarkov.DI.dll</HintPath>
-    </Reference>
-    <Reference Include="SPTarkov.Server.Core">
-      <HintPath>$(SPTPath)\SPT\SPTarkov.Server.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="SPTarkov.Reflection">
-      <HintPath>$(SPTPath)\SPT\SPTarkov.Reflection.dll</HintPath>
-    </Reference>
-    <Reference Include="SemanticVersioning">
-      <HintPath>$(SPTPath)\SPT\SemanticVersioning.dll</HintPath>
-    </Reference>
-    <Reference Include="HarmonyLib">
-      <HintPath>$(SPTPath)\SPT\0Harmony.dll</HintPath>
-    </Reference>
+    <PackageReference Include="SPTarkov.Common" Version="4.0.1" />
+    <PackageReference Include="SPTarkov.DI" Version="4.0.1" />
+    <PackageReference Include="SPTarkov.Reflection" Version="4.0.1" />
+    <PackageReference Include="SPTarkov.Server.Core" Version="4.0.1" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
