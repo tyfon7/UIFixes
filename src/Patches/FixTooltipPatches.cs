@@ -52,7 +52,7 @@ public static class FixTooltipPatches
                 trigger.OnHoverStart += eventData => __instance.method_34();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_36();
+                    __instance.method_35();
                     __instance.ShowTooltip();
                 };
 
