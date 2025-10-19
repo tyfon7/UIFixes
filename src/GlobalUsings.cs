@@ -32,7 +32,7 @@ global using ItemReceiver = GClass2331;
 // Context menus
 global using InventoryInteractions = GClass3757; // There are two child versions?
 global using TradingPlayerInteractions = GClass3767;
-global using TransferPlayerInteractions = GClass3768;
+global using TransferPlayerInteractions = GClass3770;
 global using ModdingItemInteractions = GClass3762;
 global using WishListInteractions = GClass3782;
 
