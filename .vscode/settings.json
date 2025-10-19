@@ -1,7 +1,6 @@
 {
     "files.exclude": {
-        "**/bin/**/net471/[!T]*": true,
-        "**/bin/**/net471/T[!y]*": true,
+        "**/bin/": true,
         "**/obj/": true
     }
 }

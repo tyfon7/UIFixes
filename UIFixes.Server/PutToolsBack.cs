@@ -25,9 +25,6 @@ namespace UIFixes.Server;
 [Injectable(TypePriority = OnLoadOrder.PreSptModLoader)]
 public class PutToolsBack : IOnLoad
 {
-    private static readonly string ReturnToParentId = "uifixes.returnTo.parentId";
-    private static readonly string ReturnToSlotId = "uifixes.returnTo.slotId";
-
     public Task OnLoad()
     {
         new RegisterProductionPatch().Enable();
@@ -55,6 +52,9 @@ public class PutToolsBack : IOnLoad
             }
 
             var logger = ServiceLocator.ServiceProvider.GetService<ISptLogger<App>>();
+            var profileDataHelper = ServiceLocator.ServiceProvider.GetService<ProfileDataHelper>();
+
+            var profileData = profileDataHelper.GetProfileData(pmcData.Id.Value);
 
             // Items get cloned around here a lot, gotta keep them straight
             // productionRequest.Tools: These are just ids, from the request
@@ -62,6 +62,8 @@ public class PutToolsBack : IOnLoad
             // pmcData.Inventory... : These are the original items in the stash that are about to be deleted
             try
             {
+                bool dirty = false;
+
                 for (int i = 0; i < productionRequest.Tools.Count; i++)
                 {
                     var tool = pmcData.Hideout.Production[productionRequest.RecipeId].SptRequiredTools[i];
@@ -82,8 +84,19 @@ public class PutToolsBack : IOnLoad
                     }
 
                     logger.Debug($"UIFixes: Remembering tool at {originalTool.ParentId}:{originalTool.SlotId}");
-                    tool.ExtensionData[ReturnToParentId] = originalTool.ParentId;
-                    tool.ExtensionData[ReturnToSlotId] = originalTool.SlotId;
+
+                    profileData.OriginalToolLocations[tool.Id] = new Location
+                    {
+                        ParentId = originalTool.ParentId,
+                        SlotId = originalTool.SlotId
+                    };
+
+                    dirty = true;
+                }
+
+                if (dirty)
+                {
+                    profileDataHelper.SaveProfileData(pmcData.Id.Value);
                 }
             }
             catch (Exception e)
@@ -107,42 +120,43 @@ public class PutToolsBack : IOnLoad
             var itemHelper = ServiceLocator.ServiceProvider.GetService<ItemHelper>();
             var logger = ServiceLocator.ServiceProvider.GetService<ISptLogger<App>>();
 
+            var profileDataHelper = ServiceLocator.ServiceProvider.GetService<ProfileDataHelper>();
+            var profileData = profileDataHelper.GetProfileData(pmcData.Id.Value);
+
             var itemWithModsToAddClone = cloner.Clone(request.ItemWithModsToAdd);
 
             var tool = itemWithModsToAddClone[0];
-            if (!tool.ExtensionData.ContainsKey(ReturnToParentId) || !tool.ExtensionData.ContainsKey(ReturnToSlotId))
+            if (!profileData.OriginalToolLocations.TryGetValue(tool.Id, out Location originalLocation))
             {
                 return true;
             }
 
             try
             {
-                var containerId = tool.ExtensionData[ReturnToParentId] as string;
-                var slotId = tool.ExtensionData[ReturnToSlotId] as string;
-                logger.Debug($"UIFixes: Restoring tool to original position:{containerId}:{slotId}");
+                logger.Debug($"UIFixes: Restoring tool to original position:{originalLocation.ParentId}:{originalLocation.SlotId}");
 
-                tool.ExtensionData.Remove(ReturnToParentId);
-                tool.ExtensionData.Remove(ReturnToSlotId);
+                profileData.OriginalToolLocations.Remove(tool.Id);
+                profileDataHelper.SaveProfileData(pmcData.Id.Value);
 
                 var foundContainerFS2D = FindGridFS2DForItems(
                     __instance,
-                    containerId,
-                    slotId,
+                    originalLocation.ParentId,
+                    originalLocation.SlotId,
                     itemWithModsToAddClone,
                     pmcData,
                     out string foundSlotId);
 
                 if (foundContainerFS2D == null)
                 {
-                    logger.Debug($"UIFixes: No room, falling back to default behavior");
+                    logger.Warning($"UIFixes: No room to put tool back, falling back to default behavior");
                     return true;
                 }
 
                 // At this point everything should succeed
-                var result = __instance.PlaceItemInContainer(foundContainerFS2D, itemWithModsToAddClone, containerId, foundSlotId);
+                var result = __instance.PlaceItemInContainer(foundContainerFS2D, itemWithModsToAddClone, originalLocation.ParentId, foundSlotId);
                 if (!result.Success.GetValueOrDefault(false))
                 {
-                    logger.Error("UIFixes: Something went wrong placing item in container!");
+                    logger.Error("UIFixes: Something went wrong placing tool in container!");
                     return true;
                 }
 
