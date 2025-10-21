@@ -1,34 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <Import Project="..\Shared.props" />
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Tyfon.UIFixes.Server</AssemblyName>
-    <Version>5.0.2</Version>
+    <OutputType>Library</OutputType>
+    <SPTModType>Server</SPTModType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <SPTPath>..\..\..\..\..\SPT\4.0</SPTPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <DeployTarget Include="Default">
-      <Path>$(ProjectDir)$(SPTPath)</Path>
-    </DeployTarget>
-    <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
-      <Path>$(ProjectDir)..\dist</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika1">
-      <Path>d:\fika</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika2">
-      <Path>d:\fika2</Path>
-    </DeployTarget>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SPTarkov.Common" Version="4.0.1" />
@@ -37,14 +20,4 @@
     <PackageReference Include="SPTarkov.Server.Core" Version="4.0.1" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec
-      Command='
-        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
-
-        if $(ConfigurationName) == Debug (
-          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
-        )'
-    />
-  </Target>
 </Project>

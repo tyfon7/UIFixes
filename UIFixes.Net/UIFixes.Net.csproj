@@ -1,32 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\Shared.props" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Tyfon.UIFixes.Net</AssemblyName>
-    <Version>5.0.0</Version>
+    <SPTModType>Client</SPTModType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <SPTPath>..\..\..\..\..\SPT\4.0</SPTPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <DeployTarget Include="Default">
-      <Path>$(ProjectDir)$(SPTPath)</Path>
-    </DeployTarget>
-    <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
-      <Path>$(ProjectDir)..\dist</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika1">
-      <Path>d:\fika</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika2">
-      <Path>d:\fika2</Path>
-    </DeployTarget>
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Fika.Core">
@@ -34,14 +18,4 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec
-      Command='
-        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
-
-        if $(ConfigurationName) == Debug (
-          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\BepInEx\plugins\"
-        )'
-    />
-  </Target>
 </Project>

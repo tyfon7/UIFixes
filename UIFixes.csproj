@@ -1,37 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="Shared.props" />
+
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
-    <Version>5.0.2</Version>
+    <SPTModType>Client</SPTModType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
     <DefaultItemExcludes>$(DefaultItemExcludes);UIFixes.Test\**;UIFixes.Net\**;UIFixes.Server\**</DefaultItemExcludes>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <SPTPath>..\..\..\..\SPT\4.0</SPTPath>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <DeployTarget Include="Default">
-      <Path>$(ProjectDir)$(SPTPath)</Path>
-    </DeployTarget>
-    <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
-      <Path>$(ProjectDir)dist</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika1">
-      <Path>d:\fika</Path>
-    </DeployTarget>
-    <DeployTarget Include="Fika2">
-      <Path>d:\fika2</Path>
-    </DeployTarget>
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="spt-common">
@@ -108,20 +92,10 @@
     <ProjectReference Include="UIFixes.Net\UIFixes.Net.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuildDeploy" AfterTargets="PostBuildEvent">
-    <Exec
-      Command='
-        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
-
-        if $(ConfigurationName) == Debug (
-          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\BepInEx\plugins\"
-        )'
-    />
-  </Target>
-
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent"
     Condition="'$(Configuration)'=='Release'">
     <Exec
       Command='7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\SPT' />
   </Target>
+
 </Project>

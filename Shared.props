@@ -1,0 +1,44 @@
+<Project>
+  <PropertyGroup>
+    <Version>5.0.3</Version>
+    <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.0</SPTPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <DeployTarget Include="Default">
+      <Path>$(SPTPath)</Path>
+    </DeployTarget>
+    <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
+      <Path>$(MSBuildThisFileDirectory)dist</Path>
+    </DeployTarget>
+    <DeployTarget Include="Fika1">
+      <Path>d:\fika</Path>
+    </DeployTarget>
+    <DeployTarget Include="Fika2">
+      <Path>d:\fika2</Path>
+    </DeployTarget>
+  </ItemGroup>
+
+  <Target Name="SPTClientDeploy" AfterTargets="PostBuildEvent" Condition="'$(SPTModType)'=='Client'">
+    <Exec
+      Command='
+        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\BepInEx\plugins\"
+
+        if $(ConfigurationName) == Debug (
+          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\BepInEx\plugins\"
+        )'
+    />
+  </Target>
+
+  <Target Name="SPTServerDeploy" AfterTargets="PostBuildEvent" Condition="'$(SPTModType)'=='Server'">
+    <Exec
+      Command='
+        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
+
+        if $(ConfigurationName) == Debug (
+          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
+        )'
+    />
+  </Target>
+
+</Project>
