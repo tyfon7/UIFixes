@@ -12,7 +12,7 @@ public record ModMetadata : AbstractModMetadata
 
     public override List<string> Contributors { get; init; }
 
-    public override SemanticVersioning.Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version.ToString());
+    public override SemanticVersioning.Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version.ToString(3));
 
     public override SemanticVersioning.Range SptVersion { get; init; } = new("~4.0.0");
 
