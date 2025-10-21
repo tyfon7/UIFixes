@@ -169,11 +169,8 @@ internal class Settings
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
 
     // ItemStacking
-    public static ConfigEntry<bool> GreedyStackMove { get; set; }
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
     public static ConfigEntry<bool> MergeFIROther { get; set; }
-
-    // public static ConfigEntry<bool> UnloadAmmoBoxInPlace { get; set; } // Advanced
 
     // Containers
     public static ConfigEntry<bool> AddToUnsearchedContainers { get; set; }
@@ -854,15 +851,6 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         // Item Stacking
-        configEntries.Add(GreedyStackMove = config.Bind(
-            ItemStackingSection,
-            "Always Move Entire Stacks",
-            true,
-            new ConfigDescription(
-                "When moving into a container that contains a partial stack, this will top up that stack and try to move the remainder into an open spot (or another stack), instead of leaving it behind.",
-                null,
-                new ConfigurationManagerAttributes { })));
-
         configEntries.Add(StackBeforeSort = config.Bind(
             ItemStackingSection,
             "Combine Stacks Before Sorting",
@@ -880,15 +868,6 @@ internal class Settings
                 "Allows automatic stacking of Found In Raid items with other items, making container interaction easier",
                 null,
                 new ConfigurationManagerAttributes { })));
-
-        // configEntries.Add(UnloadAmmoBoxInPlace = config.Bind(
-        //     ItemStackingSection,
-        //     "Unload Ammo Boxes In-Place",
-        //     !Chainloader.PluginInfos.ContainsKey("com.fika.core"), // default false if fika present, has issues with ground loot
-        //     new ConfigDescription(
-        //         "Whether to unload ammo boxes in-place, otherwise there needs to be free space somewhere",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Containers
         configEntries.Add(AddToUnsearchedContainers = config.Bind(

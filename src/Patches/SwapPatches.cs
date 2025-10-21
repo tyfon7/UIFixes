@@ -24,6 +24,10 @@ public static class SwapPatches
     // Whether it's being called from the "check every slot" loop
     private static bool InHighlight = false;
 
+    // Whether it's been called already in this GridView.AcceptItem stack. Needed to enforce we only check once
+    private static bool InAcceptItem = false;
+    private static int CalledPerAcceptItem = 0;
+
     // The most recent CheckItemFilter result - needed to differentiate "No room" from incompatible
     private static string LastCheckItemFilterId;
     private static bool LastCheckItemFilterResult;
@@ -39,6 +43,7 @@ public static class SwapPatches
     {
         new DetectSwapSourceContainerPatch().Enable();
         new CleanupSwapSourceContainerPatch().Enable();
+        new GridViewAcceptItemPatch().Enable();
         new GridViewCanAcceptSwapPatch().Enable();
         new DetectGridHighlightPrecheckPatch().Enable();
         new DetectSlotHighlightPrecheckPatch().Enable();
@@ -174,6 +179,27 @@ public static class SwapPatches
         }
     }
 
+    public class GridViewAcceptItemPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridView), nameof(GridView.AcceptItem));
+        }
+
+        [PatchPrefix]
+        public static void Prefix()
+        {
+            InAcceptItem = true;
+            CalledPerAcceptItem = 0;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            InAcceptItem = false;
+        }
+    }
+
     // For swapping with items in a grid
     public class GridViewCanAcceptSwapPatch : ModulePatch
     {
@@ -227,6 +253,18 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
         {
+            // BSG's "move entire stacks" code loops inside AcceptItem - don't want this method to run on 2nd+ calls. Swap only happens
+            // on the first. This still works fine with multi-select since that calls AcceptItem per item 
+            if (InAcceptItem)
+            {
+                if (CalledPerAcceptItem > 0)
+                {
+                    return;
+                }
+
+                CalledPerAcceptItem++;
+            }
+
             if (!ValidPrerequisites(itemContext, targetItemContext?.Item, operation))
             {
                 return;

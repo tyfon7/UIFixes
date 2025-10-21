@@ -644,96 +644,49 @@ public static class MultiSelectPatches
             Stack<ItemOperation> operations = new();
             foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
             {
-                if (Settings.GreedyStackMove.Value && !isGridPlacement && selectedItemContext.Item.StackObjectsCount > 1)
+                if (isGridPlacement)
                 {
-                    int originalStackCount = selectedItemContext.Item.StackObjectsCount;
-                    int stackCount = int.MaxValue;
-                    bool failed = false;
-                    while (selectedItemContext.Item.StackObjectsCount > 0)
+                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
+                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
+                }
+
+                if (targetItem is SortingTableItemClass)
+                {
+                    operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext, wrappedInstance.TraderController, false /* simulate */);
+                }
+                else
+                {
+                    operation = targetItem != null ?
+                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
+                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                }
+
+                FindOrigin = null;
+                FindVerticalFirst = false;
+
+                // Moving item to the same place, not a problem. Use a no-op move
+                if (operation.Error is MoveSameSpaceError)
+                {
+                    operation = new(new NoOpMove());
+                }
+
+                if (__result = operation.Succeeded)
+                {
+                    operations.Push(operation);
+                    if (targetItem != null && isGridPlacement) // targetItem was originally null so this is the rest of the items
                     {
-                        if (selectedItemContext.Item.StackObjectsCount >= stackCount)
-                        {
-                            break;
-                        }
-
-                        stackCount = selectedItemContext.Item.StackObjectsCount;
-                        operation = wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */);
-                        if (__result = operation.Succeeded)
-                        {
-                            operations.Push(operation);
-                        }
-                        else if (stackCount < originalStackCount)
-                        {
-                            // Some succeeded, so stop but not a failure
-                            __result = true;
-                            operation = default;
-                            break;
-                        }
-                        else
-                        {
-                            if (operation.Error is NoRoomError noRoomError)
-                            {
-                                // Wrap this error to display it
-                                operation = new(new DisplayableErrorWrapper(noRoomError));
-                            }
-
-                            // Need to double-break
-                            failed = true;
-                            break;
-                        }
-                    }
-
-                    if (failed)
-                    {
-                        break;
+                        ShowPreview(__instance, selectedItemContext, operation);
                     }
                 }
                 else
                 {
-                    if (isGridPlacement)
+                    if (operation.Error is NoRoomError noRoomError)
                     {
-                        FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
-                        FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
+                        // Wrap this error to display it
+                        operation = new(new DisplayableErrorWrapper(noRoomError));
                     }
 
-                    if (targetItem is SortingTableItemClass)
-                    {
-                        operation = ___itemUiContext_0.QuickMoveToSortingTable(selectedItemContext, wrappedInstance.TraderController, false /* simulate */);
-                    }
-                    else
-                    {
-                        operation = targetItem != null ?
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                            wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
-                    }
-
-                    FindOrigin = null;
-                    FindVerticalFirst = false;
-
-                    // Moving item to the same place, not a problem. Use a no-op move
-                    if (operation.Error is MoveSameSpaceError)
-                    {
-                        operation = new(new NoOpMove());
-                    }
-
-                    if (__result = operation.Succeeded)
-                    {
-                        operations.Push(operation);
-                        if (targetItem != null && isGridPlacement) // targetItem was originally null so this is the rest of the items
-                        {
-                            ShowPreview(__instance, selectedItemContext, operation);
-                        }
-                    }
-                    else
-                    {
-                        if (operation.Error is NoRoomError noRoomError)
-                        {
-                            // Wrap this error to display it
-                            operation = new(new DisplayableErrorWrapper(noRoomError));
-                        }
-
-                        break;
-                    }
+                    break;
                 }
 
                 // Set this after the first one
@@ -969,61 +922,19 @@ public static class MultiSelectPatches
             Stack<ItemOperation> operations = new();
             foreach (DragItemContext itemContext in MultiSelect.SortedItemContexts())
             {
-                if (!Settings.GreedyStackMove.Value || itemContext.Item.StackObjectsCount <= 1)
+                __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
+                if (operation.Succeeded)
                 {
-                    __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
-                    if (operation.Succeeded)
-                    {
-                        operations.Push(operation);
-                    }
-                    else if (operation.Error is MoveSameSpaceError)
-                    {
-                        // Moving item to the same place, cool, not a problem
-                        __result = true;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    operations.Push(operation);
+                }
+                else if (operation.Error is MoveSameSpaceError)
+                {
+                    // Moving item to the same place, cool, not a problem
+                    __result = true;
                 }
                 else
                 {
-                    int originalStackCount = itemContext.Item.StackObjectsCount;
-                    int stackCount = int.MaxValue;
-                    bool failed = false;
-                    while (itemContext.Item.StackObjectsCount > 0)
-                    {
-                        if (itemContext.Item.StackObjectsCount >= stackCount)
-                        {
-                            // The whole stack moved or nothing happened, it's done
-                            break;
-                        }
-
-                        stackCount = itemContext.Item.StackObjectsCount;
-                        __result = itemContext.CanAccept(__instance.Slot, ___ItemController, out operation, false /* simulate */);
-                        if (operation.Succeeded)
-                        {
-                            operations.Push(operation);
-                        }
-                        else if (stackCount < originalStackCount)
-                        {
-                            // Some succeeded, stop but not failure
-                            __result = true;
-                            operation = default;
-                            break;
-                        }
-                        else
-                        {
-                            // Need to double-break
-                            failed = true;
-                            break;
-                        }
-                    }
-
-                    if (failed)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
 
