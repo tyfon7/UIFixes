@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -29,13 +30,16 @@ public class LinkedSlotSearch : IOnLoad
 
     private class FilterCategoriesPatch : AbstractPatch
     {
+        private static MethodBase GetCategoryListMethod;
+
         protected override MethodBase GetTargetMethod()
         {
+            GetCategoryListMethod = AccessTools.Method(typeof(RagfairHelper), "GetCategoryList");
             return AccessTools.Method(typeof(RagfairHelper), nameof(RagfairHelper.FilterCategories));
         }
 
         [PatchPrefix]
-        public static bool Prefix(SearchRequestData request, ref List<MongoId> __result)
+        public static bool Prefix(RagfairHelper __instance, SearchRequestData request, ref List<MongoId> __result)
         {
             if (request is not LinkedSlotSearchRequestData linkedSlotRequest ||
                 string.IsNullOrEmpty(linkedSlotRequest.LinkedSearchId) ||
@@ -65,6 +69,14 @@ public class LinkedSlotSearch : IOnLoad
             }
 
             __result = [.. resultSet];
+
+            // To handle when the user selects categories on the left
+            if (request.HandbookId.HasValue && !request.HandbookId.Value.IsEmpty)
+            {
+                var handbook = GetCategoryListMethod.Invoke(__instance, [request.HandbookId.Value]) as List<MongoId>;
+                __result = (__result?.Count > 0 ? __result.IntersectWith(handbook) : handbook).ToList();
+            }
+
             return false;
         }
 
