@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -5,15 +6,29 @@ namespace UIFixes;
 
 public class SearchKeyListener : MonoBehaviour
 {
+    private Action onSearch;
+
+    public void Init(Action onSearch)
+    {
+        this.onSearch = onSearch;
+    }
+
     public void Update()
     {
         if (Settings.SearchKeyBind.Value.IsDown())
         {
-            TMP_InputField searchField = GetComponent<TMP_InputField>();
-            if (searchField != null)
+            if (onSearch != null)
             {
-                searchField.ActivateInputField();
-                searchField.Select();
+                onSearch();
+            }
+            else
+            {
+                TMP_InputField searchField = GetComponent<TMP_InputField>();
+                if (searchField != null)
+                {
+                    searchField.ActivateInputField();
+                    searchField.Select();
+                }
             }
         }
     }

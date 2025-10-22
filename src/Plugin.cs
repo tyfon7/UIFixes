@@ -100,6 +100,7 @@ public class Plugin : BaseUnityPlugin
         FilterStockPresetsPatches.Enable();
         WishlistPatches.Enable();
         new LinkedSlotSearchPatch().Enable();
+        StashSearchPatches.Enable();
     }
 
     public static bool InRaid()

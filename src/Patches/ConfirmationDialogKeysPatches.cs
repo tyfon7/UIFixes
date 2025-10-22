@@ -36,6 +36,12 @@ public static class ConfirmDialogKeysPatches
         {
             var instance = new R.DialogWindow(__instance);
 
+            // Special case for StashSearchWindow
+            if (__instance is StashSearchWindow)
+            {
+                return;
+            }
+
             if (!___bool_0)
             {
                 return;
