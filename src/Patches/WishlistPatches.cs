@@ -1,7 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Comfort.Common;
+using EFT;
 using EFT.Hideout;
+using EFT.InventoryLogic;
+using EFT.UI;
+using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
@@ -16,10 +21,17 @@ public static class WishlistPatches
         new IsInWishlistPatch().Enable();
         new AreaDatasPatch().Enable();
         new RequirementsPatch().Enable();
+
+        // The following are all to prevent non-FIR items that are auto-wishlisted for FIR hideout requirements
+        new ItemSpecificationWishlistPatch().Enable();
+        new TraderPurchaseWishlistItemPatch().Enable();
+        new GridItemViewWishlistPatch().Enable();
     }
 
     public class IsInWishlistPatch : ModulePatch
     {
+        public static Item ItemToCheck = null;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(WishlistManager), nameof(WishlistManager.IsInWishlist));
@@ -32,9 +44,28 @@ public static class WishlistPatches
         }
 
         [PatchPostfix]
-        public static void Postfix()
+        public static void Postfix(WishlistManager __instance, bool includeQol, ref EWishlistGroup group, ref bool __result)
         {
             InPatch = false;
+
+            var itemToCheck = ItemToCheck;
+            ItemToCheck = null;
+
+            if (!Settings.AutoWishlistCheckFiR.Value || itemToCheck == null || group != EWishlistGroup.Hideout)
+            {
+                return;
+            }
+
+            // If its in this dictionary, it's manually wishlisted
+            if (__instance.Dictionary_0.ContainsKey(itemToCheck.TemplateId))
+            {
+                return;
+            }
+
+            if (HideoutRequiresFiR() && !itemToCheck.SpawnedInSession)
+            {
+                __result = false;
+            }
         }
     }
 
@@ -109,5 +140,74 @@ public static class WishlistPatches
                 }
             }
         }
+    }
+
+    public class ItemSpecificationWishlistPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Show));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(ItemContextAbstractClass itemContext)
+        {
+            IsInWishlistPatch.ItemToCheck = itemContext.Item;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            IsInWishlistPatch.ItemToCheck = null;
+        }
+    }
+
+    public class TraderPurchaseWishlistItemPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_2));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(Item item)
+        {
+            IsInWishlistPatch.ItemToCheck = item;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            IsInWishlistPatch.ItemToCheck = null;
+        }
+    }
+
+    public class GridItemViewWishlistPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.NewGridItemView));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(Item item)
+        {
+            IsInWishlistPatch.ItemToCheck = item;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            IsInWishlistPatch.ItemToCheck = null;
+        }
+    }
+
+    private static bool HideoutRequiresFiR()
+    {
+        var hideout = Singleton<HideoutClass>.Instance;
+
+        // Using level 2 vents motor requirement to test
+        var req = hideout.AreaDatas[0].Template.Stages[2].Requirements.First() as ItemRequirement;
+        return req.IsSpawnedInSession;
     }
 }

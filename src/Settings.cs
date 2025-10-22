@@ -90,6 +90,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
     public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
+    public static ConfigEntry<bool> AutoWishlistCheckFiR { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -289,6 +290,15 @@ internal class Settings
                 "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
                 "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
                 "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AutoWishlistCheckFiR = config.Bind(
+            InterfaceSection,
+            "Hideout Upgrade Wishlist Respects FiR",
+            true,
+            new ConfigDescription(
+                "Auto-wishlisted hideout upgrades will only show the hideout icon if they are FiR (and upgrades requires FiR)",
                 null,
                 new ConfigurationManagerAttributes { })));
 
