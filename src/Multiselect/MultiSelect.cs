@@ -397,6 +397,16 @@ public class MultiSelect
         ApplyAll(itemUiContext, EItemInfoButton.Unequip, context => itemUiContext.Uninstall(context), allOrNothing);
     }
 
+    public static void LoadAll(ItemUiContext itemUiContext, CompoundItem[] collections, bool allOrNothing)
+    {
+        ApplyAll(itemUiContext, EItemInfoButton.Load, context => itemUiContext.LoadWeapon(context.Item as Weapon, collections), allOrNothing);
+    }
+
+    public static void UnloadAll(ItemUiContext itemUiContext, bool allOrNothing)
+    {
+        ApplyAll(itemUiContext, EItemInfoButton.Unload, context => itemUiContext.UnloadWeapon(context.Item as Weapon), allOrNothing);
+    }
+
     public static Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
     {
         StopLoading(true);

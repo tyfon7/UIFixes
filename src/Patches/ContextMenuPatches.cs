@@ -81,6 +81,14 @@ public static class ContextMenuPatches
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Repair, ItemUiContext.Instance);
             }
+            else if (caption == EItemInfoButton.Load.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.Load, ItemUiContext.Instance);
+            }
+            else if (caption == EItemInfoButton.Unload.ToString())
+            {
+                count = MultiSelect.InteractionCount(EItemInfoButton.Unload, ItemUiContext.Instance);
+            }
             else if (caption == EItemInfoButton.Equip.ToString())
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Equip, ItemUiContext.Instance);

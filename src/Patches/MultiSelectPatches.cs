@@ -385,6 +385,9 @@ public static class MultiSelectPatches
 
             switch (interaction)
             {
+                case EItemInfoButton.Unload:
+                    MultiSelect.UnloadAll(__instance.ItemUiContext_1, false);
+                    return false;
                 case EItemInfoButton.Equip:
                     MultiSelect.EquipAll(__instance.ItemUiContext_1, false);
                     return false;
@@ -423,7 +426,7 @@ public static class MultiSelectPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(ContextInteractionsAbstractClass __instance, EItemInfoButton interaction)
+        public static bool Prefix(InventoryInteractions __instance, EItemInfoButton interaction)
         {
             if (!MultiSelect.Active)
             {
@@ -432,6 +435,9 @@ public static class MultiSelectPatches
 
             switch (interaction)
             {
+                case EItemInfoButton.Load:
+                    MultiSelect.LoadAll(__instance.ItemUiContext_1, __instance.CompoundItem_0, false);
+                    return false;
                 case EItemInfoButton.Install:
                     MultiSelect.InstallAll(__instance.ItemUiContext_1, false);
                     return false;
