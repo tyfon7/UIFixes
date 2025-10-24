@@ -65,6 +65,7 @@ public static class MultiSelectPatches
         new ItemViewClickPatch().Enable();
         new ContextActionsPatch().Enable();
         new MoreContextActionsPatch().Enable();
+        new AddOfferPatch().Enable();
         new StopProcessesPatch().Enable();
 
         // GridView
@@ -334,6 +335,11 @@ public static class MultiSelectPatches
                 return;
             }
 
+            if (!Settings.SelectAllOfTypeKeyBind.Value.IsDown())
+            {
+                return;
+            }
+
             if (__instance.Item == null || //empty 
                 ___ItemUiContext == null || // UI not initialized
                 ___ItemUiContext.ItemContextAbstractClass != __instance.ItemContext || // different item is under cursor
@@ -342,10 +348,23 @@ public static class MultiSelectPatches
                 return;
             }
 
-            if (Settings.SelectAllOfTypeKeyBind.Value.IsDown())
+            // Some places have a GridsView, some have one grid
+            GridView[] grids = null;
+            var gridsView = __instance.GetComponentInParent<ContainedGridsView>();
+            if (gridsView != null)
             {
-                MultiSelect.SelectAll(__instance.Item.TemplateId, __instance.GetComponentInParent<ContainedGridsView>());
+                grids = gridsView.GridViews;
             }
+            else
+            {
+                var grid = __instance.GetComponentInParent<GridView>();
+                if (grid != null)
+                {
+                    grids = [grid];
+                }
+            }
+
+            MultiSelect.SelectAll(__instance.Item.TemplateId, grids);
         }
     }
 
@@ -390,6 +409,7 @@ public static class MultiSelectPatches
                     MultiSelect.LockAll(__instance.ItemUiContext_1);
                     return false;
                 default:
+                    // Add Offer is implemented in its own patch
                     return true;
             }
         }
@@ -418,6 +438,28 @@ public static class MultiSelectPatches
                 default:
                     return true;
             }
+        }
+    }
+
+    public class AddOfferPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(AddOfferWindow), nameof(AddOfferWindow.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Item itemToSelect, ItemUiContext itemUiContext, RagfairOfferSellHelperClass ___ragfairOfferSellHelperClass)
+        {
+            if (itemToSelect == null || !MultiSelect.Active || !MultiSelect.AreSameTemplate())
+            {
+                return;
+            }
+
+            var taskSerializer = MultiSelect.CreateTaskSerializer(itemUiContext.gameObject);
+            taskSerializer.Initialize(
+                MultiSelect.ItemContexts.Where(ic => ic.Item != itemToSelect),
+                ic => ___ragfairOfferSellHelperClass.SelectItem(ic.Item));
         }
     }
 

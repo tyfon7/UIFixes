@@ -13,6 +13,17 @@ public class TaskSerializer<T> : MonoBehaviour
     private Task currentTask;
     private TaskCompletionSource totalTask;
 
+    public Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
+    {
+        Func<T, Task> func = t =>
+        {
+            action(t);
+            return Task.CompletedTask;
+        };
+
+        return Initialize(items, func, canContinue);
+    }
+
     public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
     {
         this.enumerator = items.GetEnumerator();

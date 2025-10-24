@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Configuration;
 using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;

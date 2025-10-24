@@ -300,6 +300,17 @@ public class MultiSelect
         }
     }
 
+    public static bool AreSameTemplate()
+    {
+        if (!Active)
+        {
+            return true;
+        }
+
+        var templateId = ItemContexts.First().Item.TemplateId;
+        return ItemContexts.All(ic => ic.Item.TemplateId == templateId);
+    }
+
     public static int InteractionCount(EItemInfoButton interaction, ItemUiContext itemUiContext)
     {
         return ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
@@ -333,9 +344,9 @@ public class MultiSelect
         return result.Succeed;
     }
 
-    public static void SelectAll(string templateId, ContainedGridsView gridsView)
+    public static void SelectAll(string templateId, IEnumerable<GridView> gridViews)
     {
-        if (string.IsNullOrEmpty(templateId) || gridsView == null)
+        if (string.IsNullOrEmpty(templateId) || gridViews == null)
         {
             return;
         }
@@ -343,7 +354,7 @@ public class MultiSelect
         Clear();
 
         // explicitly create item views for every item, so that ones off screen have one
-        foreach (GridView gridView in gridsView.GridViews)
+        foreach (GridView gridView in gridViews)
         {
             foreach (Item item in gridView.Grid.Items)
             {

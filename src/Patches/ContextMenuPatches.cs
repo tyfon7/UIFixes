@@ -58,6 +58,8 @@ public static class ContextMenuPatches
             return AccessTools.Method(typeof(ContextMenuButton), nameof(ContextMenuButton.Show));
         }
 
+        // The way this detects the action is not great, the caption matching the enum string.
+        // But it's all I have at this point without doing a lot more work.
         [PatchPostfix]
         public static void Postfix(string caption, TextMeshProUGUI ____text)
         {
@@ -110,6 +112,10 @@ public static class ContextMenuPatches
             else if (caption == EItemInfoButton.Unpack.ToString())
             {
                 count = MultiSelect.InteractionCount(EItemInfoButton.Unpack, ItemUiContext.Instance);
+            }
+            else if (MultiSelect.AreSameTemplate() && caption.StartsWith("ADDOFFER".Localized()))
+            {
+                count = MultiSelect.Count;
             }
 
             if (count > 0)
