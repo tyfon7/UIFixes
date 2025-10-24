@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Comfort.Common;
@@ -21,6 +19,11 @@ public class LinkedSlotSearchPatch : ModulePatch
     [PatchPrefix]
     public static bool Prefix(Class308 __instance, ref Task<Result<OffersList>> __result, int page, int limit, int sortType, bool direction, int currency, int priceFrom, int priceTo, int quantityFrom, int quantityTo, int conditionFrom, int conditionTo, bool oneHourExpiration, bool removeBartering, int offerOwnerType, bool onlyFunctional, string handbookId, string linkedSearchId, string neededSearchId, Dictionary<string, int> buildItems, int buildCount, bool updateOfferCount)
     {
+        if (string.IsNullOrEmpty(linkedSearchId) || !linkedSearchId.Contains(":"))
+        {
+            return true;
+        }
+
         Class308.Class1594 callback = new();
         callback.completionSource = new();
         __instance.method_5(new LegacyParamsStruct
@@ -31,6 +34,7 @@ public class LinkedSlotSearchPatch : ModulePatch
             Retries = new byte?(1)
         }, new Callback<OffersList>(callback.method_0));
         __result = callback.completionSource.Task;
+
         return false;
     }
 }
