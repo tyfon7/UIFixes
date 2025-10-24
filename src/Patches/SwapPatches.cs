@@ -632,7 +632,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
         {
-            if (itemUnderCursor?.Item == __instance.ItemContext.Item)
+            if (__instance.ItemContext == null || itemUnderCursor?.Item == __instance.ItemContext.Item)
             {
                 return;
             }
