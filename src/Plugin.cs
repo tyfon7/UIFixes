@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
 
         NetworkTransactionWatcher.Enable();
         ConfirmDialogKeysPatches.Enable();
-        new FixMailRecieveAllPatch().Enable();
+        MailPatches.Enable();
         FixTooltipPatches.Enable();
         QuickAccessPanelPatches.Enable();
         FocusFleaOfferNumberPatches.Enable();
