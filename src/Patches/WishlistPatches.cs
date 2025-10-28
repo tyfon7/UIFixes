@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Comfort.Common;
 using EFT;
 using EFT.Hideout;
 using EFT.InventoryLogic;
@@ -16,6 +16,8 @@ public static class WishlistPatches
 {
     private static bool InPatch = false;
 
+    private static bool FiRRequired = true;
+
     public static void Enable()
     {
         new IsInWishlistPatch().Enable();
@@ -23,6 +25,7 @@ public static class WishlistPatches
         new RequirementsPatch().Enable();
 
         // The following are all to prevent non-FIR items that are auto-wishlisted for FIR hideout requirements
+        new DetectFiRRequirementPatch().Enable();
         new ItemSpecificationWishlistPatch().Enable();
         new TraderPurchaseWishlistItemPatch().Enable();
         new GridItemViewWishlistPatch().Enable();
@@ -62,7 +65,7 @@ public static class WishlistPatches
                 return;
             }
 
-            if (HideoutRequiresFiR() && !itemToCheck.SpawnedInSession)
+            if (FiRRequired && !itemToCheck.SpawnedInSession)
             {
                 __result = false;
             }
@@ -142,6 +145,29 @@ public static class WishlistPatches
         }
     }
 
+    public class DetectFiRRequirementPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(HideoutClass), nameof(HideoutClass.method_14));
+        }
+
+        [HarmonyPriority(Priority.First)] // This MUST run before HideoutInProgress mucks with the data
+        [PatchPostfix]
+        public static void Postfix(HideoutClass __instance)
+        {
+            try
+            {
+                var requirement = __instance.AreaDatas[0].Template.Stages[2].Requirements.First() as ItemRequirement;
+                FiRRequired = requirement.IsSpawnedInSession;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Instance.Logger.LogError("UIFixes: Failed to detect if hideout upgrades require FIR: " + ex.ToString());
+            }
+        }
+    }
+
     public class ItemSpecificationWishlistPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -200,14 +226,5 @@ public static class WishlistPatches
         {
             IsInWishlistPatch.ItemToCheck = null;
         }
-    }
-
-    private static bool HideoutRequiresFiR()
-    {
-        var hideout = Singleton<HideoutClass>.Instance;
-
-        // Using level 2 vents motor requirement to test
-        var req = hideout.AreaDatas[0].Template.Stages[2].Requirements.First() as ItemRequirement;
-        return req.IsSpawnedInSession;
     }
 }
