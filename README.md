@@ -102,6 +102,7 @@ Existing SPT features made better
 -   Confirm dialogs with Return/Enter/Space instead of just Y
 -   Close modal dialogs by clicking outside of them
 -   Sensible autofocus of textboxes in various dialogs
+-   Unlock cursor in windowed/borderless modes when in a menu
 -   Many little UI tweaks to tighten up the graphics
 
 ## Fixes
@@ -115,6 +116,10 @@ Fixing bugs that BSG won't or can't
 -   Fix modding/preset UI breaking when you click not allowed (red outlined) items
 -   Fix trader items not showing "Compatible with Available" with your items
 -   Fix selected barter items not being highlighted correctly
+
+#### Hideout
+
+-   Fix top-down camera panning around when you're in a menu
 
 #### In raid
 
