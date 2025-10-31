@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Comfort.Common;
+using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -24,6 +25,9 @@ public static class WeaponPresetConfirmPatches
         // The save button should just save, not prompt to rename
         new SavePresetPatch().Enable();
         new InstantSavePresetPatch().Enable();
+
+        // Also BSG just immediately sets the dirty flag on load, because they don't understand what anything is or how it should work
+        new NoUnsavedChangesPatch().Enable();
     }
 
     // This patch just caches whether this navigation is a forward navigation, which determines if the preset is actually closing
@@ -107,6 +111,31 @@ public static class WeaponPresetConfirmPatches
             __result.TaskCompletionSource_1.SetResult(savedName); // Don't use Accept(), it's stupid
             Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonClick);
             return false;
+        }
+    }
+
+    public class NoUnsavedChangesPatch : ModulePatch
+    {
+        private static FieldInfo DirtyFlagField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            DirtyFlagField = AccessTools.GetDeclaredFields(typeof(EditBuildScreen)).First(
+                f => f.FieldType.IsGenericType &&
+                f.FieldType.GetGenericTypeDefinition() == typeof(BindableStateClass<>) &&
+                f.Name.EndsWith("_0"));
+
+            return AccessTools.DeclaredMethod(
+                typeof(EditBuildScreen),
+                nameof(EditBuildScreen.Show),
+                [typeof(Item), typeof(Item), typeof(InventoryController), typeof(ISession)]);
+        }
+
+        [PatchPostfix]
+        public static void Postfix(EditBuildScreen __instance)
+        {
+            var bindable = DirtyFlagField.GetValue(__instance) as BindableStateClass<bool>;
+            bindable.Value = false;
         }
     }
 }
