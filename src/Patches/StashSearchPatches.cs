@@ -41,10 +41,15 @@ public static class StashSearchPatches
         [PatchPostfix]
         public static void Postfix(ToggleEFT ____searchTab)
         {
+            if (____searchTab == null)
+            {
+                return;
+            }
+
             var listener = ____searchTab.GetOrAddComponent<SearchKeyListener>();
             listener.Init(() =>
             {
-                if (!____searchTab.IsOn)
+                if (____searchTab != null && !____searchTab.IsOn)
                 {
                     ____searchTab.method_1(true);
                     ____searchTab.method_2(true);
