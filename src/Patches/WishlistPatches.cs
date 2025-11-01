@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Comfort.Common;
 using EFT;
 using EFT.Hideout;
 using EFT.InventoryLogic;
@@ -16,8 +16,6 @@ public static class WishlistPatches
 {
     private static bool InPatch = false;
 
-    private static bool FiRRequired = true;
-
     public static void Enable()
     {
         new IsInWishlistPatch().Enable();
@@ -25,7 +23,6 @@ public static class WishlistPatches
         new RequirementsPatch().Enable();
 
         // The following are all to prevent non-FIR items that are auto-wishlisted for FIR hideout requirements
-        new DetectFiRRequirementPatch().Enable();
         new ItemSpecificationWishlistPatch().Enable();
         new TraderPurchaseWishlistItemPatch().Enable();
         new GridItemViewWishlistPatch().Enable();
@@ -34,6 +31,8 @@ public static class WishlistPatches
     public class IsInWishlistPatch : ModulePatch
     {
         public static Item ItemToCheck = null;
+
+        private static bool? FiRRequired;
 
         protected override MethodBase GetTargetMethod()
         {
@@ -47,7 +46,7 @@ public static class WishlistPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(WishlistManager __instance, bool includeQol, ref EWishlistGroup group, ref bool __result)
+        public static void Postfix(WishlistManager __instance, ref EWishlistGroup group, ref bool __result)
         {
             InPatch = false;
 
@@ -65,10 +64,43 @@ public static class WishlistPatches
                 return;
             }
 
-            if (FiRRequired && !itemToCheck.SpawnedInSession)
+            if (IsFiRRequired() && !itemToCheck.SpawnedInSession)
             {
                 __result = false;
             }
+        }
+
+        private static bool IsFiRRequired()
+        {
+            if (!FiRRequired.HasValue)
+            {
+                var hideout = Singleton<HideoutClass>.Instance;
+
+                // Find the first ItemRequirement and assume all the others are the same
+                foreach (var areaData in hideout?.AreaDatas ?? [])
+                {
+                    var stages = areaData?.Template?.Stages ?? [];
+                    foreach (var stage in stages.Values)
+                    {
+                        foreach (var requirement in stage.Requirements ?? [])
+                        {
+                            // Not counting money, since that's never FIR
+                            if (requirement is ItemRequirement itemRequirement && itemRequirement.Item is not MoneyItemClass)
+                            {
+                                FiRRequired = itemRequirement.IsSpawnedInSession;
+
+                                Plugin.Instance.Logger.LogDebug($"UIFixes: Found item requirement with FiR = {FiRRequired.Value}");
+                                return FiRRequired.Value;
+                            }
+                        }
+                    }
+                }
+
+                Plugin.Instance.Logger.LogWarning("UIFixes: Failed to detect if hideout upgrades require FIR");
+                return false; // False will cause the normal behavior, so fall back to that
+            }
+
+            return FiRRequired.Value;
         }
     }
 
@@ -86,7 +118,6 @@ public static class WishlistPatches
             {
                 return;
             }
-
 
             __result = __result.Where(IsVisible).ToList();
         }
@@ -141,29 +172,6 @@ public static class WishlistPatches
                 {
                     yield return enumerator.Current;
                 }
-            }
-        }
-    }
-
-    public class DetectFiRRequirementPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(HideoutClass), nameof(HideoutClass.method_14));
-        }
-
-        [HarmonyPriority(Priority.First)] // This MUST run before HideoutInProgress mucks with the data
-        [PatchPostfix]
-        public static void Postfix(HideoutClass __instance)
-        {
-            try
-            {
-                var requirement = __instance.AreaDatas[0].Template.Stages[2].Requirements.First() as ItemRequirement;
-                FiRRequired = requirement.IsSpawnedInSession;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Instance.Logger.LogError("UIFixes: Failed to detect if hideout upgrades require FIR: " + ex.ToString());
             }
         }
     }
