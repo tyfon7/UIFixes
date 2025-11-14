@@ -71,10 +71,11 @@ public class MultiSelect
             TaskSerializer.Cancel();
         }
 
-        if (LoadUnloadSerializer != null)
-        {
-            LoadUnloadSerializer.Cancel();
-        }
+        // The LoadUnloadSerializer can keep going, it's different for reasons
+        // if (LoadUnloadSerializer != null)
+        // {
+        //     LoadUnloadSerializer.Cancel();
+        // }
 
         // ToList() because modifying the collection
         foreach (MultiSelectItemContext itemContext in SelectedItems.Keys.ToList())
@@ -237,6 +238,20 @@ public class MultiSelect
 
         TaskSerializer = gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
         return TaskSerializer;
+    }
+
+    private static MultiSelectItemContextTaskSerializer CreateLoadUnloadSerializer(GameObject gameObject)
+    {
+        // I never null this out, but for once Unity's weird behavior of overriding == null is useful
+        if (LoadUnloadSerializer != null)
+        {
+            Plugin.Instance.Logger.LogDebug("Load/Unload serializer active, cancelling old one");
+            LoadUnloadSerializer.Cancel();
+            LoadUnloadSerializer = null;
+        }
+
+        LoadUnloadSerializer = gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        return LoadUnloadSerializer;
     }
 
     public static IEnumerable<MultiSelectItemContext> ItemContexts
@@ -422,8 +437,8 @@ public class MultiSelect
         StopLoading(true);
         if (!allOrNothing || InteractionCount(EItemInfoButton.LoadAmmo, itemUiContext) == Count)
         {
-            LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            Task result = LoadUnloadSerializer.Initialize(
+            var serializer = CreateLoadUnloadSerializer(itemUiContext.gameObject);
+            serializer.Initialize(
                 SortedItemContexts()
                     .Where(ic => ic.Item is MagazineItemClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
                     .SelectMany(ic => ic.RepeatUntilFull()),
@@ -434,8 +449,6 @@ public class MultiSelect
                 });
 
             itemUiContext.Tooltip?.Close();
-
-            return result.ContinueWith(t => LoadUnloadSerializer = null);
         }
 
         return Task.CompletedTask;
@@ -446,8 +459,8 @@ public class MultiSelect
         StopLoading(true);
         if (!allOrNothing || InteractionCount(EItemInfoButton.UnloadAmmo, itemUiContext) == Count)
         {
-            LoadUnloadSerializer = itemUiContext.gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
-            LoadUnloadSerializer.Initialize(
+            var serializer = CreateLoadUnloadSerializer(itemUiContext.gameObject);
+            serializer.Initialize(
                 SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
                 itemContext =>
                 {
@@ -458,7 +471,7 @@ public class MultiSelect
 
                     IgnoreStopLoading = true;
                     return itemUiContext.UnloadAmmo(itemContext);
-                }).ContinueWith(t => LoadUnloadSerializer = null);
+                });
 
             itemUiContext.Tooltip?.Close();
         }
