@@ -79,6 +79,11 @@ public static class MultiSelectPatches
         new SlotViewCanAcceptPatch().Enable();
         new SlotViewAcceptItemPatch().Enable();
 
+        // Bullets are special
+        new LoadMagazinePatch().Enable();
+        new LoadWeaponWithAmmoPatch().Enable();
+        new LoadMultiBarrelWeaponPatch().Enable();
+
         // TradingTableGridView
         new TradingTableCanAcceptPatch().Enable();
         new TradingTableAcceptItemPatch().Enable();
@@ -829,9 +834,35 @@ public static class MultiSelectPatches
                     FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                     FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
 
-                    using var watcher = NetworkTransactionWatcher.WatchNext();
-                    await __instance.AcceptItem(selectedItemContext, targetItemContext);
-                    await watcher.Task;
+                    // Depending on a bunch of stuff and special cases for bullets, need to await different things
+                    if (!Plugin.InRaid() || selectedItemContext.Item is not AmmoItemClass)
+                    {
+                        using var watcher = NetworkTransactionWatcher.WatchNext();
+                        await __instance.AcceptItem(selectedItemContext, targetItemContext);
+                        await watcher.Task;
+                        return;
+                    }
+
+                    // InRaid and dealing with bullets
+                    await __instance.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
+                    if (targetItemContext?.Item is MagazineItemClass)
+                    {
+                        await (LoadMagazinePatch.CurrentTask ?? Task.CompletedTask);
+                        LoadMagazinePatch.CurrentTask = null;
+                    }
+                    else if (targetItemContext?.Item is Weapon weapon)
+                    {
+                        if (weapon.SupportsInternalReload)
+                        {
+                            await (LoadWeaponWithAmmoPatch.CurrentTask ?? Task.CompletedTask);
+                            LoadWeaponWithAmmoPatch.CurrentTask = null;
+                        }
+                        else if (weapon.IsMultiBarrel)
+                        {
+                            await (LoadMultiBarrelWeaponPatch.CurrentTask ?? Task.CompletedTask);
+                            LoadMultiBarrelWeaponPatch.CurrentTask = null;
+                        }
+                    }
                 });
 
             // Setting the fallback after initializing means it only applies after the first item is already moved
@@ -1019,14 +1050,87 @@ public static class MultiSelectPatches
                 MultiSelect.SortedItemContexts(),
                 async selectedItemContext =>
                 {
-                    using var watcher = NetworkTransactionWatcher.WatchNext();
-                    await __instance.AcceptItem(selectedItemContext, targetItemContext);
-                    await watcher.Task;
+                    // Depending on a bunch of stuff and special cases for bullets, need to await different things
+                    if (!Plugin.InRaid() || selectedItemContext.Item is not AmmoItemClass)
+                    {
+                        using var watcher = NetworkTransactionWatcher.WatchNext();
+                        await __instance.AcceptItem(selectedItemContext, targetItemContext);
+                        await watcher.Task;
+                        return;
+                    }
+
+                    // InRaid and dealing with bullets
+                    await __instance.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
+                    if (targetItemContext?.Item is MagazineItemClass)
+                    {
+                        await (LoadMagazinePatch.CurrentTask ?? Task.CompletedTask);
+                        LoadMagazinePatch.CurrentTask = null;
+                    }
+                    else if (targetItemContext?.Item is Weapon weapon)
+                    {
+                        if (weapon.SupportsInternalReload)
+                        {
+                            await (LoadWeaponWithAmmoPatch.CurrentTask ?? Task.CompletedTask);
+                            LoadWeaponWithAmmoPatch.CurrentTask = null;
+                        }
+                        else if (weapon.IsMultiBarrel)
+                        {
+                            await (LoadMultiBarrelWeaponPatch.CurrentTask ?? Task.CompletedTask);
+                            LoadMultiBarrelWeaponPatch.CurrentTask = null;
+                        }
+                    }
                 });
 
             __result.ContinueWith(_ => { InPatch = false; });
 
             return false;
+        }
+    }
+
+    public class LoadMagazinePatch : ModulePatch
+    {
+        public static Task<IResult> CurrentTask;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(Player.PlayerInventoryController), nameof(Player.PlayerInventoryController.LoadMagazine));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Task<IResult> __result)
+        {
+            CurrentTask = __result;
+        }
+    }
+    public class LoadWeaponWithAmmoPatch : ModulePatch
+    {
+        public static Task<IResult> CurrentTask;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(Player.PlayerInventoryController), nameof(Player.PlayerInventoryController.LoadWeaponWithAmmo));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Task<IResult> __result)
+        {
+            CurrentTask = __result;
+        }
+    }
+
+    public class LoadMultiBarrelWeaponPatch : ModulePatch
+    {
+        public static Task<IResult> CurrentTask;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(Player.PlayerInventoryController), nameof(Player.PlayerInventoryController.LoadMultiBarrelWeapon));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Task<IResult> __result)
+        {
+            CurrentTask = __result;
         }
     }
 

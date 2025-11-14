@@ -53,12 +53,12 @@ public class MultiSelectDebug : MonoBehaviour
 
         if (MultiSelect.TaskSerializer != null)
         {
-            builder.Append("TaskSerializer active\n");
+            builder.Append("<color=yellow>TaskSerializer active</color>\n");
         }
 
         if (MultiSelect.LoadUnloadSerializer != null)
         {
-            builder.Append("Load/Unload TaskSerializer active\n");
+            builder.Append("<color=red>Load/Unload TaskSerializer active</color>\n");
         }
 
         guiContent.text = builder.ToString();

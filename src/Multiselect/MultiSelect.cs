@@ -66,6 +66,16 @@ public class MultiSelect
 
     public static void Clear()
     {
+        if (TaskSerializer != null)
+        {
+            TaskSerializer.Cancel();
+        }
+
+        if (LoadUnloadSerializer != null)
+        {
+            LoadUnloadSerializer.Cancel();
+        }
+
         // ToList() because modifying the collection
         foreach (MultiSelectItemContext itemContext in SelectedItems.Keys.ToList())
         {

@@ -1,13 +1,17 @@
-using Comfort.Common;
-using HarmonyLib;
-using SPT.Reflection.Patching;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Comfort.Common;
+using HarmonyLib;
+using SPT.Reflection.Patching;
 
 namespace UIFixes;
 
+// A watcher simply watches for the next TraderControllerClass.RunNetworkTransaction and resolves its task when 
+// that method completes by calling its callback.
+// This class also manages the watchers, ensuring they are called in reverse order (LIFO).
+// To use simply call NetworkTransactionWatch.WatchNext()
 public class NetworkTransactionWatcher : IDisposable
 {
     private static readonly Stack<NetworkTransactionWatcher> Watchers = [];
