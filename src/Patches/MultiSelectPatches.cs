@@ -95,6 +95,9 @@ public static class MultiSelectPatches
         new AdjustQuickFindFlagsPatch().Enable();
         new ReorderContainersPatch().Enable();
         new AllowFindSameSpotPatch().Enable();
+
+        // Cylinders
+        new ReloadCylinderPatch().Enable();
     }
 
     public class InitializeCommonUIPatch : ModulePatch
@@ -1115,6 +1118,34 @@ public static class MultiSelectPatches
         public static void Postfix(Task<IResult> __result)
         {
             CurrentTask = __result;
+        }
+    }
+
+    public class ReloadCylinderPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(Player.FirearmController), nameof(Player.FirearmController.ReloadCylinderMagazine));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(ref AmmoPackReloadingClass ammoPack)
+        {
+            if (!MultiSelect.Active)
+            {
+                return;
+            }
+
+            List<AmmoItemClass> ammo = [];
+            foreach (var itemContext in MultiSelect.ItemContexts)
+            {
+                if (itemContext.Item is AmmoItemClass ammoItem)
+                {
+                    ammo.Add(ammoItem);
+                }
+            }
+
+            ammoPack = new AmmoPackReloadingClass(ammo);
         }
     }
 

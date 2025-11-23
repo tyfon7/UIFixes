@@ -5,32 +5,21 @@ using UnityEngine;
 
 namespace UIFixes;
 
-public class TaskSerializer<T> : MonoBehaviour
+public class TaskSerializer<T, TaskT> : MonoBehaviour
 {
-    private Func<T, Task> func;
-    private Func<T, bool> canContinue;
+    private Func<T, Task<TaskT>> func;
+    private Func<T, TaskT, bool> canContinue;
     private IEnumerator<T> enumerator;
-    private Task currentTask;
+    private Task<TaskT> currentTask;
     private TaskCompletionSource totalTask;
 
-    public Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
-    {
-        Func<T, Task> func = t =>
-        {
-            action(t);
-            return Task.CompletedTask;
-        };
-
-        return Initialize(items, func, canContinue);
-    }
-
-    public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
+    public Task Initialize(IEnumerable<T> items, Func<T, Task<TaskT>> func, Func<T, TaskT, bool> canContinue = null)
     {
         this.enumerator = items.GetEnumerator();
         this.func = func;
         this.canContinue = canContinue;
 
-        currentTask = Task.CompletedTask;
+        currentTask = null;
         totalTask = new TaskCompletionSource();
 
         LateUpdate();
@@ -54,20 +43,28 @@ public class TaskSerializer<T> : MonoBehaviour
 
     public void LateUpdate()
     {
-        if (currentTask.IsCanceled)
-        {
-            Complete();
-            return;
-        }
-
-        if (totalTask.Task.IsCompleted || !currentTask.IsCompleted)
+        if (totalTask.Task.IsCompleted)
         {
             return;
         }
 
-        if (canContinue != null && enumerator.Current != null && !canContinue(enumerator.Current))
+        if (currentTask != null)
         {
-            return;
+            if (currentTask.IsCanceled)
+            {
+                Complete();
+                return;
+            }
+
+            if (!currentTask.IsCompleted)
+            {
+                return;
+            }
+
+            if (canContinue != null && !canContinue(enumerator.Current, currentTask.Result))
+            {
+                return;
+            }
         }
 
         if (enumerator.MoveNext())
@@ -86,4 +83,37 @@ public class TaskSerializer<T> : MonoBehaviour
         func = null;
         Destroy(this);
     }
+}
+
+public class TaskSerializer<T> : TaskSerializer<T, bool>
+{
+    public Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
+    {
+        Func<T, Task<bool>> func = t =>
+        {
+            action(t);
+            return Task.FromResult(true);
+        };
+
+        return base.Initialize(items, func, canContinue != null ? (x, _) => canContinue(x) : null);
+    }
+
+    public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
+    {
+        Func<T, Task<bool>> wrapper = async t =>
+        {
+            try
+            {
+                await func(t);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        };
+
+        return base.Initialize(items, wrapper, canContinue != null ? (x, _) => canContinue(x) : null);
+    }
+
 }

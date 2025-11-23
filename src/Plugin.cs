@@ -101,6 +101,7 @@ public class Plugin : BaseUnityPlugin
         WishlistPatches.Enable();
         new LinkedSlotSearchPatch().Enable();
         StashSearchPatches.Enable();
+        RevolverPatches.Enable();
     }
 
     public static bool InRaid()
