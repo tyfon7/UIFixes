@@ -7,7 +7,6 @@
     <AssemblyName>Tyfon.UIFixes.Server</AssemblyName>
     <OutputType>Library</OutputType>
     <SPTModType>Server</SPTModType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>

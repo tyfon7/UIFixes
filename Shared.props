@@ -2,6 +2,7 @@
   <PropertyGroup>
     <Version>5.0.6</Version>
     <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.0</SPTPath>
+    <FikaPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\Fika</FikaPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,12 +12,12 @@
     <DeployTarget Include="Release" Condition="'$(Configuration)'=='Release'">
       <Path>$(MSBuildThisFileDirectory)dist</Path>
     </DeployTarget>
-    <DeployTarget Include="Fika1">
+    <!-- <DeployTarget Include="Fika1">
       <Path>d:\fika</Path>
     </DeployTarget>
     <DeployTarget Include="Fika2">
       <Path>d:\fika2</Path>
-    </DeployTarget>
+    </DeployTarget> -->
   </ItemGroup>
 
   <Target Name="SPTClientDeploy" AfterTargets="PostBuildEvent" Condition="'$(SPTModType)'=='Client'">

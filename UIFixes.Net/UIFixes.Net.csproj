@@ -6,7 +6,6 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Tyfon.UIFixes.Net</AssemblyName>
     <SPTModType>Client</SPTModType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
@@ -14,7 +13,7 @@
 
   <ItemGroup>
     <Reference Include="Fika.Core">
-      <HintPath>d:\fika\BepInEx\plugins\Fika\Fika.Core.dll</HintPath>
+      <HintPath>$(FikaPath)\Fika.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 

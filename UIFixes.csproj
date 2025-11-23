@@ -7,7 +7,6 @@
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
     <SPTModType>Client</SPTModType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
@@ -40,7 +39,7 @@
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\CommonExtensions.dll</HintPath>
     </Reference>
     <Reference Include="Fika.Core">
-      <HintPath>D:\fika\BepInEx\plugins\Fika\Fika.Core.dll</HintPath>
+      <HintPath>$(FikaPath)\Fika.Core.dll</HintPath>
     </Reference>
     <Reference Include="ItemComponent.Types">
       <HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
