@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT;
@@ -26,7 +27,7 @@ public static class SwapPatches
 
     // Whether it's been called already in this GridView.AcceptItem stack. Needed to enforce we only check once
     private static bool InAcceptItem = false;
-    private static int CalledPerAcceptItem = 0;
+    private static bool CalledInAcceptItem = false;
 
     // The most recent CheckItemFilter result - needed to differentiate "No room" from incompatible
     private static string LastCheckItemFilterId;
@@ -190,12 +191,13 @@ public static class SwapPatches
         public static void Prefix()
         {
             InAcceptItem = true;
-            CalledPerAcceptItem = 0;
+            CalledInAcceptItem = false;
         }
 
         [PatchPostfix]
-        public static void Postfix()
+        public static async void Postfix(Task __result)
         {
+            await __result;
             InAcceptItem = false;
         }
     }
@@ -257,12 +259,12 @@ public static class SwapPatches
             // on the first. This still works fine with multi-select since that calls AcceptItem per item 
             if (InAcceptItem)
             {
-                if (CalledPerAcceptItem > 0)
+                if (CalledInAcceptItem)
                 {
                     return;
                 }
 
-                CalledPerAcceptItem++;
+                CalledInAcceptItem = true;
             }
 
             if (!ValidPrerequisites(itemContext, targetItemContext?.Item, operation))
