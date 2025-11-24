@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,13 +15,51 @@ public static class RevolverPatches
 {
     public static void Enable()
     {
+        new CylinderMagApplyPatch().Enable();
+        new CylinderMagApplyWithoutRestrictionsPatch().Enable();
+
         new LoadCylinderPatch().Enable();
         new UnloadCylinderPatch().Enable();
+
+        //new IsActiveUnloadAmmoPatch().Enable(); // Enables in Raid, but action doesn't work
         new InteractiveUnloadAmmoPatch().Enable();
+    }
+
+    public class CylinderMagApplyPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(CylinderMagazineItemClass), nameof(CylinderMagazineItemClass.Apply));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(CylinderMagazineItemClass __instance, TraderControllerClass itemController, Item item, int count, bool simulate, ref ItemOperation __result)
+        {
+            __result = __instance.ApplyItem(itemController, item, count, simulate);
+            return false;
+        }
+    }
+
+    public class CylinderMagApplyWithoutRestrictionsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(CylinderMagazineItemClass), nameof(CylinderMagazineItemClass.ApplyWithoutRestrictions));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(CylinderMagazineItemClass __instance, TraderControllerClass itemController, AmmoItemClass ammo, int count, bool simulate, ref ItemOperation __result)
+        {
+            var result = __instance.method_30(itemController, ammo, count, simulate);
+            __result = result.Succeeded ? result : result.Error;
+            return false;
+        }
     }
 
     public class LoadCylinderPatch : ModulePatch
     {
+        private static bool InPatch = false;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.DeclaredMethod(
@@ -35,48 +74,41 @@ public static class RevolverPatches
             AmmoItemClass ammo,
             MagazineItemClass magazine,
             int loadCount,
+            bool ignoreRestrictions,
             ref Task<IResult> __result)
         {
-            if (magazine is not CylinderMagazineItemClass cylinder)
+            if (InPatch || magazine is not CylinderMagazineItemClass cylinder)
             {
                 return true;
             }
+
+            InPatch = true;
 
             if (Singleton<GUISounds>.Instantiated)
             {
                 Singleton<GUISounds>.Instance.PlayUILoadSound();
             }
 
+            // loadCount is incoming stack size, adust to make sense
+            loadCount = Math.Min(loadCount, cylinder.MaxCount - cylinder.Count);
+
             var taskSerializer = ItemUiContext.Instance.gameObject.AddComponent<LoadTaskSerializer>();
+
+            // Pass in loadCount - 1 symbolically, in reality this will only ever load 1 at a time
             var task = taskSerializer.Initialize(
                 Enumerable.Range(0, loadCount),
-                _ =>
-                {
-                    var operation = cylinder.Apply(__instance, ammo, int.MaxValue, true);
-                    return __instance.TryRunNetworkTransaction(operation);
-                },
-                (_, result) => result.Succeed);
+                i => __instance.LoadMagazine(ammo, magazine, loadCount - i, ignoreRestrictions));
 
-            __result = Task.FromResult(SuccessfulResult.New);
+            __result = task.ContinueWith(t =>
+            {
+                InPatch = false;
+                return SuccessfulResult.New;
+            });
+
             return false;
         }
 
         private class LoadTaskSerializer : TaskSerializer<int, IResult> { }
-    }
-
-    public class LoadCylinderWithoutRestrictionsPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.DeclaredMethod(typeof(CylinderMagazineItemClass), nameof(CylinderMagazineItemClass.ApplyWithoutRestrictions));
-        }
-
-        [PatchPrefix]
-        public static bool Prefix(CylinderMagazineItemClass __instance, TraderControllerClass itemController, AmmoItemClass ammo, int count, bool simulate, ref ItemOperation __result)
-        {
-            __result = __instance.Apply(itemController, ammo, count, simulate);
-            return false;
-        }
     }
 
     public class UnloadCylinderPatch : ModulePatch
@@ -143,6 +175,31 @@ public static class RevolverPatches
             }
 
             return result;
+        }
+    }
+
+    public class IsActiveUnloadAmmoPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
+        {
+            if (button != EItemInfoButton.UnloadAmmo)
+            {
+                return true;
+            }
+
+            if (__instance.Weapon_0 is not RevolverItemClass)
+            {
+                return true;
+            }
+
+            __result = true;
+            return false;
         }
     }
 
