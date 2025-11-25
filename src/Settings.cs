@@ -82,6 +82,7 @@ internal class Settings
     private const string TradingSection = "N. Trading";
     private const string FleaMarketSection = "O. Flea Market";
     private const string AddOfferSection = "P. Add Offer";
+    private const string HideoutSection = "Q. Hideout";
 
     // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
@@ -89,8 +90,6 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
-    public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
-    public static ConfigEntry<bool> AutoWishlistCheckFiR { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
@@ -223,6 +222,11 @@ internal class Settings
     public static ConfigEntry<bool> KeepAddOfferOpenIgnoreMaxOffers { get; set; } // Advanced
     public static ConfigEntry<bool> RememberAutoselectSimilar { get; set; } // Advanced
 
+    // Hideout
+    public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
+    public static ConfigEntry<bool> AutoWishlistCheckFiR { get; set; }
+    public static ConfigEntry<bool> RememberSearchOnExit { get; set; }
+
     public static List<ConfigEntryBase> AllConfigs = [];
 
     public static IEnumerable<ConfigEntryBase> SyncedConfigs()
@@ -278,27 +282,6 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Keybinds with display names longer than 2 characters will be shortened to '...' with a hover tooltip",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(AutoWishlistUpgrades = config.Bind(
-            InterfaceSection,
-            "Hideout Upgrade Wishlisting",
-            AutoWishlistBehavior.Normal,
-            new ConfigDescription(
-                "Change the behavior of auto-wishlisting hideout upgrades, if you have that EFT feature enabled:\n" +
-                "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
-                "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
-                "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
-                null,
-                new ConfigurationManagerAttributes { })));
-
-        configEntries.Add(AutoWishlistCheckFiR = config.Bind(
-            InterfaceSection,
-            "Hideout Upgrade Wishlist Respects FiR",
-            true,
-            new ConfigDescription(
-                "Auto-wishlisted hideout upgrades will only show the hideout icon if they are FiR (and upgrades requires FiR)",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -1226,6 +1209,37 @@ internal class Settings
                 "Remember the state of the Autoselect Similar checkbox in the Add Offer window",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        // Hideout
+        configEntries.Add(AutoWishlistUpgrades = config.Bind(
+            HideoutSection,
+            "Hideout Upgrade Wishlisting",
+            AutoWishlistBehavior.Normal,
+            new ConfigDescription(
+                "Change the behavior of auto-wishlisting hideout upgrades, if you have that EFT feature enabled:\n" +
+                "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
+                "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
+                "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(AutoWishlistCheckFiR = config.Bind(
+            HideoutSection,
+            "Hideout Upgrade Wishlist Respects FiR",
+            true,
+            new ConfigDescription(
+                "Auto-wishlisted hideout upgrades will only show the hideout icon if they are FiR (and upgrades requires FiR)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RememberSearchOnExit = config.Bind(
+            HideoutSection,
+            "Remember Craft Search",
+            false,
+            new ConfigDescription(
+                "Persist the crafting search filter even when you exit that hideout area",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         RecalcOrder(configEntries);
 

@@ -200,7 +200,11 @@ public static class HideoutSearchPatches
         [PatchPostfix]
         public static void Postfix()
         {
-            LastSearches.Clear();
+            if (!Settings.RememberSearchOnExit.Value)
+            {
+                LastSearches.Clear();
+            }
+
             ClearLastScrollPosition();
         }
     }
