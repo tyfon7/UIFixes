@@ -161,6 +161,12 @@ public static class HideoutSearchPatches
         [PatchPrefix]
         public static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
         {
+            // There can be multiple panels! But there's only one active search box.
+            if (!____searchInputField.isActiveAndEnabled)
+            {
+                return;
+            }
+
             LastSearches[__instance.AreaData.ToString()] = ____searchInputField.text;
 
             ScrollRect scrollRect = __instance.GetComponentInParent<ScrollRect>();
