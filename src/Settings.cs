@@ -127,6 +127,7 @@ internal class Settings
     public static ConfigEntry<bool> UseHomeEnd { get; set; }
     public static ConfigEntry<bool> RebindPageUpDown { get; set; }
     public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
+    public static ConfigEntry<bool> SuppressKeybindsInTextbox { get; set; }
 
     // Item Keybinds
     public static ConfigEntry<KeyboardShortcut> InspectKeyBind { get; set; }
@@ -547,6 +548,15 @@ internal class Settings
             new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
             new ConfigDescription(
                 "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SuppressKeybindsInTextbox = config.Bind(
+            InterfaceKeybindsSection,
+            "Block Keybinds While Typing",
+            true,
+            new ConfigDescription(
+                "When using a textbox, prevent keybinds bound to alphanumeric keys from firing",
                 null,
                 new ConfigurationManagerAttributes { })));
 

@@ -102,6 +102,7 @@ public class Plugin : BaseUnityPlugin
         new LinkedSlotSearchPatch().Enable();
         StashSearchPatches.Enable();
         RevolverPatches.Enable();
+        TextboxPatches.Enable();
     }
 
     public static bool InRaid()
