@@ -22,7 +22,10 @@ public static class RevolverPatches
         new UnloadCylinderPatch().Enable();
 
         //new IsActiveUnloadAmmoPatch().Enable(); // Enables in Raid, but action doesn't work
-        new InteractiveUnloadAmmoPatch().Enable();
+        new AddLoadAmmoPatch().Enable();
+        new LoadAmmoIsActivePatch().Enable();
+        new IsInteractivePatch().Enable();
+        new LoadAmmoSubInteractionsPatch().Enable();
     }
 
     public class CylinderMagApplyPatch : ModulePatch
@@ -35,7 +38,25 @@ public static class RevolverPatches
         [PatchPrefix]
         public static bool Prefix(CylinderMagazineItemClass __instance, TraderControllerClass itemController, Item item, int count, bool simulate, ref ItemOperation __result)
         {
-            __result = __instance.ApplyItem(itemController, item, count, simulate);
+            if (item is not AmmoItemClass ammo)
+            {
+                __result = new CannotApplyError(item, __instance);
+                return false;
+            }
+
+            if (!itemController.Examined(item))
+            {
+                __result = new NotExaminedError(item);
+                return false;
+            }
+
+            if (!itemController.Examined(__instance))
+            {
+                __result = new NotExaminedError(__instance);
+                return false;
+            }
+
+            __result = __instance.ApplyWithoutRestrictions(itemController, ammo, count, simulate);
             return false;
         }
     }
@@ -203,7 +224,46 @@ public static class RevolverPatches
         }
     }
 
-    public class InteractiveUnloadAmmoPatch : ModulePatch
+    public class AddLoadAmmoPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredProperty(typeof(Weapon), nameof(Weapon.ItemInteractionButtons)).GetMethod;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Weapon __instance, ref IEnumerable<EItemInfoButton> __result)
+        {
+            if (__instance is RevolverItemClass)
+            {
+                __result = __result.Append(EItemInfoButton.LoadAmmo);
+            }
+        }
+    }
+
+    public class LoadAmmoIsActivePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
+        {
+            // BSG's code explicitly disallows cylinder mags. Why?
+            var magazine = selectedItem is Weapon weapon ? weapon.GetCurrentMagazine() : selectedItem as MagazineItemClass;
+            if (magazine is CylinderMagazineItemClass)
+            {
+                __result = magazine;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class IsInteractivePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -213,21 +273,43 @@ public static class RevolverPatches
         [PatchPrefix]
         public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
         {
-            if (button != EItemInfoButton.UnloadAmmo)
+            switch (button)
             {
-                return true;
+                case EItemInfoButton.LoadAmmo:
+                    return LoadAmmoIsInteractive(__instance, ref __result);
+                case EItemInfoButton.UnloadAmmo:
+                    return UnloadAmmoIsInteractive(__instance, ref __result);
+                default:
+                    return true;
             }
+        }
 
-            if (__instance.Boolean_14)
+        private static bool LoadAmmoIsInteractive(ContextInteractionSwitcherClass context, ref IResult result)
+        {
+            var magazine = context.Weapon_0 != null ? context.Weapon_0.GetCurrentMagazine() : context.Item_0_1 as MagazineItemClass;
+
+            if (magazine is not CylinderMagazineItemClass cylinder || cylinder.Count >= cylinder.MaxCount)
             {
-                __result = new FailedResult("Inventory/PlayerIsBusy", 0);
+                result = new FailedResult("InventoryError/You can't load ammo into this item", 0);
                 return false;
             }
 
-            CylinderMagazineItemClass cylinder = __instance.Item_0_1 as CylinderMagazineItemClass;
+            result = SuccessfulResult.New;
+            return false;
+        }
+
+        private static bool UnloadAmmoIsInteractive(ContextInteractionSwitcherClass context, ref IResult result)
+        {
+            if (context.Boolean_14)
+            {
+                result = new FailedResult("Inventory/PlayerIsBusy", 0);
+                return false;
+            }
+
+            CylinderMagazineItemClass cylinder = context.Item_0_1 as CylinderMagazineItemClass;
             if (cylinder == null)
             {
-                cylinder = __instance.Weapon_0?.GetCurrentMagazine() as CylinderMagazineItemClass;
+                cylinder = context.Weapon_0?.GetCurrentMagazine() as CylinderMagazineItemClass;
             }
 
             if (cylinder == null)
@@ -237,13 +319,34 @@ public static class RevolverPatches
 
             if (cylinder.Camoras.Any(c => c.ContainedItem != null))
             {
-                __result = SuccessfulResult.New;
+                result = SuccessfulResult.New;
             }
             else
             {
-                __result = new FailedResult("InventoryError/You can't unload from this item", 0);
+                result = new FailedResult("InventoryError/You can't unload from this item", 0);
             }
 
+            return false;
+        }
+    }
+
+    public class LoadAmmoSubInteractionsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(InventoryInteractions __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper)
+        {
+            if (parentInteraction != EItemInfoButton.LoadAmmo || __instance.ItemContextAbstractClass.Item is not RevolverItemClass revolver)
+            {
+                return true;
+            }
+
+            MagazineItemClass magazine = revolver.GetCurrentMagazine();
+            subInteractionsWrapper.SetSubInteractions(new LoadAmmoInteractions(magazine, __instance.ItemContextAbstractClass, __instance.ItemUiContext_1));
             return false;
         }
     }

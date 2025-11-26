@@ -36,6 +36,7 @@ global using TradingPlayerInteractions = GClass3767;
 global using TransferPlayerInteractions = GClass3770;
 global using ModdingItemInteractions = GClass3762;
 global using WishListInteractions = GClass3782;
+global using LoadAmmoInteractions = GClass3779;
 
 // State machine states
 global using FirearmReadyState = EFT.Player.FirearmController.GClass2037;
@@ -56,6 +57,7 @@ global using NoRoomError = GClass1549;
 global using NoPossibleActionsError = GClass1550;
 global using MoveSameSpaceError = InteractionsHandlerClass.GClass1592;
 global using NotApplicableError = GClass1550;
+global using NotExaminedError = GClass1551;
 global using NotModdableInRaidError = GClass1554;
 global using MultitoolNeededError = GClass1555;
 global using ModVitalPartInRaidError = GClass1556;
