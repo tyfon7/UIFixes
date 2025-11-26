@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Bootstrap;
+using BepInEx.Logging;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -38,7 +39,9 @@ namespace UIFixesInterop
     /// </summary>
     internal static class MultiSelect
     {
-        private static readonly Version RequiredVersion = new Version(2, 5);
+        private static readonly Version RequiredVersion = new Version(5, 1);
+
+        private static readonly ManualLogSource Logger = new ManualLogSource("UIFixesInterop");
 
         private static bool? UIFixesLoaded;
 
@@ -118,8 +121,11 @@ namespace UIFixesInterop
         {
             if (!UIFixesLoaded.HasValue)
             {
+                BepInEx.Logging.Logger.Sources.Add(Logger);
+
                 bool present = Chainloader.PluginInfos.TryGetValue("com.tyfon.uifixes", out PluginInfo pluginInfo);
-                UIFixesLoaded = present && pluginInfo.Metadata.Version >= RequiredVersion;
+                bool correctVersion = present && pluginInfo.Metadata.Version >= RequiredVersion;
+                UIFixesLoaded = present && correctVersion;
 
                 if (UIFixesLoaded.Value)
                 {
@@ -129,6 +135,24 @@ namespace UIFixesInterop
                         GetCountMethod = AccessTools.Method(MultiSelectType, "GetCount");
                         GetItemsMethod = AccessTools.Method(MultiSelectType, "GetItems");
                         ApplyMethod = AccessTools.Method(MultiSelectType, "Apply");
+                    }
+                    else
+                    {
+                        Logger.LogError("UI Fixes is present but something went wrong");
+                        UIFixesLoaded = false;
+                    }
+                }
+                else
+                {
+                    if (!present)
+                    {
+                        // Check for old version
+                        present = Chainloader.PluginInfos.TryGetValue("Tyfon.UIFixes", out pluginInfo);
+                    }
+
+                    if (present && !correctVersion)
+                    {
+                        Logger.LogWarning($"UI Fixes {pluginInfo.Metadata.Version} is present but {RequiredVersion} is required, interop will not work");
                     }
                 }
             }

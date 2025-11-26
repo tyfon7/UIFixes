@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
@@ -105,6 +106,11 @@ public class Plugin : BaseUnityPlugin
         TextboxPatches.Enable();
     }
 
+    public void Start()
+    {
+        CheckForOldInterop();
+    }
+
     public static bool InRaid()
     {
         var instance = Singleton<AbstractGame>.Instance;
@@ -116,6 +122,16 @@ public class Plugin : BaseUnityPlugin
         return EventSystem.current?.currentSelectedGameObject != null &&
             EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
             EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
+    }
+
+    private void CheckForOldInterop()
+    {
+        var pluginsWithOldDependency = Chainloader.PluginInfos.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
+        if (pluginsWithOldDependency.Any())
+        {
+            var names = string.Join(",", pluginsWithOldDependency.Select(p => p.Metadata.Name).ToArray());
+            Logger.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
+        }
     }
 
     private static bool? IsFikaPresent;
