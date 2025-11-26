@@ -1,19 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Bootstrap;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
 
 /*
 UI Fixes Multi-Select InterOp
 
 First, add the following attribute to your plugin class:
 
-[BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("com.tyfon.uifixes", BepInDependency.DependencyFlags.SoftDependency)]
 
 This will ensure UI Fixes is loaded already when your code is run. It will fail gracefully if UI Fixes is missing.
 
@@ -118,7 +118,7 @@ namespace UIFixesInterop
         {
             if (!UIFixesLoaded.HasValue)
             {
-                bool present = Chainloader.PluginInfos.TryGetValue("Tyfon.UIFixes", out PluginInfo pluginInfo);
+                bool present = Chainloader.PluginInfos.TryGetValue("com.tyfon.uifixes", out PluginInfo pluginInfo);
                 UIFixesLoaded = present && pluginInfo.Metadata.Version >= RequiredVersion;
 
                 if (UIFixesLoaded.Value)
