@@ -5,8 +5,14 @@ using UnityEngine;
 
 namespace UIFixes;
 
-public class TaskSerializer<T, TaskT> : MonoBehaviour
+public class TaskSerializerBase : MonoBehaviour
 {
+    protected static int GlobalDepth = 0;
+}
+
+public class TaskSerializer<T, TaskT> : TaskSerializerBase
+{
+    private int depth;
     private Func<T, Task<TaskT>> func;
     private Func<T, TaskT, bool> canContinue;
     private IEnumerator<T> enumerator;
@@ -21,6 +27,9 @@ public class TaskSerializer<T, TaskT> : MonoBehaviour
 
         currentTask = null;
         totalTask = new TaskCompletionSource();
+
+        ++GlobalDepth;
+        depth = GlobalDepth;
 
         LateUpdate();
 
@@ -44,6 +53,12 @@ public class TaskSerializer<T, TaskT> : MonoBehaviour
     public void LateUpdate()
     {
         if (totalTask.Task.IsCompleted)
+        {
+            return;
+        }
+
+        // There is a child task serializer running
+        if (GlobalDepth > depth)
         {
             return;
         }
@@ -80,6 +95,7 @@ public class TaskSerializer<T, TaskT> : MonoBehaviour
     private void Complete()
     {
         totalTask.TryComplete();
+        --GlobalDepth;
         func = null;
         Destroy(this);
     }

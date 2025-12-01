@@ -1048,22 +1048,45 @@ public static class MultiSelectPatches
 
             InPatch = true;
 
-            var serializer = MultiSelect.CreateTaskSerializer(__instance.gameObject);
+            var slotView = __instance;
+            var slotViewName = __instance.transform.name;
+            var parentTransform = __instance.transform.parent;
+            var serializer = MultiSelect.CreateTaskSerializer(__instance is ModSlotView ? parentTransform.gameObject : __instance.gameObject);
             __result = serializer.Initialize(
                 MultiSelect.SortedItemContexts(),
                 async selectedItemContext =>
                 {
+                    // There is a case with SlotViews where the slot view is recreated after each item, so I need to check and refind the instance)
+                    if (slotView == null)
+                    {
+                        if (parentTransform == null)
+                        {
+                            return;
+                        }
+
+                        var child = parentTransform.Find(slotViewName);
+                        if (child != null)
+                        {
+                            slotView = child.GetComponent<SlotView>();
+                        }
+
+                        if (slotView == null)
+                        {
+                            return;
+                        }
+                    }
+
                     // Depending on a bunch of stuff and special cases for bullets, need to await different things
                     if (!Plugin.InRaid() || selectedItemContext.Item is not AmmoItemClass)
                     {
                         using var watcher = NetworkTransactionWatcher.WatchNext();
-                        await __instance.AcceptItem(selectedItemContext, targetItemContext);
+                        await slotView.AcceptItem(selectedItemContext, targetItemContext);
                         await watcher.Task;
                         return;
                     }
 
                     // InRaid and dealing with bullets
-                    await __instance.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
+                    await slotView.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
                     if (targetItemContext?.Item is MagazineItemClass)
                     {
                         await (LoadMagazinePatch.CurrentTask ?? Task.CompletedTask);

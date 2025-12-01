@@ -79,7 +79,7 @@ public static class RevolverPatches
 
     public class LoadCylinderPatch : ModulePatch
     {
-        private static bool InPatch = false;
+        public static bool InPatch = false;
 
         protected override MethodBase GetTargetMethod()
         {
@@ -98,7 +98,7 @@ public static class RevolverPatches
             bool ignoreRestrictions,
             ref Task<IResult> __result)
         {
-            if (InPatch || magazine is not CylinderMagazineItemClass cylinder)
+            if (InPatch || loadCount < 1 || magazine is not CylinderMagazineItemClass cylinder)
             {
                 return true;
             }
@@ -112,13 +112,28 @@ public static class RevolverPatches
 
             // loadCount is incoming stack size, adust to make sense
             loadCount = Math.Min(loadCount, cylinder.MaxCount - cylinder.Count);
+            Task task;
+            if (loadCount > 1)
+            {
+                var taskSerializer = ItemUiContext.Instance.gameObject.AddComponent<LoadTaskSerializer>();
 
-            var taskSerializer = ItemUiContext.Instance.gameObject.AddComponent<LoadTaskSerializer>();
-
-            // Pass in loadCount - 1 symbolically, in reality this will only ever load 1 at a time
-            var task = taskSerializer.Initialize(
-                Enumerable.Range(0, loadCount),
-                i => __instance.LoadMagazine(ammo, magazine, loadCount - i, ignoreRestrictions));
+                // Pass in loadCount - 1 symbolically, in reality this will only ever load 1 at a time
+                task = taskSerializer.Initialize(
+                    Enumerable.Range(0, loadCount),
+                    i => __instance.LoadMagazine(ammo, magazine, loadCount - i, ignoreRestrictions));
+            }
+            else
+            {
+                // BSG doesn't handle 1 bullet correctly, and will have already moved the stack into the magazine
+                if (ammo.Parent.Container.ParentItem == magazine)
+                {
+                    task = Task.CompletedTask;
+                }
+                else
+                {
+                    task = __instance.LoadMagazine(ammo, magazine, 1, ignoreRestrictions);
+                }
+            }
 
             __result = task.ContinueWith(t =>
             {
