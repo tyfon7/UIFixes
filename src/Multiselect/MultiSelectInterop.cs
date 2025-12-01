@@ -1,20 +1,19 @@
+using BepInEx;
+using BepInEx.Bootstrap;
+using EFT.InventoryLogic;
+using EFT.UI;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-using BepInEx;
-using BepInEx.Bootstrap;
-using BepInEx.Logging;
-using EFT.InventoryLogic;
-using EFT.UI;
-using HarmonyLib;
 
 /*
 UI Fixes Multi-Select InterOp
 
 First, add the following attribute to your plugin class:
 
-[BepInDependency("com.tyfon.uifixes", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
 
 This will ensure UI Fixes is loaded already when your code is run. It will fail gracefully if UI Fixes is missing.
 
@@ -39,9 +38,7 @@ namespace UIFixesInterop
     /// </summary>
     internal static class MultiSelect
     {
-        private static readonly Version RequiredVersion = new Version(5, 1);
-
-        private static readonly ManualLogSource Logger = new ManualLogSource("UIFixesInterop");
+        private static readonly Version RequiredVersion = new Version(2, 5);
 
         private static bool? UIFixesLoaded;
 
@@ -121,11 +118,8 @@ namespace UIFixesInterop
         {
             if (!UIFixesLoaded.HasValue)
             {
-                BepInEx.Logging.Logger.Sources.Add(Logger);
-
-                bool present = Chainloader.PluginInfos.TryGetValue("com.tyfon.uifixes", out PluginInfo pluginInfo);
-                bool correctVersion = present && pluginInfo.Metadata.Version >= RequiredVersion;
-                UIFixesLoaded = present && correctVersion;
+                bool present = Chainloader.PluginInfos.TryGetValue("Tyfon.UIFixes", out PluginInfo pluginInfo);
+                UIFixesLoaded = present && pluginInfo.Metadata.Version >= RequiredVersion;
 
                 if (UIFixesLoaded.Value)
                 {
@@ -135,24 +129,6 @@ namespace UIFixesInterop
                         GetCountMethod = AccessTools.Method(MultiSelectType, "GetCount");
                         GetItemsMethod = AccessTools.Method(MultiSelectType, "GetItems");
                         ApplyMethod = AccessTools.Method(MultiSelectType, "Apply");
-                    }
-                    else
-                    {
-                        Logger.LogError("UI Fixes is present but something went wrong");
-                        UIFixesLoaded = false;
-                    }
-                }
-                else
-                {
-                    if (!present)
-                    {
-                        // Check for old version
-                        present = Chainloader.PluginInfos.TryGetValue("Tyfon.UIFixes", out pluginInfo);
-                    }
-
-                    if (present && !correctVersion)
-                    {
-                        Logger.LogWarning($"UI Fixes {pluginInfo.Metadata.Version} is present but {RequiredVersion} is required, interop will not work");
                     }
                 }
             }
