@@ -33,6 +33,12 @@ public class LoadAmmoInRaidPatches
                 return true;
             }
 
+            // Doing these in raid would be a) somewhat cheaty, and b) a ton of work
+            if (__instance.Weapon_0 != null && (__instance.Weapon_0.SupportsInternalReload || __instance.Weapon_0.ReloadMode == Weapon.EReloadMode.OnlyBarrel))
+            {
+                return true;
+            }
+
             __result = MagazineBuildClass.TryFindPresetSource(__instance.Item_0_1).Succeeded;
             return false;
         }
