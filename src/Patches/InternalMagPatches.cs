@@ -97,7 +97,6 @@ public static class InternalMagPatches
         [PatchPrefix]
         public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
         {
-            // BSG's code explicitly disallows cylinder mags. Why?
             if (selectedItem is Weapon weapon && weapon.SupportsInternalReload)
             {
                 __result = weapon.GetCurrentMagazine();

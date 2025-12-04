@@ -23,6 +23,7 @@ public static class RevolverPatches
 
         new IsInteractivePatch().Enable();
         new LoadAmmoSubInteractionsPatch().Enable();
+        new DisablePresetPatch().Enable();
     }
 
     public class CylinderMagApplyPatch : ModulePatch
@@ -309,6 +310,24 @@ public static class RevolverPatches
             MagazineItemClass magazine = weapon.GetCurrentMagazine();
             subInteractionsWrapper.SetSubInteractions(new LoadAmmoInteractions(magazine, __instance.ItemContextAbstractClass, __instance.ItemUiContext_1));
             return false;
+        }
+    }
+
+    // Presets fundamentally don't know how to apply to cylinders and I ain't doing that
+    public class DisablePresetPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
+        {
+            if (button == EItemInfoButton.ApplyMagPreset && __instance.Weapon_0 is RevolverItemClass)
+            {
+                __result = false;
+            }
         }
     }
 }
