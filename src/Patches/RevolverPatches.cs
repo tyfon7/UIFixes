@@ -13,22 +13,14 @@ namespace UIFixes;
 
 public static class RevolverPatches
 {
-    private static bool InLoadAmmoByType = false;
-
     public static void Enable()
     {
         new CylinderMagApplyPatch().Enable();
         new CylinderMagApplyWithoutRestrictionsPatch().Enable();
-        new InternalReloadApplyItemPatch().Enable();
 
         new LoadCylinderPatch().Enable();
         new UnloadCylinderPatch().Enable();
 
-        new IsLoadAmmoByTypePatch().Enable();
-
-        //new IsActiveUnloadAmmoPatch().Enable(); // Enables in Raid, but action doesn't work
-        new AddLoadAmmoPatch().Enable();
-        new LoadAmmoIsActivePatch().Enable();
         new IsInteractivePatch().Enable();
         new LoadAmmoSubInteractionsPatch().Enable();
     }
@@ -43,7 +35,7 @@ public static class RevolverPatches
         [PatchPrefix]
         public static bool Prefix(CylinderMagazineItemClass __instance, TraderControllerClass itemController, Item item, int count, bool simulate, ref ItemOperation __result)
         {
-            if (InLoadAmmoByType && item is AmmoItemClass ammo)
+            if (InternalMagPatches.InLoadAmmoByType && item is AmmoItemClass ammo)
             {
                 __result = __instance.ApplyWithoutRestrictions(itemController, ammo, count, simulate);
                 return false;
@@ -67,26 +59,6 @@ public static class RevolverPatches
             var result = __instance.method_30(itemController, ammo, count, simulate);
             __result = result.Succeeded ? result : result.Error;
             return false;
-        }
-    }
-
-    public class InternalReloadApplyItemPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.DeclaredMethod(typeof(MagazineItemClass), nameof(MagazineItemClass.ApplyItem));
-        }
-
-        [PatchPrefix]
-        public static bool Prefix(MagazineItemClass __instance, TraderControllerClass itemController, Item item, int count, bool simulate, ref ItemOperation __result)
-        {
-            if (InLoadAmmoByType && item is AmmoItemClass ammo)
-            {
-                __result = __instance.ApplyWithoutRestrictions(itemController, ammo, count, simulate);
-                return false;
-            }
-
-            return true;
         }
     }
 
@@ -227,95 +199,6 @@ public static class RevolverPatches
         }
     }
 
-    public class IsLoadAmmoByTypePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.LoadAmmoByType));
-        }
-
-        [PatchPrefix]
-        public static void Prefix()
-        {
-            InLoadAmmoByType = true;
-        }
-
-        [PatchPostfix]
-        public static async Task Postfix(Task __result)
-        {
-            await __result;
-            InLoadAmmoByType = false;
-        }
-    }
-
-    public class IsActiveUnloadAmmoPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
-        }
-
-        [PatchPrefix]
-        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
-        {
-            if (button != EItemInfoButton.UnloadAmmo)
-            {
-                return true;
-            }
-
-            if (__instance.Weapon_0 is not RevolverItemClass)
-            {
-                return true;
-            }
-
-            __result = true;
-            return false;
-        }
-    }
-
-    public class AddLoadAmmoPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.DeclaredProperty(typeof(Weapon), nameof(Weapon.ItemInteractionButtons)).GetMethod;
-        }
-
-        [PatchPostfix]
-        public static void Postfix(Weapon __instance, ref IEnumerable<EItemInfoButton> __result)
-        {
-            if (__instance.SupportsInternalReload)
-            {
-                __result = __result.Append(EItemInfoButton.LoadAmmo);
-            }
-        }
-    }
-
-    public class LoadAmmoIsActivePatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
-        }
-
-        [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
-        {
-            // BSG's code explicitly disallows cylinder mags. Why?
-            if (selectedItem is Weapon weapon && weapon.SupportsInternalReload)
-            {
-                __result = weapon.GetCurrentMagazine();
-                return false;
-            }
-            else if (selectedItem is MagazineItemClass)
-            {
-                __result = selectedItem;
-                return false;
-            }
-
-            return true;
-        }
-    }
-
     public class IsInteractivePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -339,6 +222,12 @@ public static class RevolverPatches
 
         private static bool LoadAmmoIsInteractive(ContextInteractionSwitcherClass context, ref IResult result)
         {
+            if (context.Boolean_14)
+            {
+                result = new FailedResult("Inventory/PlayerIsBusy", 0);
+                return false;
+            }
+
             if (context.Item_0_1 is MagazineItemClass && context.Item_0_1.Parent.Container is Slot)
             {
                 result = new FailedResult("InventoryError/You can't load ammo into an installed magazine", 0);
@@ -353,7 +242,7 @@ public static class RevolverPatches
                     new FailedResult("InventoryError/You can't load ammo into this item", 0);
                 return false;
             }
-            else if (context.Weapon_0 != null && context.Weapon_0.SupportsInternalReload)
+            else if (magazine != null && context.Weapon_0 != null && context.Weapon_0.SupportsInternalReload)
             {
                 result = magazine.Cartridges.Count < magazine.Cartridges.MaxCount ?
                     SuccessfulResult.New :
@@ -372,7 +261,7 @@ public static class RevolverPatches
                 return false;
             }
 
-            if (!context.Boolean_7 && context.Item_0_1.Parent.Container is Slot)
+            if (context.Item_0_1 is MagazineItemClass && context.Item_0_1.Parent.Container is Slot)
             {
                 result = new FailedResult("InventoryError/You can't unload ammo from an installed magazine", 0);
                 return false;

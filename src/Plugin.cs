@@ -102,6 +102,8 @@ public class Plugin : BaseUnityPlugin
         WishlistPatches.Enable();
         new LinkedSlotSearchPatch().Enable();
         StashSearchPatches.Enable();
+        InternalMagPatches.Enable();
+        BarrelOnlyPatches.Enable();
         RevolverPatches.Enable();
         TextboxPatches.Enable();
     }
