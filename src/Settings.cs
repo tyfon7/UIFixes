@@ -83,6 +83,7 @@ internal class Settings
     private const string FleaMarketSection = "O. Flea Market";
     private const string AddOfferSection = "P. Add Offer";
     private const string HideoutSection = "Q. Hideout";
+    private const string WeaponsSection = "R. Weapons";
 
     // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
@@ -227,6 +228,10 @@ internal class Settings
     public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
     public static ConfigEntry<bool> AutoWishlistCheckFiR { get; set; }
     public static ConfigEntry<bool> RememberSearchOnExit { get; set; }
+
+    // Weapons
+    public static ConfigEntry<bool> ShowReloadOnInternalMags { get; set; } // Advanced
+    public static ConfigEntry<bool> LoadAmmoOnInternalMags { get; set; }
 
     public static List<ConfigEntryBase> AllConfigs = [];
 
@@ -1250,6 +1255,25 @@ internal class Settings
                 "Persist the crafting search filter even when you exit that hideout area",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowReloadOnInternalMags = config.Bind(
+            WeaponsSection,
+            "Show Internal Mag (Re)load Context Menu",
+            false,
+            new ConfigDescription(
+                "The Load and Reload context menu actions are permanently disabled for weapons with internal magazines. Enable this setting if you want to see it anyway.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(LoadAmmoOnInternalMags = config.Bind(
+            WeaponsSection,
+            "Show Internal Mag Load/Unload Ammo",
+            true,
+            new ConfigDescription(
+                "Add context menu actions to load and unload ammo for weapons with internal magazines or multiple barrels (shotguns, revolvers, bolt actions)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
 
         RecalcOrder(configEntries);
 

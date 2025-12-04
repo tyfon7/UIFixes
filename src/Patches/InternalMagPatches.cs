@@ -77,9 +77,12 @@ public static class InternalMagPatches
         {
             if (__instance.SupportsInternalReload || __instance.ReloadMode == Weapon.EReloadMode.OnlyBarrel)
             {
-                __result = __result.Where(b => b != EItemInfoButton.Reload && b != EItemInfoButton.Load);
+                if (!Settings.ShowReloadOnInternalMags.Value)
+                {
+                    __result = __result.Where(b => b != EItemInfoButton.Reload && b != EItemInfoButton.Load);
+                }
 
-                if (!Plugin.InRaid())
+                if (Settings.LoadAmmoOnInternalMags.Value && !Plugin.InRaid())
                 {
                     __result = __result.Append(EItemInfoButton.LoadAmmo);
                 }
@@ -97,6 +100,11 @@ public static class InternalMagPatches
         [PatchPrefix]
         public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
         {
+            if (!Settings.LoadAmmoOnInternalMags.Value)
+            {
+                return true;
+            }
+
             if (selectedItem is Weapon weapon && weapon.SupportsInternalReload)
             {
                 __result = weapon.GetCurrentMagazine();

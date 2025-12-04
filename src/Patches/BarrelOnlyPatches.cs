@@ -94,6 +94,11 @@ public static class BarrelOnlyPatches
         [PatchPrefix]
         public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
         {
+            if (!Settings.LoadAmmoOnInternalMags.Value)
+            {
+                return true;
+            }
+
             // Boolean_1 is InRaid
             if (__instance.Boolean_1 || (button != EItemInfoButton.LoadAmmo && button != EItemInfoButton.UnloadAmmo))
             {
@@ -120,6 +125,11 @@ public static class BarrelOnlyPatches
         [PatchPrefix]
         public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
         {
+            if (!Settings.LoadAmmoOnInternalMags.Value)
+            {
+                return true;
+            }
+
             if (button != EItemInfoButton.LoadAmmo && button != EItemInfoButton.UnloadAmmo)
             {
                 return true;
@@ -314,7 +324,6 @@ public static class BarrelOnlyPatches
                 return true;
             }
 
-            // BSG never implemented this !?
             var equipmentBlocked = itemContext.ViewType == EItemViewType.InventoryDuringMatching;
 
             var taskSerializer = ItemUiContext.Instance.gameObject.AddComponent<UnloadChambersTaskSerializer>();
