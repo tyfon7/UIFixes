@@ -44,12 +44,19 @@ public static class SwapPatches
     {
         new DetectSwapSourceContainerPatch().Enable();
         new CleanupSwapSourceContainerPatch().Enable();
+
+        // Grids
         new GridViewAcceptItemPatch().Enable();
         new GridViewCanAcceptSwapPatch().Enable();
+        new GridViewForceTrickTargetPatch().Enable();
+
+        // Slots
+        new SlotCanAcceptSwapPatch().Enable();
         new DetectGridHighlightPrecheckPatch().Enable();
         new DetectSlotHighlightPrecheckPatch().Enable();
-        new SlotCanAcceptSwapPatch().Enable();
+
         new WeaponApplyPatch().Enable();
+
         new DetectFilterForSwapPatch().Enable();
         new FixNoGridErrorPatch().Enable();
         new SwapOperationRaiseEventsPatch().Enable();
@@ -60,7 +67,7 @@ public static class SwapPatches
         new ScavInventorySplitPatch().Enable();
     }
 
-    private static bool ValidPrerequisites(DragItemContext itemContext, Item targetItem, IInventoryEventResult operation)
+    private static bool ValidPrerequisites(DragItemContext itemContext, Item targetItem, IInventoryEventResult operation, bool prefix)
     {
         if (!Settings.SwapItems.Value)
         {
@@ -78,7 +85,7 @@ public static class SwapPatches
             return false;
         }
 
-        if (InHighlight || itemContext == null || targetItem == null || operation.Succeeded)
+        if (InHighlight || itemContext == null || targetItem == null || (!prefix && operation.Succeeded))
         {
             return false;
         }
@@ -99,7 +106,7 @@ public static class SwapPatches
             return false;
         }
 
-        var error = operation.Error;
+        var error = prefix ? null : operation.Error;
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
         bool isContainer = targetItem is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
@@ -124,7 +131,7 @@ public static class SwapPatches
             }
         }
 
-        return error is NotApplicableError or CannotApplyError or NoPossibleActionsError;
+        return error is NotApplicableError or CannotApplyError or NoPossibleActionsError or null;
     }
 
     private static bool CouldEverFit(DragItemContext itemContext, Item containerItem)
@@ -148,6 +155,17 @@ public static class SwapPatches
         }
 
         return false;
+    }
+
+    private static bool IsForceSwapPressed()
+    {
+        return Settings.ForceSwapModifier.Value switch
+        {
+            ModifierKey.Shift => Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift),
+            ModifierKey.Control => Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl),
+            ModifierKey.Alt => Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt),
+            _ => false,
+        };
     }
 
     // Grabs the source container of a drag for later use
@@ -202,6 +220,25 @@ public static class SwapPatches
         }
     }
 
+    // If force swap is pressed, forcing this method to return null will trick AcceptItem to not run its special handling of ammo
+    public class GridViewForceTrickTargetPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridView), nameof(GridView.method_8));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ref Item __result)
+        {
+            var force = IsForceSwapPressed();
+            if (InAcceptItem && force)
+            {
+                __result = null;
+            }
+        }
+    }
+
     // For swapping with items in a grid
     public class GridViewCanAcceptSwapPatch : ModulePatch
     {
@@ -252,8 +289,30 @@ public static class SwapPatches
             return false;
         }
 
+        [PatchPrefix]
+        public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
+        {
+            var force = IsForceSwapPressed();
+            if (force && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true))
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
+        }
+
         [PatchPostfix]
         public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
+        {
+            var force = IsForceSwapPressed();
+            if (!force && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, false))
+            {
+                __result = true;
+            }
+        }
+
+        private static bool CanSwap(GridView gridView, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, Dictionary<string, ItemView> itemViews, bool prefix)
         {
             // BSG's "move entire stacks" code loops inside AcceptItem - don't want this method to run on 2nd+ calls. Swap only happens
             // on the first. This still works fine with multi-select since that calls AcceptItem per item 
@@ -261,15 +320,15 @@ public static class SwapPatches
             {
                 if (CalledInAcceptItem)
                 {
-                    return;
+                    return false;
                 }
 
                 CalledInAcceptItem = true;
             }
 
-            if (!ValidPrerequisites(itemContext, targetItemContext?.Item, operation))
+            if (!ValidPrerequisites(itemContext, targetItemContext?.Item, operation, prefix))
             {
-                return;
+                return false;
             }
 
             Item item = itemContext.Item;
@@ -279,20 +338,20 @@ public static class SwapPatches
 
             if (targetItemAddress == null)
             {
-                return;
+                return false;
             }
 
             // Repair kits are special
-            if (___ItemViews.TryGetValue(targetItem.Id, out ItemView targetItemView))
+            if (itemViews.TryGetValue(targetItem.Id, out ItemView targetItemView))
             {
                 if (targetItemView.CanInteract(itemContext))
                 {
-                    return;
+                    return false;
                 }
             }
 
             // This is the location you're dragging it, including rotation
-            LocationInGrid itemToLocation = __instance.CalculateItemLocation(itemContext);
+            LocationInGrid itemToLocation = gridView.CalculateItemLocation(itemContext);
 
             // Target is a grid because this is the GridView patch, i.e. you're dragging it over a grid
             var targetGridItemAddress = targetItemAddress as GridItemAddress;
@@ -307,7 +366,7 @@ public static class SwapPatches
                 }
                 else
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -332,11 +391,11 @@ public static class SwapPatches
             }
             else
             {
-                return;
+                return false;
             }
 
             // Get the TraderControllerClass
-            TraderControllerClass traderControllerClass = __instance.R().TraderController;
+            TraderControllerClass traderControllerClass = gridView.R().TraderController;
 
             // Check that the destinations won't overlap (Swap won't check this)
             if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
@@ -344,10 +403,9 @@ public static class SwapPatches
                 // Try original rotations
                 var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
                 operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
-                __result = result.Succeeded;
                 if (result.Succeeded)
                 {
-                    return;
+                    return true;
                 }
             }
 
@@ -362,11 +420,12 @@ public static class SwapPatches
                     {
                         // Only save this operation result if it succeeded, otherwise return the non-rotated result from above
                         operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
-                        __result = true;
-                        return;
+                        return true;
                     }
                 }
             }
+
+            return false;
         }
     }
 
@@ -439,9 +498,8 @@ public static class SwapPatches
             return AccessTools.Method(typeof(DragItemContext), nameof(DragItemContext.CanAccept));
         }
 
-        // Do not use targetItemContext parameter, it's literally just __instance. Thanks, BSG!
-        [PatchPostfix]
-        public static void Postfix(
+        [PatchPrefix]
+        public static bool Prefix(
             DragItemContext __instance,
             Slot slot,
             ref IInventoryEventResult operation,
@@ -449,18 +507,41 @@ public static class SwapPatches
             bool simulate,
             ref bool __result)
         {
+            var force = IsForceSwapPressed();
+            if (force && CanSwap(__instance, slot, ref operation, itemController, simulate, true))
+            {
+                __result = true;
+                return false;
+            }
+
+            return true;
+        }
+
+        // Do not use targetItemContext parameter, it's literally just __instance. Thanks, BSG!
+        [PatchPostfix]
+        public static void Postfix(DragItemContext __instance, Slot slot, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+        {
+            var force = IsForceSwapPressed();
+            if (!force && CanSwap(__instance, slot, ref operation, itemController, simulate, false))
+            {
+                __result = true;
+            }
+        }
+
+        private static bool CanSwap(DragItemContext dragItemContext, Slot slot, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, bool prefix)
+        {
             // Do a few more checks
-            if (slot.ContainedItem == null || __instance.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(__instance.Item))
+            if (slot.ContainedItem == null || dragItemContext.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(dragItemContext.Item))
             {
-                return;
+                return false;
             }
 
-            if (!ValidPrerequisites(__instance, slot.ContainedItem, operation))
+            if (!ValidPrerequisites(dragItemContext, slot.ContainedItem, operation, prefix))
             {
-                return;
+                return false;
             }
 
-            var item = __instance.Item;
+            var item = dragItemContext.Item;
             var targetItem = slot.ContainedItem;
             var itemToAddress = R.SlotItemAddress.Create(slot);
             var targetToAddress = item.Parent;
@@ -469,26 +550,26 @@ public static class SwapPatches
             // Don't have access to ItemView to call CanInteract, but repair kits can't go into any slot I'm aware of, so...
             if (item is RepairKitsItemClass)
             {
-                return;
+                return false;
             }
 
             // Make sure it's a grid or a slot we're sending the target to - LootRadius workaround
             if (targetToAddress is not GridItemAddress && !R.SlotItemAddress.Type.IsInstanceOfType(targetToAddress))
             {
                 // _1 is the root item (i.e. the stash)
-                if (__instance.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+                if (dragItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
                 {
                     targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
                 }
                 else
                 {
-                    return;
+                    return false;
                 }
             }
 
             var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
             operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
-            __result = result.Succeeded;
+            return result.Succeeded;
         }
     }
 

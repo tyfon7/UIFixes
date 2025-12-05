@@ -39,8 +39,9 @@ internal enum AutoFleaPrice
     Maximum
 }
 
-internal enum TacticalBindModifier
+internal enum ModifierKey
 {
+    None,
     Shift,
     Control,
     Alt
@@ -154,7 +155,7 @@ internal class Settings
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
     // Gameplay Keybinds
-    public static ConfigEntry<TacticalBindModifier> TacticalModeModifier { get; set; }
+    public static ConfigEntry<ModifierKey> TacticalModeModifier { get; set; }
 
     // Multiselect
     public static ConfigEntry<bool> EnableMultiSelect { get; set; }
@@ -169,6 +170,7 @@ internal class Settings
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
+    public static ConfigEntry<ModifierKey> ForceSwapModifier { get; set; }
 
     // ItemStacking
     public static ConfigEntry<bool> StackBeforeSort { get; set; }
@@ -759,7 +761,7 @@ internal class Settings
         configEntries.Add(TacticalModeModifier = config.Bind(
             GameplayKeybindsSection,
             "Change Quickbound Tactical Mode",
-            TacticalBindModifier.Shift,
+            ModifierKey.Shift,
             new ConfigDescription(
                 "Holding this modifer when activating a quickbound tactical device will switch its active mode",
                 null,
@@ -855,6 +857,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "Enable swapping items with containers that could never fit that item due to size or filter restrictions. Disabled in raid to avoid costly mistakes.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ForceSwapModifier = config.Bind(
+            ItemSwappingSection,
+            "Force Swap Key",
+            ModifierKey.Alt,
+            new ConfigDescription(
+                "Holding this modifer when moving items will force swap to take precedence over other interactions (except ammo)",
                 null,
                 new ConfigurationManagerAttributes { })));
 
