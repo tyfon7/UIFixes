@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Comfort.Common;
+using EFT;
 using EFT.InputSystem;
+using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
@@ -18,8 +20,10 @@ public static class AimToggleHoldPatches
         new UpdateInputPatch().Enable();
 
         new ForceTacticalModePatch().Enable();
+        new ToggleInteractionPatch().Enable();
 
         Settings.ToggleOrHoldAim.SettingChanged += OnSettingChanged;
+        Settings.ToggleOrHoldInteract.SettingChanged += OnSettingChanged;
         Settings.ToggleOrHoldSprint.SettingChanged += OnSettingChanged;
         Settings.ToggleOrHoldTactical.SettingChanged += OnSettingChanged;
         Settings.ToggleOrHoldHeadlight.SettingChanged += OnSettingChanged;
@@ -34,7 +38,7 @@ public static class AimToggleHoldPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand disableCommand)
+        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
         {
             if (!UseToggleHold(gameKey))
             {
@@ -45,7 +49,7 @@ public static class AimToggleHoldPatches
             {
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
-                new ToggleHoldHoldState(__instance, disableCommand)
+                new ToggleHoldHoldState(__instance)
             };
 
             __instance.KeyCombinationState_1 = states.ToArray();
@@ -60,7 +64,7 @@ public static class AimToggleHoldPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey, ECommand command)
+        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
         {
             if (!UseToggleHold(gameKey))
             {
@@ -71,7 +75,7 @@ public static class AimToggleHoldPatches
             {
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
-                new ToggleHoldHoldState(__instance, command)
+                new ToggleHoldHoldState(__instance)
             };
 
             __instance.KeyCombinationState_1 = states.ToArray();
@@ -126,11 +130,31 @@ public static class AimToggleHoldPatches
         }
     }
 
+    // Begin/End Interacting is implemented as a two-state keybind, but unlike the others it's not toggle/end, it's begin/end. 
+    // And none of the interactions handle receiving begin while they're active
+    public class ToggleInteractionPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ActionPanel), nameof(ActionPanel.TranslateCommand));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(ref ECommand command, GamePlayerOwner ___gamePlayerOwner_0)
+        {
+            if (command == ECommand.BeginInteracting && ___gamePlayerOwner_0 != null && ___gamePlayerOwner_0.Player.CurrentManagedState is PlantStateClass)
+            {
+                command = ECommand.EndInteracting;
+            }
+        }
+    }
+
     private static bool UseToggleHold(EGameKey gameKey)
     {
         return gameKey switch
         {
             EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
+            EGameKey.Interact => Settings.ToggleOrHoldInteract.Value,
             EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
             EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
             EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,

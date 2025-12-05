@@ -66,10 +66,8 @@ public class ToggleHoldClickOrHoldState(KeyBindingClass keyCombination) : KeyBin
     private float timer;
 }
 
-public class ToggleHoldHoldState(KeyBindingClass keyCombination, ECommand disableCommand) : KeyBindingClass.KeyCombinationState(keyCombination)
+public class ToggleHoldHoldState(KeyBindingClass keyCombination) : KeyBindingClass.KeyCombinationState(keyCombination)
 {
-    private readonly ECommand disableCommand = disableCommand;
-
     public override ECommand GetCommand(float deltaTime)
     {
         if (GetKeysStatus(out EKeyPress ekeyPress) && ekeyPress == EKeyPress.Hold)
@@ -80,6 +78,12 @@ public class ToggleHoldHoldState(KeyBindingClass keyCombination, ECommand disabl
 
         UnhandleKeys(null);
         KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
-        return disableCommand;
+
+        if (KeyCombination is ToggleKeyCombination toggleKeyCombination)
+        {
+            return toggleKeyCombination.Ecommand_1;
+        }
+
+        return KeyCombination.Ecommand_0;
     }
 }

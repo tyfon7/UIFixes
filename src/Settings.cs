@@ -107,6 +107,7 @@ internal class Settings
 
     // Gameplay
     public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
+    public static ConfigEntry<bool> ToggleOrHoldInteract { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldSprint { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldTactical { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
@@ -391,6 +392,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "Tap the aim key to toggle aiming, or hold the key for continuous aiming",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ToggleOrHoldInteract = config.Bind(
+            GameplaySection,
+            "Use Toggle/Hold Interaction",
+            false,
+            new ConfigDescription(
+                "Tap the interact key to begin interacting, and tap again to stop, or hold the key for continuous interaction",
                 null,
                 new ConfigurationManagerAttributes { })));
 
