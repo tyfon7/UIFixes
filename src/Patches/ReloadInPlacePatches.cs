@@ -149,17 +149,30 @@ public static class ReloadInPlacePatches
         // This tied to a different animation state machine sequence than Swap(), and is faster than Swap.
         // So only use Swap if *needed*, otherwise its penalizing all reload speeds
         [PatchPrefix]
-        public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress, Callback callback)
+        public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress, Callback callback, Player ____player)
         {
-            if (!__instance.CanStartReload() || __instance.Blindfire)
-            {
-                return false;
-            }
-
             // If itemAddress isn't null, it already found a place for the current mag, so let it run (unless always swap is enabled)
             if (!Settings.SwapMags.Value || (itemAddress != null && !Settings.AlwaysSwapMags.Value))
             {
                 return true;
+            }
+
+            if (__instance.Blindfire)
+            {
+                return false;
+            }
+
+            ____player.RemoveLeftHandItem(3f);
+            ____player.MovementContext.PlayerAnimator.AnimatedInteractions.ForceStopInteractions();
+            if (____player.MovementContext.PlayerAnimator.AnimatedInteractions.IsInteractionPlaying)
+            {
+                return false;
+            }
+
+            if (!__instance.CanStartReload())
+            {
+                callback?.Fail("Cant StartReload");
+                return false;
             }
 
             // Weapon doesn't currently have a magazine, let the default run (will load one)
