@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>5.1.0</Version>
+    <Version>5.1.1</Version>
     <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.0</SPTPath>
     <FikaPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\Fika</FikaPath>
   </PropertyGroup>

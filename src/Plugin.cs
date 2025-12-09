@@ -100,7 +100,6 @@ public class Plugin : BaseUnityPlugin
         TraderAvatarPatches.Enable();
         FilterStockPresetsPatches.Enable();
         WishlistPatches.Enable();
-        new LinkedSlotSearchPatch().Enable();
         StashSearchPatches.Enable();
         InternalMagPatches.Enable();
         BarrelOnlyPatches.Enable();
