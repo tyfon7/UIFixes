@@ -119,6 +119,7 @@ internal class Settings
     public static ConfigEntry<bool> RemoveDisabledActions { get; set; }
     public static ConfigEntry<bool> EnableLoadAmmoInRaid { get; set; }
     public static ConfigEntry<bool> RebindGrenades { get; set; }
+    public static ConfigEntry<bool> RebindConsumables { get; set; }
 
     // Mouse
     public static ConfigEntry<bool> UnlockCursor { get; set; }
@@ -500,6 +501,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "After throwing a grenade that had a quickbind, move the quickbind to another grenade of the same type, if you have one",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RebindConsumables = config.Bind(
+            GameplaySection,
+            "Quickbind Matching Consumable After Use",
+            true,
+            new ConfigDescription(
+                "After finish a med, food, or drink item that had a quickbind, move the quickbind to another item of the same type, if you have one",
                 null,
                 new ConfigurationManagerAttributes { })));
 

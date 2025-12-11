@@ -73,7 +73,7 @@ public class Plugin : BaseUnityPlugin
         UnloadAmmoPatches.Enable();
         new FixTraderControllerSimulateFalsePatch().Enable();
         new PutToolsBackPatch().Enable();
-        new RebindGrenadesPatch().Enable();
+        RebindConsumablesPatches.Enable();
         AimToggleHoldPatches.Enable();
         ReorderGridsPatches.Enable();
         GPCoinPatches.Enable();
