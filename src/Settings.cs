@@ -1265,7 +1265,7 @@ internal class Settings
                 "Change the behavior of auto-wishlisting hideout upgrades, if you have that EFT feature enabled:\n" +
                 "Normal: EFT default, items will only be wishlisted if all other requirements are met\n" +
                 "Visible Upgrades: Items in any upgrade you can view will be wishlisted, even if there are rep, skill, or other upgrade requirements\n" +
-                "All Requirements: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
+                "All Upgrades: Items will be wishlisted for every upgrade, even for areas you haven't unlocked yet",
                 null,
                 new ConfigurationManagerAttributes { })));
 
