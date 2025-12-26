@@ -208,7 +208,8 @@ public static class ContextMenuShortcutPatches
         [PatchPostfix]
         public static void Postfix(HideoutItemView __instance, ItemUiContext ___ItemUiContext)
         {
-            ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext);
+            // Without waiting, this somehow causes a race condition and doesn't work.
+            __instance.WaitForEndOfFrame(() => ___ItemUiContext.RegisterCurrentItemContext(__instance.ItemContext));
         }
     }
 
