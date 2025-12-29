@@ -14,14 +14,16 @@ public class TransferConfirmPatch : ModulePatch
     }
 
     [PatchPrefix]
-    public static bool Prefix(ref Task<bool> __result)
+    public static bool Prefix(SimpleStashPanel ____stashPanel, ref Task<bool> __result)
     {
         if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
         {
             return true;
         }
 
-        __result = Task.FromResult(true);
+        // This cleans up any open windows that need to close. Pass directly as result.
+        __result = ____stashPanel.TryClose();
+
         return false;
     }
 }
