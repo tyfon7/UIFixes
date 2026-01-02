@@ -3,6 +3,12 @@
     <Version>5.1.3</Version>
     <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.0</SPTPath>
     <FikaPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\Fika</FikaPath>
+    <AssemblySearchPaths>
+      $(SPTPath)\EscapeFromTarkov_Data\Managed;
+      $(SPTPath)\BepInEx\plugins\spt;
+      $(FikaPath);
+      $(AssemblySearchPaths)
+    </AssemblySearchPaths>
   </PropertyGroup>
 
   <ItemGroup>
