@@ -106,6 +106,7 @@ public class Plugin : BaseUnityPlugin
         RevolverPatches.Enable();
         TextboxPatches.Enable();
         VariableScopeFixPatches.Enable();
+        new TransferMergePatch().Enable();
     }
 
     public void Start()
