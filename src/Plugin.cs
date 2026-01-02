@@ -105,6 +105,7 @@ public class Plugin : BaseUnityPlugin
         BarrelOnlyPatches.Enable();
         RevolverPatches.Enable();
         TextboxPatches.Enable();
+        VariableScopeFixPatches.Enable();
     }
 
     public void Start()

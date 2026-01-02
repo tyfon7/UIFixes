@@ -113,6 +113,7 @@ internal class Settings
     public static ConfigEntry<bool> ToggleOrHoldHeadlight { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldGoggles { get; set; }
     public static ConfigEntry<bool> PreventScopeZoomFromInventory { get; set; }
+    public static ConfigEntry<bool> VariableScopeFix { get; set; } // Advanced
     public static ConfigEntry<bool> ModifyEquippedWeapons { get; set; }
     public static ConfigEntry<ModRaidWeapon> ModifyRaidWeapons { get; set; }
     public static ConfigEntry<bool> ModifyEquippedPlates { get; set; }
@@ -449,6 +450,15 @@ internal class Settings
                 "Prevent mousewheel actions in the inventory from affecting your scope zoom",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(VariableScopeFix = config.Bind(
+            GameplaySection,
+            "Variable Scope Fix (requires restart)",
+            true,
+            new ConfigDescription(
+                "Fix for variable scope bug that spams errors and eventually bricks your raid. Only enabled when Fika is NOT present, since Fika has the same fix.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(ModifyEquippedWeapons = config.Bind(
             GameplaySection,
