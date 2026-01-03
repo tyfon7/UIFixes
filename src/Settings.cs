@@ -187,6 +187,7 @@ internal class Settings
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> TagBackpacks { get; set; }
     public static ConfigEntry<bool> TagVests { get; set; }
+    public static ConfigEntry<bool> NoFitBorder { get; set; }
 
     // InspectWindows
     public static ConfigEntry<bool> ShowModStats { get; set; }
@@ -981,6 +982,15 @@ internal class Settings
                 "Enable adding tags to vests. For reasons, the game client must be restarted for changes to take effect.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(NoFitBorder = config.Bind(
+            ContainersSection,
+            "Show Border for Oversized Items",
+            true,
+            new ConfigDescription(
+                "When an item won't fit in a grid, show an outline so you can tell how it doesn't fit by",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // Inspect Windows
         configEntries.Add(ShowModStats = config.Bind(
