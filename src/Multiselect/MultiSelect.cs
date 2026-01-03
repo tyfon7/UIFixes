@@ -336,9 +336,17 @@ public class MultiSelect
         return ItemContexts.All(ic => ic.Item.TemplateId == templateId);
     }
 
+    // Need to track this centrally because patches to the underlying methods (IsActive, IsInteractive) need to not run
+    public static bool CountingInteractions { get; private set; }
+
     public static int InteractionCount(EItemInfoButton interaction, ItemUiContext itemUiContext)
     {
-        return ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
+        CountingInteractions = true;
+
+        int count = ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
+
+        CountingInteractions = false;
+        return count;
     }
 
     private static bool InteractionAvailable(DragItemContext itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)

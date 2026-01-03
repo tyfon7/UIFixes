@@ -65,6 +65,7 @@ public static class MultiSelectPatches
         new ItemViewClickPatch().Enable();
         new ContextActionsPatch().Enable();
         new MoreContextActionsPatch().Enable();
+        new ContextActionsInteractivePatch().Enable();
         new AddOfferPatch().Enable();
         new StopProcessesPatch().Enable();
 
@@ -451,6 +452,29 @@ public static class MultiSelectPatches
                     return false;
                 default:
                     return true;
+            }
+        }
+    }
+
+    public class ContextActionsInteractivePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ContextInteractionsAbstractClass), nameof(ContextInteractionsAbstractClass.IsInteractive));
+        }
+
+        // Postfix so it only runs on failure and can possibly retain original error
+        [PatchPostfix]
+        public static void Postfix(ContextInteractionsAbstractClass __instance, EItemInfoButton button, ref IResult __result)
+        {
+            if (__result.Succeed || !MultiSelect.Active || MultiSelect.CountingInteractions)
+            {
+                return;
+            }
+
+            if (MultiSelect.InteractionCount(button, __instance.ItemUiContext_1) > 0)
+            {
+                __result = SuccessfulResult.New;
             }
         }
     }

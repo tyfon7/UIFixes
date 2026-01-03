@@ -73,8 +73,7 @@ public static class ContextMenuPatches
             {
                 InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
                 count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
-                    .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
-                    .Count();
+                    .Count(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
 
             }
             else if (caption == EItemInfoButton.Repair.ToString())
