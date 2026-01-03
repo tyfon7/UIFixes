@@ -84,7 +84,7 @@ public class Plugin : BaseUnityPlugin
         BarterOfferPatches.Enable();
         new UnlockCursorPatch().Enable();
         LimitDragPatches.Enable();
-        new HideoutCameraPatch().Enable();
+        HideoutCameraPatches.Enable();
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
         TacticalBindsPatches.Enable();

@@ -1,22 +1,34 @@
 using System.Reflection;
+using Comfort.Common;
 using EFT.Hideout;
+using EFT.UI;
 using EFT.UI.Screens;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
 
-// Prevent the hideout camera from moving due to screen-edge when an area is selected or inventory is open
-public class HideoutCameraPatch : ModulePatch
+public static class HideoutCameraPatches
 {
-    protected override MethodBase GetTargetMethod()
+    public static void Enable()
     {
-        return AccessTools.Method(typeof(HideoutCameraController), nameof(HideoutCameraController.LateUpdate));
+        new HideoutCameraPatch().Enable();
     }
 
-    [PatchPrefix]
-    public static bool Prefix(HideoutCameraController __instance)
+    // Prevent the hideout camera from moving due to screen-edge when an area is selected or inventory is open
+    public class HideoutCameraPatch : ModulePatch
     {
-        return !__instance.AreaSelected && !CurrentScreenSingletonClass.Instance.CheckCurrentScreen(EEftScreenType.Inventory);
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(HideoutCameraController), nameof(HideoutCameraController.LateUpdate));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(HideoutCameraController __instance)
+        {
+            return !__instance.AreaSelected &&
+                CurrentScreenSingletonClass.Instance?.CurrentScreenController?.ScreenType is EEftScreenType.Hideout &&
+                !Singleton<CommonUI>.Instance.ChatScreen.gameObject.activeInHierarchy;
+        }
     }
 }
