@@ -71,7 +71,7 @@ public class Plugin : BaseUnityPlugin
         MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
         UnloadAmmoPatches.Enable();
-        new FixTraderControllerSimulateFalsePatch().Enable();
+        FixTraderControllerPatches.Enable();
         new PutToolsBackPatch().Enable();
         RebindConsumablesPatches.Enable();
         AimToggleHoldPatches.Enable();
