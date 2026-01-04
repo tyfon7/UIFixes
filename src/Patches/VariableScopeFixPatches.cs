@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 using EFT.CameraControl;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using UnityEngine;
 
 namespace UIFixes;
 
@@ -18,6 +19,7 @@ public static class VariableScopeFixPatches
             new WeaponManagerClass_method_12_Patch().Enable();
             new WeaponManagerClass_ValidateScopeSmoothZoomUpdate_Patch().Enable();
             new PlayerCameraController_LateUpdate_Transpiler().Enable();
+            new OpticRetrice_UpdateTransform_Patch().Enable();
         }
     }
 
@@ -78,6 +80,20 @@ public static class VariableScopeFixPatches
                 newInstructions[i].opcode = OpCodes.Ret;
             }
             return newInstructions;
+        }
+    }
+
+    public class OpticRetrice_UpdateTransform_Patch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return typeof(OpticRetrice).GetMethod(nameof(OpticRetrice.UpdateTransform));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(OpticSight opticSight, SkinnedMeshRenderer ____renderer)
+        {
+            return opticSight.ScopeData != null && opticSight.ScopeData.Reticle != null && ____renderer != null;
         }
     }
 }
