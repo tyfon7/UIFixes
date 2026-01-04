@@ -39,6 +39,11 @@ public class NetworkTransactionWatcher : IDisposable
         callback = Callback;
     }
 
+    public bool Started()
+    {
+        return innerCallback != null;
+    }
+
     public void Dispose()
     {
         if (Watchers.Count > 0)

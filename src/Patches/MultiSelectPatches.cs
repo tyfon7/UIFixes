@@ -866,7 +866,15 @@ public static class MultiSelectPatches
                     {
                         using var watcher = NetworkTransactionWatcher.WatchNext();
                         await __instance.AcceptItem(selectedItemContext, targetItemContext);
-                        await watcher.Task;
+
+                        // I have no way of knowing that AcceptItem succeeded - it doesn't wait
+                        // To allow partial success, there will be failures
+                        // The network call should have least started by now in the success case
+                        if (watcher.Started())
+                        {
+                            await watcher.Task;
+                        }
+
                         return;
                     }
 
@@ -1105,7 +1113,15 @@ public static class MultiSelectPatches
                     {
                         using var watcher = NetworkTransactionWatcher.WatchNext();
                         await slotView.AcceptItem(selectedItemContext, targetItemContext);
-                        await watcher.Task;
+
+                        // I have no way of knowing that AcceptItem succeeded -it doesn't wait
+                        // To allow partial success, there will be failures
+                        // The network call should have least started by now in the success case
+                        if (watcher.Started())
+                        {
+                            await watcher.Task;
+                        }
+
                         return;
                     }
 
