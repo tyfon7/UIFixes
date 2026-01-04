@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Comfort.Common;
 using EFT.UI;
+using EFT.UI.Chat;
 using EFT.UI.DragAndDrop;
 using TMPro;
 using UnityEngine;
@@ -225,10 +226,14 @@ public class DrawMultiSelect : MonoBehaviour
             .Where(c => c is UIInputNode) // Windows<>'s parent, cheap check
             .Where(IsWindow);
 
+        // Other clickable elements or anything that I want to block
+        var other = allParents
+            .Where(c => c is ChatScreen);
+
         clickables = clickables.Except(windows);
         draggables = draggables.Except(windows);
 
-        return draggables.Any() || clickables.Any();
+        return draggables.Any() || clickables.Any() || other.Any();
     }
 
     private bool IsWindow(MonoBehaviour component)
