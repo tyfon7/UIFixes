@@ -37,13 +37,11 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
     // Base IsActive pukes on mannequin slots, reimpliment it here for linked slots without troublesome parts
     public override bool IsActive(EItemInfoButton button)
     {
-        switch (button)
+        return button switch
         {
-            case EItemInfoButton.LinkedSearch:
-                return !Plugin.InRaid() && AllowedContextTypes.Contains(ItemUiContext_1.ContextType);
-            default:
-                return base.IsActive(button);
-        }
+            EItemInfoButton.LinkedSearch => !Plugin.InRaid() && AllowedContextTypes.Contains(ItemUiContext_1.ContextType),
+            _ => false,
+        };
     }
 
     // Base IsInteractive pukes on mannequin slots, reimpliment it here for linked slots without troublesome parts
@@ -65,7 +63,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
 
                 return SuccessfulResult.New;
             default:
-                return base.IsInteractive(button);
+                return new FailedResult("Unsupported button");
         }
     }
 
