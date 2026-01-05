@@ -82,7 +82,7 @@ public class Plugin : BaseUnityPlugin
         SortPatches.Enable();
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
-        new UnlockCursorPatch().Enable();
+        CursorPatches.Enable();
         LimitDragPatches.Enable();
         HideoutCameraPatches.Enable();
         WeaponModdingPatches.Enable();
