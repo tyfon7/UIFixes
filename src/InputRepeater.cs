@@ -28,7 +28,7 @@ public class InputRepeater : MonoBehaviour
 
     public void BeginTrying(EGameKey gameKey, Action action)
     {
-        StopTrying();
+        Reset();
 
         if (!KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding))
         {
@@ -44,6 +44,11 @@ public class InputRepeater : MonoBehaviour
     }
 
     public void StopTrying()
+    {
+        Reset();
+    }
+
+    private void Reset()
     {
         keyBinding = null;
         action = null;

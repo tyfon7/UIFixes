@@ -65,27 +65,40 @@ public static class InputPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.method_17));
+            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.method_13));
         }
 
-        [PatchPostfix]
-        public static void Postfix(FirearmHandsInputTranslator __instance, Weapon weapon, bool quickReload, bool __result)
+        [PatchPrefix]
+        public static void Postfix(FirearmHandsInputTranslator __instance)
         {
             if (!Settings.QueueHeldInputs.Value || InAttempt)
             {
                 return;
             }
 
-            if (!__result && !quickReload)
+            if (__instance.IfirearmHandsController_0 is not Player.FirearmController firearmController)
             {
-                var firearmController = __instance.IfirearmHandsController_0 as Player.FirearmController;
-                var repeater = firearmController.GetOrAddComponent<InputRepeater>();
+                return;
+            }
+
+            InputRepeater repeater;
+            if (!firearmController.CanStartReload())
+            {
+                repeater = firearmController.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.ReloadWeapon, () =>
                 {
                     InAttempt = true;
-                    __instance.method_17(weapon, quickReload);
+                    __instance.method_13();
                     InAttempt = false;
                 });
+            }
+            else
+            {
+                repeater = firearmController.GetComponent<InputRepeater>();
+                if (repeater != null)
+                {
+                    repeater.StopTrying();
+                }
             }
         }
     }
