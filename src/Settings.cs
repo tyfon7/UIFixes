@@ -106,6 +106,7 @@ internal class Settings
     public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
     // Gameplay
+    public static ConfigEntry<bool> QueueHeldInputs { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldAim { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldInteract { get; set; }
     public static ConfigEntry<bool> ToggleOrHoldSprint { get; set; }
@@ -389,6 +390,15 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Gameplay
+        configEntries.Add(QueueHeldInputs = config.Bind(
+            GameplaySection,
+            "Queue Held Inputs",
+            true,
+            new ConfigDescription(
+                "Certain actions will occur as soon as the current action is complete when holding the button. Works for Aim, Reload, and Sprint. Requires that they are set to Press or Continuous (or Toggle/Hold is enabled)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(ToggleOrHoldAim = config.Bind(
             GameplaySection,
             "Use Toggle/Hold Aiming",

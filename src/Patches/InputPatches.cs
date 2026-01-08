@@ -32,7 +32,7 @@ public static class InputPatches
         [PatchPostfix]
         public static void Postfix(Player.FirearmController __instance, bool value)
         {
-            if (InAttempt)
+            if (!Settings.QueueHeldInputs.Value || InAttempt)
             {
                 return;
             }
@@ -71,7 +71,7 @@ public static class InputPatches
         [PatchPostfix]
         public static void Postfix(FirearmHandsInputTranslator __instance, Weapon weapon, bool quickReload, bool __result)
         {
-            if (InAttempt)
+            if (!Settings.QueueHeldInputs.Value || InAttempt)
             {
                 return;
             }
@@ -103,6 +103,11 @@ public static class InputPatches
         [PatchPrefix]
         public static bool Prefix(Player __instance)
         {
+            if (!Settings.QueueHeldInputs.Value)
+            {
+                return true;
+            }
+
             bool enable = !__instance.Physical.Sprinting;
             __instance.CurrentManagedState.EnableSprint(enable, false);
 
@@ -122,6 +127,11 @@ public static class InputPatches
         [PatchPrefix]
         public static bool Prefix(MovementContext __instance, Player ____player)
         {
+            if (!Settings.QueueHeldInputs.Value)
+            {
+                return true;
+            }
+
             if (____player.UsedSimplifiedSkeleton)
             {
                 return false;
