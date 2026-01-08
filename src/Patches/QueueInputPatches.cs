@@ -1,13 +1,12 @@
 using System.Reflection;
 using EFT;
 using EFT.InputSystem;
-using EFT.InventoryLogic;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
 
-public static class InputPatches
+public static class QueueInputPatches
 {
     public static void Enable()
     {
