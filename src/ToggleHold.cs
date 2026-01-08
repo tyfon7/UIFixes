@@ -87,3 +87,38 @@ public class ToggleHoldHoldState(KeyBindingClass keyCombination) : KeyBindingCla
         return KeyCombination.Ecommand_0;
     }
 }
+
+public static class ToggleHold
+{
+    public static bool IsEnabled(EGameKey gameKey)
+    {
+        return gameKey switch
+        {
+            EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
+            EGameKey.Interact => Settings.ToggleOrHoldInteract.Value,
+            EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
+            EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
+            EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,
+            EGameKey.Sprint => Settings.ToggleOrHoldSprint.Value,
+            EGameKey.Slot4 => IsQuickbindEnabled(EGameKey.Slot4),
+            EGameKey.Slot5 => IsQuickbindEnabled(EGameKey.Slot5),
+            EGameKey.Slot6 => IsQuickbindEnabled(EGameKey.Slot6),
+            EGameKey.Slot7 => IsQuickbindEnabled(EGameKey.Slot7),
+            EGameKey.Slot8 => IsQuickbindEnabled(EGameKey.Slot8),
+            EGameKey.Slot9 => IsQuickbindEnabled(EGameKey.Slot9),
+            EGameKey.Slot0 => IsQuickbindEnabled(EGameKey.Slot0),
+            _ => false
+        };
+    }
+
+    private static bool IsQuickbindEnabled(EGameKey gameKey)
+    {
+        return Quickbind.GetType(gameKey) switch
+        {
+            Quickbind.ItemType.Tactical => Settings.ToggleOrHoldTactical.Value,
+            Quickbind.ItemType.Headlight => Settings.ToggleOrHoldHeadlight.Value,
+            Quickbind.ItemType.NightVision => Settings.ToggleOrHoldGoggles.Value,
+            _ => false,
+        };
+    }
+}

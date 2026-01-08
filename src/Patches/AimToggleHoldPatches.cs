@@ -40,7 +40,7 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
         {
-            if (!UseToggleHold(gameKey))
+            if (!ToggleHold.IsEnabled(gameKey))
             {
                 return;
             }
@@ -66,7 +66,7 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
         {
-            if (!UseToggleHold(gameKey))
+            if (!ToggleHold.IsEnabled(gameKey))
             {
                 return;
             }
@@ -93,7 +93,7 @@ public static class AimToggleHoldPatches
         public static void Prefix(KeyBindingClass __instance, ref List<IInputKey> inputKeys)
         {
             // BSG implemented tactical as an entirely new abomination, so I have to disable the "release tactical" 
-            if (__instance.GameKey == EGameKey.ReleaseTactical && UseToggleHold(EGameKey.Tactical))
+            if (__instance.GameKey == EGameKey.ReleaseTactical && ToggleHold.IsEnabled(EGameKey.Tactical))
             {
                 inputKeys = [];
             }
@@ -102,7 +102,7 @@ public static class AimToggleHoldPatches
         [PatchPostfix]
         public static void Postfix(KeyBindingClass __instance)
         {
-            if (UseToggleHold(__instance.GameKey))
+            if (ToggleHold.IsEnabled(__instance.GameKey))
             {
                 __instance.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
             }
@@ -120,7 +120,7 @@ public static class AimToggleHoldPatches
         [PatchPrefix]
         public static bool Prefix(ref bool __result)
         {
-            if (UseToggleHold(EGameKey.Tactical))
+            if (ToggleHold.IsEnabled(EGameKey.Tactical))
             {
                 __result = true;
                 return false;
@@ -149,37 +149,6 @@ public static class AimToggleHoldPatches
         }
     }
 
-    private static bool UseToggleHold(EGameKey gameKey)
-    {
-        return gameKey switch
-        {
-            EGameKey.Aim => Settings.ToggleOrHoldAim.Value,
-            EGameKey.Interact => Settings.ToggleOrHoldInteract.Value,
-            EGameKey.Tactical => Settings.ToggleOrHoldTactical.Value,
-            EGameKey.ToggleGoggles => Settings.ToggleOrHoldGoggles.Value,
-            EGameKey.ToggleHeadLight => Settings.ToggleOrHoldHeadlight.Value,
-            EGameKey.Sprint => Settings.ToggleOrHoldSprint.Value,
-            EGameKey.Slot4 => UseToggleHoldQuickBind(EGameKey.Slot4),
-            EGameKey.Slot5 => UseToggleHoldQuickBind(EGameKey.Slot5),
-            EGameKey.Slot6 => UseToggleHoldQuickBind(EGameKey.Slot6),
-            EGameKey.Slot7 => UseToggleHoldQuickBind(EGameKey.Slot7),
-            EGameKey.Slot8 => UseToggleHoldQuickBind(EGameKey.Slot8),
-            EGameKey.Slot9 => UseToggleHoldQuickBind(EGameKey.Slot9),
-            EGameKey.Slot0 => UseToggleHoldQuickBind(EGameKey.Slot0),
-            _ => false
-        };
-    }
-
-    private static bool UseToggleHoldQuickBind(EGameKey gameKey)
-    {
-        return Quickbind.GetType(gameKey) switch
-        {
-            Quickbind.ItemType.Tactical => Settings.ToggleOrHoldTactical.Value,
-            Quickbind.ItemType.Headlight => Settings.ToggleOrHoldHeadlight.Value,
-            Quickbind.ItemType.NightVision => Settings.ToggleOrHoldGoggles.Value,
-            _ => false,
-        };
-    }
 
     private static void OnSettingChanged(object sender, EventArgs args)
     {

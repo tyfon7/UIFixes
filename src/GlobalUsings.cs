@@ -29,6 +29,7 @@ global using ArmorFormatter = GClass3132;
 global using WishlistManager = GClass2067;
 global using ItemReceiver = GClass2331;
 global using KeyPressState = GClass2412;
+global using FirearmHandsInputTranslator = Class1730;
 
 // Context menus
 global using InventoryInteractions = GClass3757; // There are two child versions?

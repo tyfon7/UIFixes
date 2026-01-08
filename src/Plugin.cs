@@ -108,6 +108,7 @@ public class Plugin : BaseUnityPlugin
         VariableScopeFixPatches.Enable();
         new TransferMergePatch().Enable();
         GridHighlightPatches.Enable();
+        InputPatches.Enable();
     }
 
     public void Start()
