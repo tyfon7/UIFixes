@@ -38,6 +38,9 @@ public static class WeaponModdingPatches
         new ArmorSlotAcceptRaidPatch().Enable();
         new ModRaidModdablePatch().Enable();
         new EmptyVitalPartsPatch().Enable();
+
+        new InAssemblePatch().Enable();
+        new LongerFullIdPatch().Enable();
     }
 
     public class ResizePatch : ModulePatch
@@ -649,6 +652,50 @@ public static class WeaponModdingPatches
             if (CanApplyPatch.SuccessOverride)
             {
                 __result = [];
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Track if assembling for LongerFullIdPatch below
+    public class InAssemblePatch : ModulePatch
+    {
+        public static bool Assembling = false;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(WeaponBuilder), nameof(WeaponBuilder.smethod_0));
+        }
+
+        [PatchPrefix]
+        public static void Prefix()
+        {
+            Assembling = true;
+        }
+
+        [PatchPostfix]
+        public static void Postfix()
+        {
+            Assembling = false;
+        }
+    }
+
+    // While assembling, change Slot.FullId to also append the parent's slot ID, to disambiguate
+    public class LongerFullIdPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Property(typeof(Slot), nameof(Slot.FullId)).GetMethod;
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(Slot __instance, ref string __result)
+        {
+            if (InAssemblePatch.Assembling && __instance.ParentItem.Parent?.Container is Slot parentSlot)
+            {
+                __result = $"{__instance.ID} {__instance.ParentItem.TemplateId} {parentSlot.ID}";
                 return false;
             }
 
