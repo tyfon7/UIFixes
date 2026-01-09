@@ -109,6 +109,7 @@ public class Plugin : BaseUnityPlugin
         new TransferMergePatch().Enable();
         GridHighlightPatches.Enable();
         QueueInputPatches.Enable();
+        new CompassGogglesPatch().Enable();
     }
 
     public void Start()
