@@ -97,7 +97,7 @@ public static class WishlistPatches
                 }
 
                 Plugin.Instance.Logger.LogWarning("UIFixes: Failed to detect if hideout upgrades require FIR");
-                return false; // False will cause the normal behavior, so fall back to that
+                FiRRequired = false; // False will cause the normal behavior, so fall back to that
             }
 
             return FiRRequired.Value;
