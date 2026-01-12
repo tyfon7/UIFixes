@@ -31,7 +31,7 @@ public static class QueueInputPatches
         [PatchPostfix]
         public static void Postfix(Player.FirearmController __instance, bool value)
         {
-            if (!Settings.QueueHeldInputs.Value || InAttempt)
+            if (!Settings.QueueHeldInputs.Value || InAttempt || __instance == null)
             {
                 return;
             }
@@ -42,6 +42,12 @@ public static class QueueInputPatches
                 repeater = __instance.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.Aim, () =>
                 {
+                    if (__instance == null)
+                    {
+                        repeater.StopTrying();
+                        return;
+                    }
+
                     InAttempt = true;
                     __instance.SetAim(true);
                     InAttempt = false;
@@ -70,7 +76,7 @@ public static class QueueInputPatches
         [PatchPrefix]
         public static void Postfix(FirearmHandsInputTranslator __instance)
         {
-            if (!Settings.QueueHeldInputs.Value || InAttempt)
+            if (!Settings.QueueHeldInputs.Value || InAttempt || __instance == null)
             {
                 return;
             }
@@ -86,6 +92,12 @@ public static class QueueInputPatches
                 repeater = firearmController.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.ReloadWeapon, () =>
                 {
+                    if (__instance == null)
+                    {
+                        repeater.StopTrying();
+                        return;
+                    }
+
                     InAttempt = true;
                     __instance.method_13();
                     InAttempt = false;

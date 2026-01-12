@@ -63,7 +63,15 @@ public class InputRepeater : MonoBehaviour
             switch (keyPress)
             {
                 case EKeyPress.Hold:
-                    action();
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception ex)
+                    {
+                        Plugin.Instance.Logger.LogError($"Error repeating {keyBinding.GameKey}: {ex}");
+                        StopTrying();
+                    }
                     break;
                 case EKeyPress.None:
                 case EKeyPress.Up:
