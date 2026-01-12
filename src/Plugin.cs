@@ -114,7 +114,8 @@ public class Plugin : BaseUnityPlugin
 
     public void Start()
     {
-        CheckForOldInterop();
+        // TODO: Re-enable with 4.1
+        // CheckForOldInterop();
     }
 
     public static bool InRaid()
