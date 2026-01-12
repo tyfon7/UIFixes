@@ -60,6 +60,7 @@ global using GridModificationsUnavailableError = StashGridClass.GClass1547;
 global using NoRoomError = GClass1549;
 global using NoPossibleActionsError = GClass1550;
 global using MoveSameSpaceError = InteractionsHandlerClass.GClass1592;
+global using MoveResizeError = InteractionsHandlerClass.GClass1605;
 global using NotApplicableError = GClass1550;
 global using NotExaminedError = GClass1551;
 global using NotModdableInRaidError = GClass1554;

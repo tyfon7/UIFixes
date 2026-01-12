@@ -21,9 +21,10 @@ public static class WeaponModdingPatches
 
     public static void Enable()
     {
-        new ResizePatch().Enable();
-        new ResizeHelperPatch().Enable();
-        new ResizeOperationRollbackPatch().Enable();
+        new LastResizePatch().Enable();
+        new MoveBeforeResizePatch().Enable();
+        new MoveBeforeUnfoldPatch().Enable();
+        new MoveOperationRollbackPatch().Enable();
         new MoveBeforeNetworkTransactionPatch().Enable();
 
         new SwapModsPatch().Enable();
@@ -43,85 +44,60 @@ public static class WeaponModdingPatches
         new LongerFullIdPatch().Enable();
     }
 
-    public class ResizePatch : ModulePatch
+    public struct ResizeData
     {
-        public static MoveOperation NecessaryMoveOperation = null;
+        public MongoID itemId;
+        public XYCellSizeStruct oldSize;
+        public XYCellSizeStruct newSize;
+    }
 
-        private static bool InPatch = false;
+    public class LastResizePatch : ModulePatch
+    {
+        public static ResizeData LastResize;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.Resize));
         }
 
         [PatchPostfix]
-        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize, bool simulate, ref GStruct154<IResizeResult> __result)
+        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize)
         {
-            if (__result.Succeeded || InPatch)
-            {
-                return;
-            }
-
-            if (item.Owner is not InventoryController inventoryController)
-            {
-                return;
-            }
-
             LocationInGrid itemLocation = __instance.GetItemLocation(item);
 
             // The sizes passed in are the template sizes, need to make match the item's rotation
-            XYCellSizeStruct actualOldSize = itemLocation.r.Rotate(oldSize);
-            XYCellSizeStruct actualNewSize = itemLocation.r.Rotate(newSize);
+            LastResize = new ResizeData
+            {
+                itemId = item.Id,
+                oldSize = itemLocation.r.Rotate(oldSize),
+                newSize = itemLocation.r.Rotate(newSize)
+            };
+        }
+    }
 
-            // Figure out which direction(s) its growing
-            int horizontalGrowth = actualNewSize.X - actualOldSize.X;
-            int verticalGrowth = actualNewSize.Y - actualOldSize.Y;
+    public class MoveBeforeResizePatch : ModulePatch
+    {
+        private static bool InPatch = false;
 
-            // Can't move up/left more than the position
-            horizontalGrowth = Math.Min(horizontalGrowth, itemLocation.x);
-            verticalGrowth = Math.Min(verticalGrowth, itemLocation.y);
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Move));
+        }
 
-            // Try moving it
+        [PatchPostfix]
+        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, bool simulate, ref GStruct154<MoveOperation> __result)
+        {
+            if (__result.Succeeded || InPatch || __result.Error is not MoveResizeError)
+            {
+                return;
+            }
+
+            Item targetItem = to.Container.ParentItem;
+
             try
             {
                 InPatch = true;
-                for (int x = 0; x <= horizontalGrowth; x++)
-                {
-                    for (int y = 0; y <= verticalGrowth; y++)
-                    {
-                        if (x + y == 0)
-                        {
-                            continue;
-                        }
-
-                        LocationInGrid newLocation = new(itemLocation.x - x, itemLocation.y - y, itemLocation.r);
-                        ItemAddress newAddress = new StashGridItemAddress(__instance, newLocation);
-
-                        var moveOperation = InteractionsHandlerClass.Move(item, newAddress, inventoryController, false);
-                        if (moveOperation.Failed || moveOperation.Value == null)
-                        {
-                            continue;
-                        }
-
-                        var resizeResult = __instance.Resize(item, oldSize, newSize, simulate);
-
-                        // If simulating, rollback. Note that for some reason, only the Fold case even uses simulate
-                        // The other cases (adding a mod, etc) never simulate, and then rollback later. Likely because there is normally
-                        // no server side-effect of a resize - the only effect is updating the grid's free/used map. 
-                        if (simulate || resizeResult.Failed)
-                        {
-                            moveOperation.Value.RollBack();
-                        }
-
-                        if (resizeResult.Succeeded)
-                        {
-                            // Stash the move operation so it can be executed or rolled back later
-                            NecessaryMoveOperation = moveOperation.Value;
-
-                            __result = resizeResult;
-                            return;
-                        }
-                    }
-                }
+                TryMoving(targetItem, itemController, simulate, ref __result, () => InteractionsHandlerClass.Move(item, to, itemController, simulate));
             }
             finally
             {
@@ -130,40 +106,122 @@ public static class WeaponModdingPatches
         }
     }
 
-    public class ResizeHelperPatch : ModulePatch
+    public class MoveBeforeUnfoldPatch : ModulePatch
     {
+        private static bool InPatch = false;
+
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Resize_Helper));
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Fold));
         }
 
         [PatchPostfix]
-        public static void Postfix(ref GStruct154<ResizeOperation> __result)
+        public static void Postfix(FoldableComponent foldable, bool folded, bool simulate, ref GStruct154<FoldOperation> __result)
         {
-            if (__result.Failed || __result.Value == null)
+            if (__result.Succeeded || InPatch || __result.Error is not MoveResizeError)
             {
                 return;
             }
 
-            if (ResizePatch.NecessaryMoveOperation != null)
+            if (foldable.Item.Owner is not InventoryController inventoryController)
             {
-                __result.Value.SetMoveOperation(ResizePatch.NecessaryMoveOperation);
-                ResizePatch.NecessaryMoveOperation = null;
+                return;
+            }
+
+            try
+            {
+                InPatch = true;
+                TryMoving(foldable.Item, inventoryController, simulate, ref __result, () => InteractionsHandlerClass.Fold(foldable, folded, simulate));
+            }
+            finally
+            {
+                InPatch = false;
             }
         }
     }
 
-    public class ResizeOperationRollbackPatch : ModulePatch
+    private static void TryMoving<T>(Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<T> __result, Func<GStruct154<T>> func) where T : IRaiseEvents
+    {
+        ResizeData resize = LastResizePatch.LastResize;
+        if (targetItem.Id != resize.itemId || targetItem.Parent is not GridItemAddress gridItemAddress)
+        {
+            return;
+        }
+
+        StashGridClass grid = gridItemAddress.Grid;
+        LocationInGrid itemLocation = gridItemAddress.LocationInGrid;
+
+        // Figure out which direction(s) its growing
+        int horizontalGrowth = resize.newSize.X - resize.oldSize.X;
+        int verticalGrowth = resize.newSize.Y - resize.oldSize.Y;
+
+        // Can't move up/left more than the position
+        horizontalGrowth = Math.Min(horizontalGrowth, itemLocation.x);
+        verticalGrowth = Math.Min(verticalGrowth, itemLocation.y);
+
+        for (int x = itemLocation.x; x >= itemLocation.x - horizontalGrowth; x--)
+        {
+            for (int y = itemLocation.y; y >= itemLocation.y - verticalGrowth; y--)
+            {
+                if (x == itemLocation.x && y == itemLocation.y)
+                {
+                    continue;
+                }
+
+                LocationInGrid newLocation = new(x, y, itemLocation.r);
+                ItemAddress newAddress = new StashGridItemAddress(grid, newLocation);
+
+                var extraMoveResult = InteractionsHandlerClass.Move(targetItem, newAddress, itemController, false);
+                if (extraMoveResult.Failed || extraMoveResult.Value == null)
+                {
+                    if (extraMoveResult.Error is GridSpaceTakenError)
+                    {
+                        // If this x value collided before going up, it's over
+                        if (y == itemLocation.y)
+                        {
+                            return;
+                        }
+
+                        // Otherwise move on to the next x value
+                        break;
+                    }
+
+                    continue;
+                }
+
+                var originalResult = func();
+
+                // If simulating, rollback. Note that for some reason, only the Fold case even uses simulate
+                // The other cases (adding a mod, etc) never simulate, and then rollback later. Likely because there is normally
+                // no server side-effect of a resize - the only effect is updating the grid's free/used map. 
+                if (simulate || originalResult.Failed)
+                {
+                    extraMoveResult.Value.RollBack();
+                }
+
+                if (originalResult.Succeeded)
+                {
+                    // Stash the extra move operation so it can be executed or rolled back later
+                    originalResult.Value.SetExtraMoveOperation(extraMoveResult.Value);
+
+                    __result = originalResult;
+                    return;
+                }
+            }
+        }
+    }
+
+    public class MoveOperationRollbackPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ResizeOperation), nameof(ResizeOperation.RollBack));
+            return AccessTools.Method(typeof(MoveOperation), nameof(MoveOperation.RollBack));
         }
 
         [PatchPostfix]
-        public static void Postfix(ResizeOperation __instance)
+        public static void Postfix(MoveOperation __instance)
         {
-            MoveOperation moveOperation = __instance.GetMoveOperation();
+            MoveOperation moveOperation = __instance.GetExtraMoveOperation();
             if (moveOperation != null)
             {
                 moveOperation.RollBack();
@@ -191,11 +249,11 @@ public static class WeaponModdingPatches
             MoveOperation extraOperation = null;
             if (operationResult is MoveOperation moveOperation)
             {
-                extraOperation = moveOperation.R().AddOperation?.R().ResizeOperation?.GetMoveOperation();
+                extraOperation = moveOperation.GetExtraMoveOperation();
             }
             else if (operationResult is FoldOperation foldOperation)
             {
-                extraOperation = foldOperation.R().ResizeOperation?.GetMoveOperation();
+                extraOperation = foldOperation.GetExtraMoveOperation();
             }
 
             if (extraOperation == null)

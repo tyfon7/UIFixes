@@ -74,16 +74,16 @@ public static class ExtraItemViewStatsProperties
     public static void SetHideMods(this ItemViewStats itemViewStats, bool value) => properties.GetOrCreateValue(itemViewStats).HideMods = value;
 }
 
-public static class ExtraEventResultProperties
+public static class ExtraOperationProperties
 {
-    private static readonly ConditionalWeakTable<ResizeOperation, Properties> properties = new();
+    private static readonly ConditionalWeakTable<IRaiseEvents, Properties> properties = new();
 
     private class Properties
     {
-        public MoveOperation MoveOperation;
+        public MoveOperation ExtraMoveOperation;
     }
 
-    public static MoveOperation GetMoveOperation(this ResizeOperation result) => properties.GetOrCreateValue(result).MoveOperation;
-    public static void SetMoveOperation(this ResizeOperation result, MoveOperation operation) => properties.GetOrCreateValue(result).MoveOperation = operation;
+    public static MoveOperation GetExtraMoveOperation(this IRaiseEvents op) => properties.GetOrCreateValue(op).ExtraMoveOperation;
+    public static void SetExtraMoveOperation(this IRaiseEvents op, MoveOperation operation) => properties.GetOrCreateValue(op).ExtraMoveOperation = operation;
 }
 
