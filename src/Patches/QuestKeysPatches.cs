@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Reflection;
+using EFT;
+using EFT.Quests;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -13,6 +16,7 @@ public static class QuestKeysPatches
     public static void Enable()
     {
         new BigButtonPatch().Enable();
+        new DebounceStatusNotifyPatch().Enable();
     }
 
     // Hook up listener to Accept/Complete button
@@ -28,6 +32,33 @@ public static class QuestKeysPatches
         {
             var listener = ____button.GetOrAddComponent<ButtonListener>();
             listener.Button = ____button;
+        }
+    }
+
+    public class DebounceStatusNotifyPatch : ModulePatch
+    {
+        private static Dictionary<MongoID, EQuestStatus> RecentQuestStatuses = [];
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(QuestController), nameof(QuestController.TryNotifyConditionalStatusChanged));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(QuestClass quest)
+        {
+            if (RecentQuestStatuses.TryGetValue(quest.Template.Id, out EQuestStatus status) && status == quest.QuestStatus)
+            {
+                return false;
+            }
+
+            if (ItemUiContext.Instance != null)
+            {
+                RecentQuestStatuses[quest.Template.Id] = quest.QuestStatus;
+                ItemUiContext.Instance.WaitSeconds(1, () => RecentQuestStatuses.Remove(quest.Template.Id));
+            }
+
+            return true;
         }
     }
 
