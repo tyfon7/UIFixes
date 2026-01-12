@@ -92,7 +92,11 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            Item targetItem = to.Container.ParentItem;
+            Item targetItem = to.GetRootItemNotEquipment();
+            if (targetItem == null)
+            {
+                return;
+            }
 
             try
             {
