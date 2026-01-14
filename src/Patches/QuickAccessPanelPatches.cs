@@ -17,6 +17,7 @@ public static class QuickAccessPanelPatches
     {
         new FixWeaponBindsDisplayPatch().Enable();
         new BoundItemViewTextPatch().Enable();
+        new BindPanelTextPatch().Enable();
         new RotationPatch().Enable();
     }
 
@@ -46,6 +47,7 @@ public static class QuickAccessPanelPatches
         }
     }
 
+    // Shorten the keybind on the quickbar
     public class BoundItemViewTextPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -54,7 +56,7 @@ public static class QuickAccessPanelPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(BoundItemView __instance, ItemUiContext itemUiContext, TextMeshProUGUI ___HotKey)
+        public static void Postfix(ItemUiContext itemUiContext, TextMeshProUGUI ___HotKey)
         {
             if (___HotKey == null || ___HotKey.text == null)
             {
@@ -62,41 +64,62 @@ public static class QuickAccessPanelPatches
             }
 
             var bindPanel = ___HotKey.transform.parent.gameObject;
+            ShortenText(bindPanel, ___HotKey, itemUiContext);
+        }
+    }
 
-            if (Settings.ShortenKeyBinds.Value && ___HotKey.text.Length > 2 && ___HotKey.text != "...")
+    // Shorten the quickbind on the equipment item itself
+    public class BindPanelTextPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(BindPanel), nameof(BindPanel.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(BindPanel __instance, TextMeshProUGUI ____hotKey)
+        {
+            // Required because there's some kind of late adjustment that screws with the offset
+            ShortenText(__instance.gameObject, ____hotKey, ItemUiContext.Instance);
+        }
+    }
+
+    private static void ShortenText(GameObject bindPanel, TextMeshProUGUI hotkey, ItemUiContext itemUiContext)
+    {
+        if (hotkey == null || hotkey.text == null)
+        {
+            return;
+        }
+
+        if (Settings.ShortenKeyBinds.Value && hotkey.text.Length > 2 && hotkey.text != "...")
+        {
+            var originalText = hotkey.text;
+            hotkey.text = "...";
+            hotkey.fontSize = 22f;
+            hotkey.margin = new(0f, 0f, 0f, 14f);
+
+            var hoverTrigger = bindPanel.GetOrAddComponent<HoverTrigger>();
+            hoverTrigger.OnHoverStart += _ =>
             {
-                var originalText = ___HotKey.text;
-                ___HotKey.text = "...";
-                ___HotKey.fontSize = 22f;
-                ___HotKey.transform.localPosition = new Vector3(12, -6, 0);
-
-                var hoverTrigger = bindPanel.GetOrAddComponent<HoverTrigger>();
-                hoverTrigger.OnHoverStart += _ =>
+                if (itemUiContext.Tooltip != null)
                 {
-                    if (itemUiContext.Tooltip != null)
-                    {
-                        itemUiContext.Tooltip.Show(originalText);
-                    }
-                };
-
-                hoverTrigger.OnHoverEnd += _ =>
-                {
-                    if (itemUiContext.Tooltip != null)
-                    {
-                        itemUiContext.Tooltip.Close();
-                    }
-                };
-            }
-            else
-            {
-                ___HotKey.fontSize = 14f;
-                ___HotKey.transform.localPosition = new Vector3(12, -12, 0);
-                var hoverTrigger = bindPanel.GetComponent<HoverTrigger>();
-                if (hoverTrigger != null)
-                {
-                    UnityEngine.Object.Destroy(hoverTrigger);
+                    itemUiContext.Tooltip.Show(originalText);
                 }
-            }
+            };
+
+            hoverTrigger.OnHoverEnd += _ =>
+            {
+                if (itemUiContext.Tooltip != null)
+                {
+                    itemUiContext.Tooltip.Close();
+                }
+            };
+        }
+        else if (bindPanel.GetComponent<HoverTrigger>() is HoverTrigger hoverTrigger)
+        {
+            hotkey.fontSize = 14f;
+            hotkey.margin = new(0f, 0f, 0f, 0f);
+            UnityEngine.Object.Destroy(hoverTrigger);
         }
     }
 
