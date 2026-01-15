@@ -45,6 +45,8 @@ public static class SwapPatches
         new DetectSwapSourceContainerPatch().Enable();
         new CleanupSwapSourceContainerPatch().Enable();
 
+        new ToggleForceSwapPatch().Enable();
+
         // Grids
         new GridViewAcceptItemPatch().Enable();
         new GridViewCanAcceptSwapPatch().Enable();
@@ -168,6 +170,17 @@ public static class SwapPatches
         };
     }
 
+    private static bool DidForceSwapChange()
+    {
+        return Settings.ForceSwapModifier.Value switch
+        {
+            ModifierKey.Shift => Input.GetKeyUp(KeyCode.LeftShift) || Input.GetKeyUp(KeyCode.RightShift) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift),
+            ModifierKey.Control => Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl) || Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl),
+            ModifierKey.Alt => Input.GetKeyUp(KeyCode.LeftAlt) || Input.GetKeyUp(KeyCode.RightAlt) || Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt),
+            _ => false,
+        };
+    }
+
     // Grabs the source container of a drag for later use
     public class DetectSwapSourceContainerPatch : ModulePatch
     {
@@ -195,6 +208,34 @@ public static class SwapPatches
         public static void Postfix()
         {
             SourceContainer = null;
+        }
+    }
+
+    public class ToggleForceSwapPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(DraggedItemView), nameof(DraggedItemView.Update));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(
+            DraggedItemView __instance,
+            IContainer ___iContainer,
+            ItemContextAbstractClass ___itemContextAbstractClass,
+            ItemUiContext ___itemUiContext_0)
+        {
+            if (DidForceSwapChange())
+            {
+
+                ___itemUiContext_0.method_2(); // Rerun highlighting
+                if (___iContainer != null)
+                {
+                    // Clear tooltip since the following won't
+                    ___itemUiContext_0.Tooltip.Close();
+                    ___iContainer.HighlightItemViewPosition(__instance.ItemContext, ___itemContextAbstractClass, false);
+                }
+            }
         }
     }
 
@@ -293,9 +334,10 @@ public static class SwapPatches
         public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
         {
             var force = IsForceSwapPressed();
-            if (force && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true))
+            var canSwap = CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true);
+            if (force || canSwap) // Return true on success, or whatever the result is if forcing swap
             {
-                __result = true;
+                __result = canSwap;
                 return false;
             }
 
@@ -305,6 +347,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
         {
+            // Unsure if this runs when the prefix returns false, so only do anything if !force
             var force = IsForceSwapPressed();
             if (!force && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, false))
             {
@@ -408,6 +451,10 @@ public static class SwapPatches
                     return true;
                 }
             }
+            else if (targetToAddress is GridItemAddress badTargetToAddress)
+            {
+                operation = new ItemOperation(new GridSpaceTakenError(targetItem, badTargetToAddress.LocationInGrid, badTargetToAddress.Grid));
+            }
 
             // If the target is going to a grid, try rotating it. This address is already a new object, safe to modify
             if (targetToAddress is GridItemAddress targetToGridItemAddress)
@@ -508,9 +555,10 @@ public static class SwapPatches
             ref bool __result)
         {
             var force = IsForceSwapPressed();
-            if (force && CanSwap(__instance, slot, ref operation, itemController, simulate, true))
+            var canSwap = CanSwap(__instance, slot, ref operation, itemController, simulate, true);
+            if (force || canSwap)
             {
-                __result = true;
+                __result = canSwap;
                 return false;
             }
 
@@ -519,8 +567,15 @@ public static class SwapPatches
 
         // Do not use targetItemContext parameter, it's literally just __instance. Thanks, BSG!
         [PatchPostfix]
-        public static void Postfix(DragItemContext __instance, Slot slot, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, ref bool __result)
+        public static void Postfix(
+            DragItemContext __instance,
+            Slot slot,
+            ref IInventoryEventResult operation,
+            TraderControllerClass itemController,
+            bool simulate,
+            ref bool __result)
         {
+            // Unsure if this runs when the prefix returns false, so only do anything if !force
             var force = IsForceSwapPressed();
             if (!force && CanSwap(__instance, slot, ref operation, itemController, simulate, false))
             {
