@@ -240,6 +240,7 @@ internal class Settings
     // Weapons
     public static ConfigEntry<bool> ShowReloadOnInternalMags { get; set; } // Advanced
     public static ConfigEntry<bool> LoadAmmoOnInternalMags { get; set; }
+    public static ConfigEntry<bool> FullyDisassemble { get; set; } // Advanced
 
     public static List<ConfigEntryBase> AllConfigs = [];
 
@@ -1344,6 +1345,15 @@ internal class Settings
                 "Add context menu actions to load and unload ammo for weapons with internal magazines or multiple barrels (shotguns, revolvers, bolt actions)",
                 null,
                 new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ShowReloadOnInternalMags = config.Bind(
+            WeaponsSection,
+            "Fully Disassemble",
+            true,
+            new ConfigDescription(
+                "Always fully disassemble weapons. If disabled, weapons will sometimes not fully disassemble, arbitrarily depending on the order of the mods.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
 
         RecalcOrder(configEntries);

@@ -42,6 +42,8 @@ public static class WeaponModdingPatches
 
         new InAssemblePatch().Enable();
         new LongerFullIdPatch().Enable();
+
+        new DisassembleAllPatch().Enable();
     }
 
     public struct ResizeData
@@ -762,6 +764,49 @@ public static class WeaponModdingPatches
             }
 
             return true;
+        }
+    }
+
+    public class DisassembleAllPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_17));
+        }
+
+        // BSG's implemention uses a lazy-eval linq that doesn't see mods that are nested once the higher level mod is removed
+        [PatchPrefix]
+        public static bool Prefix(ItemUiContext __instance, ItemContextAbstractClass itemContext, bool simulate, ref List<ItemOperation> __result, TraderControllerClass ___traderControllerClass)
+        {
+            if (!Settings.FullyDisassemble.Value)
+            {
+                return true;
+            }
+
+            Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.MenuWeaponDisassemble);
+            if (itemContext.Item is not Weapon weapon)
+            {
+                throw new ArgumentException("Item to disassemble is not a weapon");
+            }
+
+            List<ItemOperation> list = new List<ItemOperation>();
+            foreach (Mod mod in weapon.Mods.Where(__instance.method_19).ToArray()) // ToArray copies the list so it's set
+            {
+                ItemContextAbstractClass itemContextAbstractClass = itemContext.CreateChild(mod);
+                ItemOperation gstruct = __instance.QuickFindAppropriatePlace(itemContextAbstractClass, ___traderControllerClass, !Plugin.InRaid(), false, false);
+                if (gstruct.Succeeded)
+                {
+                    list.Add(gstruct);
+                }
+            }
+
+            if (simulate)
+            {
+                list.RollBack();
+            }
+
+            __result = list;
+            return false;
         }
     }
 
