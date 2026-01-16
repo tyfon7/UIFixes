@@ -256,6 +256,7 @@ public static class R
         private static FieldInfo HighlightPanelField;
         private static FieldInfo ValidMoveColorField;
         private static FieldInfo InvalidOperationColorField;
+        private static FieldInfo SwapColorField;
         private static FieldInfo ItemViewsField;
         public static void InitTypes()
         {
@@ -265,6 +266,7 @@ public static class R
             HighlightPanelField = AccessTools.Field(Type, "_highlightPanel");
             ValidMoveColorField = AccessTools.Field(Type, "ValidMoveColor");
             InvalidOperationColorField = AccessTools.Field(Type, "InvalidOperationColor");
+            SwapColorField = AccessTools.Field(Type, "color_0");
             ItemViewsField = AccessTools.Field(Type, "ItemViews");
         }
 
@@ -273,6 +275,7 @@ public static class R
         public Image HighlightPanel { get { return (Image)HighlightPanelField.GetValue(Value); } }
         public static Color ValidMoveColor { get { return (Color)ValidMoveColorField.GetValue(null); } }
         public static Color InvalidOperationColor { get { return (Color)InvalidOperationColorField.GetValue(null); } }
+        public static Color SwapColor { get { return (Color)SwapColorField.GetValue(null); } }
         public Dictionary<string, ItemView> ItemViews { get { return (Dictionary<string, ItemView>)ItemViewsField.GetValue(Value); } }
     }
 

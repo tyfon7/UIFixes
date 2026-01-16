@@ -171,6 +171,7 @@ internal class Settings
 
     // ItemSwapping
     public static ConfigEntry<bool> SwapItems { get; set; }
+    public static ConfigEntry<bool> ExtraSwapFeedback { get; set; }
     public static ConfigEntry<bool> SwapMags { get; set; }
     public static ConfigEntry<bool> AlwaysSwapMags { get; set; }
     public static ConfigEntry<bool> SwapImpossibleContainers { get; set; }
@@ -871,6 +872,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Drag one item onto another to swap their positions, if possible",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ExtraSwapFeedback = config.Bind(
+            ItemSwappingSection,
+            "Show Swap Grid Highlights",
+            true,
+            new ConfigDescription(
+                "Show extra grid highlights for swap destinations",
                 null,
                 new ConfigurationManagerAttributes { })));
 

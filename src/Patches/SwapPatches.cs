@@ -14,6 +14,7 @@ using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace UIFixes;
 
@@ -46,6 +47,7 @@ public static class SwapPatches
         new CleanupSwapSourceContainerPatch().Enable();
 
         new ToggleForceSwapPatch().Enable();
+        new HighlightSwapSourcePatch().Enable();
 
         // Grids
         new GridViewAcceptItemPatch().Enable();
@@ -227,16 +229,137 @@ public static class SwapPatches
         {
             if (DidForceSwapChange())
             {
-
                 ___itemUiContext_0.method_2(); // Rerun highlighting
                 if (___iContainer != null)
                 {
                     // Clear tooltip since the following won't
                     ___itemUiContext_0.Tooltip.Close();
                     ___iContainer.HighlightItemViewPosition(__instance.ItemContext, ___itemContextAbstractClass, false);
+                    UpdateSwapHighlight(__instance, ___iContainer, ___itemContextAbstractClass);
                 }
             }
         }
+    }
+
+    public class HighlightSwapSourcePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(DraggedItemView), nameof(DraggedItemView.UpdateTargetUnderCursor));
+        }
+
+        // Prefix so the throttling logic works
+        [PatchPrefix]
+        public static void Prefix(
+            DraggedItemView __instance,
+            IContainer containerUnderCursor,
+            ItemContextAbstractClass itemUnderCursor,
+            IContainer ___iContainer,
+            ItemContextAbstractClass ___itemContextAbstractClass,
+            LocationInGrid ___locationInGrid_0)
+        {
+            // Copy logic to avoid running unless pointer location changes
+            GridView gridView = containerUnderCursor as GridView;
+            LocationInGrid locationInGrid = gridView != null ? gridView.CalculateItemLocation(__instance.ItemContext) : null;
+            if (containerUnderCursor == ___iContainer && itemUnderCursor == ___itemContextAbstractClass && locationInGrid == ___locationInGrid_0)
+            {
+                return;
+            }
+
+            UpdateSwapHighlight(__instance, containerUnderCursor, itemUnderCursor);
+        }
+    }
+
+    private static void UpdateSwapHighlight(DraggedItemView draggedItemView, IContainer containerUnderCursor, ItemContextAbstractClass itemUnderCursor)
+    {
+        if (!Settings.ExtraSwapFeedback.Value)
+        {
+            return;
+        }
+
+        // Only if coming from a grid
+        if (draggedItemView.ItemContext.ItemAddress is not GridItemAddress gridItemAddress)
+        {
+            return;
+        }
+
+        var highlightPanel = GetSecondHighlight();
+        if (highlightPanel != null)
+        {
+            highlightPanel.gameObject.SetActive(false);
+        }
+
+        if (containerUnderCursor == null || itemUnderCursor == null)
+        {
+            return;
+        }
+
+        Color color;
+        ItemRotation rotation = ItemRotation.Horizontal;
+
+        containerUnderCursor.CanAccept(draggedItemView.ItemContext, itemUnderCursor, out ItemOperation operation);
+        if (operation.Succeeded && operation.Value is SwapOperation swapOperation)
+        {
+            // show blue highlight
+            color = R.GridView.SwapColor;
+            if (swapOperation.To2 is GridItemAddress gridAddress)
+            {
+                rotation = gridAddress.LocationInGrid.r;
+            }
+        }
+        else if (operation.Error is GridSpaceTakenError error && error.Item_0 == itemUnderCursor.Item) // only happens with failed swap
+        {
+            // show red highlight
+            color = R.GridView.InvalidOperationColor;
+        }
+        else
+        {
+            return;
+        }
+
+        color.a /= 2f; // Half as much alpha as the normal highlight
+        highlightPanel ??= GetSecondHighlight(true);
+        highlightPanel.color = color;
+
+        var panelRect = highlightPanel.RectTransform();
+        panelRect.localScale = Vector3.one;
+        panelRect.pivot = new Vector2(0f, 1f);
+        panelRect.anchorMin = new Vector2(0f, 1f);
+        panelRect.anchorMax = new Vector2(0f, 1f);
+        panelRect.localPosition = Vector3.zero;
+
+        XYCellSizeStruct xycellSizeStruct = itemUnderCursor.Item.CalculateRotatedSize(rotation);
+        LocationInGrid panelLocation = gridItemAddress.LocationInGrid;
+
+        int minX = panelLocation.x;
+        int minY = panelLocation.y;
+        int maxX = minX + xycellSizeStruct.X;
+        int maxY = minY + xycellSizeStruct.Y;
+        panelRect.anchoredPosition = new Vector2(minX * 63, -minY * 63);
+        panelRect.sizeDelta = new Vector2((maxX - minX) * 63, (maxY - minY) * 63);
+
+        highlightPanel.gameObject.SetActive(true);
+        return;
+    }
+
+    private static Image GetSecondHighlight(bool create = false)
+    {
+        if (SourceContainer is not GridView sourceGridView)
+        {
+            return null;
+        }
+
+        var transform = sourceGridView.transform.Find("SwapHighlightPanel");
+        var panel = transform != null ? transform.GetComponent<Image>() : null;
+        if (panel == null && create)
+        {
+            var template = sourceGridView.R().HighlightPanel;
+            panel = UnityEngine.Object.Instantiate(template, sourceGridView.transform);
+            panel.name = "SwapHighlightPanel";
+            panel.transform.SetSiblingIndex(template.transform.GetSiblingIndex());
+        }
+
+        return panel;
     }
 
     public class GridViewAcceptItemPatch : ModulePatch
@@ -331,13 +454,17 @@ public static class SwapPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
+        public static bool Prefix(
+            GridView __instance,
+            DragItemContext itemContext,
+            ItemContextAbstractClass targetItemContext,
+            ref IInventoryEventResult operation,
+            ref bool __result,
+            Dictionary<string, ItemView> ___ItemViews)
         {
-            var force = IsForceSwapPressed();
-            var canSwap = CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true);
-            if (force || canSwap) // Return true on success, or whatever the result is if forcing swap
+            if (IsForceSwapPressed())
             {
-                __result = canSwap;
+                __result = CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true);
                 return false;
             }
 
@@ -345,11 +472,16 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(GridView __instance, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, ref bool __result, Dictionary<string, ItemView> ___ItemViews)
+        public static void Postfix(
+            GridView __instance,
+            DragItemContext itemContext,
+            ItemContextAbstractClass targetItemContext,
+            ref IInventoryEventResult operation,
+            ref bool __result,
+            Dictionary<string, ItemView> ___ItemViews)
         {
             // Unsure if this runs when the prefix returns false, so only do anything if !force
-            var force = IsForceSwapPressed();
-            if (!force && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, false))
+            if (!IsForceSwapPressed() && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, false))
             {
                 __result = true;
             }
@@ -554,11 +686,9 @@ public static class SwapPatches
             bool simulate,
             ref bool __result)
         {
-            var force = IsForceSwapPressed();
-            var canSwap = CanSwap(__instance, slot, ref operation, itemController, simulate, true);
-            if (force || canSwap)
+            if (IsForceSwapPressed())
             {
-                __result = canSwap;
+                __result = CanSwap(__instance, slot, ref operation, itemController, simulate, true);
                 return false;
             }
 
@@ -576,8 +706,7 @@ public static class SwapPatches
             ref bool __result)
         {
             // Unsure if this runs when the prefix returns false, so only do anything if !force
-            var force = IsForceSwapPressed();
-            if (!force && CanSwap(__instance, slot, ref operation, itemController, simulate, false))
+            if (!IsForceSwapPressed() && CanSwap(__instance, slot, ref operation, itemController, simulate, false))
             {
                 __result = true;
             }
