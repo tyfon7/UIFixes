@@ -1346,7 +1346,7 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { })));
 
-        configEntries.Add(ShowReloadOnInternalMags = config.Bind(
+        configEntries.Add(FullyDisassemble = config.Bind(
             WeaponsSection,
             "Fully Disassemble",
             true,
