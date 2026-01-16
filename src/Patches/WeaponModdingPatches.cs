@@ -789,23 +789,23 @@ public static class WeaponModdingPatches
                 throw new ArgumentException("Item to disassemble is not a weapon");
             }
 
-            List<ItemOperation> list = new List<ItemOperation>();
+            List<ItemOperation> operations = [];
             foreach (Mod mod in weapon.Mods.Where(__instance.method_19).ToArray()) // ToArray copies the list so it's set
             {
                 ItemContextAbstractClass itemContextAbstractClass = itemContext.CreateChild(mod);
-                ItemOperation gstruct = __instance.QuickFindAppropriatePlace(itemContextAbstractClass, ___traderControllerClass, !Plugin.InRaid(), false, false);
-                if (gstruct.Succeeded)
+                ItemOperation operation = __instance.QuickFindAppropriatePlace(itemContextAbstractClass, ___traderControllerClass, !Plugin.InRaid(), false, false);
+                if (operation.Succeeded)
                 {
-                    list.Add(gstruct);
+                    operations.Add(operation);
                 }
             }
 
             if (simulate)
             {
-                list.RollBack();
+                operations.RollBack();
             }
 
-            __result = list;
+            __result = operations;
             return false;
         }
     }
