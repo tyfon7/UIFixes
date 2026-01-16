@@ -12,6 +12,8 @@ public class InputRepeater : MonoBehaviour
     private KeyBindingClass keyBinding;
     private Action action;
 
+    private float timer = 0f;
+
     public static void MapKeyBindings(InputBindingsDataClass bindingsData)
     {
         KeyBindings.Clear();
@@ -53,10 +55,19 @@ public class InputRepeater : MonoBehaviour
         keyBinding = null;
         action = null;
         enabled = false;
+        timer = 0f;
     }
 
     public void Update()
     {
+        timer += Time.deltaTime;
+        if (timer < 0.1f)
+        {
+            return;
+        }
+
+        timer -= 0.1f;
+
         // KeyCombinationState_0 is the current state
         if (keyBinding.KeyCombinationState_0.GetKeysStatus(out EKeyPress keyPress))
         {
