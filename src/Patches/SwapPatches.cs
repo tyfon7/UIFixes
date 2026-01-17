@@ -289,35 +289,41 @@ public static class SwapPatches
             highlightPanel.gameObject.SetActive(false);
         }
 
-        if (containerUnderCursor == null || itemUnderCursor == null)
+        if (containerUnderCursor == null || itemUnderCursor == null || itemUnderCursor.Item == draggedItemView.ItemContext.Item)
         {
             return;
         }
 
         Color color;
         ItemRotation rotation = ItemRotation.Horizontal;
+        Item targetItem;
 
         containerUnderCursor.CanAccept(draggedItemView.ItemContext, itemUnderCursor, out ItemOperation operation);
         if (operation.Succeeded && operation.Value is SwapOperation swapOperation)
         {
             // show blue highlight
             color = R.GridView.SwapColor;
+            targetItem = swapOperation.Item2; // It's not necessarily itemUnderCursor, e.g. swapping mags on a weapon
             if (swapOperation.To2 is GridItemAddress gridAddress)
             {
                 rotation = gridAddress.LocationInGrid.r;
             }
         }
-        else if (operation.Error is GridSpaceTakenError error && error.Item_0 == itemUnderCursor.Item) // only happens with failed swap
+        else if (operation.Error is GridSpaceTakenError error && // compare x and y but NOT r (rotation). Same x,y, same grid, only swap would error like this
+            error.LocationInGrid_0.x == gridItemAddress.LocationInGrid.x &&
+            error.LocationInGrid_0.y == gridItemAddress.LocationInGrid.y &&
+            error.StashGridClass == gridItemAddress.Grid)
         {
             // show red highlight
             color = R.GridView.InvalidOperationColor;
+            targetItem = error.Item_0;
         }
         else
         {
             return;
         }
 
-        color.a /= 2f; // Half as much alpha as the normal highlight
+        color.a *= 0.75f; // Knock off 25% alpha
         highlightPanel ??= GetSecondHighlight(true);
         highlightPanel.color = color;
 
@@ -328,7 +334,7 @@ public static class SwapPatches
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.localPosition = Vector3.zero;
 
-        XYCellSizeStruct xycellSizeStruct = itemUnderCursor.Item.CalculateRotatedSize(rotation);
+        XYCellSizeStruct xycellSizeStruct = targetItem.CalculateRotatedSize(rotation);
         LocationInGrid panelLocation = gridItemAddress.LocationInGrid;
 
         int minX = panelLocation.x;
