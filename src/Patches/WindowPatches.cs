@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using EFT.InputSystem;
+using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -15,6 +17,13 @@ public static class WindowPatches
 {
     public static void Enable()
     {
+        new WindowOpenPatch(nameof(ItemUiContext.Inspect)).Enable();
+        new WindowOpenPatch(nameof(ItemUiContext.OpenItem)).Enable(); // grids
+        new WindowClosePatch().Enable();
+
+        new InventoryShowPatch().Enable();
+        new InventoryClosePatch().Enable();
+
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.Inspect)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.EditTag)).Enable();
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenInsuranceWindow)).Enable();
@@ -24,25 +33,97 @@ public static class WindowPatches
         new KeepTopOnScreenPatch().Enable();
     }
 
-    private static void FixNewestWindow(List<InputNode> windows)
+    public class WindowOpenPatch(string methodName) : ModulePatch
     {
-        if (windows.LastOrDefault() is UIInputNode newWindow)
-        {
-            newWindow.CorrectPosition();
-        }
-    }
-
-    public class KeepWindowOnScreenPatch(string methodName) : ModulePatch
-    {
-        private readonly string methodName = methodName;
-
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(ItemUiContext), methodName);
         }
 
         [PatchPostfix]
-        public static void Postfix(List<InputNode> ____children) => FixNewestWindow(____children);
+        public static void Postfix(List<WindowData> ___list_1)
+        {
+            if (___list_1.LastOrDefault() is WindowData windowData)
+            {
+                WindowManager.Instance.OnOpen(windowData);
+            }
+        }
+    }
+
+    public class WindowClosePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Window<>).MakeGenericType([typeof(WindowContext)]), nameof(Window<>.method_0));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(Window<WindowContext> __instance)
+        {
+            WindowManager.Instance.OnClose(__instance);
+        }
+    }
+
+    public class InventoryShowPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(InventoryScreen), nameof(InventoryScreen.method_4));
+        }
+
+        // The actual work of showing the inventory is in a coroutine that runs method_4, so wrap it and run after
+        [PatchPostfix]
+        public static void Postfix(ref IEnumerator __result, ItemContextAbstractClass ___itemContextAbstractClass)
+        {
+            // Only restore windows out of raid
+            if (Plugin.InRaid())
+            {
+                return;
+            }
+
+            __result = PostfixEnumerator(__result, ___itemContextAbstractClass);
+        }
+
+        private static IEnumerator PostfixEnumerator(IEnumerator enumerator, ItemContextAbstractClass itemContext)
+        {
+            while (enumerator.MoveNext())
+            {
+                yield return enumerator.Current;
+            }
+
+            WindowManager.Instance.RestoreWindows(itemContext);
+        }
+    }
+
+    public class InventoryClosePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(InventoryScreen), nameof(InventoryScreen.Close));
+        }
+
+        [PatchPrefix]
+        public static void Prefix()
+        {
+            WindowManager.Instance.SaveWindows();
+        }
+    }
+
+    public class KeepWindowOnScreenPatch(string methodName) : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemUiContext), methodName);
+        }
+
+        [PatchPostfix]
+        public static void Postfix(List<InputNode> ____children)
+        {
+            if (____children.LastOrDefault() is UIInputNode newWindow)
+            {
+                newWindow.CorrectPosition();
+            }
+        }
     }
 
     // Duplicates the function but specifically checks top only.
@@ -70,5 +151,10 @@ public static class WindowPatches
                 transform.position = vector4 - vector2;
             }
         }
+    }
+
+    private static void FixNewestWindow(List<InputNode> windows)
+    {
+
     }
 }

@@ -33,6 +33,8 @@ global using FirearmHandsInputTranslator = Class1730;
 global using WeaponBuilder = GClass3470;
 global using LeftHandController = GClass2725;
 global using QuestController = GClass4005;
+global using WindowContext = GClass3829;
+global using WindowData = EFT.UI.ItemUiContext.Class2918;
 
 // Context menus
 global using InventoryInteractions = GClass3757; // There are two child versions?

@@ -85,6 +85,7 @@ internal class Settings
     private const string AddOfferSection = "P. Add Offer";
     private const string HideoutSection = "Q. Hideout";
     private const string WeaponsSection = "R. Weapons";
+    private const string WindowsSection = "S. Inventory Windows";
 
     // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
@@ -241,6 +242,12 @@ internal class Settings
     public static ConfigEntry<bool> ShowReloadOnInternalMags { get; set; } // Advanced
     public static ConfigEntry<bool> LoadAmmoOnInternalMags { get; set; }
     public static ConfigEntry<bool> FullyDisassemble { get; set; } // Advanced
+
+    // Windows
+    public static ConfigEntry<bool> SaveOpenInspectWindows { get; set; }
+    public static ConfigEntry<bool> SaveOpenContainerWindows { get; set; }
+    public static ConfigEntry<bool> PerItemInspectPositions { get; set; }
+    public static ConfigEntry<bool> PerItemContainerPositions { get; set; }
 
     public static List<ConfigEntryBase> AllConfigs = [];
 
@@ -1355,6 +1362,42 @@ internal class Settings
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
+        // Windows
+        configEntries.Add(SaveOpenInspectWindows = config.Bind(
+            WindowsSection,
+            "Remember Inspect Windows",
+            false,
+            new ConfigDescription(
+                "Save and restore inspect windows when you leave and return to your inventory (out of raid)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(SaveOpenContainerWindows = config.Bind(
+            WindowsSection,
+            "Remember Open Containers",
+            true,
+            new ConfigDescription(
+                "Save and restore container windows when you leave and return to your inventory (out of raid)",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PerItemInspectPositions = config.Bind(
+            WindowsSection,
+            "Remember Inspect Position per Item",
+            true,
+            new ConfigDescription(
+                "Always open inspect windows for a given item in the same place",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(PerItemContainerPositions = config.Bind(
+            WindowsSection,
+            "Remember Container Position per Item",
+            true,
+            new ConfigDescription(
+                "Always open windows for a given container in the same place",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         RecalcOrder(configEntries);
 
