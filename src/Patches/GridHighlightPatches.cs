@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using Comfort.Common;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -15,6 +17,7 @@ public static class GridHighlightPatches
     {
         new NoFitOutlinePatch().Enable();
         new HideNoFitOutlinePatch().Enable();
+        new SilencePixelPerfectSpriteScalerPatch().Enable();
     }
 
     public class NoFitOutlinePatch : ModulePatch
@@ -63,6 +66,13 @@ public static class GridHighlightPatches
 
                 border = UnityEngine.Object.Instantiate(Template, __instance.transform);
                 border.name = "NoFitBorder";
+
+                // Remove pixel perfect scaler, not needed
+                var scaler = border.GetComponent<PixelPerfectSpriteScaler>();
+                if (scaler != null)
+                {
+                    UnityEngine.Object.Destroy(scaler);
+                }
             }
 
             XYCellSizeStruct xycellSizeStruct = itemContext.Item.CalculateRotatedSize(itemContext.ItemRotation);
@@ -132,6 +142,42 @@ public static class GridHighlightPatches
             }
 
             border.gameObject.SetActive(false);
+        }
+    }
+
+    public class SilencePixelPerfectSpriteScalerPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(PixelPerfectSpriteScaler), nameof(PixelPerfectSpriteScaler.Awake));
+        }
+
+        [PatchTranspiler]
+        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
+        {
+            bool skipping = false;
+            foreach (var instruction in instructions)
+            {
+                // Stop skipping when it hits ret
+                if (skipping && instruction.opcode == OpCodes.Ret)
+                {
+                    skipping = false;
+                }
+
+                if (skipping)
+                {
+                    continue;
+                }
+
+                // Start skipping when it calls ldstr
+                if (instruction.opcode == OpCodes.Ldstr)
+                {
+                    skipping = true;
+                    continue;
+                }
+
+                yield return instruction;
+            }
         }
     }
 }
