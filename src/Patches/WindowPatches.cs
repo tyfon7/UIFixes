@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace UIFixes;
 
-public static class KeepWindowsOnScreenPatches
+public static class WindowPatches
 {
     public static void Enable()
     {
@@ -26,8 +26,10 @@ public static class KeepWindowsOnScreenPatches
 
     private static void FixNewestWindow(List<InputNode> windows)
     {
-        UIInputNode newWindow = windows.LastOrDefault() as UIInputNode;
-        newWindow?.CorrectPosition();
+        if (windows.LastOrDefault() is UIInputNode newWindow)
+        {
+            newWindow.CorrectPosition();
+        }
     }
 
     public class KeepWindowOnScreenPatch(string methodName) : ModulePatch
@@ -50,7 +52,7 @@ public static class KeepWindowsOnScreenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass926
+            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass949
             return AccessTools.Method(type, "CorrectPositionResolution", [typeof(RectTransform), typeof(RectTransform), typeof(MarginsStruct)]);
         }
 

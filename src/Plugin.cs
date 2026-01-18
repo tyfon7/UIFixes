@@ -64,7 +64,7 @@ public class Plugin : BaseUnityPlugin
         RememberRepairerPatches.Enable();
         new GridWindowButtonsPatch().Enable();
         MagPresetsPatches.Enable();
-        KeepWindowsOnScreenPatches.Enable();
+        WindowPatches.Enable();
         ContextMenuShortcutPatches.Enable();
         OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
