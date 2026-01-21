@@ -110,6 +110,7 @@ public class Plugin : BaseUnityPlugin
         GridHighlightPatches.Enable();
         QueueInputPatches.Enable();
         new CompassGogglesPatch().Enable();
+        new FastAccessBindingMysteryPatch().Enable();
     }
 
     public void Start()

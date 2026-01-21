@@ -137,7 +137,7 @@ public static class R
 
         public static void InitTypes()
         {
-            Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().Single(t => t.IsClass && t.GetField("availableSearch") != null); // ProductionPanel.Class1815
+            Type = typeof(EFT.Hideout.ProductionPanel).GetNestedTypes().Single(t => t.IsClass && t.GetField("availableSearch") != null); // ProductionPanel.Class1944
             ProductionPanelField = AccessTools.Field(Type, "productionPanel_0");
         }
 
