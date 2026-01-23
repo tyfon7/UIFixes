@@ -78,6 +78,7 @@ public static class WindowPatches
             // Only restore windows out of raid
             if (Plugin.InRaid())
             {
+                WindowManager.Instance.Clear();
                 return;
             }
 

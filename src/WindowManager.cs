@@ -150,4 +150,9 @@ public class WindowManager : MonoBehaviour
             }
         }
     }
+
+    public void Clear()
+    {
+        openWindows.Clear();
+    }
 }
