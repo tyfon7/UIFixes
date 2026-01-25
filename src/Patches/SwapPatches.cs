@@ -540,7 +540,6 @@ public static class SwapPatches
             // LootRadius workaround - if the item is on the ground, the address is NOT a GridItemAddress
             if (targetGridItemAddress == null)
             {
-                // _1 is the root item, i.e. the stash
                 if (targetItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
                 {
                     targetGridItemAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[targetItem]);

@@ -205,6 +205,7 @@ internal class Settings
     public static ConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
 
     // Stash
+    public static ConfigEntry<bool> StashSearchContextMenu { get; set; }
     public static ConfigEntry<bool> SynchronizeStashScrolling { get; set; }
     public static ConfigEntry<bool> AutoOpenSortingTable { get; set; }
     public static ConfigEntry<bool> ShowGPCurrency { get; set; }
@@ -1112,6 +1113,15 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Stash
+        configEntries.Add(StashSearchContextMenu = config.Bind(
+            StashSection,
+            "Search in Stash Context Menu",
+            true,
+            new ConfigDescription(
+                "Add a context menu action to open the search panel and search for more of the item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
         configEntries.Add(SynchronizeStashScrolling = config.Bind(
             StashSection,
             "Synchronize Stash Scroll Position",
