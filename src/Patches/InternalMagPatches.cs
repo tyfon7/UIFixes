@@ -77,14 +77,18 @@ public static class InternalMagPatches
         {
             if (__instance.SupportsInternalReload || __instance.ReloadMode == Weapon.EReloadMode.OnlyBarrel)
             {
-                if (!Settings.ShowReloadOnInternalMags.Value)
-                {
-                    __result = __result.Where(b => b != EItemInfoButton.Reload && b != EItemInfoButton.Load);
-                }
-
                 if (Settings.LoadAmmoOnInternalMags.Value && !Plugin.InRaid())
                 {
                     __result = __result.Append(EItemInfoButton.LoadAmmo);
+                }
+            }
+
+            // Also hide permanently disabled load/reload buttons
+            if (__instance.ReloadMode != Weapon.EReloadMode.ExternalMagazine && __instance.ReloadMode != Weapon.EReloadMode.ExternalMagazineWithInternalReloadSupport)
+            {
+                if (!Settings.ShowReloadOnInternalMags.Value)
+                {
+                    __result = __result.Where(b => b != EItemInfoButton.Reload && b != EItemInfoButton.Load);
                 }
             }
         }
