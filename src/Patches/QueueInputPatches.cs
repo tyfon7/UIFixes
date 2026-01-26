@@ -1,4 +1,5 @@
 using System.Reflection;
+using Comfort.Common;
 using EFT;
 using EFT.InputSystem;
 using HarmonyLib;
@@ -29,33 +30,45 @@ public static class QueueInputPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Player.FirearmController __instance, bool value)
+        public static void Postfix(Player.FirearmController __instance, bool value, Player ____player)
         {
-            if (!Settings.QueueHeldInputs.Value || InAttempt || __instance == null)
+            var firearmController = __instance;
+            if (firearmController == null && ____player != null)
+            {
+                // At certain times during weapon switch, the old firearm controller has been destroyed but is still hooked up, grab the new one
+                firearmController = ____player.HandsController as Player.FirearmController;
+            }
+
+            if (!Settings.QueueHeldInputs.Value || InAttempt || firearmController == null)
             {
                 return;
             }
 
             InputRepeater repeater;
-            if (value && !__instance.IsAiming)
+            if (value && !firearmController.IsAiming)
             {
-                repeater = __instance.GetOrAddComponent<InputRepeater>();
+                repeater = ____player.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.Aim, () =>
                 {
-                    if (__instance == null)
+                    if (firearmController == null)
                     {
-                        repeater.StopTrying();
-                        return;
+                        firearmController = ____player.HandsController as Player.FirearmController;
+                        if (firearmController == null)
+                        {
+                            return true;
+                        }
                     }
 
                     InAttempt = true;
-                    __instance.SetAim(true);
+                    firearmController.SetAim(true);
                     InAttempt = false;
+
+                    return firearmController.IsAiming;
                 });
             }
             else if (!value)
             {
-                repeater = __instance.GetComponent<InputRepeater>();
+                repeater = ____player.GetComponent<InputRepeater>();
                 if (repeater != null)
                 {
                     repeater.StopTrying();
@@ -74,43 +87,80 @@ public static class QueueInputPatches
         }
 
         [PatchPrefix]
-        public static void Postfix(FirearmHandsInputTranslator __instance)
+        public static void Postfix(FirearmHandsInputTranslator __instance, Player ___Player_0)
         {
-            if (!Settings.QueueHeldInputs.Value || InAttempt || __instance == null)
+            if (!Settings.QueueHeldInputs.Value || InAttempt)
             {
                 return;
             }
 
-            if (__instance.IfirearmHandsController_0 is not Player.FirearmController firearmController)
-            {
-                return;
-            }
+            var inputTranslator = __instance;
+            var firearmController = inputTranslator.IfirearmHandsController_0 as Player.FirearmController;
 
             InputRepeater repeater;
-            if (!firearmController.CanStartReload())
+            if (firearmController == null || !firearmController.CanStartReload())
             {
-                repeater = firearmController.GetOrAddComponent<InputRepeater>();
+                repeater = ___Player_0.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.ReloadWeapon, () =>
                 {
-                    if (__instance == null)
+                    if (firearmController == null)
                     {
-                        repeater.StopTrying();
-                        return;
+                        // No way to tell if inputTranslator is still hooked up, just refresh it for a new firearm controller
+                        inputTranslator = GetInputTranslator();
+                        if (inputTranslator == null)
+                        {
+                            return true;
+                        }
+
+                        firearmController = inputTranslator.IfirearmHandsController_0 as Player.FirearmController;
+                        if (firearmController == null)
+                        {
+                            // For some reason the firearm controller is destroyed way before the input translator is. Just keep trying
+                            return false;
+                        }
+                    }
+
+                    if (!firearmController.CanStartReload())
+                    {
+                        return false;
                     }
 
                     InAttempt = true;
-                    __instance.method_13();
+                    inputTranslator.method_13();
                     InAttempt = false;
+
+                    return firearmController.CurrentHandsOperation is FirearmReloadingState;
                 });
             }
             else
             {
-                repeater = firearmController.GetComponent<InputRepeater>();
+                repeater = ___Player_0.GetComponent<InputRepeater>();
                 if (repeater != null)
                 {
                     repeater.StopTrying();
                 }
             }
+        }
+
+        private static FirearmHandsInputTranslator GetInputTranslator()
+        {
+            var game = Singleton<AbstractGame>.Instance;
+            if (game == null)
+            {
+                return null;
+            }
+
+            if (game is HideoutGame hideoutGame)
+            {
+                return hideoutGame.PlayerOwner.HandsInputTranslator as FirearmHandsInputTranslator;
+            }
+
+            if (game is LocalGame localGame)
+            {
+                return localGame.PlayerOwner.HandsInputTranslator as FirearmHandsInputTranslator;
+            }
+
+            return null;
         }
     }
 

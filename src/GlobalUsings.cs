@@ -48,6 +48,7 @@ global using LoadAmmoInteractions = GClass3779;
 global using FirearmReadyState = EFT.Player.FirearmController.GClass2037;
 global using FirearmAddingModState = EFT.Player.FirearmController.Class1264;
 global using FirearmInsertedMagState = EFT.Player.FirearmController.GClass2039;
+global using FirearmReloadingState = EFT.Player.FirearmController.GClass2016;
 
 // JSON
 global using LocationJsonParser = GClass1911;

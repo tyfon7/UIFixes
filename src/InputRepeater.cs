@@ -10,7 +10,7 @@ public class InputRepeater : MonoBehaviour
     private static Dictionary<EGameKey, KeyBindingClass> KeyBindings = [];
 
     private KeyBindingClass keyBinding;
-    private Action action;
+    private Func<bool> retry;
 
     private float timer = 0f;
 
@@ -28,7 +28,7 @@ public class InputRepeater : MonoBehaviour
         }
     }
 
-    public void BeginTrying(EGameKey gameKey, Action action)
+    public void BeginTrying(EGameKey gameKey, Func<bool> retry)
     {
         Reset();
 
@@ -40,7 +40,7 @@ public class InputRepeater : MonoBehaviour
         if (keyBinding.Type == EPressType.Press || keyBinding.Type == EPressType.Continuous || ToggleHold.IsEnabled(gameKey))
         {
             this.keyBinding = keyBinding;
-            this.action = action;
+            this.retry = retry;
             enabled = true;
         }
     }
@@ -53,7 +53,7 @@ public class InputRepeater : MonoBehaviour
     private void Reset()
     {
         keyBinding = null;
-        action = null;
+        retry = null;
         enabled = false;
         timer = 0f;
     }
@@ -76,7 +76,10 @@ public class InputRepeater : MonoBehaviour
                 case EKeyPress.Hold:
                     try
                     {
-                        action();
+                        if (retry())
+                        {
+                            StopTrying();
+                        }
                     }
                     catch (Exception ex)
                     {
