@@ -162,6 +162,7 @@ public static class StashSearchPatches
         }
 
         [PatchPostfix]
+        [HarmonyPriority(Priority.High)] // Just to make it run before wikilinks
         public static void Postfix(string key, SimpleContextMenuButton __result)
         {
             // They use the localized string for the key, because BSG
