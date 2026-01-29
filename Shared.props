@@ -11,6 +11,8 @@
     </AssemblySearchPaths>
   </PropertyGroup>
 
+  <Import Project="Shared.props.user" Condition="Exists('Shared.props.user')" />
+
   <ItemGroup>
     <DeployTarget Include="Default">
       <Path>$(SPTPath)</Path>
