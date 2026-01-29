@@ -156,32 +156,33 @@ public static class StashSearchPatches
 
     public class PositionSearchStashPatch : ModulePatch
     {
+        private static Transform TargetSibling = null;
+
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.Method(typeof(InteractionButtonsContainer), "method_1");
         }
 
         [PatchPostfix]
-        [HarmonyPriority(Priority.High)] // Just to make it run before wikilinks
         public static void Postfix(string key, SimpleContextMenuButton __result)
         {
-            // They use the localized string for the key, because BSG
+            if (key == EItemInfoButton.NeededSearch.ToString())
+            {
+                TargetSibling = __result.Transform;
+            }
+
+            // Dynamic actions use the localized string for the key, because BSG
             var text = "UI/SearchWindow/Tooltip/SearchInStash".Localized(EFT.EStringCase.Upper);
             if (key != text)
             {
                 return;
             }
 
-            var parent = __result.Transform.parent;
-            var targetIndex = __result.Transform.GetSiblingIndex();
-
-            var targetButton = parent.Find("Wishlist Template(Clone)");
-            if (targetButton != null && targetButton.gameObject.activeInHierarchy)
+            if (TargetSibling != null)
             {
-                targetIndex = targetButton.GetSiblingIndex();
+                __result.Transform.SetSiblingIndex(TargetSibling.GetSiblingIndex() + 1);
+                TargetSibling = null;
             }
-
-            __result.Transform.SetSiblingIndex(targetIndex);
         }
     }
 }
