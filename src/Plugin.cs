@@ -111,6 +111,7 @@ public class Plugin : BaseUnityPlugin
         QueueInputPatches.Enable();
         new CompassGogglesPatch().Enable();
         new FixGridPrepareItemsPatch().Enable();
+        new FixTraderFiltersPatch().Enable();
     }
 
     public void Start()
