@@ -94,6 +94,7 @@ internal class Settings
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
+    public static ConfigEntry<int> MailReadQueueTime { get; set; } // Advanced
     public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
     public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
@@ -315,6 +316,15 @@ internal class Settings
             new ConfigDescription(
                 "The client waits this long to batch inventory operations before sending them to the server. Vanilla Tarkov is 60 (!)",
                 new AcceptableValueRange<int>(0, 60),
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(MailReadQueueTime = config.Bind(
+            InterfaceSection,
+            "Mail Read Queue Time",
+            5,
+            new ConfigDescription(
+                "The client waits this long to tell the server to mark mail messages as read. Vanilla Tarkov is 80, except that it's broken and never does anything.",
+                new AcceptableValueRange<int>(0, 80),
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LimitNonstandardDrags = config.Bind(

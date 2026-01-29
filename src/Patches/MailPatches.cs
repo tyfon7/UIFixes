@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,8 +14,9 @@ public static class MailPatches
 {
     public static void Enable()
     {
-        // Always refresh data from server
-        new AlwaysLoadMessagesPatch().Enable();
+        // Send read requests to the server
+        new ActuallyReadMessagesPatch().Enable();
+        new ReadMessagesTimerPatch().Enable();
 
         // Show the new message icons for messages with attachments
         new AttachmentsAreNewPatch().Enable();
@@ -22,8 +24,7 @@ public static class MailPatches
         new DialogueViewAttachmentsAreNewPatch().Enable();
 
         // Handle transfer items screen
-        new RoundTripDialogueAfterTransferPatch().Enable();
-        new RefreshCountsAfterViewPatch().Enable();
+        new UpdateCountsAfterTransferPatch().Enable();
 
         // Block the places that clear AttachmentsNew
         new MenuTaskBarPatch().Enable();
@@ -31,19 +32,40 @@ public static class MailPatches
         new SocialNetworkDisplayPatch().Enable();
     }
 
-    // TODO: After SPT 4.0.2, consider patching the client to actually call /client/mail/dialog/read 
-    public class AlwaysLoadMessagesPatch : ModulePatch
+    public class ActuallyReadMessagesPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(DialogueClass), nameof(DialogueClass.MessagesLoaded)).GetMethod;
+            return AccessTools.Method(typeof(SocialNetworkClass), nameof(SocialNetworkClass.UpdateReadMessages));
+        }
+
+        // Must be prefix because it fires events whose handlers will set Dialog.New to 0
+        [PatchPrefix]
+        public static void Prefix(SocialNetworkClass __instance)
+        {
+            if (__instance.SelectedDialogue != null)
+            {
+                __instance.method_9(__instance.SelectedDialogue); // Adds it to list of dialogs to be marked read when the timer goes
+            }
+        }
+    }
+
+    public class ReadMessagesTimerPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ChatScreen), nameof(ChatScreen.method_9));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ref bool __result)
+        public static void Prefix(ref DateTime ___dateTime_0)
         {
-            __result = false;
-            return false;
+            // The target method is hardcoded to 80 seconds. Rather than try to change that, just lie to it about when it last sent
+            DateTime dateTime = ___dateTime_0.AddSeconds(Settings.MailReadQueueTime.Value);
+            if (EFTDateTimeClass.UtcNow > dateTime)
+            {
+                ___dateTime_0 = new DateTime(0);
+            }
         }
     }
 
@@ -111,10 +133,13 @@ public static class MailPatches
         }
     }
 
-    public class RoundTripDialogueAfterTransferPatch : ModulePatch
+    public class UpdateCountsAfterTransferPatch : ModulePatch
     {
+        private static FieldInfo DialogueViewDialogueField;
+
         protected override MethodBase GetTargetMethod()
         {
+            DialogueViewDialogueField = AccessTools.Field(typeof(DialogueView), "dialogueClass");
             return AccessTools.DeclaredMethod(typeof(TransferItemsScreen), nameof(TransferItemsScreen.Close));
         }
 
@@ -126,9 +151,42 @@ public static class MailPatches
                 return;
             }
 
-            var socialNetwork = ___itemUiContext_0.Session.SocialNetwork;
-            var message = ___ienumerable_0.First();
+            var dialogue = GetDialogFromMessage(___ienumerable_0.First(), ___itemUiContext_0.Session.SocialNetwork);
+            if (dialogue == null)
+            {
+                return;
+            }
 
+            // Need to flush any moves
+            await ___itemUiContext_0.ClientSession.FlushOperationQueue();
+
+            // count messages that no longer have rewards
+            var claimed = ___ienumerable_0.Count(m => !m.DisplayRewardStatus);
+
+            // Update dialog
+            dialogue.AttachmentsNew -= claimed;
+            if (dialogue.AttachmentsNew <= 0)
+            {
+                dialogue.HasMessagesWithRewards = false;
+            }
+
+            dialogue.OnDialogueAttachmentsChanged.Invoke();
+
+            // If the chat screen is already open, I have to use UI to reach into it to update the attachment count
+            var dialoguesContainer = MonoBehaviourSingleton<CommonUI>.Instance.ChatScreen.transform.Find("DialoguesPart").GetComponent<DialoguesContainer>();
+            var dialogueViews = dialoguesContainer.GetComponentsInChildren<DialogueView>();
+            var dialogueView = dialogueViews?.FirstOrDefault(dv => DialogueViewDialogueField.GetValue(dv) == dialogue);
+            if (dialogueView != null)
+            {
+                dialogueView.Int32_1 = dialogue.AttachmentsNew;
+            }
+
+            // update menu
+            MonoBehaviourSingleton<PreloaderUI>.Instance.MenuTaskBar.method_12();
+        }
+
+        private static DialogueClass GetDialogFromMessage(ChatMessageClass message, SocialNetworkClass socialNetwork)
+        {
             string dialogueId;
             if (message.Member != null)
             {
@@ -141,47 +199,10 @@ public static class MailPatches
             else
             {
                 Plugin.Instance.Logger.LogError("UIFixes: Can't find dialogue ID from message");
-                return;
+                return null;
             }
 
-            var dialogue = socialNetwork.Dialogues.FirstOrDefault(d => d._id == dialogueId);
-
-            // Need to flush any moves before refreshing dialogues
-            await ___itemUiContext_0.ClientSession.FlushOperationQueue();
-
-            // Force a server roundtrip, which will update the messages' HasRewards properties
-            socialNetwork.UpdateDialogMessages(dialogue, 0);
-        }
-    }
-
-    public class RefreshCountsAfterViewPatch : ModulePatch
-    {
-        private static FieldInfo DialogueViewDialogueField;
-
-        protected override MethodBase GetTargetMethod()
-        {
-            DialogueViewDialogueField = AccessTools.Field(typeof(DialogueView), "dialogueClass");
-            return AccessTools.Method(typeof(DialogueClass), nameof(DialogueClass.method_0));
-        }
-
-        [PatchPostfix]
-        public static void Postfix(DialogueClass __instance)
-        {
-            // Use DisplayRewardStatus because this checks expiration. There'll be a bunch of expired shit otherwise
-            __instance.AttachmentsNew = __instance.ChatMessages.Count(m => m.DisplayRewardStatus);
-
-            __instance.OnDialogueAttachmentsChanged.Invoke();
-
-            // If the chat screen is already open, I have to use UI to reach into it to update the attachment count
-            var dialoguesContainer = MonoBehaviourSingleton<CommonUI>.Instance.ChatScreen.transform.Find("DialoguesPart").GetComponent<DialoguesContainer>();
-            var dialogueViews = dialoguesContainer.GetComponentsInChildren<DialogueView>();
-            var dialogueView = dialogueViews?.FirstOrDefault(dv => DialogueViewDialogueField.GetValue(dv) == __instance);
-            if (dialogueView != null)
-            {
-                dialogueView.Int32_1 = __instance.AttachmentsNew;
-            }
-
-            MonoBehaviourSingleton<PreloaderUI>.Instance.MenuTaskBar.method_12(); // update menu counts
+            return socialNetwork.Dialogues.FirstOrDefault(d => d._id == dialogueId);
         }
     }
 
