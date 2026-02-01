@@ -27,9 +27,13 @@ public static class MailPatches
         new UpdateCountsAfterTransferPatch().Enable();
 
         // Block the places that clear AttachmentsNew
-        new MenuTaskBarPatch().Enable();
-        new DialogueViewSelectedPatch().Enable();
-        new SocialNetworkDisplayPatch().Enable();
+        new DialogueViewSelectedPatch().Enable(); // Upon selecting a dialog
+        new MenuTaskBarPatch().Enable(); // Also upon selecting a dialog
+        new SocialNetworkDisplayPatch().Enable(); // Upon receiving a message via socket
+
+        // Best effort to handle expired attachments
+        new InvokeAttachmentsChangedPatch().Enable();
+        new HandleExpiredMessagesPatch().Enable();
     }
 
     public class ActuallyReadMessagesPatch : ModulePatch
@@ -302,6 +306,15 @@ public static class MailPatches
             return AccessTools.Method(typeof(SocialNetworkClass), nameof(SocialNetworkClass.DisplayMessage));
         }
 
+        [PatchPostfix]
+        public static void Postfix(ChatMessageClass message, DialogueClass dialogue)
+        {
+            if (message.HasRewards)
+            {
+                dialogue.HasMessagesWithRewards = true;
+            }
+        }
+
         // Skipping the following:
         // ldarg.2
         // ldc.i4.0
@@ -354,6 +367,59 @@ public static class MailPatches
 
                 yield return instruction;
             }
+        }
+    }
+
+    // Normally this event is invoked when HasMessagesWithRewards changes - but it should be invoked on first load, because 
+    // even if the value is the same, it's going from unloaded default value (false) to real value
+    public class InvokeAttachmentsChangedPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(DialogueClass), nameof(DialogueClass.method_0));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(DialogueClass __instance, ref bool __state)
+        {
+            __state = __instance.MessagesLoaded;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(DialogueClass __instance, bool __state)
+        {
+            if (!__state && __instance.MessagesLoaded) // if this is first load and it was successful
+            {
+                __instance.OnDialogueAttachmentsChanged.Invoke();
+            }
+        }
+    }
+
+    public class HandleExpiredMessagesPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(DialogueView), nameof(DialogueView.Show));
+        }
+
+        // AttachmentsNew is only sent in intial load all dialogs request, and may included expired messages
+        // HasMessagesWithRewards is sent when fetching specific dialog and is accurate due to server cleanup
+        // Problem here is I only decrement AttachmentsNew when you transfer items
+        // When you load a dialog it doesn't update AttachmentsNew, and with pagination I can't tell if there are more messages that have attachments
+        // Can handle the 0 attachments case because HasMessagesWithRewards will be false, so in that case can set AttachmentsNew to 0
+        // Leaves problematic case of HasMessagesWithRewards = true, but some have expired since the server cleaned up, so count will be off
+        [PatchPostfix]
+        public static void Postfix(DialogueView __instance, DialogueClass ___dialogueClass)
+        {
+            __instance.R().UI.AddDisposable(___dialogueClass.OnDialogueAttachmentsChanged.Bind(() =>
+            {
+                if (___dialogueClass.MessagesLoaded && !___dialogueClass.HasMessagesWithRewards && ___dialogueClass.AttachmentsNew > 0)
+                {
+                    ___dialogueClass.AttachmentsNew = 0;
+                    __instance.Int32_1 = 0;
+                    MonoBehaviourSingleton<PreloaderUI>.Instance.MenuTaskBar.method_12();
+                }
+            }));
         }
     }
 }
