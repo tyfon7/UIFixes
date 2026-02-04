@@ -28,6 +28,31 @@ public class InputRepeater : MonoBehaviour
         }
     }
 
+    public static bool IsKeyHeld(EGameKey gameKey)
+    {        
+        if (!KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding))
+        {
+            return false;
+        }
+
+        // KeyCombinationState_0 is the current state
+        if (keyBinding.KeyCombinationState_0.GetKeysStatus(out EKeyPress keyPress))
+        {
+            switch (keyPress)
+            {
+                case EKeyPress.Hold:
+                case EKeyPress.Up:
+                case EKeyPress.Down:
+                    return true;
+                case EKeyPress.None:
+                default:
+                    return false;
+            }
+        }
+
+        return false;
+    }
+
     public void BeginTrying(EGameKey gameKey, Func<bool> retry)
     {
         Reset();
