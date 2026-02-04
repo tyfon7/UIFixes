@@ -17,6 +17,8 @@ public static class QueueInputPatches
         new SprintPatch().Enable();
         new PreSprintPatch().Enable();
 
+        new BreathPatch().Enable();
+
         new MapKeyBindingsPatch().Enable();
     }
 
@@ -219,6 +221,41 @@ public static class QueueInputPatches
 
             // The rest of the function is fine
             return true;
+        }
+    }
+
+    // Moving while aimed down sights releases hold breath, this patch lets the player enter
+    // the hold-breath state when the key is held after moving.
+    public class BreathPatch : ModulePatch
+    {
+        private static readonly AccessTools.FieldRef<MovementContext, Player> PlayerField =
+            AccessTools.FieldRefAccess<MovementContext, Player>("_player");
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(IdleStateClass), nameof(IdleStateClass.Enter));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(IdleStateClass __instance)
+        {
+            if (!Settings.QueueHeldInputs.Value)
+            {
+                return;
+            }
+
+            var player = PlayerField(__instance.MovementContext);
+            if (!player.IsYourPlayer || !player.HandsController.IsAiming)
+            {
+                return;
+            }
+
+            if (!InputRepeater.IsKeyHeld(EGameKey.Breath))
+            {
+                return;
+            }
+
+            player.Physical.HoldBreath(true);
         }
     }
 
