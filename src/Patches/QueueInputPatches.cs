@@ -250,7 +250,7 @@ public static class QueueInputPatches
                 return;
             }
 
-            if (!InputRepeater.IsKeyHeld(EGameKey.Breath))
+            if (!InputHelper.IsKeyHeld(EGameKey.Breath))
             {
                 return;
             }
@@ -269,7 +269,7 @@ public static class QueueInputPatches
         [PatchPostfix]
         public static void Postfix(InputBindingsDataClass __instance)
         {
-            InputRepeater.MapKeyBindings(__instance);
+            InputHelper.MapKeyBindings(__instance);
         }
     }
 }
