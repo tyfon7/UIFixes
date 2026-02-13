@@ -84,7 +84,17 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
                 text = string.Format("<b><color=#C6C4B2>{0}</color></b>", repairer.LocalizedName);
             }
 
-            base.method_2(MakeInteractionId(repairer.RepairerId), text, () => this.Repair(repairer.RepairerId));
+            // BSG using display strings for keys again...
+            // Multiple repair kit types with the same short name will result in dupes that throw exceptions.
+            string dedupedText = text;
+            int dupeCount = 1;
+            while (Dictionary_0.ContainsKey(dedupedText))
+            {
+                dupeCount++;
+                dedupedText = text + string.Format("<b><color=#C6C4B2> #{0}</color></b>", dupeCount);
+            }
+
+            base.method_2(MakeInteractionId(repairer.RepairerId), dedupedText, () => this.Repair(repairer.RepairerId));
         }
     }
 
