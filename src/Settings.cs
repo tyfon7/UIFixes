@@ -250,6 +250,7 @@ internal class Settings
     public static ConfigEntry<bool> SaveOpenContainerWindows { get; set; }
     public static ConfigEntry<bool> PerItemInspectPositions { get; set; }
     public static ConfigEntry<bool> PerItemContainerPositions { get; set; }
+    public static ConfigEntry<bool> HighlightPrioritizedWindowBorder { get; set; }
 
     public static List<ConfigEntryBase> AllConfigs = [];
 
@@ -1416,6 +1417,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "Always open windows for a given container in the same place",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HighlightPrioritizedWindowBorder = config.Bind(
+            WindowsSection,
+            "Highlight Priority Window Border",
+            true,
+            new ConfigDescription(
+                "Outline the prioritized window with yellow",
                 null,
                 new ConfigurationManagerAttributes { })));
 

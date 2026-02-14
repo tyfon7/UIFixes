@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using EFT.InputSystem;
-using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UIFixes;
 
@@ -31,6 +31,8 @@ public static class WindowPatches
         new KeepWindowOnScreenPatch(nameof(ItemUiContext.OpenItem)).Enable(); // grids
 
         new KeepTopOnScreenPatch().Enable();
+
+        new BorderPrioritizedWindow().Enable();
     }
 
     public class WindowOpenPatch(string methodName) : ModulePatch
@@ -154,8 +156,29 @@ public static class WindowPatches
         }
     }
 
-    private static void FixNewestWindow(List<InputNode> windows)
+    public class BorderPrioritizedWindow : ModulePatch
     {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridWindow), nameof(GridWindow.SetSelectedAsTargetVisual));
+        }
 
+        [PatchPostfix]
+        public static void Postfix(GridWindow __instance, bool selected, Color ____iconColorSelected, Color ____iconColorIdle)
+        {
+            if (!Settings.HighlightPrioritizedWindowBorder.Value)
+            {
+                return;
+            }
+
+            // border is not normally changed so I couldn't find a cached property
+            var border = __instance.transform.Find("Border")?.GetComponent<Image>();
+            if (border == null)
+            {
+                return;
+            }
+
+            border.color = selected ? ____iconColorSelected : ____iconColorIdle;
+        }
     }
 }
