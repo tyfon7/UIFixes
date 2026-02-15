@@ -189,6 +189,7 @@ internal class Settings
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
     public static ConfigEntry<bool> HighlightQuickMove { get; set; }
+    public static ConfigEntry<bool> HighlightQuickEquip { get; set; }
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> TagBackpacks { get; set; }
@@ -999,6 +1000,15 @@ internal class Settings
             true,
             new ConfigDescription(
                 "When holding CTRL and mousing over an item, show a border around where quick moving (CTRL-clicking) will put the item",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HighlightQuickEquip = config.Bind(
+            ContainersSection,
+            "Highlight Quick Equip Target",
+            true,
+            new ConfigDescription(
+                "When holding ALT and mousing over an item, show a border around where quick equipping (ALT-clicking) will put the item",
                 null,
                 new ConfigurationManagerAttributes { })));
 

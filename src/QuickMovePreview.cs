@@ -15,12 +15,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
     private TraderControllerClass itemController;
     private ItemUiContext itemUiContext;
 
-    bool hovered = false;
-
-    public void Awake()
-    {
-        Settings.HighlightQuickMove.Bind(enabled => this.enabled = enabled);
-    }
+    private bool hovered = false;
 
     public void Init(ItemContextAbstractClass itemContext, TraderControllerClass itemController, ItemUiContext itemUiContext)
     {
@@ -34,9 +29,14 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         hovered = true;
 
         bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-        if (ctrlHeld)
+        bool altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+        if (ctrlHeld && !altHeld)
         {
-            ShowHighlight();
+            ShowMoveHighlight();
+        }
+        else if (altHeld && !ctrlHeld)
+        {
+            ShowEquipHighlight();
         }
     }
 
@@ -68,19 +68,30 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
         bool ctrlDown = Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
         bool ctrlUp = Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl);
+        bool altDown = Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt);
+        bool altUp = Input.GetKeyUp(KeyCode.LeftAlt) || Input.GetKeyUp(KeyCode.RightAlt);
 
         if (ctrlDown)
         {
-            ShowHighlight();
+            ShowMoveHighlight();
         }
-        else if (ctrlUp)
+        else if (altDown)
+        {
+            ShowEquipHighlight();
+        }
+        else if (ctrlUp || altUp)
         {
             HideHighlight();
         }
     }
 
-    private void ShowHighlight()
+    private void ShowMoveHighlight()
     {
+        if (!Settings.HighlightQuickMove.Value)
+        {
+            return;
+        }
+
         if (itemUiContext == null || !itemContext.Searched)
         {
             return;
@@ -110,9 +121,37 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
     }
 
+    private void ShowEquipHighlight()
+    {
+        if (!Settings.HighlightQuickEquip.Value)
+        {
+            return;
+        }
+
+        if (itemUiContext == null || !itemContext.Searched)
+        {
+            return;
+        }
+
+        var equipment = itemUiContext.R().InventoryEquipment;
+        if (equipment.IsItemEquipped(itemContext.Item))
+        {
+            return;
+        }
+
+        var itemAddress = equipment.FindSlotToPickUp(itemContext.Item);
+        if (itemAddress is not SlotAddress slotAddress)
+        {
+            return;
+        }
+
+        var targetSlotView = itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
+        HighlightSlot(targetSlotView);
+    }
+
     private void HighlightGridLocation(GridView gridView, GridItemAddress gridAddress)
     {
-        targetBorder = GetTargetBorder(gridView);
+        targetBorder = GetTargetBorder(gridView.transform);
         if (targetBorder == null)
         {
             return;
@@ -141,7 +180,17 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     private void HighlightSlot(SlotView slotView)
     {
-        targetBorder = GetTargetBorder(slotView);
+        // Bags are weird, test for Slot Panel
+        var slotPanel = slotView.transform.Find("Slot Panel");
+        if (slotPanel != null)
+        {
+            targetBorder = GetTargetBorder(slotPanel);
+        }
+        else
+        {
+            targetBorder = GetTargetBorder(slotView.transform);
+        }
+
         if (targetBorder == null)
         {
             return;
@@ -168,9 +217,9 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         targetBorder = null;
     }
 
-    private GameObject GetTargetBorder(MonoBehaviour target)
+    private GameObject GetTargetBorder(Transform target)
     {
-        var targetBorder = target.transform.Find("TargetBorder");
+        var targetBorder = target.Find("TargetBorder");
         if (targetBorder == null)
         {
             var borderTemplate = transform.Find("Border"); // use this itemview's border
@@ -179,7 +228,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
                 return null;
             }
 
-            targetBorder = UnityEngine.Object.Instantiate(borderTemplate, target.transform);
+            targetBorder = UnityEngine.Object.Instantiate(borderTemplate, target);
             targetBorder.name = "TargetBorder";
 
             targetBorder.GetComponent<Image>().color = Color.yellow;

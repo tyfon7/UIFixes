@@ -473,6 +473,7 @@ public static class R
         private static FieldInfo TraderControllerField;
         private static FieldInfo InventoryControllerField;
         private static FieldInfo InventoryField;
+        private static FieldInfo InventoryEquipmentField;
         private static FieldInfo GridWindowTemplateField;
         private static FieldInfo ContextTypeField;
         private static PropertyInfo ItemContextProperty;
@@ -486,6 +487,7 @@ public static class R
             TraderControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(TraderControllerClass));
             InventoryControllerField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryController));
             InventoryField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(Inventory));
+            InventoryEquipmentField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(InventoryEquipment));
             GridWindowTemplateField = AccessTools.Field(Type, "_gridWindowTemplate");
             ContextTypeField = AccessTools.GetDeclaredFields(Type).Single(t => t.FieldType == typeof(EItemUiContextType));
             ItemContextProperty = AccessTools.GetDeclaredProperties(Type).Single(p => p.PropertyType == typeof(ItemContextAbstractClass));
@@ -497,6 +499,7 @@ public static class R
         public TraderControllerClass TraderController { get { return (TraderControllerClass)TraderControllerField.GetValue(Value); } }
         public InventoryController InventoryController { get { return (InventoryController)InventoryControllerField.GetValue(Value); } }
         public Inventory Inventory { get { return (Inventory)InventoryField.GetValue(Value); } }
+        public InventoryEquipment InventoryEquipment { get { return (InventoryEquipment)InventoryEquipmentField.GetValue(Value); } }
         public EFT.UI.GridWindow GridWindowTemplate { get { return (EFT.UI.GridWindow)GridWindowTemplateField.GetValue(Value); } }
         public EItemUiContextType ContextType { get { return (EItemUiContextType)ContextTypeField.GetValue(Value); } }
         public ItemContextAbstractClass ItemContext { get { return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value); } }
