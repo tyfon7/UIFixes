@@ -5,7 +5,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Readability", Scope = "namespaceanddescendants", Target = "~N:UIFixes")]
-[assembly: SuppressMessage("Style", "IDE0045:Convert to conditional expression", Justification = "Readability", Scope = "namespaceanddescendants", Target = "~N:UIFixes")]
-[assembly: SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "Readability", Scope = "namespaceanddescendants", Target = "~N:UIFixes")]
-[assembly: SuppressMessage("Style", "IDE0031:Use null propagation", Justification = "Unity", Scope = "namespaceanddescendants", Target = "~N:UIFixes")]
+[assembly: SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Readability")]
+[assembly: SuppressMessage("Style", "IDE0045:Convert to conditional expression", Justification = "Readability")]
+[assembly: SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "Readability")]
+[assembly: SuppressMessage("Style", "IDE0031:Use null propagation", Justification = "Unity")]
