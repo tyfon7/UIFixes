@@ -6,6 +6,7 @@
     <AssemblySearchPaths>
       $(SPTPath)\EscapeFromTarkov_Data\Managed;
       $(SPTPath)\BepInEx\plugins\spt;
+      $(SPTPath)\BepInEx\plugins\spt\ConfigurationManager;
       $(FikaPath);
       $(AssemblySearchPaths)
     </AssemblySearchPaths>

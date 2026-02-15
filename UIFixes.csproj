@@ -24,6 +24,7 @@
     <Reference Include="Comfort" />
     <Reference Include="Comfort.Unity" />
     <Reference Include="CommonExtensions" />
+    <Reference Include="ConfigurationManager" />
     <Reference Include="Fika.Core" />
     <Reference Include="ItemComponent.Types" />
     <Reference Include="Newtonsoft.Json" />

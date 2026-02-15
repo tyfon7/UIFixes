@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using UnityEngine;
 
@@ -260,10 +261,14 @@ internal class Settings
         return AllConfigs.Where(c => c.IsSynced());
     }
 
+    private static ConfigurationManager.ConfigurationManager ConfigManager { get; set; }
+
     // Categories
     public static void Init(ConfigFile config)
     {
         var configEntries = AllConfigs;
+
+        ConfigManager = Chainloader.PluginInfos["com.bepis.bepinex.configurationmanager"].Instance as ConfigurationManager.ConfigurationManager;
 
         // Interface
         configEntries.Add(KeepMessagesOpen = config.Bind(
@@ -1447,8 +1452,10 @@ internal class Settings
 
         MakeExclusive(EnableMultiClick, AutoOpenSortingTable, false);
 
-        MakeRequirement(ReorderGrids, !Plugin.FikaPresent());
+        MakeRequirement(ReorderGrids, !Plugin.FikaPresent(), "Incompatible with Fika");
         MakeDependent(ReorderGrids, PrioritizeSmallerGrids, false);
+
+        MakeRequirement(ModifyEquippedPlates, !Plugin.FikaPresent(), "Incompatible with Fika");
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
@@ -1457,10 +1464,8 @@ internal class Settings
         int settingOrder = configEntries.Count;
         foreach (var entry in configEntries)
         {
-            if (entry.Description.Tags[0] is ConfigurationManagerAttributes attributes)
-            {
-                attributes.Order = settingOrder;
-            }
+            var attributes = entry.GetAttributes();
+            attributes.Order = settingOrder;
 
             settingOrder--;
         }
@@ -1502,6 +1507,11 @@ internal class Settings
         if (!primaryConfig.Value)
         {
             dependentConfig.Value = false;
+
+            var attributes = dependentConfig.GetAttributes();
+            attributes.ReadOnly = true;
+            attributes.DispName = $"<color=grey>{dependentConfig.Definition.Key}</color>";
+            attributes.CustomDrawer = MakeDisabledBoolDrawer($"Requires {primaryConfig.Definition.Key}");
         }
 
         primaryConfig.SettingChanged += (_, _) =>
@@ -1512,37 +1522,48 @@ internal class Settings
                 {
                     dependentConfig.Value = true;
                 }
+
+                var attributes = dependentConfig.GetAttributes();
+                attributes.ReadOnly = false;
+                attributes.DispName = dependentConfig.Definition.Key;
+                attributes.CustomDrawer = null;
             }
             else
             {
                 dependentConfig.Value = false;
-            }
-        };
 
-        dependentConfig.SettingChanged += (_, _) =>
-        {
-            if (!primaryConfig.Value)
-            {
-                dependentConfig.Value = false;
+                var attributes = dependentConfig.GetAttributes();
+                attributes.ReadOnly = true;
+                attributes.DispName = $"<color=grey>{dependentConfig.Definition.Key}</color>";
+                attributes.CustomDrawer = MakeDisabledBoolDrawer($"requires {primaryConfig.Definition.Key}");
             }
+
+            ConfigManager.BuildSettingList(); // refresh drawers
         };
     }
 
-    private static void MakeRequirement(ConfigEntry<bool> config, bool requirement)
+    private static void MakeRequirement(ConfigEntry<bool> config, bool requirement, string explanation)
     {
         if (!requirement)
         {
-            Plugin.Instance.Logger.LogInfo($"Disabling '{config.Definition.Key}'");
+            Plugin.Instance.Logger.LogInfo($"Disabling '{config.Definition.Key}'; {explanation}");
 
             config.Value = false;
-        }
 
-        config.SettingChanged += (_, _) =>
+            var attributes = config.GetAttributes();
+            attributes.ReadOnly = true;
+            attributes.DispName = $"<color=grey>{config.Definition.Key}</color>";
+            attributes.CustomDrawer = MakeDisabledBoolDrawer(explanation);
+        }
+    }
+
+    private static Action<ConfigEntryBase> MakeDisabledBoolDrawer(string explanation)
+    {
+        return (ConfigEntryBase config) =>
         {
-            if (!requirement)
-            {
-                config.Value = false;
-            }
+            var value = (bool)config.BoxedValue;
+            var state = value ? "Enabled" : "Disabled";
+            GUILayout.Toggle(value, $"<color=grey>{state} ({explanation})</color>", GUILayout.ExpandWidth(true));
         };
     }
 }
@@ -1576,9 +1597,14 @@ public static class SettingExtensions
         return Input.GetKeyUp(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
     }
 
+    internal static ConfigurationManagerAttributes GetAttributes(this ConfigEntryBase configEntry)
+    {
+        return configEntry.Description.Tags.OfType<ConfigurationManagerAttributes>().FirstOrDefault();
+    }
+
     public static bool IsSynced(this ConfigEntryBase configEntry)
     {
-        ConfigurationManagerAttributes attributes = configEntry.Description.Tags.OfType<ConfigurationManagerAttributes>().FirstOrDefault();
+        ConfigurationManagerAttributes attributes = configEntry.GetAttributes();
         return attributes != null && attributes.Synced.HasValue && attributes.Synced.Value;
     }
 }
