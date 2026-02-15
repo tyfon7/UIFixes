@@ -10,17 +10,17 @@ namespace UIFixes;
 
 public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContext itemUiContext) : ItemInfoInteractionsAbstractClass<OpenInteractions.Options>(itemUiContext)
 {
-    private readonly ItemContextAbstractClass itemContext = itemContext;
+    private readonly ItemContextAbstractClass _itemContext = itemContext;
 
     public override void ExecuteInteractionInternal(Options interaction)
     {
-        if (itemContext == null || itemContext.Item is not CompoundItem compoundItem)
+        if (_itemContext == null || _itemContext.Item is not CompoundItem compoundItem)
         {
             return;
         }
 
         var taskSerializer = ItemUiContext_0.gameObject.AddComponent<NestedContainerTaskSerializer>();
-        taskSerializer.Initialize(GetNestedContainers(itemContext), containerContext =>
+        taskSerializer.Initialize(GetNestedContainers(_itemContext), containerContext =>
         {
             if (containerContext != null)
             {

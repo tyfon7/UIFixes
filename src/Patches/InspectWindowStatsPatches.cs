@@ -113,7 +113,7 @@ public static class InspectWindowStatsPatches
             }
 
             // Armor points is added in method_5, but not in other places so it's missed by compare
-            ArmorComponent[] armorComponents = compareItem.GetItemComponentsInChildren<ArmorComponent>(true).Where(c => c.ArmorClass > 0).ToArray<ArmorComponent>();
+            var armorComponents = compareItem.GetItemComponentsInChildren<ArmorComponent>(true).Where(c => c.ArmorClass > 0).ToArray<ArmorComponent>();
             if (armorComponents.Any())
             {
                 float maxDurability = armorComponents.Sum(c => c.Repairable.Durability);
@@ -174,40 +174,40 @@ public static class InspectWindowStatsPatches
             ContextMenuButton toggleButton = null;
 
             // Listen to the setting and the work there to handle multiple windows open at once
-            void onSettingChanged(object sender, EventArgs args)
+            void OnSettingChanged(object sender, EventArgs args)
             {
                 var text = toggleButton.R().Text;
                 text.text = GetLabel();
 
                 __instance.method_5(); // rebuild stat panels
             }
-            Settings.ShowModStats.SettingChanged += onSettingChanged;
+            Settings.ShowModStats.SettingChanged += OnSettingChanged;
 
-            static void onClick()
+            static void OnClick()
             {
                 Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
             }
 
-            void createButton()
+            void CreateButton()
             {
                 Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
                 toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
-                toggleButton.Show(GetLabel(), null, sprite, onClick, null);
+                toggleButton.Show(GetLabel(), null, sprite, OnClick, null);
                 toggleButton.transform.SetSiblingIndex(toggleButton.transform.GetSiblingIndex() - 1);
                 ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
             }
 
             // Subscribe to redraws to recreate when mods get dropped in
-            contextInteractions.OnRedrawRequired += createButton;
+            contextInteractions.OnRedrawRequired += CreateButton;
 
             // And unsubscribe when the window goes away
             buttonsContainer.UI.AddDisposable(() =>
             {
-                contextInteractions.OnRedrawRequired -= createButton;
-                Settings.ShowModStats.SettingChanged -= onSettingChanged;
+                contextInteractions.OnRedrawRequired -= CreateButton;
+                Settings.ShowModStats.SettingChanged -= OnSettingChanged;
             });
 
-            createButton();
+            CreateButton();
         }
     }
 
@@ -400,8 +400,8 @@ public static class InspectWindowStatsPatches
 
         // These come from CompactCharacteristicPanel._increasingColor and _decreasingColor, which are hardcoded. Hardcoding here too because 
         // CharacteristicPanel doesn't define and you get clear
-        const string IncreasingColorHex = "#5EC1FF";
-        const string DecreasingColorHex = "#C40000";
+        const string increasingColorHex = "#5EC1FF";
+        const string decreasingColorHex = "#C40000";
 
         string text = textMesh.text;
         var wrappedPanel = panel.R();
@@ -428,7 +428,7 @@ public static class InspectWindowStatsPatches
                         if (Math.Abs(delta) > 0)
                         {
                             string sign = delta > 0 ? "+" : "";
-                            string color = (attribute.LessIsGood && delta < 0) || (!attribute.LessIsGood && delta > 0) ? IncreasingColorHex : DecreasingColorHex;
+                            string color = (attribute.LessIsGood && delta < 0) || (!attribute.LessIsGood && delta > 0) ? increasingColorHex : decreasingColorHex;
                             final += " <color=" + color + ">(" + sign + delta.ToString("0.0#") + ")</color>";
                         }
 
@@ -447,17 +447,12 @@ public static class InspectWindowStatsPatches
             if (float.TryParse(match.Groups[1].Value, out float value))
             {
                 string sign = value > 0 ? "+" : "";
-                string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
 
                 // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
-                if (NonPercentPercents.Contains((EItemAttributeId)attribute.Id))
-                {
-                    text = Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value + "%)</color>");
-                }
-                else
-                {
-                    text = Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
-                }
+                text = NonPercentPercents.Contains((EItemAttributeId)attribute.Id)
+                    ? Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value + "%)</color>")
+                    : Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
             }
         }
         else
@@ -470,7 +465,7 @@ public static class InspectWindowStatsPatches
                 if (float.TryParse(match.Groups[2].Value, out float value))
                 {
                     string sign = value > 0 ? "+" : "";
-                    string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                    string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
                     text = Regex.Replace(text, @"(\S)%\(([+-].*)\)", match.Groups[1].Value + "%<color=" + color + ">(" + sign + value + "%)</color>");
                 }
             }
@@ -484,7 +479,7 @@ public static class InspectWindowStatsPatches
                     if (float.TryParse(match.Groups[1].Value, out float value))
                     {
                         string sign = value > 0 ? "+" : "";
-                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? IncreasingColorHex : DecreasingColorHex;
+                        string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
                         if (fullBar && Math.Abs(value) >= 1)
                         {
                             // Fullbar rounds to nearest int, but I transpiled it not to. Restore the rounding, but only if the value won't just round to 0
@@ -509,7 +504,7 @@ public static class InspectWindowStatsPatches
     private static List<ItemAttributeClass> GetDeepAttributes(Item item, out bool changed)
     {
         changed = false;
-        List<ItemAttributeClass> itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
+        var itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
         foreach (var subItem in item.GetAllItems()) // This get all items, recursively
         {
             if (subItem == item)

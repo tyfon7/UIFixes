@@ -140,7 +140,7 @@ public class Plugin : BaseUnityPlugin
         var pluginsWithOldDependency = Chainloader.PluginInfos.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
         if (pluginsWithOldDependency.Any())
         {
-            var names = string.Join(",", pluginsWithOldDependency.Select(p => p.Metadata.Name).ToArray());
+            var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
             Logger.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
         }
     }

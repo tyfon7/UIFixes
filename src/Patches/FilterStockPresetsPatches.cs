@@ -59,15 +59,15 @@ public static class FilterStockPresetsPatches
 
             var originalNodes = new EntityNodeDictionary(nodes);
             var originalFilteredNodes = new EntityNodeDictionary(filteredNodes);
-            void reload(object sender, EventArgs args)
+            void Reload(object sender, EventArgs args)
             {
                 LastSearch = ___SearchInputField.text;
                 __instance.Close();
                 __instance.Show(ragfair, handbook, originalNodes, originalFilteredNodes, contextMenu, viewListType, windowType, initialNodeId, onSelection, onConfirmedSelection);
             }
 
-            Settings.ShowStockPresets.SettingChanged += reload;
-            __instance.R().UI.AddDisposable(() => Settings.ShowStockPresets.SettingChanged -= reload);
+            Settings.ShowStockPresets.SettingChanged += Reload;
+            __instance.R().UI.AddDisposable(() => Settings.ShowStockPresets.SettingChanged -= Reload);
 
             if (!Settings.ShowStockPresets.Value)
             {
@@ -144,7 +144,7 @@ public static class FilterStockPresetsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(OpenBuildWindow __instance, BuildsCategoriesPanel ____categoriesPanel)
+        public static void Postfix(BuildsCategoriesPanel ____categoriesPanel)
         {
             var subPanel = ____categoriesPanel.transform.Find("Panel");
 

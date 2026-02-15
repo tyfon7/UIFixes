@@ -8,10 +8,10 @@ namespace UIFixes;
 
 public class MultiSelectDebug : MonoBehaviour
 {
-    private GUIStyle guiStyle;
-    private Rect guiRect = new(20, 70, 0, 0);
+    private GUIStyle _guiStyle;
+    private Rect _guiRect = new(20, 70, 0, 0);
 
-    GUIContent guiContent;
+    GUIContent _guiContent;
 
     public void OnGUI()
     {
@@ -20,7 +20,7 @@ public class MultiSelectDebug : MonoBehaviour
             return;
         }
 
-        guiStyle ??= new GUIStyle(GUI.skin.box)
+        _guiStyle ??= new GUIStyle(GUI.skin.box)
         {
             alignment = TextAnchor.MiddleLeft,
             fontSize = 14,
@@ -28,7 +28,7 @@ public class MultiSelectDebug : MonoBehaviour
             richText = true
         };
 
-        guiContent ??= new GUIContent();
+        _guiContent ??= new GUIContent();
 
         StringBuilder builder = new();
 
@@ -61,11 +61,11 @@ public class MultiSelectDebug : MonoBehaviour
             builder.Append("<color=red>Load/Unload TaskSerializer active</color>\n");
         }
 
-        guiContent.text = builder.ToString();
+        _guiContent.text = builder.ToString();
 
-        guiRect.size = guiStyle.CalcSize(guiContent);
+        _guiRect.size = _guiStyle.CalcSize(_guiContent);
 
-        GUI.Box(guiRect, guiContent, guiStyle);
+        GUI.Box(_guiRect, _guiContent, _guiStyle);
     }
 
     private string FormatItemContext(ItemContextAbstractClass itemContext)

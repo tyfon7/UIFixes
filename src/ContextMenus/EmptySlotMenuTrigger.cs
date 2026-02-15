@@ -8,29 +8,29 @@ namespace UIFixes;
 
 public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    private ItemUiContext itemUiContext;
-    private Slot slot;
-    private ItemContextAbstractClass parentContext;
-    private bool hovered = false;
+    private ItemUiContext _itemUiContext;
+    private Slot _slot;
+    private ItemContextAbstractClass _parentContext;
+    private bool _hovered = false;
 
     public void Init(Slot slot, ItemContextAbstractClass parentContext, ItemUiContext itemUiContext)
     {
-        this.itemUiContext = itemUiContext;
-        this.slot = slot;
-        this.parentContext = parentContext;
+        _itemUiContext = itemUiContext;
+        _slot = slot;
+        _parentContext = parentContext;
     }
 
     public void Update()
     {
-        if (!hovered)
+        if (!_hovered)
         {
             return;
         }
 
         if (Settings.LinkedSearchKeyBind.Value.IsDown())
         {
-            using EmptySlotContext context = new(slot, parentContext, itemUiContext);
-            var interactions = itemUiContext.GetItemContextInteractions(context, null);
+            using EmptySlotContext context = new(_slot, _parentContext, _itemUiContext);
+            var interactions = _itemUiContext.GetItemContextInteractions(context, null);
             interactions.ExecuteInteraction(EItemInfoButton.LinkedSearch);
 
             // Call this explicitly since screen transition prevents it from firing normally
@@ -42,8 +42,8 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
     {
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            EmptySlotContext context = new(slot, parentContext, itemUiContext);
-            itemUiContext.ShowContextMenu(context, eventData.position);
+            EmptySlotContext context = new(_slot, _parentContext, _itemUiContext);
+            _itemUiContext.ShowContextMenu(context, eventData.position);
         }
     }
 
@@ -51,12 +51,12 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        hovered = true;
+        _hovered = true;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        hovered = false;
+        _hovered = false;
     }
 
     public void OnPointerUp(PointerEventData eventData) { }
@@ -64,12 +64,12 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
 
 public class EmptySlotContext(Slot slot, ItemContextAbstractClass parentContext, ItemUiContext itemUiContext) : ItemContextAbstractClass(parentContext.Item, parentContext.ViewType, parentContext)
 {
-    private readonly Slot slot = slot;
-    private readonly ItemUiContext itemUiContext = itemUiContext;
+    private readonly Slot _slot = slot;
+    private readonly ItemUiContext _itemUiContext = itemUiContext;
 
     public override ItemInfoInteractionsAbstractClass<EItemInfoButton> GetItemContextInteractions(Action closeAction)
     {
-        return new EmptySlotMenu(slot, ItemContextAbstractClass, itemUiContext, () =>
+        return new EmptySlotMenu(_slot, ItemContextAbstractClass, _itemUiContext, () =>
         {
             Dispose();
             closeAction?.Invoke();

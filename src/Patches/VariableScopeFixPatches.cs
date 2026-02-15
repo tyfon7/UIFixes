@@ -56,11 +56,7 @@ public static class VariableScopeFixPatches
         [PatchPrefix]
         public static bool Prefix(WeaponManagerClass __instance)
         {
-            if (__instance.Player != null && !__instance.Player.IsYourPlayer)
-            {
-                return false;
-            }
-            return true;
+            return __instance.Player == null || __instance.Player.IsYourPlayer;
         }
     }
 

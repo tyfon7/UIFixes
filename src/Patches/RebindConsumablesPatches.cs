@@ -28,7 +28,7 @@ public static class RebindConsumablesPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Item item, TraderControllerClass itemController, bool simulate, GStruct154<DiscardOperation> __result)
+        public static void Postfix(Item item, bool simulate, GStruct154<DiscardOperation> __result)
         {
             if (!Settings.RebindConsumables.Value || simulate || !__result.Succeeded)
             {

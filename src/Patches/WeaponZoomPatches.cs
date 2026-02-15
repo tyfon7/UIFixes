@@ -30,7 +30,7 @@ public static class WeaponZoomPatches
         public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
         {
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-            scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+            scrollTrigger.OnOnScroll += eventData =>
             {
                 if (____weaponPreview != null && __instance != null)
                 {
@@ -52,7 +52,7 @@ public static class WeaponZoomPatches
         public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
         {
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
-            scrollTrigger.OnOnScroll += (PointerEventData eventData) =>
+            scrollTrigger.OnOnScroll += eventData =>
             {
                 if (____weaponPreview != null && __instance != null)
                 {
@@ -78,13 +78,8 @@ public static class WeaponZoomPatches
                 return true;
             }
 
-            Player player = Singleton<GameWorld>.Instance != null ? Singleton<GameWorld>.Instance.MainPlayer : null;
-            if (player != null && player.IsInventoryOpened)
-            {
-                return false;
-            }
-
-            return true;
+            Player player = Singleton<GameWorld>.Instance?.MainPlayer;
+            return player == null || !player.IsInventoryOpened;
         }
     }
 }

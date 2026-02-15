@@ -8,6 +8,9 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 
+#pragma warning disable IDE0161 // Not using file scoped namespace for back-compat
+#pragma warning disable IDE0300 // Using legacy collection initalization for back-compat
+
 /*
 UI Fixes Multi-Select InterOp
 

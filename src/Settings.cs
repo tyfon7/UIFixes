@@ -1569,7 +1569,7 @@ internal class Settings
 
     private static Action<ConfigEntryBase> MakeDisabledBoolDrawer(string explanation)
     {
-        return (ConfigEntryBase config) =>
+        return config =>
         {
             var value = (bool)config.BoxedValue;
             var state = value ? "Enabled" : "Disabled";

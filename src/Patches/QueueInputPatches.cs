@@ -157,12 +157,7 @@ public static class QueueInputPatches
                 return hideoutGame.PlayerOwner.HandsInputTranslator as FirearmHandsInputTranslator;
             }
 
-            if (game is LocalGame localGame)
-            {
-                return localGame.PlayerOwner.HandsInputTranslator as FirearmHandsInputTranslator;
-            }
-
-            return null;
+            return game is LocalGame localGame ? localGame.PlayerOwner.HandsInputTranslator as FirearmHandsInputTranslator : null;
         }
     }
 

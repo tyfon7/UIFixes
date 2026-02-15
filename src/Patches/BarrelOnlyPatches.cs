@@ -62,14 +62,7 @@ public static class BarrelOnlyPatches
             else
             {
                 // BSG doesn't handle 1 bullet correctly, and will have already moved the stack into the weapon
-                if (ammo.Parent.Container.ParentItem == weapon)
-                {
-                    task = Task.CompletedTask;
-                }
-                else
-                {
-                    task = __instance.LoadMultiBarrelWeapon(weapon, ammo, 1);
-                }
+                task = ammo.Parent.Container.ParentItem == weapon ? Task.CompletedTask : __instance.LoadMultiBarrelWeapon(weapon, ammo, 1);
             }
 
             __result = task.ContinueWith(t =>
@@ -182,18 +175,18 @@ public static class BarrelOnlyPatches
         {
             public override bool HasIcons => false;
 
-            private readonly bool foundAny = false;
-            private readonly Weapon weapon;
-            private readonly ItemUiContext itemUiContext;
+            private readonly bool _foundAny = false;
+            private readonly Weapon _weapon;
+            private readonly ItemUiContext _itemUiContext;
 
             public BarrelLoadAmmoInteractions(Weapon weapon, ItemUiContext itemUiContext) : base(itemUiContext)
             {
-                this.weapon = weapon;
-                this.itemUiContext = itemUiContext;
+                _weapon = weapon;
+                _itemUiContext = itemUiContext;
 
-                foreach (var (ammoTemplateId, count) in FindCompatibleAmmo(weapon))
+                foreach (var (ammoTemplateId, count) in FindCompatibleAmmo())
                 {
-                    foundAny = true;
+                    _foundAny = true;
                     string nameKey = ammoTemplateId + " Name";
                     string text = string.Format("<b><color=#C6C4B2>{0}</color> <color=#ADB8BC>({1})</color></b>", nameKey.Localized(), count);
 
@@ -202,9 +195,9 @@ public static class BarrelOnlyPatches
             }
 
             // BSG never wrote this for barrel-only guns
-            private Dictionary<string, int> FindCompatibleAmmo(Weapon weapon)
+            private Dictionary<string, int> FindCompatibleAmmo()
             {
-                var inventory = itemUiContext.R().Inventory;
+                var inventory = _itemUiContext.R().Inventory;
 
                 List<AmmoItemClass> ammo = [];
                 inventory.Stash.GetAllAssembledItems(ammo);
@@ -213,7 +206,7 @@ public static class BarrelOnlyPatches
                 Dictionary<string, int> results = [];
                 foreach (var ammoItem in ammo)
                 {
-                    if (itemUiContext.method_12(ammoItem) && CheckCompatability(ammoItem))
+                    if (_itemUiContext.method_12(ammoItem) && CheckCompatability(ammoItem))
                     {
                         if (!results.TryGetValue(ammoItem.TemplateId, out int existingCount))
                         {
@@ -229,12 +222,12 @@ public static class BarrelOnlyPatches
 
             private bool CheckCompatability(AmmoItemClass ammo)
             {
-                return weapon.Chambers[0].Filters.CheckItemFilter(ammo);
+                return _weapon.Chambers[0].Filters.CheckItemFilter(ammo);
             }
 
             public async Task LoadAmmo(string ammoTemplateId)
             {
-                var inventory = itemUiContext.R().Inventory;
+                var inventory = _itemUiContext.R().Inventory;
 
                 // try from stash, then equipment
                 if (!await TryLoadFromContainer(inventory.Stash, ammoTemplateId))
@@ -253,11 +246,11 @@ public static class BarrelOnlyPatches
                 List<AmmoItemClass> ammo = [];
                 container.GetAllAssembledItems(ammo);
 
-                var matchingAmmo = ammo.Where(a => a.TemplateId == ammoTemplateId && itemUiContext.method_12(a))
+                var matchingAmmo = ammo.Where(a => a.TemplateId == ammoTemplateId && _itemUiContext.method_12(a))
                     .OrderBy(a => a.SpawnedInSession)
                     .ThenBy(a => a.StackObjectsCount);
 
-                var traderController = itemUiContext.R().TraderController;
+                var traderController = _itemUiContext.R().TraderController;
 
                 foreach (var ammoItem in matchingAmmo)
                 {
@@ -271,14 +264,14 @@ public static class BarrelOnlyPatches
 
                         }
 
-                        var operation = weapon.Apply(traderController, ammoItem, int.MaxValue, true);
+                        var operation = _weapon.Apply(traderController, ammoItem, int.MaxValue, true);
                         if (operation.Failed)
                         {
                             return true;
                         }
 
                         var result = await traderController.TryRunNetworkTransaction(operation);
-                        if (result.Failed || weapon.FreeChamberSlotsCount == 0)
+                        if (result.Failed || _weapon.FreeChamberSlotsCount == 0)
                         {
                             return true;
                         }
@@ -294,7 +287,7 @@ public static class BarrelOnlyPatches
 
             public override bool IsActive(EMagInteraction button)
             {
-                return button == BarrelLoadAmmoInteractions.EMagInteraction.NoCompatibleAmmo && !foundAny;
+                return button == BarrelLoadAmmoInteractions.EMagInteraction.NoCompatibleAmmo && !_foundAny;
             }
 
             public override IResult IsInteractive(EMagInteraction button)
@@ -336,8 +329,7 @@ public static class BarrelOnlyPatches
 
         public static async Task UnloadChamber(Slot chamber, InventoryController inventoryController, bool equipmentBlocked)
         {
-            var ammoItem = chamber.ContainedItem as AmmoItemClass;
-            if (ammoItem == null)
+            if (chamber.ContainedItem is not AmmoItemClass ammoItem)
             {
                 return;
             }

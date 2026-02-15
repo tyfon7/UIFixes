@@ -283,13 +283,13 @@ public class MultiSelect
     // Can pass no itemContext, and it just sorts items by their grid order
     public static IEnumerable<MultiSelectItemContext> SortedItemContexts(DragItemContext first = null, bool prepend = true)
     {
-        static int gridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
+        static int GridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
 
         var result = SelectedItems.Keys
             .Where(ic => first == null || ic.Item != first.Item)
             .OrderByDescending(ic => ic.ItemAddress is GridItemAddress)
             .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
-            .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? gridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
+            .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? GridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
         if (first != null && prepend)
         {
@@ -644,12 +644,7 @@ public static class MultiSelectExtensions
         // The player's dogtag is not selectable
         // BSG implements this in the most convoluted way possidble, by setting an empty View on the item context, and then
         // relying on the fact that this empty view no-ops most interactions. 
-        if (itemView.ItemContext == null || itemView.ItemContext.ViewType == EItemViewType.Empty)
-        {
-            return false;
-        }
-
-        return true;
+        return itemView.ItemContext != null && itemView.ItemContext.ViewType != EItemViewType.Empty;
     }
 
     // Be Careful!!

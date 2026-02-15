@@ -19,11 +19,6 @@ public class FixPlayerInspectPatch : ModulePatch
     public static bool Prefix(GroupPlayerViewModelClass raidPlayer)
     {
         var equipment = raidPlayer.PlayerVisualRepresentation.Equipment;
-        if (equipment.CurrentAddress.GetOwnerOrNull() is Player.PlayerOwnerInventoryController)
-        {
-            return false;
-        }
-
-        return true;
+        return equipment.CurrentAddress.GetOwnerOrNull() is not Player.PlayerOwnerInventoryController;
     }
 }

@@ -45,14 +45,13 @@ public static class AimToggleHoldPatches
                 return;
             }
 
-            List<KeyBindingClass.KeyCombinationState> states = new(__instance.KeyCombinationState_1)
-            {
+            __instance.KeyCombinationState_1 =
+            [
+                .. __instance.KeyCombinationState_1,
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance)
-            };
-
-            __instance.KeyCombinationState_1 = states.ToArray();
+            ];
         }
     }
 
@@ -71,14 +70,13 @@ public static class AimToggleHoldPatches
                 return;
             }
 
-            List<KeyBindingClass.KeyCombinationState> states = new(__instance.KeyCombinationState_1)
-            {
+            __instance.KeyCombinationState_1 =
+            [
+                .. __instance.KeyCombinationState_1,
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance)
-            };
-
-            __instance.KeyCombinationState_1 = states.ToArray();
+            ];
         }
     }
 

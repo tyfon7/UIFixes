@@ -18,8 +18,8 @@ public static class FleaPrevSearchPatches
 {
     private class HistoryEntry
     {
-        public FilterRule filterRule;
-        public float scrollPosition = 0f;
+        public FilterRule FilterRule;
+        public float ScrollPosition = 0f;
     }
 
     private static readonly Stack<HistoryEntry> History = new();
@@ -47,39 +47,39 @@ public static class FleaPrevSearchPatches
 
     public class PreviousFilterButton : MonoBehaviour
     {
-        private RagFairClass ragfair;
-        private RagfairScreen ragfairScreen;
-        private DefaultUIButton button;
-        private LayoutElement layoutElement;
+        private RagFairClass _ragfair;
+        private RagfairScreen _ragfairScreen;
+        private DefaultUIButton _button;
+        private LayoutElement _layoutElement;
 
-        private bool goingBack = false;
+        private bool _goingBack = false;
 
         public static PreviousFilterButton Instance;
 
         public void Awake()
         {
             Instance = this;
-            button = GetComponent<DefaultUIButton>();
-            layoutElement = GetComponent<LayoutElement>();
+            _button = GetComponent<DefaultUIButton>();
+            _layoutElement = GetComponent<LayoutElement>();
 
-            button.OnClick.RemoveAllListeners();
-            button.OnClick.AddListener(OnClick);
+            _button.OnClick.RemoveAllListeners();
+            _button.OnClick.AddListener(OnClick);
         }
 
         public void Show(RagfairScreen ragfairScreen, RagFairClass ragfair)
         {
-            this.ragfair = ragfair;
-            this.ragfairScreen = ragfairScreen;
+            _ragfair = ragfair;
+            _ragfairScreen = ragfairScreen;
 
-            button.SetRawText("< " + "back".Localized(), 20);
+            _button.SetRawText("< " + "back".Localized(), 20);
 
-            layoutElement.minWidth = -1;
-            layoutElement.preferredWidth = -1;
+            _layoutElement.minWidth = -1;
+            _layoutElement.preferredWidth = -1;
 
             // Prime the first filter
             if (!History.Any())
             {
-                History.Push(new HistoryEntry() { filterRule = ragfair.method_3(EViewListType.AllOffers) }); // Player's saved default rule
+                History.Push(new HistoryEntry() { FilterRule = ragfair.method_3(EViewListType.AllOffers) }); // Player's saved default rule
             }
 
             // Load what they're searching now, which may or may not be the same as the default
@@ -89,7 +89,7 @@ public static class FleaPrevSearchPatches
 
             if (History.Count < 2)
             {
-                button.Interactable = false;
+                _button.Interactable = false;
             }
 
             gameObject.SetActive(ragfair.FilterRule.ViewListType == EViewListType.AllOffers);
@@ -97,9 +97,9 @@ public static class FleaPrevSearchPatches
 
         public void Close()
         {
-            ragfair.OnFilterRuleChanged -= OnFilterRuleChanged;
-            ragfair = null;
-            ragfairScreen = null;
+            _ragfair.OnFilterRuleChanged -= OnFilterRuleChanged;
+            _ragfair = null;
+            _ragfairScreen = null;
         }
 
         public void OnOffersLoaded(OfferViewList offerViewList)
@@ -117,7 +117,7 @@ public static class FleaPrevSearchPatches
             // Restore scroll position now that offers are loaded
             if (History.Any())
             {
-                offerViewList.R().Scroller.SetScrollPosition(History.Peek().scrollPosition);
+                offerViewList.R().Scroller.SetScrollPosition(History.Peek().ScrollPosition);
             }
         }
 
@@ -126,31 +126,31 @@ public static class FleaPrevSearchPatches
             History.Pop(); // remove current
             if (History.Count < 2)
             {
-                button.Interactable = false;
+                _button.Interactable = false;
             }
 
             HistoryEntry previousEntry = History.Peek();
 
             // Manually update parts of the UI because BSG sucks
-            UpdateColumnHeaders(ragfairScreen.R().OfferViewList.R().FiltersPanel, previousEntry.filterRule.SortType, previousEntry.filterRule.SortDirection);
+            UpdateColumnHeaders(_ragfairScreen.R().OfferViewList.R().FiltersPanel, previousEntry.FilterRule.SortType, previousEntry.FilterRule.SortDirection);
 
-            goingBack = true;
-            ApplyFullFilter(previousEntry.filterRule);
-            goingBack = false;
+            _goingBack = true;
+            ApplyFullFilter(previousEntry.FilterRule);
+            _goingBack = false;
         }
 
         private void OnFilterRuleChanged(RagFairClass.ESetFilterSource source = 0, bool clear = false, bool updateCategories = false)
         {
-            if (goingBack || !string.IsNullOrEmpty(DelayedHandbookId) || ragfair.FilterRule.ViewListType != EViewListType.AllOffers)
+            if (_goingBack || !string.IsNullOrEmpty(DelayedHandbookId) || _ragfair.FilterRule.ViewListType != EViewListType.AllOffers)
             {
                 return;
             }
 
             HistoryEntry current = History.Any() ? History.Peek() : null;
-            if (current != null && current.filterRule.IsSimilarTo(ragfair.FilterRule))
+            if (current != null && current.FilterRule.IsSimilarTo(_ragfair.FilterRule))
             {
                 // Minor filter change, just update the current one
-                current.filterRule = ragfair.FilterRule;
+                current.FilterRule = _ragfair.FilterRule;
                 return;
             }
 
@@ -159,20 +159,20 @@ public static class FleaPrevSearchPatches
             {
                 if (PossibleScrollPosition >= 0f)
                 {
-                    current.scrollPosition = PossibleScrollPosition;
+                    current.ScrollPosition = PossibleScrollPosition;
                 }
                 else
                 {
-                    LightScroller scroller = ragfairScreen.R().OfferViewList.R().Scroller;
-                    current.scrollPosition = scroller.NormalizedScrollPosition;
+                    LightScroller scroller = _ragfairScreen.R().OfferViewList.R().Scroller;
+                    current.ScrollPosition = scroller.NormalizedScrollPosition;
                 }
             }
 
-            History.Push(new HistoryEntry() { filterRule = ragfair.FilterRule });
+            History.Push(new HistoryEntry() { FilterRule = _ragfair.FilterRule });
 
             if (History.Count >= 2)
             {
-                button.Interactable = true;
+                _button.Interactable = true;
             }
 
             // Basic sanity to keep this from growing out of control
@@ -232,7 +232,7 @@ public static class FleaPrevSearchPatches
             searches.Add(new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0));
             searches.Add(new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional));
 
-            ragfair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
+            _ragfair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
             // These properties don't consistute a new search, so much as a different view of the same search
             newRule.Page = filterRule.Page;
@@ -242,7 +242,7 @@ public static class FleaPrevSearchPatches
             // Can't set handbookId yet - it limits the result set and that in turn limits what categories even display
             DelayedHandbookId = filterRule.HandbookId;
 
-            ragfair.SetFilterRule(newRule, true, true);
+            _ragfair.SetFilterRule(newRule, true, true);
         }
 
         private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)

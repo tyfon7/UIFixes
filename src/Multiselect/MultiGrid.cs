@@ -128,11 +128,6 @@ public static class MultiGrid
 
     private static bool IsMultiGrid(Item item)
     {
-        if (item is not CompoundItem compoundItem)
-        {
-            return false;
-        }
-
-        return compoundItem.Grids.Length > 1;
+        return item is CompoundItem compoundItem && compoundItem.Grids.Length > 1;
     }
 }

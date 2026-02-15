@@ -81,7 +81,7 @@ public static class MailPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(SocialNetworkClass __instance, ChatMessageClass message, DialogueClass dialogue)
+        public static void Prefix(ChatMessageClass message, DialogueClass dialogue)
         {
             // Normally it won't increment new if it has rewards
             if (message.HasRewards)

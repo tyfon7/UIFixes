@@ -119,7 +119,7 @@ public static class WishlistPatches
                 return;
             }
 
-            __result = __result.Where(IsVisible).ToList();
+            __result = [.. __result.Where(IsVisible)];
         }
 
         // This logic copied from AreaWorldPanel.SetInfo(), which determines if the area icon is rendered in the hideout world

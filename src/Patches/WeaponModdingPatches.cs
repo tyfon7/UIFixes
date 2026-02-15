@@ -48,9 +48,9 @@ public static class WeaponModdingPatches
 
     public struct ResizeData
     {
-        public MongoID itemId;
-        public XYCellSizeStruct oldSize;
-        public XYCellSizeStruct newSize;
+        public MongoID ItemId;
+        public XYCellSizeStruct OldSize;
+        public XYCellSizeStruct NewSize;
     }
 
     public class LastResizePatch : ModulePatch
@@ -70,9 +70,9 @@ public static class WeaponModdingPatches
             // The sizes passed in are the template sizes, need to make match the item's rotation
             LastResize = new ResizeData
             {
-                itemId = item.Id,
-                oldSize = itemLocation.r.Rotate(oldSize),
-                newSize = itemLocation.r.Rotate(newSize)
+                ItemId = item.Id,
+                OldSize = itemLocation.r.Rotate(oldSize),
+                NewSize = itemLocation.r.Rotate(newSize)
             };
         }
     }
@@ -149,7 +149,7 @@ public static class WeaponModdingPatches
     private static void TryMoving<T>(Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<T> __result, Func<GStruct154<T>> func) where T : IRaiseEvents
     {
         ResizeData resize = LastResizePatch.LastResize;
-        if (targetItem.Id != resize.itemId || targetItem.Parent is not GridItemAddress gridItemAddress)
+        if (targetItem.Id != resize.ItemId || targetItem.Parent is not GridItemAddress gridItemAddress)
         {
             return;
         }
@@ -158,8 +158,8 @@ public static class WeaponModdingPatches
         LocationInGrid itemLocation = gridItemAddress.LocationInGrid;
 
         // Figure out which direction(s) its growing
-        int horizontalGrowth = resize.newSize.X - resize.oldSize.X;
-        int verticalGrowth = resize.newSize.Y - resize.oldSize.Y;
+        int horizontalGrowth = resize.NewSize.X - resize.OldSize.X;
+        int verticalGrowth = resize.NewSize.Y - resize.OldSize.Y;
 
         // Can't move up/left more than the position
         horizontalGrowth = Math.Min(horizontalGrowth, itemLocation.x);
@@ -228,10 +228,7 @@ public static class WeaponModdingPatches
         public static void Postfix(MoveOperation __instance)
         {
             MoveOperation moveOperation = __instance.GetExtraMoveOperation();
-            if (moveOperation != null)
-            {
-                moveOperation.RollBack();
-            }
+            moveOperation?.RollBack();
         }
     }
 
@@ -274,25 +271,16 @@ public static class WeaponModdingPatches
                 if (extraResult.Failed)
                 {
                     InPatch = false;
-                    if (callback != null)
-                    {
-                        callback(extraResult);
-                    }
+                    callback?.Invoke(extraResult);
 
                     return;
                 }
 
-                ItemUiContext.Instance.WaitOneFrame(() =>
-                {
-                    __instance.RunNetworkTransaction(operationResult, result =>
+                ItemUiContext.Instance.WaitOneFrame(() => __instance.RunNetworkTransaction(operationResult, result =>
                     {
                         InPatch = false;
-                        if (callback != null)
-                        {
-                            callback(result);
-                        }
-                    });
-                });
+                        callback?.Invoke(result);
+                    }));
             });
 
             return false;
@@ -401,7 +389,7 @@ public static class WeaponModdingPatches
             }
 
             // Keep it grayed out and warning text if its not draggable, even if context menu is enabled
-            if (CanModify(__instance.Slot.ContainedItem, ___ItemController as InventoryController, out string error))
+            if (CanModify(__instance.Slot.ContainedItem, ___ItemController as InventoryController, out _))
             {
                 ___bool_1 = false;
                 ____canvasGroup.alpha = 1f;
@@ -450,13 +438,12 @@ public static class WeaponModdingPatches
             }
 
             var inventoryController = MoveCanExecutePatch.TraderController as InventoryController;
-
-            if (!CanModify(__instance, inventoryController, out string itemError))
+            if (!CanModify(__instance, inventoryController, out _))
             {
                 return;
             }
 
-            if (toContainer is not Slot toSlot || !CanModify(R.SlotItemAddress.Create(toSlot), inventoryController, out string slotError))
+            if (toContainer is not Slot toSlot || !CanModify(R.SlotItemAddress.Create(toSlot), inventoryController, out _))
             {
                 return;
             }
@@ -864,12 +851,7 @@ public static class WeaponModdingPatches
         if (rootItem is Weapon weapon)
         {
             // If the slot is not a required slot, allow it (item is null here, checking the empty destination slot)
-            if (!slot.Required)
-            {
-                return true;
-            }
-
-            return CanModify(weapon, inventoryController, out error);
+            return !slot.Required || CanModify(weapon, inventoryController, out error);
         }
         else if (item is ArmorPlateItemClass && rootItem is ArmorItemClass or VestItemClass)
         {

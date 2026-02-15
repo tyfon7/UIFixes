@@ -32,7 +32,7 @@ public static class FilterOutOfStockPatches
     {
         get
         {
-            return PlayerPrefs.HasKey(PlayerPrefKey) ? PlayerPrefs.GetInt(PlayerPrefKey) == 1 : true;
+            return !PlayerPrefs.HasKey(PlayerPrefKey) || PlayerPrefs.GetInt(PlayerPrefKey) == 1;
         }
         set
         {

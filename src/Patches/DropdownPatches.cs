@@ -252,18 +252,18 @@ public static class DropdownPatches
 
     private class ClickHandler : MonoBehaviour, IPointerClickHandler
     {
-        private Action onClick;
+        private Action _onClick;
 
         public void Init(Action onClick)
         {
-            this.onClick = onClick;
+            _onClick = onClick;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                onClick();
+                _onClick();
             }
         }
     }

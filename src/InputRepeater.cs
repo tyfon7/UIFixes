@@ -6,11 +6,9 @@ namespace UIFixes;
 
 public class InputRepeater : MonoBehaviour
 {
-
-    private EGameKey gameKey;
-    private Func<bool> retry;
-
-    private float timer = 0f;
+    private EGameKey _gameKey;
+    private Func<bool> _retry;
+    private float _timer = 0f;
 
     public void BeginTrying(EGameKey gameKey, Func<bool> retry)
     {
@@ -24,8 +22,8 @@ public class InputRepeater : MonoBehaviour
 
         if (keyBinding.Type == EPressType.Press || keyBinding.Type == EPressType.Continuous || ToggleHold.IsEnabled(gameKey))
         {
-            this.gameKey = gameKey;
-            this.retry = retry;
+            _gameKey = gameKey;
+            _retry = retry;
             enabled = true;
         }
     }
@@ -37,34 +35,34 @@ public class InputRepeater : MonoBehaviour
 
     private void Reset()
     {
-        gameKey = EGameKey.None;
-        retry = null;
+        _gameKey = EGameKey.None;
+        _retry = null;
+        _timer = 0f;
         enabled = false;
-        timer = 0f;
     }
 
     public void Update()
     {
-        timer += Time.deltaTime;
-        if (timer < 0.1f)
+        _timer += Time.deltaTime;
+        if (_timer < 0.1f)
         {
             return;
         }
 
-        timer -= 0.1f;
+        _timer -= 0.1f;
 
-        if (InputHelper.IsKeyHeld(gameKey))
+        if (InputHelper.IsKeyHeld(_gameKey))
         {
             try
             {
-                if (retry())
+                if (_retry())
                 {
                     StopTrying();
                 }
             }
             catch (Exception ex)
             {
-                Plugin.Instance.Logger.LogError($"Error repeating {gameKey}: {ex}");
+                Plugin.Instance.Logger.LogError($"Error repeating {_gameKey}: {ex}");
                 StopTrying();
             }
         }

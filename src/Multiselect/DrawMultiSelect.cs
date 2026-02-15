@@ -14,40 +14,40 @@ namespace UIFixes;
 
 public class DrawMultiSelect : MonoBehaviour
 {
-    private Texture2D selectTexture;
+    private Texture2D _selectTexture;
 
-    private Vector3 selectOrigin;
-    private Vector3 selectEnd;
+    private Vector3 _selectOrigin;
+    private Vector3 _selectEnd;
 
-    private GraphicRaycaster localRaycaster;
-    private GraphicRaycaster preloaderRaycaster;
+    private GraphicRaycaster _localRaycaster;
+    private GraphicRaycaster _preloaderRaycaster;
 
-    private bool drawing;
-    private bool secondary;
+    private bool _drawing;
+    private bool _secondary;
 
-    private static Vector2 Deadzone = new(5f, 5f);
+    private static readonly Vector2 Deadzone = new(5f, 5f);
 
-    private readonly List<Type> blockedTypes = [];
+    private readonly List<Type> _blockedTypes = [];
 
     public void Block<T>()
     {
-        blockedTypes.Add(typeof(T));
+        _blockedTypes.Add(typeof(T));
     }
 
     public void Start()
     {
-        selectTexture = new Texture2D(1, 1);
-        selectTexture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.6f));
-        selectTexture.Apply();
+        _selectTexture = new Texture2D(1, 1);
+        _selectTexture.SetPixel(0, 0, new Color(1f, 1f, 1f, 0.6f));
+        _selectTexture.Apply();
 
-        localRaycaster = GetComponentInParent<GraphicRaycaster>();
-        if (localRaycaster == null)
+        _localRaycaster = GetComponentInParent<GraphicRaycaster>();
+        if (_localRaycaster == null)
         {
             throw new InvalidOperationException("DrawMultiSelect couldn't find GraphicRayCaster in parents");
         }
 
-        preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
-        if (preloaderRaycaster == null)
+        _preloaderRaycaster = Singleton<PreloaderUI>.Instance.transform.GetChild(0).GetComponent<GraphicRaycaster>();
+        if (_preloaderRaycaster == null)
         {
             throw new InvalidOperationException("DrawMultiSelect couldn't find the PreloaderUI GraphicRayCaster");
         }
@@ -55,7 +55,7 @@ public class DrawMultiSelect : MonoBehaviour
 
     public void OnDisable()
     {
-        drawing = false;
+        _drawing = false;
         MultiSelect.Clear();
     }
 
@@ -82,11 +82,11 @@ public class DrawMultiSelect : MonoBehaviour
                 return;
             }
 
-            selectOrigin = Input.mousePosition;
-            drawing = true;
-            secondary = shiftDown;
+            _selectOrigin = Input.mousePosition;
+            _drawing = true;
+            _secondary = shiftDown;
 
-            if (!secondary)
+            if (!_secondary)
             {
                 // Special case: if selection key is any mouse key (center,right), don't clear selection on mouse down if over item
                 if (Settings.SelectionBoxKey.Value.MainKey != KeyCode.Mouse1 && Settings.SelectionBoxKey.Value.MainKey != KeyCode.Mouse2 || !MouseIsOverItem())
@@ -96,28 +96,28 @@ public class DrawMultiSelect : MonoBehaviour
             }
         }
 
-        if (drawing && !Settings.SelectionBoxKey.Value.IsPressedIgnoreOthers())
+        if (_drawing && !Settings.SelectionBoxKey.Value.IsPressedIgnoreOthers())
         {
-            drawing = false;
-            if (secondary)
+            _drawing = false;
+            if (_secondary)
             {
                 MultiSelect.CombineSecondary();
-                secondary = false;
+                _secondary = false;
             }
         }
 
-        if (drawing)
+        if (_drawing)
         {
-            selectEnd = Input.mousePosition;
+            _selectEnd = Input.mousePosition;
 
-            Rect selectRect = new(selectOrigin, selectEnd - selectOrigin);
+            Rect selectRect = new(_selectOrigin, _selectEnd - _selectOrigin);
             if (Mathf.Abs(selectRect.size.x) < Deadzone.x && Mathf.Abs(selectRect.size.y) < Deadzone.y)
             {
                 return;
             }
 
             // If not secondary, then we can kick out any non-rendered items, plus they won't be covered by the foreach below
-            if (!secondary)
+            if (!_secondary)
             {
                 MultiSelect.Prune();
             }
@@ -130,55 +130,53 @@ public class DrawMultiSelect : MonoBehaviour
                 if (selectRect.Overlaps(itemRect, true))
                 {
                     // Don't re-raycast already selected items - if there were visible before they still are
-                    if (MultiSelect.IsSelected(gridItemView, secondary))
+                    if (MultiSelect.IsSelected(gridItemView, _secondary))
                     {
                         continue;
                     }
 
                     // Otherwise, ensure it's not overlapped by window UI
-                    PointerEventData eventData = new(EventSystem.current);
-
-                    if (IsOnTop(itemRect, itemTransform, preloaderRaycaster)) // no preloaderUI on top of this?
+                    if (IsOnTop(itemRect, itemTransform, _preloaderRaycaster)) // no preloaderUI on top of this?
                     {
                         if (itemTransform.IsDescendantOf(Singleton<PreloaderUI>.Instance.transform))
                         {
-                            MultiSelect.Select(gridItemView, secondary);
+                            MultiSelect.Select(gridItemView, _secondary);
                             continue;
                         }
 
-                        if (IsOnTop(itemRect, itemTransform, localRaycaster)) // no local UI on top of this?
+                        if (IsOnTop(itemRect, itemTransform, _localRaycaster)) // no local UI on top of this?
                         {
-                            MultiSelect.Select(gridItemView, secondary);
+                            MultiSelect.Select(gridItemView, _secondary);
                             continue;
                         }
                     }
                 }
 
-                MultiSelect.Deselect(gridItemView, secondary);
+                MultiSelect.Deselect(gridItemView, _secondary);
             }
         }
     }
 
     public void OnGUI()
     {
-        if (drawing)
+        if (_drawing)
         {
             // Invert Y because GUI has upper-left origin
-            Rect area = new(selectOrigin.x, Screen.height - selectOrigin.y, selectEnd.x - selectOrigin.x, selectOrigin.y - selectEnd.y);
+            Rect area = new(_selectOrigin.x, Screen.height - _selectOrigin.y, _selectEnd.x - _selectOrigin.x, _selectOrigin.y - _selectEnd.y);
 
             Rect lineArea = area;
             lineArea.height = 1; // Top
-            GUI.DrawTexture(lineArea, selectTexture);
+            GUI.DrawTexture(lineArea, _selectTexture);
 
             lineArea.y = area.yMax - 1; // Bottom
-            GUI.DrawTexture(lineArea, selectTexture);
+            GUI.DrawTexture(lineArea, _selectTexture);
 
             lineArea = area;
             lineArea.width = 1; // Left
-            GUI.DrawTexture(lineArea, selectTexture);
+            GUI.DrawTexture(lineArea, _selectTexture);
 
             lineArea.x = area.xMax - 1; // Right
-            GUI.DrawTexture(lineArea, selectTexture);
+            GUI.DrawTexture(lineArea, _selectTexture);
         }
     }
 
@@ -196,8 +194,8 @@ public class DrawMultiSelect : MonoBehaviour
         };
 
         List<RaycastResult> results = [];
-        preloaderRaycaster.Raycast(eventData, results); // preload objects are on top, so check that first
-        localRaycaster.Raycast(eventData, results);
+        _preloaderRaycaster.Raycast(eventData, results); // preload objects are on top, so check that first
+        _localRaycaster.Raycast(eventData, results);
 
         return results.FirstOrDefault().gameObject;
     }
@@ -259,7 +257,7 @@ public class DrawMultiSelect : MonoBehaviour
             return false;
         }
 
-        foreach (Type type in blockedTypes)
+        foreach (Type type in _blockedTypes)
         {
             if (mouseTarget.GetComponentInParent(type) != null)
             {
@@ -310,12 +308,7 @@ public class DrawMultiSelect : MonoBehaviour
         raycastResults.Clear();
         eventData.position = new Vector2(itemRect.xMax - widthMargin, itemRect.yMin + heightMargin);
         raycaster.Raycast(eventData, raycastResults);
-        if (raycastResults.Any() && !raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform))
-        {
-            return false;
-        }
-
-        return true;
+        return !raycastResults.Any() || raycastResults[0].gameObject.transform.IsDescendantOf(itemTransform);
     }
 }
 

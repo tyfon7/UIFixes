@@ -73,7 +73,7 @@ public static class BarterOfferPatches
             RagfairOfferItemView itemView = ItemViewFactory.CreateFromPool<RagfairOfferItemView>("ragfair_offer_layout");
             itemView.transform.SetParent(__instance.transform, false);
 
-            int ownedCount = GetOwnedCount(requirement, inventoryController);
+            int ownedCount = GetOwnedCount(requirement);
 
             var border = itemView.transform.Find("Border");
             border.GetComponent<CanvasRenderer>().SetColor(ownedCount >= requirement.IntCount ? Color.green : Color.red);
@@ -138,7 +138,7 @@ public static class BarterOfferPatches
             }
         }
 
-        private static int GetOwnedCount(IExchangeRequirement requirement, InventoryController inventoryController)
+        private static int GetOwnedCount(IExchangeRequirement requirement)
         {
             List<Item> allItems = ItemCacheHelper.GetAllItemsCache();
 
@@ -147,17 +147,13 @@ public static class BarterOfferPatches
                 return 0;
             }
 
-            if (requirement.Item.GetItemComponent<DogtagComponent>() != null)
-            {
-                return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+            return requirement.Item.GetItemComponent<DogtagComponent>() != null
+                ? allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
                     .Select(item => item.GetItemComponent<DogtagComponent>())
                     .Where(dogtag => dogtag != null)
                     .Where(dogtag => dogtag.Level >= handoverRequirement.Level)
-                    .Where(dogtag => handoverRequirement.Side == EDogtagExchangeSide.Any || dogtag.Side.ToString() == handoverRequirement.Side.ToString())
-                    .Count();
-            }
-
-            return allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+                    .Count(dogtag => handoverRequirement.Side == EDogtagExchangeSide.Any || dogtag.Side.ToString() == handoverRequirement.Side.ToString())
+                : allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
                 .Where(item => item.TemplateId == requirement.Item.TemplateId)
                 .Where(item => !requirement.OnlyFunctional || item is not CompoundItem compoundItem || !compoundItem.MissingVitalParts.Any())
                 .Where(item => item is not IEncodable encodable || requirement.Item is not IEncodable || encodable.IsEncoded() == requirement.IsEncoded)
@@ -350,17 +346,17 @@ public static class BarterOfferPatches
 
     public class ItemViewManager : MonoBehaviour
     {
-        RagfairOfferItemView itemView;
+        RagfairOfferItemView _itemView;
 
         public void Init(RagfairOfferItemView itemView)
         {
-            this.itemView = itemView;
+            _itemView = itemView;
         }
 
         public void OnDestroy()
         {
-            itemView.IsStub = true;
-            itemView.Kill();
+            _itemView.IsStub = true;
+            _itemView.Kill();
         }
     }
 }

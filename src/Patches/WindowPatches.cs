@@ -150,7 +150,7 @@ public static class WindowPatches
                 vector.y += distanceToBorders.Top;
                 Vector2 vector2 = transform.GetTopLeftToPivotDelta() * transform.lossyScale;
                 Vector2 vector3 = vector + vector2;
-                Vector2 vector4 = new Vector2((float)Math.Round(vector3.x), (float)Math.Round(vector3.y));
+                Vector2 vector4 = new((float)Math.Round(vector3.x), (float)Math.Round(vector3.y));
                 transform.position = vector4 - vector2;
             }
         }

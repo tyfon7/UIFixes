@@ -40,7 +40,7 @@ public static class Sync
         }
 
         var settings = Settings.SyncedConfigs().Select(configEntry => configEntry.GetSerializedValue());
-        ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, settings.ToArray());
+        ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, [.. settings]);
 
         Plugin.Instance.Logger.LogInfo($"Peer connected; sending Fika sync packet to peer {ev.Peer.Id}");
         Singleton<FikaServer>.Instance.SendDataToPeer(ref packet, DeliveryMethod.ReliableUnordered, ev.Peer);
@@ -69,7 +69,7 @@ public static class Sync
         }
 
         var settings = Settings.SyncedConfigs().Select(configEntry => configEntry.GetSerializedValue());
-        ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, settings.ToArray());
+        ConfigPacket packet = new(PluginInfo.PLUGIN_VERSION, [.. settings]);
 
         Plugin.Instance.Logger.LogInfo("Synced setting changed; sending Fika sync packet to all peers");
         Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableUnordered);
@@ -150,14 +150,9 @@ public static class Sync
         IgnoreClientSettingsChanged = true;
         foreach (var (configEntry, value) in Settings.SyncedConfigs().Zip(packet.Settings, (key, value) => (key, value)))
         {
-            if (SettingOverrides.TryGetValue(configEntry, out SyncedValues values))
-            {
-                SettingOverrides[configEntry] = new SyncedValues { Original = values.Original, Override = value };
-            }
-            else
-            {
-                SettingOverrides[configEntry] = new SyncedValues { Original = configEntry.GetSerializedValue(), Override = value };
-            }
+            SettingOverrides[configEntry] = SettingOverrides.TryGetValue(configEntry, out SyncedValues values)
+                ? new SyncedValues { Original = values.Original, Override = value }
+                : new SyncedValues { Original = configEntry.GetSerializedValue(), Override = value };
 
             configEntry.SetSerializedValue(value);
         }

@@ -18,7 +18,7 @@ public static class BTRPaymentPatches
     // This just makes payment slots bypass a cached value altogether since it's not called often
     public class PaymentSlotsPatch : ModulePatch
     {
-        private static readonly EquipmentSlot[] paymentSlots = [EquipmentSlot.Backpack, EquipmentSlot.TacticalVest, EquipmentSlot.Pockets, EquipmentSlot.SecuredContainer];
+        private static readonly EquipmentSlot[] PaymentSlots = [EquipmentSlot.Backpack, EquipmentSlot.TacticalVest, EquipmentSlot.Pockets, EquipmentSlot.SecuredContainer];
 
         protected override MethodBase GetTargetMethod()
         {
@@ -28,7 +28,7 @@ public static class BTRPaymentPatches
         [PatchPrefix]
         public static bool Prefix(InventoryEquipment __instance, ref IReadOnlyList<Slot> __result)
         {
-            __result = paymentSlots.Select(__instance.GetSlot).ToList();
+            __result = [.. PaymentSlots.Select(__instance.GetSlot)];
             return false;
         }
     }

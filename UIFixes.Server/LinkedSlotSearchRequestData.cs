@@ -5,15 +5,13 @@ namespace UIFixes.Server;
 
 public record LinkedSlotSearchRequestData : SearchRequestData
 {
-    private string linkedSearchId;
-
     [JsonPropertyName("linkedSearchId")]
     public new string LinkedSearchId
     {
-        get { return linkedSearchId; }
+        get;
         set
         {
-            linkedSearchId = value;
+            field = value;
             if (!string.IsNullOrEmpty(value))
             {
                 var parts = value.Split(":", 2);

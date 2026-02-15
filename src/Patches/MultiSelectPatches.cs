@@ -736,9 +736,9 @@ public static class MultiSelectPatches
                 }
                 else
                 {
-                    operation = targetItem != null ?
-                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */) :
-                        wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                    operation = targetItem != null
+                        ? wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */)
+                        : wrappedInstance.TraderController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
                 }
 
                 FindOrigin = null;
@@ -1397,14 +1397,9 @@ public static class MultiSelectPatches
             }
 
             TraderAssortmentControllerClass traderAssortmentController = __instance.R().TraderAssortmentController;
-            if (MultiSelect.ItemContexts.All(ic => traderAssortmentController.CanPrepareItemToSell(ic.Item)))
-            {
-                __result = R.GridView.ValidMoveColor;
-            }
-            else
-            {
-                __result = R.GridView.InvalidOperationColor;
-            }
+            __result = MultiSelect.ItemContexts.All(ic => traderAssortmentController.CanPrepareItemToSell(ic.Item))
+                ? R.GridView.ValidMoveColor
+                : R.GridView.InvalidOperationColor;
 
             return false;
         }

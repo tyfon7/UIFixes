@@ -47,28 +47,28 @@ public static class SliderPatches
 
     public class SliderMouseListener : MonoBehaviour
     {
-        private Slider slider;
+        private Slider _slider;
 
         public void Init(Slider slider)
         {
-            this.slider = slider;
+            _slider = slider;
         }
 
         public void Update()
         {
-            if (slider == null)
+            if (_slider == null)
             {
                 return;
             }
 
             if (Input.mouseScrollDelta.y > float.Epsilon)
             {
-                slider.value = Mathf.Min(slider.value + 1, slider.maxValue);
+                _slider.value = Mathf.Min(_slider.value + 1, _slider.maxValue);
 
             }
             else if (Input.mouseScrollDelta.y < -float.Epsilon)
             {
-                slider.value = Mathf.Max(slider.value - 1, slider.minValue);
+                _slider.value = Mathf.Max(_slider.value - 1, _slider.minValue);
             }
         }
     }

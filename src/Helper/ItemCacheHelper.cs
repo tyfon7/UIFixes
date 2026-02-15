@@ -5,18 +5,18 @@ namespace UIFixes;
 
 public static class ItemCacheHelper
 {
-    private static readonly List<Item> allItemsCache = new();
+    private static readonly List<Item> AllItemsCache = [];
 
     public static void UpdateAllItemsCache(InventoryController inventoryController)
     {
-        allItemsCache.Clear();
-        inventoryController.Inventory.Stash.GetAllAssembledItemsNonAlloc(allItemsCache);
-        inventoryController.Inventory.QuestStashItems.GetAllAssembledItemsNonAlloc(allItemsCache);
-        inventoryController.Inventory.QuestRaidItems.GetAllAssembledItemsNonAlloc(allItemsCache);
+        AllItemsCache.Clear();
+        inventoryController.Inventory.Stash.GetAllAssembledItemsNonAlloc(AllItemsCache);
+        inventoryController.Inventory.QuestStashItems.GetAllAssembledItemsNonAlloc(AllItemsCache);
+        inventoryController.Inventory.QuestRaidItems.GetAllAssembledItemsNonAlloc(AllItemsCache);
     }
 
     public static List<Item> GetAllItemsCache()
     {
-        return allItemsCache;
+        return AllItemsCache;
     }
 }

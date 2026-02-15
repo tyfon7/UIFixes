@@ -227,7 +227,7 @@ public static class ContextMenuPatches
         {
             return AccessTools.PropertyGetter(
                 typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
-                nameof(ItemInfoInteractionsAbstractClass<EItemInfoButton>.SubInteractions));
+                nameof(ItemInfoInteractionsAbstractClass<>.SubInteractions));
         }
 
         [PatchPostfix]
@@ -251,7 +251,7 @@ public static class ContextMenuPatches
         {
             return AccessTools.Method(
                 typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
-                nameof(ItemInfoInteractionsAbstractClass<EItemInfoButton>.CreateSubInteractions));
+                nameof(ItemInfoInteractionsAbstractClass<>.CreateSubInteractions));
         }
 
         [PatchPrefix]
@@ -396,10 +396,10 @@ public static class ContextMenuPatches
             }
 
             IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [__instance.Item_0];
-            IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
-            IEnumerable<InsuranceItem> insurableItems = InsuranceItemes.SelectMany(__instance.InsuranceCompanyClass.GetItemChildren)
+            IEnumerable<InsuranceItem> insuranceItemes = items.Select(InsuranceItem.FindOrCreate);
+            IEnumerable<InsuranceItem> insurableItems = insuranceItemes.SelectMany(__instance.InsuranceCompanyClass.GetItemChildren)
                 .Flatten(__instance.InsuranceCompanyClass.GetItemChildren)
-                .Concat(InsuranceItemes)
+                .Concat(insuranceItemes)
                 .Where(i => __instance.InsuranceCompanyClass.ItemTypeAvailableForInsurance(i) && !__instance.InsuranceCompanyClass.InsuredItems.Contains(i));
 
             if (insurableItems.Any())
@@ -725,11 +725,6 @@ public static class ContextMenuPatches
     private static int GetPlayerRubles(ItemUiContext itemUiContext)
     {
         StashItemClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
-        if (stash == null)
-        {
-            return 0;
-        }
-
-        return R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
+        return stash == null ? 0 : R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
     }
 }

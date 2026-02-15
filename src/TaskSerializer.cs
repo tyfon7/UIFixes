@@ -12,35 +12,35 @@ public class TaskSerializerBase : MonoBehaviour
 
 public class TaskSerializer<T, TaskT> : TaskSerializerBase
 {
-    private int depth;
-    private Func<T, Task<TaskT>> func;
-    private Func<T, TaskT, bool> canContinue;
-    private IEnumerator<T> enumerator;
-    private Task<TaskT> currentTask;
-    private TaskCompletionSource totalTask;
+    private int _depth;
+    private Func<T, Task<TaskT>> _func;
+    private Func<T, TaskT, bool> _canContinue;
+    private IEnumerator<T> _enumerator;
+    private Task<TaskT> _currentTask;
+    private TaskCompletionSource _totalTask;
 
     public Task Initialize(IEnumerable<T> items, Func<T, Task<TaskT>> func, Func<T, TaskT, bool> canContinue = null)
     {
-        this.enumerator = items.GetEnumerator();
-        this.func = func;
-        this.canContinue = canContinue;
+        _enumerator = items.GetEnumerator();
+        _func = func;
+        _canContinue = canContinue;
 
-        currentTask = null;
-        totalTask = new TaskCompletionSource();
+        _currentTask = null;
+        _totalTask = new TaskCompletionSource();
 
         ++GlobalDepth;
-        depth = GlobalDepth;
+        _depth = GlobalDepth;
 
         LateUpdate();
 
-        return totalTask.Task;
+        return _totalTask.Task;
     }
 
     public void Cancel()
     {
-        if (!totalTask.Task.IsCompleted)
+        if (!_totalTask.Task.IsCompleted)
         {
-            totalTask.TrySetCanceled();
+            _totalTask.TrySetCanceled();
             Complete();
         }
     }
@@ -52,39 +52,39 @@ public class TaskSerializer<T, TaskT> : TaskSerializerBase
 
     public void LateUpdate()
     {
-        if (totalTask.Task.IsCompleted)
+        if (_totalTask.Task.IsCompleted)
         {
             return;
         }
 
         // There is a child task serializer running
-        if (GlobalDepth > depth)
+        if (GlobalDepth > _depth)
         {
             return;
         }
 
-        if (currentTask != null)
+        if (_currentTask != null)
         {
-            if (currentTask.IsCanceled)
+            if (_currentTask.IsCanceled)
             {
                 Complete();
                 return;
             }
 
-            if (!currentTask.IsCompleted)
+            if (!_currentTask.IsCompleted)
             {
                 return;
             }
 
-            if (canContinue != null && !canContinue(enumerator.Current, currentTask.Result))
+            if (_canContinue != null && !_canContinue(_enumerator.Current, _currentTask.Result))
             {
                 return;
             }
         }
 
-        if (enumerator.MoveNext())
+        if (_enumerator.MoveNext())
         {
-            currentTask = func(enumerator.Current);
+            _currentTask = _func(_enumerator.Current);
         }
         else
         {
@@ -94,9 +94,9 @@ public class TaskSerializer<T, TaskT> : TaskSerializerBase
 
     private void Complete()
     {
-        totalTask.TryComplete();
+        _totalTask.TryComplete();
         --GlobalDepth;
-        func = null;
+        _func = null;
         Destroy(this);
     }
 }
@@ -105,18 +105,18 @@ public class TaskSerializer<T> : TaskSerializer<T, bool>
 {
     public Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
     {
-        Func<T, Task<bool>> func = t =>
+        Task<bool> Func(T t)
         {
             action(t);
             return Task.FromResult(true);
-        };
+        }
 
-        return base.Initialize(items, func, canContinue != null ? (x, _) => canContinue(x) : null);
+        return base.Initialize(items, Func, canContinue != null ? (x, _) => canContinue(x) : null);
     }
 
     public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
     {
-        Func<T, Task<bool>> wrapper = async t =>
+        async Task<bool> Wrapper(T t)
         {
             try
             {
@@ -127,9 +127,9 @@ public class TaskSerializer<T> : TaskSerializer<T, bool>
             {
                 return false;
             }
-        };
+        }
 
-        return base.Initialize(items, wrapper, canContinue != null ? (x, _) => canContinue(x) : null);
+        return base.Initialize(items, Wrapper, canContinue != null ? (x, _) => canContinue(x) : null);
     }
 
 }

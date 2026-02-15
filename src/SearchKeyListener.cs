@@ -6,20 +6,20 @@ namespace UIFixes;
 
 public class SearchKeyListener : MonoBehaviour
 {
-    private Action onSearch;
+    private Action _onSearch;
 
     public void Init(Action onSearch)
     {
-        this.onSearch = onSearch;
+        _onSearch = onSearch;
     }
 
     public void Update()
     {
         if (Settings.SearchKeyBind.Value.IsDown())
         {
-            if (onSearch != null)
+            if (_onSearch != null)
             {
-                onSearch();
+                _onSearch();
             }
             else
             {

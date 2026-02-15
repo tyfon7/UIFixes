@@ -104,7 +104,7 @@ public static class ReorderGridsPatches
             var pairs = compoundItem.Grids.Zip(____presetGridViews, (g, gv) => new KeyValuePair<StashGridClass, GridView>(g, gv));
             var sortedPairs = SortGrids(__instance, pairs);
 
-            GridView[] orderedGridViews = sortedPairs.Select(pair => pair.Value).ToArray();
+            GridView[] orderedGridViews = [.. sortedPairs.Select(pair => pair.Value)];
 
             // Populate the gridmap
             if (!GridMaps.ContainsKey(compoundItem.TemplateId))
@@ -118,7 +118,7 @@ public static class ReorderGridsPatches
                 GridMaps.Add(compoundItem.TemplateId, map);
             }
 
-            compoundItem.Grids = sortedPairs.Select(pair => pair.Key).ToArray();
+            compoundItem.Grids = [.. sortedPairs.Select(pair => pair.Key)];
             ____presetGridViews = orderedGridViews;
 
             compoundItem.SetReordered(true);
@@ -133,7 +133,7 @@ public static class ReorderGridsPatches
             Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
             Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
 
-            int calculateCoords(KeyValuePair<StashGridClass, GridView> pair)
+            int CalculateCoords(KeyValuePair<StashGridClass, GridView> pair)
             {
                 var grid = pair.Key;
                 var gridView = pair.Value;
@@ -147,12 +147,9 @@ public static class ReorderGridsPatches
                 return y * 100 + x;
             }
 
-            if (Settings.PrioritizeSmallerGrids.Value)
-            {
-                return pairs.OrderBy(pair => pair.Key.GridWidth).ThenBy(pair => pair.Key.GridHeight).ThenBy(calculateCoords);
-            }
-
-            return pairs.OrderBy(calculateCoords);
+            return Settings.PrioritizeSmallerGrids.Value
+                ? pairs.OrderBy(pair => pair.Key.GridWidth).ThenBy(pair => pair.Key.GridHeight).ThenBy(CalculateCoords)
+                : pairs.OrderBy(CalculateCoords);
         }
     }
 }

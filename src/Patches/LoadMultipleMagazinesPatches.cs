@@ -141,7 +141,7 @@ public static class LoadMultipleMagazinesPatches
             }
 
             var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineItemClass>();
-            ___ItemUiContext_1.ApplyMagPreset(preset, magazines.ToList()).HandleExceptions();
+            ___ItemUiContext_1.ApplyMagPreset(preset, [.. magazines]).HandleExceptions();
 
             return false;
         }

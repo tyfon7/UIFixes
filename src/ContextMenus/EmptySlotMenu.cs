@@ -18,7 +18,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
         EItemUiContextType.Hideout,
         EItemUiContextType.TransferItemsScreen];
 
-    private readonly Slot slot = slot;
+    private readonly Slot _slot = slot;
 
     public override IEnumerable<EItemInfoButton> AvailableInteractions => Actions;
 
@@ -27,7 +27,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
         switch (interaction)
         {
             case EItemInfoButton.LinkedSearch:
-                Search(new(EFilterType.LinkedSearch, slot.ParentItem.TemplateId + ":" + slot.ID, true));
+                Search(new(EFilterType.LinkedSearch, _slot.ParentItem.TemplateId + ":" + _slot.ID, true));
                 break;
             default:
                 break;

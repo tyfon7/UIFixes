@@ -35,13 +35,13 @@ public static class Extensions
         RectTransform scrollArea = panel.GetComponentInChildren<ScrollRect>().RectTransform();
 
         // Try to auto-expand categories to use available space. Gotta do math to see what fits
-        float PanelHeight = scrollArea.sizeDelta.y * scrollArea.lossyScale.y; // 780;
-        float CategoryHeight = 36f * scrollArea.lossyScale.y;
-        float SubcategoryHeight = 25f * scrollArea.lossyScale.y;
+        float panelHeight = scrollArea.sizeDelta.y * scrollArea.lossyScale.y; // 780;
+        float categoryHeight = 36f * scrollArea.lossyScale.y;
+        float subcategoryHeight = 25f * scrollArea.lossyScale.y;
 
         var activeCategories = panel.GetComponentsInChildren<CategoryView>();
         var activeSubcategories = panel.GetComponentsInChildren<SubcategoryView>();
-        float currentHeight = activeCategories.Length * CategoryHeight + activeSubcategories.Length * SubcategoryHeight;
+        float currentHeight = activeCategories.Length * categoryHeight + activeSubcategories.Length * subcategoryHeight;
 
         var categories = panel.GetComponentsInChildren<CombinedView>()
             .Where(cv => cv.transform.childCount > 0)
@@ -58,9 +58,9 @@ public static class Extensions
                 .Where(c => !c.R().IsOpen && c.Node != null)
                 .SelectMany(c => c.Node.Children)
                 .Where(n => n.Count > 0)
-                .Sum(n => n.Children.Any() ? CategoryHeight : SubcategoryHeight);
+                .Sum(n => n.Children.Any() ? categoryHeight : subcategoryHeight);
 
-            if (categoryTrees > 1 && currentHeight + additionalHeight > PanelHeight)
+            if (categoryTrees > 1 && currentHeight + additionalHeight > panelHeight)
             {
                 break;
             }

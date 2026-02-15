@@ -56,18 +56,18 @@ public static class FocusFleaOfferNumberPatches
 
     public class AllButtonKeybind : MonoBehaviour
     {
-        private Action purchaseAllAction;
+        private Action _purchaseAllAction;
 
         public void Init(Action purchaseAllAction)
         {
-            this.purchaseAllAction = purchaseAllAction;
+            _purchaseAllAction = purchaseAllAction;
         }
 
         public void Update()
         {
             if (Settings.PurchaseAllKeybind.Value.IsDown())
             {
-                purchaseAllAction();
+                _purchaseAllAction();
             }
         }
     }

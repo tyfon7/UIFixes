@@ -193,7 +193,7 @@ public static class FixFleaPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(DropDownBox __instance, ref float ____maxVisibleHeight)
+        public static void Postfix(ref float ____maxVisibleHeight)
         {
             if (____maxVisibleHeight == 120f)
             {

@@ -18,12 +18,7 @@ public class MultiSelectItemContext : DragItemContext
 
     public MultiSelectItemContext Refresh()
     {
-        if (Item == ItemContextAbstractClass.Item)
-        {
-            return new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation);
-        }
-
-        return null;
+        return Item == ItemContextAbstractClass.Item ? new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation) : null;
     }
 
     public void UpdateDragContext(DragItemContext itemContext)
@@ -56,11 +51,8 @@ public class MultiSelectItemContext : DragItemContext
     // DragItemContext (drag) defaults to None, but we want what the underlying item allows
     public override bool CanQuickMoveTo(ETargetContainer targetContainer)
     {
-        if (ItemContextAbstractClass != null)
-        {
-            return ItemContextAbstractClass.CanQuickMoveTo(targetContainer);
-        }
-
-        return base.CanQuickMoveTo(targetContainer);
+        return ItemContextAbstractClass != null
+            ? ItemContextAbstractClass.CanQuickMoveTo(targetContainer)
+            : base.CanQuickMoveTo(targetContainer);
     }
 }

@@ -13,7 +13,7 @@ public struct ConfigPacket(string version, string[] settings) : INetSerializable
         Settings = reader.GetStringArray();
     }
 
-    public void Serialize(NetDataWriter writer)
+    public readonly void Serialize(NetDataWriter writer)
     {
         writer.Put(Version);
         writer.PutArray(Settings);

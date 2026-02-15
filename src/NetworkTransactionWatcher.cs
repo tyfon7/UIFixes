@@ -28,20 +28,20 @@ public class NetworkTransactionWatcher : IDisposable
         return watcher;
     }
 
-    private Callback innerCallback;
-    private readonly TaskCompletionSource source = new();
+    private Callback _innerCallback;
+    private readonly TaskCompletionSource _source = new();
 
-    public Task Task => source.Task;
+    public Task Task => _source.Task;
 
     protected void Watch(ref Callback callback)
     {
-        innerCallback = callback;
+        _innerCallback = callback;
         callback = Callback;
     }
 
     public bool Started()
     {
-        return innerCallback != null;
+        return _innerCallback != null;
     }
 
     public void Dispose()
@@ -54,14 +54,14 @@ public class NetworkTransactionWatcher : IDisposable
                 throw new InvalidOperationException("NetworkTransactionWatcher disposed out of order");
             }
 
-            source.TrySetCanceled();
+            _source.TrySetCanceled();
         }
     }
 
     private void Callback(IResult result)
     {
-        innerCallback?.Invoke(result);
-        source.TryComplete();
+        _innerCallback?.Invoke(result);
+        _source.TryComplete();
     }
 
     public class NetworkTransactionPatch : ModulePatch

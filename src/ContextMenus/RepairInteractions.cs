@@ -11,36 +11,36 @@ namespace UIFixes;
 
 public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairInteractions.ERepairers>
 {
-    private readonly RepairControllerClass repairController;
-    private readonly int playerRubles;
-    private readonly IEnumerable<R.RepairStrategy> repairStrategies;
-    private readonly IEnumerable<IRepairer> repairers;
+    private readonly RepairControllerClass _repairController;
+    private readonly int _playerRubles;
+    private readonly IEnumerable<R.RepairStrategy> _repairStrategies;
+    private readonly IEnumerable<IRepairer> _repairers;
 
     public RepairInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
 
     public RepairInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : base(uiContext)
     {
-        repairController = uiContext.Session.RepairController;
+        _repairController = uiContext.Session.RepairController;
 
         // Add empty action because otherwise RepairControllerClass.action_0 is null and it pukes on successful repair
-        repairController.OnSuccessfulRepairChangedEvent += () => { };
+        _repairController.OnSuccessfulRepairChangedEvent += () => { };
 
-        this.playerRubles = playerRubles;
+        _playerRubles = playerRubles;
 
-        repairStrategies = items.Where(IsRepairable).Select(i => R.RepairStrategy.Create(i, repairController));
-        repairers = repairStrategies.SelectMany(rs => rs.Repairers).DistinctBy(r => r.RepairerId);
+        _repairStrategies = items.Where(IsRepairable).Select(i => R.RepairStrategy.Create(i, _repairController));
+        _repairers = _repairStrategies.SelectMany(rs => rs.Repairers).DistinctBy(r => r.RepairerId);
 
         Load();
     }
 
     private void Load()
     {
-        foreach (IRepairer repairer in repairers)
+        foreach (IRepairer repairer in _repairers)
         {
             double totalKitAmount = 0f;
             int totalPrice = 0;
 
-            foreach (var repairStrategy in repairStrategies)
+            foreach (var repairStrategy in _repairStrategies)
             {
                 repairStrategy.CurrentRepairer = repairer;
 
@@ -76,7 +76,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             }
             else if (totalPrice > 0)
             {
-                string priceColor = totalPrice > playerRubles ? "#FF0000" : "#ADB8BC";
+                string priceColor = totalPrice > _playerRubles ? "#FF0000" : "#ADB8BC";
                 text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", repairer.LocalizedName, priceColor, totalPrice);
             }
             else
@@ -118,7 +118,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
     private async void Repair(string repairerId)
     {
         bool anySuccess = false;
-        foreach (var repairStrategy in repairStrategies)
+        foreach (var repairStrategy in _repairStrategies)
         {
             var repairer = repairStrategy.Repairers.FirstOrDefault(r => r.RepairerId == repairerId);
             if (repairer == null)
@@ -144,9 +144,9 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
     public IResult GetButtonInteraction(string interactionId)
     {
         string repairerId = interactionId.Split(':')[1];
-        IRepairer repairer = repairers.Single(r => r.RepairerId == repairerId);
+        IRepairer repairer = _repairers.Single(r => r.RepairerId == repairerId);
 
-        if (!repairStrategies.Any(rs => rs.CanRepair(repairer, repairer.Targets)))
+        if (!_repairStrategies.Any(rs => rs.CanRepair(repairer, repairer.Targets)))
         {
             return new FailedResult(ERepairStatusWarning.ExceptionRepairItem.ToString());
         }
@@ -154,7 +154,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
         double totalKitAmount = 0f;
         int totalPrice = 0;
 
-        foreach (var repairStrategy in repairStrategies)
+        foreach (var repairStrategy in _repairStrategies)
         {
             repairStrategy.CurrentRepairer = repairer;
 
@@ -177,7 +177,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
         if (totalKitAmount > double.Epsilon && R.RepairKit.Type.IsInstanceOfType(repairer))
         {
             // This check is only for repair kits
-            if (repairStrategies.Any(rs => rs.IsNoCorrespondingArea()))
+            if (_repairStrategies.Any(rs => rs.IsNoCorrespondingArea()))
             {
                 return new FailedResult(ERepairStatusWarning.NoCorrespondingArea.ToString());
             }
@@ -191,7 +191,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
         }
         else if (totalPrice > 0)
         {
-            if (totalPrice > playerRubles)
+            if (totalPrice > _playerRubles)
             {
                 return new FailedResult(ERepairStatusWarning.NotEnoughMoney.ToString());
             }
@@ -217,7 +217,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
     public override bool IsActive(ERepairers button)
     {
-        return button == ERepairers.None && !this.repairController.TraderRepairers.Any();
+        return button == ERepairers.None && !_repairController.TraderRepairers.Any();
     }
 
     public override IResult IsInteractive(ERepairers button)

@@ -87,12 +87,7 @@ public static class OpenSortingTablePatches
             bool altDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
             bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-            if (button == PointerEventData.InputButton.Left && !doubleClick && !ctrlDown && !altDown && shiftDown)
-            {
-                return false;
-            }
-
-            return true;
+            return button != PointerEventData.InputButton.Left || doubleClick || ctrlDown || altDown || !shiftDown;
         }
     }
 }

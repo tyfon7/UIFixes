@@ -33,7 +33,7 @@ public class ToggleHoldClickOrHoldState(KeyBindingClass keyCombination) : KeyBin
 {
     public override void Enter()
     {
-        timer = KeyCombination.DoubleClickTimeout;
+        _timer = KeyCombination.DoubleClickTimeout;
     }
 
     public override ECommand GetCommand(float deltaTime)
@@ -59,11 +59,11 @@ public class ToggleHoldClickOrHoldState(KeyBindingClass keyCombination) : KeyBin
 
     private bool LongEnough(float deltaTime)
     {
-        timer -= deltaTime;
-        return timer <= 0f;
+        _timer -= deltaTime;
+        return _timer <= 0f;
     }
 
-    private float timer;
+    private float _timer;
 }
 
 public class ToggleHoldHoldState(KeyBindingClass keyCombination) : KeyBindingClass.KeyCombinationState(keyCombination)
@@ -79,12 +79,7 @@ public class ToggleHoldHoldState(KeyBindingClass keyCombination) : KeyBindingCla
         UnhandleKeys(null);
         KeyCombination.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
 
-        if (KeyCombination is ToggleKeyCombination toggleKeyCombination)
-        {
-            return toggleKeyCombination.Ecommand_1;
-        }
-
-        return KeyCombination.Ecommand_0;
+        return KeyCombination is ToggleKeyCombination toggleKeyCombination ? toggleKeyCombination.Ecommand_1 : KeyCombination.Ecommand_0;
     }
 }
 

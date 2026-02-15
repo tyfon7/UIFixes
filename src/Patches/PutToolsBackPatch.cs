@@ -53,13 +53,13 @@ public class PutToolsBackPatch : ModulePatch
         }
 
         // Change the parameter to remove the items handled here
-        newItems = newItems.Except(unhandledItems).ToArray();
+        newItems = [.. newItems.Except(unhandledItems)];
 
-        List<Item> stashItems = stash.GetNotMergedItems().ToList();
+        List<Item> stashItems = [.. stash.GetNotMergedItems()];
 
         InventoryController inventoryController = new R.ItemReceiver(__instance).InventoryController;
 
-        var tree = __instance.ItemFactoryClass.FlatItemsToTree(unhandledItems.ToArray(), true, null);
+        var tree = __instance.ItemFactoryClass.FlatItemsToTree([.. unhandledItems], true, null);
         foreach (Item item in tree.Items.Values.Where(i => i.CurrentAddress == null))
         {
             var newItem = unhandledItems.First(i => i._id == item.Id);

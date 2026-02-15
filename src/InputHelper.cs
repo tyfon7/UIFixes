@@ -23,12 +23,7 @@ public static class InputHelper
 
     public static KeyBindingClass GetKeyBinding(EGameKey gameKey)
     {
-        if (KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding))
-        {
-            return keyBinding;
-        }
-
-        return null;
+        return KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding) ? keyBinding : null;
     }
 
     public static bool IsKeyHeld(EGameKey gameKey)
@@ -41,16 +36,11 @@ public static class InputHelper
         // KeyCombinationState_0 is the current state
         if (keyBinding.KeyCombinationState_0.GetKeysStatus(out EKeyPress keyPress))
         {
-            switch (keyPress)
+            return keyPress switch
             {
-                case EKeyPress.Hold:
-                case EKeyPress.Down:
-                    return true;
-                case EKeyPress.Up:
-                case EKeyPress.None:
-                default:
-                    return false;
-            }
+                EKeyPress.Hold or EKeyPress.Down => true,
+                _ => false,
+            };
         }
 
         return false;

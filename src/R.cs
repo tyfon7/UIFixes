@@ -631,12 +631,9 @@ public static class R
 
         public static RepairStrategy Create(Item item, RepairControllerClass repairController)
         {
-            if (item.GetItemComponent<ArmorHolderComponent>() != null)
-            {
-                return new RepairStrategy(Activator.CreateInstance(ArmorStrategyType, [item, repairController]));
-            }
-
-            return new RepairStrategy(Activator.CreateInstance(DefaultStrategyType, [item, repairController]));
+            return item.GetItemComponent<ArmorHolderComponent>() != null
+                ? new RepairStrategy(Activator.CreateInstance(ArmorStrategyType, [item, repairController]))
+                : new RepairStrategy(Activator.CreateInstance(DefaultStrategyType, [item, repairController]));
         }
 
         public IEnumerable<IRepairer> Repairers { get { return (IEnumerable<IRepairer>)RepairersProperty.GetValue(Value); } }
@@ -690,10 +687,10 @@ public static class R
 
     public class TradingTableGridView(object value) : GridView(value)
     {
-        public new static Type Type { get; private set; }
+        public static new Type Type { get; private set; }
         private static FieldInfo TraderAssortmentControllerField;
 
-        public new static void InitTypes()
+        public static new void InitTypes()
         {
             Type = typeof(EFT.UI.DragAndDrop.TradingTableGridView);
             TraderAssortmentControllerField = AccessTools.GetDeclaredFields(Type).Single(f => f.FieldType == typeof(TraderAssortmentControllerClass));

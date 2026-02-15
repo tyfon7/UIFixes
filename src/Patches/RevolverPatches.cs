@@ -111,14 +111,9 @@ public static class RevolverPatches
             else
             {
                 // BSG doesn't handle 1 bullet correctly, and will have already moved the stack into the magazine
-                if (ammo.Parent.Container.ParentItem == magazine)
-                {
-                    task = Task.CompletedTask;
-                }
-                else
-                {
-                    task = __instance.LoadMagazine(ammo, magazine, 1, ignoreRestrictions);
-                }
+                task = ammo.Parent.Container.ParentItem == magazine
+                    ? Task.CompletedTask
+                    : __instance.LoadMagazine(ammo, magazine, 1, ignoreRestrictions);
             }
 
             __result = task.ContinueWith(t =>
@@ -161,8 +156,7 @@ public static class RevolverPatches
 
         private static async Task<IResult> UnloadCamora(InventoryController inventoryController, Slot camora, bool equipmentBlocked)
         {
-            var ammoItem = camora.ContainedItem as AmmoItemClass;
-            if (ammoItem == null)
+            if (camora.ContainedItem is not AmmoItemClass ammoItem)
             {
                 return new FailedResult("InventoryError/You can't unload from this item", 0);
             }
@@ -210,15 +204,12 @@ public static class RevolverPatches
         [PatchPrefix]
         public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
         {
-            switch (button)
+            return button switch
             {
-                case EItemInfoButton.LoadAmmo:
-                    return LoadAmmoIsInteractive(__instance, ref __result);
-                case EItemInfoButton.UnloadAmmo:
-                    return UnloadAmmoIsInteractive(__instance, ref __result);
-                default:
-                    return true;
-            }
+                EItemInfoButton.LoadAmmo => LoadAmmoIsInteractive(__instance, ref __result),
+                EItemInfoButton.UnloadAmmo => UnloadAmmoIsInteractive(__instance, ref __result),
+                _ => true,
+            };
         }
 
         private static bool LoadAmmoIsInteractive(ContextInteractionSwitcherClass context, ref IResult result)
@@ -268,25 +259,15 @@ public static class RevolverPatches
                 return false;
             }
 
-            CylinderMagazineItemClass cylinder = context.Item_0_1 as CylinderMagazineItemClass;
-            if (cylinder == null)
-            {
-                cylinder = context.Weapon_0?.GetCurrentMagazine() as CylinderMagazineItemClass;
-            }
-
+            CylinderMagazineItemClass cylinder = context.Item_0_1 as CylinderMagazineItemClass ?? context.Weapon_0?.GetCurrentMagazine() as CylinderMagazineItemClass;
             if (cylinder == null)
             {
                 return true;
             }
 
-            if (cylinder.Camoras.Any(c => c.ContainedItem != null))
-            {
-                result = SuccessfulResult.New;
-            }
-            else
-            {
-                result = new FailedResult("InventoryError/You can't unload from this item", 0);
-            }
+            result = cylinder.Camoras.Any(c => c.ContainedItem != null)
+                ? SuccessfulResult.New
+                : new FailedResult("InventoryError/You can't unload from this item", 0);
 
             return false;
         }

@@ -132,7 +132,7 @@ public static class InternalMagPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance, ItemContextAbstractClass itemContext, ref Task __result, InventoryController ___inventoryController_0)
+        public static void Postfix(ItemUiContext __instance, ItemContextAbstractClass itemContext, InventoryController ___inventoryController_0)
         {
             if (itemContext.Item is not Weapon weapon || !weapon.SupportsInternalReload)
             {

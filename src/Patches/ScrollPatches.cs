@@ -158,19 +158,19 @@ public static class ScrollPatches
 
     public class KeyScrollListener : MonoBehaviour
     {
-        private ScrollRect scrollRect;
+        private ScrollRect _scrollRect;
 
         public UnityEvent OnKeyScroll;
 
         public void Awake()
         {
-            scrollRect = GetComponent<ScrollRect>();
+            _scrollRect = GetComponent<ScrollRect>();
             OnKeyScroll = new();
         }
 
         public void Update()
         {
-            if (HandleInput(scrollRect))
+            if (HandleInput(_scrollRect))
             {
                 OnKeyScroll.Invoke();
             }
@@ -201,12 +201,7 @@ public static class ScrollPatches
         [PatchTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
         {
-            if (Settings.RebindPageUpDown.Value)
-            {
-                return RemovePageUpDownHandling(instructions);
-            }
-
-            return instructions;
+            return Settings.RebindPageUpDown.Value ? RemovePageUpDownHandling(instructions) : instructions;
         }
     }
 
@@ -226,12 +221,7 @@ public static class ScrollPatches
         [PatchTranspiler]
         public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
         {
-            if (Settings.RebindPageUpDown.Value)
-            {
-                return RemovePageUpDownHandling(instructions);
-            }
-
-            return instructions;
+            return Settings.RebindPageUpDown.Value ? RemovePageUpDownHandling(instructions) : instructions;
         }
     }
 
@@ -251,12 +241,7 @@ public static class ScrollPatches
         [PatchTranspiler]
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (Settings.RebindPageUpDown.Value)
-            {
-                return RemovePageUpDownHandling(instructions);
-            }
-
-            return instructions;
+            return Settings.RebindPageUpDown.Value ? RemovePageUpDownHandling(instructions) : instructions;
         }
     }
 
@@ -296,12 +281,7 @@ public static class ScrollPatches
         [PatchTranspiler]
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (Settings.RebindPageUpDown.Value)
-            {
-                return RemovePageUpDownHandling(instructions);
-            }
-
-            return instructions;
+            return Settings.RebindPageUpDown.Value ? RemovePageUpDownHandling(instructions) : instructions;
         }
     }
 
@@ -352,16 +332,16 @@ public static class ScrollPatches
 
     public class KeyScroller : MonoBehaviour
     {
-        ScrollRect scrollRect;
+        ScrollRect _scrollRect;
 
         public void Init(ScrollRect scrollRect)
         {
-            this.scrollRect = scrollRect;
+            _scrollRect = scrollRect;
         }
 
         public void Update()
         {
-            HandleInput(scrollRect);
+            HandleInput(_scrollRect);
         }
     }
 

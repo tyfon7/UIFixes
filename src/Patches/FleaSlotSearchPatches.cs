@@ -105,8 +105,10 @@ public static class FleaSlotSearchPatches
                 return true;
             }
 
-            Class308.Class1594 callback = new();
-            callback.completionSource = new();
+            Class308.Class1594 callback = new()
+            {
+                completionSource = new()
+            };
             __instance.method_5(new LegacyParamsStruct
             {
                 Url = __instance.Gclass1392_0.RagFair + "/uifixes/ragfair/find",

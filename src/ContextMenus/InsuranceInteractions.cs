@@ -9,31 +9,31 @@ namespace UIFixes;
 
 public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : ItemInfoInteractionsAbstractClass<InsuranceInteractions.EInsurers>(uiContext)
 {
-    private readonly InsuranceCompanyClass insurance = uiContext.Session.InsuranceCompany;
-    private readonly List<Item> items = items.ToList();
-    private readonly int playerRubles = playerRubles;
-    private List<InsuranceItem> insurableItems;
-    private readonly Dictionary<string, int> prices = [];
+    private readonly InsuranceCompanyClass _insurance = uiContext.Session.InsuranceCompany;
+    private readonly List<Item> _items = [.. items];
+    private readonly int _playerRubles = playerRubles;
+    private List<InsuranceItem> _insurableItems;
+    private readonly Dictionary<string, int> _prices = [];
 
     public InsuranceInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
 
     public void LoadAsync(Action callback)
     {
-        IEnumerable<InsuranceItem> InsuranceItemes = items.Select(InsuranceItem.FindOrCreate);
-        insurableItems = InsuranceItemes.SelectMany(insurance.GetItemChildren)
-            .Flatten(insurance.GetItemChildren)
-            .Concat(InsuranceItemes)
-            .Where(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i))
+        IEnumerable<InsuranceItem> insuranceItems = _items.Select(InsuranceItem.FindOrCreate);
+        _insurableItems = insuranceItems.SelectMany(_insurance.GetItemChildren)
+            .Flatten(_insurance.GetItemChildren)
+            .Concat(insuranceItems)
+            .Where(i => _insurance.ItemTypeAvailableForInsurance(i) && !_insurance.InsuredItems.Contains(i))
             .ToList();
 
-        insurance.GetInsurePriceAsync(insurableItems, _ =>
+        _insurance.GetInsurePriceAsync(_insurableItems, _ =>
         {
-            foreach (var insurer in insurance.Insurers)
+            foreach (var insurer in _insurance.Insurers)
             {
-                int price = this.insurableItems.Select(i => insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
-                prices[insurer.Id] = price;
+                int price = _insurableItems.Select(i => _insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
+                _prices[insurer.Id] = price;
 
-                string priceColor = price > playerRubles ? "#FF0000" : "#ADB8BC";
+                string priceColor = price > _playerRubles ? "#FF0000" : "#ADB8BC";
 
                 string text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", insurer.LocalizedName, priceColor, price);
 
@@ -46,14 +46,14 @@ public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiCont
 
     private void Insure(string insurerId)
     {
-        insurance.SelectedInsurerId = insurerId;
-        insurance.InsureItems(this.insurableItems, result => { });
+        _insurance.SelectedInsurerId = insurerId;
+        _insurance.InsureItems(_insurableItems, result => { });
     }
 
     public IResult GetButtonInteraction(string interactionId)
     {
         string traderId = interactionId.Split(':')[1];
-        if (prices[traderId] > playerRubles)
+        if (_prices[traderId] > playerRubles)
         {
             return new FailedResult("ragfair/Not enough money", 0);
         }
@@ -67,7 +67,7 @@ public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiCont
 
     public override bool IsActive(EInsurers button)
     {
-        return button == EInsurers.None && !this.insurance.Insurers.Any();
+        return button == EInsurers.None && !_insurance.Insurers.Any();
     }
 
     public override IResult IsInteractive(EInsurers button)

@@ -64,11 +64,11 @@ public class GridWindowButtonsPatch : ModulePatch
 
     public class LeftRightKeybind : MonoBehaviour
     {
-        private GridWindow window;
+        private GridWindow _window;
 
         public void Init(GridWindow window)
         {
-            this.window = window;
+            _window = window;
         }
 
         public void Update()
@@ -78,15 +78,15 @@ public class GridWindowButtonsPatch : ModulePatch
                 return;
             }
 
-            bool isTopWindow = window.transform.GetSiblingIndex() == window.transform.parent.childCount - 1;
+            bool isTopWindow = _window.transform.GetSiblingIndex() == _window.transform.parent.childCount - 1;
             if (Settings.SnapLeftKeybind.Value.IsDown() && isTopWindow)
             {
-                SnapLeft(window);
+                SnapLeft(_window);
             }
 
             if (Settings.SnapRightKeybind.Value.IsDown() && isTopWindow)
             {
-                SnapRight(window);
+                SnapRight(_window);
             }
         }
     }

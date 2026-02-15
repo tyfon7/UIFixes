@@ -221,12 +221,7 @@ public static class TacticalBindsPatches
         }
 
         Item rootItem = item.GetRootItemNotEquipment();
-        if (rootItem is Weapon || rootItem is HeadwearItemClass)
-        {
-            return inventoryController.Inventory.Equipment.Contains(rootItem);
-        }
-
-        return false;
+        return (rootItem is Weapon || rootItem is HeadwearItemClass) && inventoryController.Inventory.Equipment.Contains(rootItem);
     }
 
     private static bool IsTacticalModeModifierPressed()

@@ -46,12 +46,7 @@ public static class HideoutCameraPatches
         public static bool Prefix()
         {
             // Unity reports the mouse position as on the edge when it leaves the game
-            if (Input.mousePosition.x <= 0 || Input.mousePosition.y <= 0 || Input.mousePosition.x >= Screen.width || Input.mousePosition.y >= Screen.height)
-            {
-                return false;
-            }
-
-            return true;
+            return Input.mousePosition.x > 0 && Input.mousePosition.y > 0 && Input.mousePosition.x < Screen.width && Input.mousePosition.y < Screen.height;
         }
     }
 }
