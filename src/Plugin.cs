@@ -112,6 +112,7 @@ public class Plugin : BaseUnityPlugin
         new CompassGogglesPatch().Enable();
         new FixGridPrepareItemsPatch().Enable();
         new FixTraderFiltersPatch().Enable();
+        QuickMovePreviewPatches.Enable();
     }
 
     public void Start()

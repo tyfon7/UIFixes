@@ -6,6 +6,7 @@ global using ToggleKeyCombination = DeleteNoteDescriptorClass; // automatic name
 // Everything below will change between EFT builds
 global using ItemProperties = GClass846;
 global using GridItemAddress = GClass3393;
+global using SlotAddress = GClass3391;
 global using StashGridItemAddress = StashGridClass.Class2458;
 global using GenericItemContext = GClass3453;
 global using ModdingItemContext = GClass3456;
@@ -97,4 +98,5 @@ global using IResizeResult = GInterface407;
 global using IApplicable = GInterface408;
 global using IEncodable = GInterface412;
 global using IItemResult = GInterface424;
+global using IMoveResult = GInterface427;
 global using ITargetItemResult = GInterface429;

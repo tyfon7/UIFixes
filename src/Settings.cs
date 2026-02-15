@@ -187,6 +187,7 @@ internal class Settings
     public static ConfigEntry<bool> AddToUnsearchedContainers { get; set; }
     public static ConfigEntry<bool> ReorderGrids { get; set; }
     public static ConfigEntry<bool> PrioritizeSmallerGrids { get; set; }
+    public static ConfigEntry<bool> HighlightQuickMove { get; set; }
     public static ConfigEntry<bool> OpenAllContextMenu { get; set; }
     public static ConfigEntry<bool> TagsOverCaptions { get; set; }
     public static ConfigEntry<bool> TagBackpacks { get; set; }
@@ -984,6 +985,15 @@ internal class Settings
             false,
             new ConfigDescription(
                 "When adding items to containers with multiple slots, place the item in the smallest slot that can hold it, rather than just the first empty space. Requires Standardize Grid Order.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(HighlightQuickMove = config.Bind(
+            ContainersSection,
+            "Highlight Quick Move Target",
+            true,
+            new ConfigDescription(
+                "When holding CTRL and mousing over an item, show a border around where quick moving (CTRL-clicking) will put the item",
                 null,
                 new ConfigurationManagerAttributes { })));
 
