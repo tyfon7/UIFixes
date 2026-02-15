@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using BepInEx;
 using BepInEx.Bootstrap;
-
 using EFT.InventoryLogic;
 using EFT.UI;
-
 using HarmonyLib;
 
 /*

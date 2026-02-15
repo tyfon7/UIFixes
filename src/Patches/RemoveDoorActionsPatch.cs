@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

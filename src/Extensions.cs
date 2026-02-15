@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
-
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Ragfair;
-
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Linq;
-
 using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Logging;
-
 using Comfort.Common;
-
 using EFT;
-
 using TMPro;
-
 using UnityEngine.EventSystems;
 
 namespace UIFixes;

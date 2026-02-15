@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Comfort.Common;
-
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;

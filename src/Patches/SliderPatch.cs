@@ -1,11 +1,7 @@
 using System.Reflection;
-
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine;
 using UnityEngine.UI;
 

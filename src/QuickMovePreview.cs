@@ -1,8 +1,6 @@
 using System.Linq;
-
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

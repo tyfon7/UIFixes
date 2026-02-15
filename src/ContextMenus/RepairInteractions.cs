@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
 using Comfort.Common;
-
 using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;

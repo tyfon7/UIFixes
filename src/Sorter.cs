@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-
 using EFT.InventoryLogic;
 
 namespace UIFixes;

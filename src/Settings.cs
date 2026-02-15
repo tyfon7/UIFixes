@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-
 using UnityEngine;
 
 namespace UIFixes;

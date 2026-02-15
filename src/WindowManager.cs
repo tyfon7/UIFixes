@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
-
 using UnityEngine;
 
 namespace UIFixes;

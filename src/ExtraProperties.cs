@@ -1,8 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-
 using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
-
 using UnityEngine;
 
 namespace UIFixes;

@@ -1,14 +1,10 @@
 using System.Collections.Generic;
 using System.Reflection;
-
 using EFT;
 using EFT.Hideout;
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine;
 
 namespace UIFixes;

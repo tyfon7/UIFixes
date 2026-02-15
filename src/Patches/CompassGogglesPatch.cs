@@ -1,12 +1,8 @@
 using System.Reflection;
-
 using AnimationEventSystem;
-
 using EFT;
 using EFT.ItemInHandSubsystem;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

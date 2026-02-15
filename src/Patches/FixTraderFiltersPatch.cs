@@ -1,9 +1,6 @@
 using System.Reflection;
-
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

@@ -1,9 +1,6 @@
 using System.Reflection;
-
 using EFT.UI.DragAndDrop;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

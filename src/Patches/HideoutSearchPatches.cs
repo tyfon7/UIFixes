@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine.UI;
 
 namespace UIFixes;

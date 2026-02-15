@@ -1,13 +1,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using HarmonyLib;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using SemanticVersioning;
-
 using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.Controllers;

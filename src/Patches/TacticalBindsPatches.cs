@@ -1,17 +1,12 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using Comfort.Common;
-
 using EFT;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine;
 
 namespace UIFixes;

@@ -2,17 +2,12 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-
 using Comfort.Common;
-
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine;
 
 namespace UIFixes;

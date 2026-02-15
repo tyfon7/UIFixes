@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using Comfort.Common;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

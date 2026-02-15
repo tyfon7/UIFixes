@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-
 using TMPro;
-
 using UnityEngine;
 
 namespace UIFixes;

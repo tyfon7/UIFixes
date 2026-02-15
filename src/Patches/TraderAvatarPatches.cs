@@ -2,19 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using Comfort.Common;
-
 using EFT;
 using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
-
 using UnityEngine;
 using UnityEngine.UI;
 

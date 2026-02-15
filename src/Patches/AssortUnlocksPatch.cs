@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
-
 using EFT.UI;
 using EFT.UI.Ragfair;
-
 using HarmonyLib;
-
 using Newtonsoft.Json;
-
 using SPT.Common.Http;
 using SPT.Reflection.Patching;
 

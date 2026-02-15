@@ -1,19 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Ragfair;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using TMPro;
-
 using UnityEngine;
 using UnityEngine.UI;
 

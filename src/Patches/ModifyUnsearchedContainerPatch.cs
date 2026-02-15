@@ -1,9 +1,6 @@
 using System.Reflection;
-
 using Diz.LanguageExtensions;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

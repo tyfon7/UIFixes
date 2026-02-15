@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-
 using EFT.InventoryLogic;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

@@ -1,11 +1,8 @@
 ﻿using System.Reflection;
-
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Screens;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

@@ -1,9 +1,6 @@
 ﻿using System.Reflection;
-
 using EFT.Hideout;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

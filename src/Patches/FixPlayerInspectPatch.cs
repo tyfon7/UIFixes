@@ -1,10 +1,7 @@
 using System.Reflection;
-
 using EFT;
 using EFT.UI.Matchmaker;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

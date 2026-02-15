@@ -1,16 +1,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-
 using Comfort.Common;
-
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
-
 using UnityEngine;
 using UnityEngine.UI;
 

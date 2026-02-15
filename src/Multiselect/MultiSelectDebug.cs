@@ -1,9 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
-
 using EFT.InventoryLogic;
 using EFT.UI;
-
 using UnityEngine;
 
 namespace UIFixes;

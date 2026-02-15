@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-
 using SPTarkov.Server.Core.Models.Eft.Ragfair;
 
 namespace UIFixes.Server;

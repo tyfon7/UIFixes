@@ -1,11 +1,7 @@
 ﻿using System.Reflection;
-
 using Diz.LanguageExtensions;
-
 using EFT.InventoryLogic;
-
 using HarmonyLib;
-
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

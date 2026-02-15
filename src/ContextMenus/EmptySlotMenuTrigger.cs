@@ -1,8 +1,6 @@
 ﻿using System;
-
 using EFT.InventoryLogic;
 using EFT.UI;
-
 using UnityEngine;
 using UnityEngine.EventSystems;
 
