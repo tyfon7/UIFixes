@@ -1,13 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using Comfort.Common;
+
 using EFT;
 using EFT.Hideout;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

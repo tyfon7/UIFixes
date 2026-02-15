@@ -1,8 +1,12 @@
 using System.Reflection;
+
 using Comfort.Common;
+
 using EFT;
 using EFT.InputSystem;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

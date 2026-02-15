@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Reflection;
+
 using EFT.UI.Ragfair;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using TMPro;
+
 using UnityEngine;
 
 namespace UIFixes;

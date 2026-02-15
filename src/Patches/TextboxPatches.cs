@@ -1,7 +1,11 @@
 using System.Reflection;
+
 using EFT.InputSystem;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using UnityEngine;
 
 namespace UIFixes;

@@ -1,8 +1,12 @@
-﻿using EFT.UI;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
+
+using EFT.UI;
+
+using HarmonyLib;
+
+using SPT.Reflection.Patching;
+
 using UnityEngine;
 
 namespace UIFixes;

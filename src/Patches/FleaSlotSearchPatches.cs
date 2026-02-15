@@ -2,10 +2,14 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Comfort.Common;
+
 using EFT.HandBook;
 using EFT.UI.Ragfair;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

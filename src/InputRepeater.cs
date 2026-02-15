@@ -1,5 +1,7 @@
 using System;
+
 using EFT.InputSystem;
+
 using UnityEngine;
 
 namespace UIFixes;

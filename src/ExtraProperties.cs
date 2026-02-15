@@ -1,6 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
+
 using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
+
 using UnityEngine;
 
 namespace UIFixes;
@@ -86,4 +88,3 @@ public static class ExtraOperationProperties
     public static MoveOperation GetExtraMoveOperation(this IRaiseEvents op) => properties.GetOrCreateValue(op).ExtraMoveOperation;
     public static void SetExtraMoveOperation(this IRaiseEvents op, MoveOperation operation) => properties.GetOrCreateValue(op).ExtraMoveOperation = operation;
 }
-

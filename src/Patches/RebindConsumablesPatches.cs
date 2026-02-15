@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

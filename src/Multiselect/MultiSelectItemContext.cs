@@ -64,4 +64,3 @@ public class MultiSelectItemContext : DragItemContext
         return base.CanQuickMoveTo(targetContainer);
     }
 }
-

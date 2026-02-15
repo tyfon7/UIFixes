@@ -1,14 +1,20 @@
 using System;
 using System.Linq;
 using System.Reflection;
+
 using Comfort.Common;
+
 using Diz.LanguageExtensions;
+
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.WeaponModding;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 

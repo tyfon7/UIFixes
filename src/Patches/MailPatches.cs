@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using ChatShared;
+
 using EFT.UI;
 using EFT.UI.Chat;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

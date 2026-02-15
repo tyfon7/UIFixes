@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using Comfort.Common;
+
 using EFT;
 using EFT.InputSystem;
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

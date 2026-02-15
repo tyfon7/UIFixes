@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using System.Reflection;
+
 using EFT;
 using EFT.Quests;
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using UnityEngine;
 
 namespace UIFixes;
@@ -37,7 +41,7 @@ public static class QuestKeysPatches
 
     public class DebounceStatusNotifyPatch : ModulePatch
     {
-        private static Dictionary<MongoID, EQuestStatus> RecentQuestStatuses = [];
+        private static readonly Dictionary<MongoID, EQuestStatus> RecentQuestStatuses = [];
 
         protected override MethodBase GetTargetMethod()
         {

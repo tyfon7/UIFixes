@@ -1,10 +1,15 @@
 using System.Reflection;
+
 using Comfort.Common;
+
 using EFT.Hideout;
 using EFT.UI;
 using EFT.UI.Screens;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using UnityEngine;
 
 namespace UIFixes;

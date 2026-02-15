@@ -1,10 +1,15 @@
 ﻿using System.Reflection;
+
 using Comfort.Common;
+
 using EFT;
 using EFT.UI;
 using EFT.UI.WeaponModding;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using UnityEngine.EventSystems;
 
 namespace UIFixes;

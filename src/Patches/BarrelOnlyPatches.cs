@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Comfort.Common;
+
 using EFT.InventoryLogic;
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
@@ -182,9 +186,9 @@ public static class BarrelOnlyPatches
         {
             public override bool HasIcons => false;
 
-            private bool foundAny = false;
-            private Weapon weapon;
-            private ItemUiContext itemUiContext;
+            private readonly bool foundAny = false;
+            private readonly Weapon weapon;
+            private readonly ItemUiContext itemUiContext;
 
             public BarrelLoadAmmoInteractions(Weapon weapon, ItemUiContext itemUiContext) : base(itemUiContext)
             {

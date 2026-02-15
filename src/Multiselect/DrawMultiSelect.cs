@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Comfort.Common;
+
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.DragAndDrop;
+
 using TMPro;
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

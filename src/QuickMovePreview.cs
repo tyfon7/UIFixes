@@ -1,6 +1,8 @@
 using System.Linq;
+
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,24 +11,24 @@ namespace UIFixes;
 
 public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private GameObject targetBorder;
+    private GameObject _targetBorder;
 
-    private ItemContextAbstractClass itemContext;
-    private TraderControllerClass itemController;
-    private ItemUiContext itemUiContext;
+    private ItemContextAbstractClass _itemContext;
+    private TraderControllerClass _itemController;
+    private ItemUiContext _itemUiContext;
 
-    private bool hovered = false;
+    private bool _hovered = false;
 
     public void Init(ItemContextAbstractClass itemContext, TraderControllerClass itemController, ItemUiContext itemUiContext)
     {
-        this.itemContext = itemContext;
-        this.itemController = itemController;
-        this.itemUiContext = itemUiContext;
+        _itemContext = itemContext;
+        _itemController = itemController;
+        _itemUiContext = itemUiContext;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        hovered = true;
+        _hovered = true;
 
         bool ctrlHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
         bool altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
@@ -42,7 +44,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        hovered = false;
+        _hovered = false;
 
         HideHighlight();
     }
@@ -50,18 +52,18 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
     // ItemViews are pooled so this needs to be reusable
     public void Kill()
     {
-        hovered = false;
+        _hovered = false;
 
         HideHighlight();
 
-        itemContext = null;
-        itemController = null;
-        itemUiContext = null;
+        _itemContext = null;
+        _itemController = null;
+        _itemUiContext = null;
     }
 
     public void Update()
     {
-        if (!hovered)
+        if (!_hovered)
         {
             return;
         }
@@ -92,20 +94,20 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
             return;
         }
 
-        if (itemUiContext == null || !itemContext.Searched)
+        if (_itemUiContext == null || !_itemContext.Searched)
         {
             return;
         }
 
-        var quickMoveOperation = itemUiContext.QuickFindAppropriatePlace(itemContext, itemController, false, false, true);
-        if (quickMoveOperation.Failed || !itemController.CanExecute(quickMoveOperation.Value) || quickMoveOperation.Value is not IMoveResult moveResult)
+        var quickMoveOperation = _itemUiContext.QuickFindAppropriatePlace(_itemContext, _itemController, false, false, true);
+        if (quickMoveOperation.Failed || !_itemController.CanExecute(quickMoveOperation.Value) || quickMoveOperation.Value is not IMoveResult moveResult)
         {
             return;
         }
 
         if (moveResult.To is GridItemAddress gridAddress)
         {
-            var targetGridView = itemController.HashSet_0.FirstOrDefault(view => view is GridView gridView && gridView.Grid == gridAddress.Grid) as GridView;
+            var targetGridView = _itemController.HashSet_0.FirstOrDefault(view => view is GridView gridView && gridView.Grid == gridAddress.Grid) as GridView;
             if (targetGridView != null)
             {
                 HighlightGridLocation(targetGridView, gridAddress);
@@ -113,7 +115,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
         else if (moveResult.To is SlotAddress slotAddress)
         {
-            var targetSlotView = itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
+            var targetSlotView = _itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
             if (targetSlotView != null)
             {
                 HighlightSlot(targetSlotView);
@@ -128,43 +130,43 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
             return;
         }
 
-        if (itemUiContext == null || !itemContext.Searched)
+        if (_itemUiContext == null || !_itemContext.Searched)
         {
             return;
         }
 
-        var equipment = itemUiContext.R().InventoryEquipment;
-        if (equipment.IsItemEquipped(itemContext.Item))
+        var equipment = _itemUiContext.R().InventoryEquipment;
+        if (equipment.IsItemEquipped(_itemContext.Item))
         {
             return;
         }
 
-        var itemAddress = equipment.FindSlotToPickUp(itemContext.Item);
+        var itemAddress = equipment.FindSlotToPickUp(_itemContext.Item);
         if (itemAddress is not SlotAddress slotAddress)
         {
             return;
         }
 
-        var targetSlotView = itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
+        var targetSlotView = _itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
         HighlightSlot(targetSlotView);
     }
 
     private void HighlightGridLocation(GridView gridView, GridItemAddress gridAddress)
     {
-        targetBorder = GetTargetBorder(gridView.transform);
-        if (targetBorder == null)
+        _targetBorder = GetTargetBorder(gridView.transform);
+        if (_targetBorder == null)
         {
             return;
         }
 
-        XYCellSizeStruct xycellSizeStruct = itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+        XYCellSizeStruct xycellSizeStruct = _itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
 
         int minX = gridAddress.LocationInGrid.x;
         int minY = gridAddress.LocationInGrid.y;
         int maxX = minX + xycellSizeStruct.X;
         int maxY = minY + xycellSizeStruct.Y;
 
-        var borderRect = targetBorder.RectTransform();
+        var borderRect = _targetBorder.RectTransform();
         borderRect.localScale = Vector3.one;
         borderRect.pivot = new Vector2(0f, 1f);
         borderRect.anchorMin = new Vector2(0f, 1f);
@@ -174,8 +176,8 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         borderRect.anchoredPosition = new Vector2(minX * 63, -minY * 63);
         borderRect.sizeDelta = new Vector2((maxX - minX) * 63, (maxY - minY) * 63);
 
-        targetBorder.transform.SetAsLastSibling();
-        targetBorder.SetActive(true);
+        _targetBorder.transform.SetAsLastSibling();
+        _targetBorder.SetActive(true);
     }
 
     private void HighlightSlot(SlotView slotView)
@@ -184,37 +186,37 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         var slotPanel = slotView.transform.Find("Slot Panel");
         if (slotPanel != null)
         {
-            targetBorder = GetTargetBorder(slotPanel);
+            _targetBorder = GetTargetBorder(slotPanel);
         }
         else
         {
-            targetBorder = GetTargetBorder(slotView.transform);
+            _targetBorder = GetTargetBorder(slotView.transform);
         }
 
-        if (targetBorder == null)
+        if (_targetBorder == null)
         {
             return;
         }
 
-        var borderRect = targetBorder.RectTransform();
+        var borderRect = _targetBorder.RectTransform();
         borderRect.localScale = Vector3.one;
         borderRect.pivot = new Vector2(0f, 0f);
         borderRect.anchorMin = new Vector2(0f, 0f);
         borderRect.anchorMax = new Vector2(1f, 1f);
 
-        targetBorder.transform.SetAsLastSibling();
-        targetBorder.SetActive(true);
+        _targetBorder.transform.SetAsLastSibling();
+        _targetBorder.SetActive(true);
     }
 
     private void HideHighlight()
     {
-        if (targetBorder == null)
+        if (_targetBorder == null)
         {
             return;
         }
 
-        targetBorder.SetActive(false);
-        targetBorder = null;
+        _targetBorder.SetActive(false);
+        _targetBorder = null;
     }
 
     private GameObject GetTargetBorder(Transform target)

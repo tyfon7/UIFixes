@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
+
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
@@ -27,4 +30,3 @@ public class TransferConfirmPatch : ModulePatch
         return false;
     }
 }
-

@@ -1,11 +1,15 @@
-﻿using EFT.InventoryLogic;
-using EFT.UI.DragAndDrop;
-using HarmonyLib;
-using SPT.Reflection.Patching;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using EFT.InventoryLogic;
+using EFT.UI.DragAndDrop;
+
+using HarmonyLib;
+
+using SPT.Reflection.Patching;
+
 using UnityEngine;
 
 namespace UIFixes;

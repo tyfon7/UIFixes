@@ -1,11 +1,17 @@
 ﻿using System.Reflection;
+
 using Comfort.Common;
+
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using TMPro;
+
 using UnityEngine.EventSystems;
 
 namespace UIFixes;

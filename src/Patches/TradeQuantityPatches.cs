@@ -1,8 +1,13 @@
 ﻿using System.Reflection;
+
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
+
 using TMPro;
+
 using UnityEngine.EventSystems;
 
 namespace UIFixes;

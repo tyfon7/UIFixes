@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Builds;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 
 namespace UIFixes;

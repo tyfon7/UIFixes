@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+
 using EFT.InventoryLogic;
 
 namespace UIFixes;
 
 public static class ItemCacheHelper
 {
-    private static List<Item> allItemsCache = new();
+    private static readonly List<Item> allItemsCache = new();
 
     public static void UpdateAllItemsCache(InventoryController inventoryController)
     {

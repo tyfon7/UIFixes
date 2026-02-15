@@ -2,12 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using EFT.UI;
 using EFT.UI.Ragfair;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
+
 using TMPro;
+
 using UnityEngine.UI;
 
 namespace UIFixes;

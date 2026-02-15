@@ -2,11 +2,15 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using EFT.InventoryLogic;
 using EFT.UI;
+
 using HarmonyLib;
+
 using SPT.Reflection.Patching;
 using SPT.Reflection.Utils;
+
 using UnityEngine;
 
 namespace UIFixes;

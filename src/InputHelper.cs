@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+
 using EFT.InputSystem;
 
 namespace UIFixes;
 
 public static class InputHelper
 {
-    private static Dictionary<EGameKey, KeyBindingClass> KeyBindings = [];
+    private static readonly Dictionary<EGameKey, KeyBindingClass> KeyBindings = [];
 
     public static void MapKeyBindings(InputBindingsDataClass bindingsData)
     {
