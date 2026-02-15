@@ -11,7 +11,6 @@ public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiCont
 {
     private readonly InsuranceCompanyClass _insurance = uiContext.Session.InsuranceCompany;
     private readonly List<Item> _items = [.. items];
-    private readonly int _playerRubles = playerRubles;
     private List<InsuranceItem> _insurableItems;
     private readonly Dictionary<string, int> _prices = [];
 
@@ -33,7 +32,7 @@ public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiCont
                 int price = _insurableItems.Select(i => _insurance.InsureSummary[insurer.Id][i]).Where(s => s.Loaded).Sum(s => s.Amount);
                 _prices[insurer.Id] = price;
 
-                string priceColor = price > _playerRubles ? "#FF0000" : "#ADB8BC";
+                string priceColor = price > playerRubles ? "#FF0000" : "#ADB8BC";
 
                 string text = string.Format("<b><color=#C6C4B2>{0}</color> <color={1}>({2} ₽)</color></b>", insurer.LocalizedName, priceColor, price);
 
