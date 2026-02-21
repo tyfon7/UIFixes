@@ -78,6 +78,7 @@ internal partial class Settings
     public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SelectAllOfTypeKeyBind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> RotateKeyBind { get; set; }
     public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
@@ -725,6 +726,15 @@ internal partial class Settings
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
                 "Keybind to transfer items to and from the sorting table. Will auto-open sorting table if necessary.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(RotateKeyBind = config.Bind(
+            Section.ItemKeybinds,
+            "Rotate Item",
+            new KeyboardShortcut(KeyCode.R),
+            new ConfigDescription(
+                "Keybind to rotate the currently dragged item.",
                 null,
                 new ConfigurationManagerAttributes { })));
 

@@ -114,6 +114,7 @@ public class Plugin : BaseUnityPlugin
         new FixGridPrepareItemsPatch().Enable();
         new FixTraderFiltersPatch().Enable();
         QuickMovePreviewPatches.Enable();
+        new RotateKeybindPatch().Enable();
     }
 
     public void Start()
