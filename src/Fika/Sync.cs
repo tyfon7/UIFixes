@@ -16,7 +16,7 @@ namespace UIFixes.Fika;
 
 public static class Sync
 {
-    private static readonly Dictionary<ConfigEntryBase, SyncedValues> SettingOverrides = [];
+    private static readonly Dictionary<ConfigEntryBase, string> OriginalSettings = [];
 
     private static bool ConfigReceived;
 
@@ -55,7 +55,6 @@ public static class Sync
                 Plugin.Instance.Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(OnServerSettingChanged);
                 break;
             case FikaClient client:
-                Plugin.Instance.Config.SettingChanged += new EventHandler<SettingChangedEventArgs>(OnClientSettingChanged);
                 client.RegisterPacket(new Action<ConfigPacket>(HandlePacketClient));
                 break;
         }
@@ -73,26 +72,6 @@ public static class Sync
 
         Plugin.Instance.Logger.LogInfo("Synced setting changed; sending Fika sync packet to all peers");
         Singleton<FikaServer>.Instance.SendData(ref packet, DeliveryMethod.ReliableUnordered);
-    }
-
-    // Prevents clients from changing synced settings
-    private static bool IgnoreClientSettingsChanged;
-    private static void OnClientSettingChanged(object sender, SettingChangedEventArgs args)
-    {
-        ConfigEntryBase configEntry = args.ChangedSetting;
-        if (IgnoreClientSettingsChanged || !configEntry.IsSynced())
-        {
-            return;
-        }
-
-        IgnoreClientSettingsChanged = true;
-
-        if (SettingOverrides.TryGetValue(configEntry, out SyncedValues values))
-        {
-            configEntry.SetSerializedValue(values.Override);
-        }
-
-        IgnoreClientSettingsChanged = false;
     }
 
     private static void OnRaidStarted(FikaRaidStartedEvent ev)
@@ -117,18 +96,15 @@ public static class Sync
         }
         else
         {
-            Plugin.Instance.Config.SettingChanged -= new EventHandler<SettingChangedEventArgs>(OnClientSettingChanged);
-
-            foreach (var config in SettingOverrides)
+            foreach (var (config, originalValue) in OriginalSettings)
             {
-                config.Key.SetSerializedValue(config.Value.Original);
+                config.SetReadonly(false);
+                config.SetSerializedValue(originalValue);
             }
 
-            SettingOverrides.Clear();
+            OriginalSettings.Clear();
 
             ConfigReceived = false;
-            Plugin.Instance.Config.Save();
-            Plugin.Instance.Config.SaveOnConfigSet = true;
         }
     }
 
@@ -144,27 +120,17 @@ public static class Sync
             return;
         }
 
-        // Disable saving until end of raid
-        Plugin.Instance.Config.SaveOnConfigSet = false;
-
-        IgnoreClientSettingsChanged = true;
-        foreach (var (configEntry, value) in Settings.SyncedConfigs().Zip(packet.Settings, (key, value) => (key, value)))
+        foreach (var (config, value) in Settings.SyncedConfigs().Zip(packet.Settings, (key, value) => (key, value)))
         {
-            SettingOverrides[configEntry] = SettingOverrides.TryGetValue(configEntry, out SyncedValues values)
-                ? new SyncedValues { Original = values.Original, Override = value }
-                : new SyncedValues { Original = configEntry.GetSerializedValue(), Override = value };
+            if (!OriginalSettings.ContainsKey(config))
+            {
+                OriginalSettings[config] = config.GetSerializedValue();
+            }
 
-            configEntry.SetSerializedValue(value);
+            config.SetSerializedValue(value);
+            config.SetReadonly(true, "Set by Fika host");
         }
 
-        IgnoreClientSettingsChanged = false;
-
         NotificationManagerClass.DisplayMessageNotification("UIFixes configuration synced from host");
-    }
-
-    private struct SyncedValues
-    {
-        public string Original;
-        public string Override;
     }
 }

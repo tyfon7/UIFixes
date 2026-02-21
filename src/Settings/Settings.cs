@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
@@ -8,86 +6,8 @@ using UnityEngine;
 
 namespace UIFixes;
 
-internal enum WeaponPresetConfirmationOption
+internal partial class Settings
 {
-    Never,
-    [Description("On Close")]
-    OnClose,
-    Always
-}
-
-internal enum TransferConfirmationOption
-{
-    Never,
-    Always
-}
-
-internal enum MultiSelectStrategy
-{
-    [Description("First Available Space")]
-    FirstOpenSpace,
-    [Description("Same Row or Below (Wrapping)")]
-    SameRowOrLower,
-    [Description("Keep Original Spacing (Best Effort)")]
-    OriginalSpacing
-}
-
-internal enum AutoFleaPrice
-{
-    None,
-    Minimum,
-    Average,
-    Maximum
-}
-
-internal enum ModifierKey
-{
-    None,
-    Shift,
-    Control,
-    Alt
-}
-
-internal enum ModRaidWeapon
-{
-    Never,
-    [Description("With Multitool")]
-    WithTool,
-    Always
-}
-
-internal enum AutoWishlistBehavior
-{
-    Normal,
-    [Description("Visible Upgrades")]
-    Visible,
-    [Description("All Upgrades")]
-    All
-}
-
-internal class Settings
-{
-    // New categories
-    private const string InterfaceSection = "A. Interface";
-    private const string DialogsSection = "B. Dialogs";
-    private const string GameplaySection = "C. Gameplay";
-    private const string MouseSection = "D. Mouse";
-    private const string InterfaceKeybindsSection = "E. Interface Keybinds";
-    private const string ItemKeybindsSection = "F. Item Keybinds";
-    private const string GameplayKeybindsSection = "G. Gameplay Keybinds";
-    private const string MultiSelectSection = "H. Multiselect";
-    private const string ItemSwappingSection = "I. Item Swapping";
-    private const string ItemStackingSection = "J. Item Stacking";
-    private const string ContainersSection = "K. Containers";
-    private const string InspectWindowsSection = "L. Inspect Windows";
-    private const string StashSection = "M. Stash";
-    private const string TradingSection = "N. Trading";
-    private const string FleaMarketSection = "O. Flea Market";
-    private const string AddOfferSection = "P. Add Offer";
-    private const string HideoutSection = "Q. Hideout";
-    private const string WeaponsSection = "R. Weapons";
-    private const string WindowsSection = "S. Inventory Windows";
-
     // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
@@ -262,7 +182,7 @@ internal class Settings
         return AllConfigs.Where(c => c.IsSynced());
     }
 
-    private static ConfigurationManager.ConfigurationManager ConfigManager { get; set; }
+    public static ConfigurationManager.ConfigurationManager ConfigManager { get; set; }
 
     // Categories
     public static void Init(ConfigFile config)
@@ -273,7 +193,7 @@ internal class Settings
 
         // Interface
         configEntries.Add(KeepMessagesOpen = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Keep Messages Window Open",
             true,
             new ConfigDescription(
@@ -282,7 +202,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AutofillQuestTurnIns = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Autofill Quest Item Turn-ins",
             true,
             new ConfigDescription(
@@ -291,7 +211,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ContextMenuOnRight = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Context Menu Flyout on Right",
             true,
             new ConfigDescription(
@@ -300,7 +220,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ContextMenuWhileSearching = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Allow Context Menu While Searching",
             false,
             new ConfigDescription(
@@ -309,7 +229,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShortenKeyBinds = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Hide Long Quickbar Keybinds",
             true,
             new ConfigDescription(
@@ -318,7 +238,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(OperationQueueTime = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Server Operation Queue Time",
             15,
             new ConfigDescription(
@@ -327,7 +247,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(MailReadQueueTime = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Mail Read Queue Time",
             5,
             new ConfigDescription(
@@ -336,7 +256,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LimitNonstandardDrags = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Limit Nonstandard Drags",
             true,
             new ConfigDescription(
@@ -345,7 +265,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Restore Async Scroll Positions",
             true,
             new ConfigDescription(
@@ -354,7 +274,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(RemoveDefaultMagPresetName = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Remove Default Mag Preset Name",
             true,
             new ConfigDescription(
@@ -363,7 +283,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LoadMagPresetOnBullets = config.Bind(
-            InterfaceSection,
+            Section.Interface,
             "Mag Presets Context Menu on Bullets",
             false,
             new ConfigDescription(
@@ -373,7 +293,7 @@ internal class Settings
 
         // Dialogs
         configEntries.Add(ShowPresetConfirmations = config.Bind(
-            DialogsSection,
+            Section.Dialogs,
             "Show Weapon Preset Confirmation Dialog",
             WeaponPresetConfirmationOption.OnClose,
             new ConfigDescription(
@@ -382,7 +302,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(OneClickPresetSave = config.Bind(
-            DialogsSection,
+            Section.Dialogs,
             "One Click Save Weapon Presets",
             true,
             new ConfigDescription(
@@ -391,7 +311,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowStockPresets = config.Bind(
-            DialogsSection,
+            Section.Dialogs,
             "Show Stock Weapon Presets",
             true,
             new ConfigDescription(
@@ -400,7 +320,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowTransferConfirmations = config.Bind(
-            DialogsSection,
+            Section.Dialogs,
             "Show Transfer Items Confirmation Dialog",
             TransferConfirmationOption.Never,
             new ConfigDescription(
@@ -409,7 +329,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ClickOutOfDialogs = config.Bind(
-            DialogsSection,
+            Section.Dialogs,
             "Click Outside of Dialogs to Close",
             true,
             new ConfigDescription(
@@ -419,7 +339,7 @@ internal class Settings
 
         // Gameplay
         configEntries.Add(QueueHeldInputs = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Queue Held Inputs",
             true,
             new ConfigDescription(
@@ -428,7 +348,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldAim = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Aiming",
             false,
             new ConfigDescription(
@@ -437,7 +357,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldInteract = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Interaction",
             false,
             new ConfigDescription(
@@ -446,7 +366,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldSprint = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Sprint",
             false,
             new ConfigDescription(
@@ -455,7 +375,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldTactical = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Tactical Device",
             false,
             new ConfigDescription(
@@ -464,7 +384,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldHeadlight = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Headlight",
             false,
             new ConfigDescription(
@@ -473,7 +393,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ToggleOrHoldGoggles = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Use Toggle/Hold Goggles",
             false,
             new ConfigDescription(
@@ -482,7 +402,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PreventScopeZoomFromInventory = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Prevent Scope Zoom in Inventory",
             true,
             new ConfigDescription(
@@ -491,7 +411,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(VariableScopeFix = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Variable Scope Fix (requires restart)",
             true,
             new ConfigDescription(
@@ -500,7 +420,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(ModifyEquippedWeapons = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Modify Equipped Weapons",
             true,
             new ConfigDescription(
@@ -509,7 +429,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ModifyRaidWeapons = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Modify Weapons In Raid",
             ModRaidWeapon.Never,
             new ConfigDescription(
@@ -518,16 +438,16 @@ internal class Settings
                 new ConfigurationManagerAttributes { Synced = true })));
 
         configEntries.Add(ModifyEquippedPlates = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Modify Equipped Armor Plates In Raid",
             false,
             new ConfigDescription(
                 "Allow armor plates to be removed and inserted on equipped armor, in raid",
                 null,
-                new ConfigurationManagerAttributes { Synced = true })));
+                new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RemoveDisabledActions = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Hide Unimplemented Door Actions",
             true,
             new ConfigDescription(
@@ -536,7 +456,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(EnableLoadAmmoInRaid = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Enable Load Ammo Context Menu",
             true,
             new ConfigDescription(
@@ -545,7 +465,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RebindGrenades = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Quickbind Matching Grenade After Throw",
             true,
             new ConfigDescription(
@@ -554,7 +474,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RebindConsumables = config.Bind(
-            GameplaySection,
+            Section.Gameplay,
             "Quickbind Matching Consumable After Use",
             true,
             new ConfigDescription(
@@ -564,7 +484,7 @@ internal class Settings
 
         // Mouse
         configEntries.Add(UnlockCursor = config.Bind(
-            MouseSection,
+            Section.Mouse,
             "Unlock Cursor",
             true,
             new ConfigDescription(
@@ -573,7 +493,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(MouseScrollMulti = config.Bind(
-            MouseSection,
+            Section.Mouse,
             "Mousewheel Scrolling Speed",
             1,
             new ConfigDescription(
@@ -582,7 +502,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
-            MouseSection,
+            Section.Mouse,
             "Use Different Scrolling Speed in Raid",
             false,
             new ConfigDescription(
@@ -591,7 +511,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(MouseScrollMultiInRaid = config.Bind(
-            MouseSection,
+            Section.Mouse,
             "Mousewheel Scrolling Speed in Raid",
             1,
             new ConfigDescription(
@@ -601,7 +521,7 @@ internal class Settings
 
         // Interface Keybinds
         configEntries.Add(UseHomeEnd = config.Bind(
-            InterfaceKeybindsSection,
+            Section.InterfaceKeybinds,
             "Enable Home/End Keys",
             true,
             new ConfigDescription(
@@ -610,7 +530,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RebindPageUpDown = config.Bind(
-            InterfaceKeybindsSection,
+            Section.InterfaceKeybinds,
             "Rebind PageUp/PageDown (requires restart)",
             true,
             new ConfigDescription(
@@ -619,7 +539,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SearchKeyBind = config.Bind(
-            InterfaceKeybindsSection,
+            Section.InterfaceKeybinds,
             "Highlight Search Box",
             new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
             new ConfigDescription(
@@ -628,7 +548,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SuppressKeybindsInTextbox = config.Bind(
-            InterfaceKeybindsSection,
+            Section.InterfaceKeybinds,
             "Block Keybinds While Typing",
             true,
             new ConfigDescription(
@@ -638,7 +558,7 @@ internal class Settings
 
         // Item Keybinds
         configEntries.Add(InspectKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Inspect Shortcut",
             new KeyboardShortcut(KeyCode.I),
             new ConfigDescription(
@@ -647,7 +567,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(OpenKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Open Shortcut",
             new KeyboardShortcut(KeyCode.O),
             new ConfigDescription(
@@ -656,7 +576,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ExamineKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Examine/Interact Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -665,7 +585,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(TopUpKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Top Up Ammo Shortcut",
             new KeyboardShortcut(KeyCode.T),
             new ConfigDescription(
@@ -674,7 +594,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UseKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Use Item Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -683,7 +603,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UseAllKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Use Item (All) Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -692,7 +612,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ReloadKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Reload Weapon Shortcut",
             new KeyboardShortcut(KeyCode.R),
             new ConfigDescription(
@@ -701,7 +621,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UnloadKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Unload Mag/Ammo Shortcut",
             new KeyboardShortcut(KeyCode.U),
             new ConfigDescription(
@@ -710,7 +630,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(InstallKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Install Mod Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -719,7 +639,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UninstallKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Uninstall Mod Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -728,7 +648,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UnpackKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Unpack Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -737,7 +657,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(FilterByKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Filter by Item Shortcut",
             new KeyboardShortcut(KeyCode.F),
             new ConfigDescription(
@@ -746,7 +666,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(LinkedSearchKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Linked Search Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -755,7 +675,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RequiredSearchKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Required Search Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -764,7 +684,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AddOfferKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Add Offer Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -773,7 +693,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PinKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Pin Item Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -782,7 +702,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(LockKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Lock Item Shortcut",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -791,7 +711,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SelectAllOfTypeKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Select All of Type",
             new KeyboardShortcut(KeyCode.A, KeyCode.LeftControl),
             new ConfigDescription(
@@ -800,7 +720,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SortingTableKeyBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Transfer to/from Sorting Table",
             new KeyboardShortcut(KeyCode.None),
             new ConfigDescription(
@@ -809,7 +729,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(DefaultSortingTableBind = config.Bind(
-            ItemKeybindsSection,
+            Section.ItemKeybinds,
             "Shift-Click to Sorting Table",
             true,
             new ConfigDescription(
@@ -818,7 +738,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
-           ItemKeybindsSection,
+           Section.ItemKeybinds,
            "Block Text Inputs on Item Mouseover",
            true,
            new ConfigDescription(
@@ -828,7 +748,7 @@ internal class Settings
 
         // Gameplay Keybinds
         configEntries.Add(TacticalModeModifier = config.Bind(
-            GameplayKeybindsSection,
+            Section.GameplayKeybinds,
             "Change Quickbound Tactical Mode",
             ModifierKey.Shift,
             new ConfigDescription(
@@ -838,7 +758,7 @@ internal class Settings
 
         // Multiselect
         configEntries.Add(EnableMultiSelect = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Enable Multiselect",
             true,
             new ConfigDescription(
@@ -847,7 +767,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(EnableMultiSelectInRaid = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Enable Multiselect In Raid",
             true,
 
@@ -857,7 +777,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(EnableMultiClick = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Enable Multiselect with Shift-Click",
             true,
             new ConfigDescription(
@@ -866,7 +786,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(SelectionBoxKey = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Selection Box Key",
             new KeyboardShortcut(KeyCode.Mouse0),
             new ConfigDescription(
@@ -875,7 +795,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(MultiSelectStrat = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Multiselect Item Placement",
             MultiSelectStrategy.OriginalSpacing,
             new ConfigDescription(
@@ -884,7 +804,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowMultiSelectDebug = config.Bind(
-            MultiSelectSection,
+            Section.MultiSelect,
             "Show Multiselect Debug",
             false,
             new ConfigDescription(
@@ -894,7 +814,7 @@ internal class Settings
 
         // Item Swapping
         configEntries.Add(SwapItems = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Enable In-Place Item Swapping",
             true,
             new ConfigDescription(
@@ -903,7 +823,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ExtraSwapFeedback = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Show Swap Grid Highlights",
             true,
             new ConfigDescription(
@@ -912,7 +832,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SwapMags = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Reload Magazines In-Place",
             true,
             new ConfigDescription(
@@ -921,7 +841,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AlwaysSwapMags = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Always Reload Magazines In-Place",
             false,
             new ConfigDescription(
@@ -930,7 +850,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SwapImpossibleContainers = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Swap with Incompatible Containers",
             false,
             new ConfigDescription(
@@ -939,7 +859,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ForceSwapModifier = config.Bind(
-            ItemSwappingSection,
+            Section.ItemSwapping,
             "Force Swap Key",
             ModifierKey.Alt,
             new ConfigDescription(
@@ -949,7 +869,7 @@ internal class Settings
 
         // Item Stacking
         configEntries.Add(StackBeforeSort = config.Bind(
-            ItemStackingSection,
+            Section.ItemStacking,
             "Combine Stacks Before Sorting",
             true,
             new ConfigDescription(
@@ -958,7 +878,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(MergeFIROther = config.Bind(
-            ItemStackingSection,
+            Section.ItemStacking,
             "Autostack Items with FiR Items",
             false,
             new ConfigDescription(
@@ -968,7 +888,7 @@ internal class Settings
 
         // Containers
         configEntries.Add(AddToUnsearchedContainers = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Allow Adding to Unsearched Containers",
             false,
             new ConfigDescription(
@@ -977,7 +897,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { Synced = true })));
 
         configEntries.Add(ReorderGrids = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Standardize Grid Order",
             true,
             new ConfigDescription(
@@ -986,7 +906,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PrioritizeSmallerGrids = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Prioritize Smaller Slots (requires restart)",
             false,
             new ConfigDescription(
@@ -995,7 +915,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightQuickMove = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Highlight Quick Move Target",
             true,
             new ConfigDescription(
@@ -1004,7 +924,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightQuickEquip = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Highlight Quick Equip Target",
             true,
             new ConfigDescription(
@@ -1013,7 +933,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(OpenAllContextMenu = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Open All Context Flyout",
             true,
             new ConfigDescription(
@@ -1022,7 +942,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(TagsOverCaptions = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Prioritize Tags Over Names",
             true,
             new ConfigDescription(
@@ -1031,7 +951,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(TagBackpacks = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Tag Backpacks (requires restart)",
             true,
             new ConfigDescription(
@@ -1040,7 +960,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(TagVests = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Tag Vests (requires restart)",
             true,
             new ConfigDescription(
@@ -1049,7 +969,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(NoFitBorder = config.Bind(
-            ContainersSection,
+            Section.Containers,
             "Show Border for Oversized Items",
             true,
             new ConfigDescription(
@@ -1059,7 +979,7 @@ internal class Settings
 
         // Inspect Windows
         configEntries.Add(ShowModStats = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Show Total Stats on Mods",
             true,
             new ConfigDescription(
@@ -1068,7 +988,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightEmptySlots = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Highlight Compatible Slots",
             true,
             new ConfigDescription(
@@ -1077,7 +997,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightFilledSlots = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Highlight Filled Slots",
             true,
             new ConfigDescription(
@@ -1086,7 +1006,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RememberInspectSize = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Remember Window Size",
             true,
             new ConfigDescription(
@@ -1095,7 +1015,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(LockInspectPreviewSize = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Lock Inspect Preview Size",
             true,
             new ConfigDescription(
@@ -1104,7 +1024,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ExpandDescriptionHeight = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Auto-expand to Fit Description",
             true,
             new ConfigDescription(
@@ -1113,7 +1033,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SnapLeftKeybind = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Snap Window Left shortcut",
             new KeyboardShortcut(KeyCode.LeftArrow),
             new ConfigDescription(
@@ -1122,7 +1042,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SnapRightKeybind = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Snap Window Right shortcut",
             new KeyboardShortcut(KeyCode.RightArrow),
             new ConfigDescription(
@@ -1131,7 +1051,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(StyleItemPanel = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Style Attribute Panels",
             true,
             new ConfigDescription(
@@ -1140,7 +1060,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(AddContainerButtons = config.Bind(
-            InspectWindowsSection,
+            Section.InspectWindows,
             "Add Left/Right Buttons on Containers",
             true,
             new ConfigDescription(
@@ -1150,7 +1070,7 @@ internal class Settings
 
         // Stash
         configEntries.Add(StashSearchContextMenu = config.Bind(
-            StashSection,
+            Section.Stash,
             "Search in Stash Context Menu",
             true,
             new ConfigDescription(
@@ -1159,7 +1079,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SynchronizeStashScrolling = config.Bind(
-            StashSection,
+            Section.Stash,
             "Synchronize Stash Scroll Position",
             false,
             new ConfigDescription(
@@ -1168,7 +1088,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AutoOpenSortingTable = config.Bind(
-            StashSection,
+            Section.Stash,
             "Auto-open Sorting Table",
             false,
             new ConfigDescription(
@@ -1177,7 +1097,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowGPCurrency = config.Bind(
-            StashSection,
+            Section.Stash,
             "Show GP Coins in Currency",
             true,
             new ConfigDescription(
@@ -1187,7 +1107,7 @@ internal class Settings
 
         // Trading
         configEntries.Add(AutoSwitchTrading = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Autoswitch Buy/Sell when Trading",
             true,
             new ConfigDescription(
@@ -1196,7 +1116,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(DailyQuestIcon = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Show Daily Quest Icon on Traders",
             true,
             new ConfigDescription(
@@ -1205,7 +1125,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HandOverQuestItemsIcon = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Show Hand Over Items Icon on Traders",
             true,
             new ConfigDescription(
@@ -1214,7 +1134,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(QuestHandOverQuestItemsIcon = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Show Hand Over Items Icon on Quests",
             true,
             new ConfigDescription(
@@ -1223,7 +1143,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RememberLastTrader = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Remember Last Trader",
             false,
             new ConfigDescription(
@@ -1232,7 +1152,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowOutOfStockCheckbox = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Show Out of Stock Toggle",
             true,
             new ConfigDescription(
@@ -1241,7 +1161,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PurchaseAllKeybind = config.Bind(
-            TradingSection,
+            Section.Trading,
             "Purchase Dialog ALL Shortcut",
             new KeyboardShortcut(KeyCode.A),
             new ConfigDescription(
@@ -1251,7 +1171,7 @@ internal class Settings
 
         // Flea Market
         configEntries.Add(EnableFleaHistory = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Show Filter Back Button",
             true,
             new ConfigDescription(
@@ -1260,7 +1180,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowBarterIcons = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Show Barter Icons",
             true,
             new ConfigDescription(
@@ -1269,7 +1189,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(EnableSlotSearch = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Enable Linked Slot Search",
             true,
             new ConfigDescription(
@@ -1278,7 +1198,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowRequiredQuest = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Show Required Quest for Locked Offers",
             true,
             new ConfigDescription(
@@ -1287,7 +1207,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AutoExpandCategories = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Auto-expand Categories",
             true,
             new ConfigDescription(
@@ -1296,7 +1216,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ClearFiltersOnSearch = config.Bind(
-            FleaMarketSection,
+            Section.FleaMarket,
             "Clear Filters on Search",
             true,
             new ConfigDescription(
@@ -1306,7 +1226,7 @@ internal class Settings
 
         // Add Offer
         configEntries.Add(AutoOfferPrice = config.Bind(
-            AddOfferSection,
+            Section.AddOffer,
             "Autopopulate Offer Price",
             AutoFleaPrice.None,
             new ConfigDescription(
@@ -1315,7 +1235,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(UpdatePriceOnBulk = config.Bind(
-            AddOfferSection,
+            Section.AddOffer,
             "Update Offer Price on Bulk",
             true,
             new ConfigDescription(
@@ -1324,7 +1244,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(KeepAddOfferOpen = config.Bind(
-            AddOfferSection,
+            Section.AddOffer,
             "Keep Add Offer Window Open",
             false,
             new ConfigDescription(
@@ -1333,7 +1253,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(KeepAddOfferOpenIgnoreMaxOffers = config.Bind(
-            AddOfferSection,
+            Section.AddOffer,
             "Keep Add Offer Window Open: Ignore Max Offers",
             false,
             new ConfigDescription(
@@ -1342,7 +1262,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(RememberAutoselectSimilar = config.Bind(
-            AddOfferSection,
+            Section.AddOffer,
             "Remember Add Offer Autoselect Similar",
             true,
             new ConfigDescription(
@@ -1352,7 +1272,7 @@ internal class Settings
 
         // Hideout
         configEntries.Add(AutoWishlistUpgrades = config.Bind(
-            HideoutSection,
+            Section.Hideout,
             "Hideout Upgrade Wishlisting",
             AutoWishlistBehavior.Normal,
             new ConfigDescription(
@@ -1364,7 +1284,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(AutoWishlistCheckFiR = config.Bind(
-            HideoutSection,
+            Section.Hideout,
             "Hideout Upgrade Wishlist Respects FiR",
             true,
             new ConfigDescription(
@@ -1373,7 +1293,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(RememberSearchOnExit = config.Bind(
-            HideoutSection,
+            Section.Hideout,
             "Remember Craft Search",
             false,
             new ConfigDescription(
@@ -1382,7 +1302,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShowReloadOnInternalMags = config.Bind(
-            WeaponsSection,
+            Section.Weapons,
             "Show Internal Mag (Re)load Context Menu",
             false,
             new ConfigDescription(
@@ -1391,7 +1311,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         configEntries.Add(LoadAmmoOnInternalMags = config.Bind(
-            WeaponsSection,
+            Section.Weapons,
             "Show Internal Mag Load/Unload Ammo",
             true,
             new ConfigDescription(
@@ -1400,7 +1320,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(FullyDisassemble = config.Bind(
-            WeaponsSection,
+            Section.Weapons,
             "Fully Disassemble",
             true,
             new ConfigDescription(
@@ -1410,7 +1330,7 @@ internal class Settings
 
         // Windows
         configEntries.Add(SaveOpenInspectWindows = config.Bind(
-            WindowsSection,
+            Section.Windows,
             "Remember Inspect Windows",
             false,
             new ConfigDescription(
@@ -1419,7 +1339,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(SaveOpenContainerWindows = config.Bind(
-            WindowsSection,
+            Section.Windows,
             "Remember Open Containers",
             true,
             new ConfigDescription(
@@ -1428,7 +1348,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PerItemInspectPositions = config.Bind(
-            WindowsSection,
+            Section.Windows,
             "Remember Inspect Position per Item",
             true,
             new ConfigDescription(
@@ -1437,7 +1357,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(PerItemContainerPositions = config.Bind(
-            WindowsSection,
+            Section.Windows,
             "Remember Container Position per Item",
             true,
             new ConfigDescription(
@@ -1446,7 +1366,7 @@ internal class Settings
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(HighlightPrioritizedWindowBorder = config.Bind(
-            WindowsSection,
+            Section.Windows,
             "Highlight Priority Window Border",
             true,
             new ConfigDescription(
@@ -1456,16 +1376,21 @@ internal class Settings
 
         RecalcOrder(configEntries);
 
-        MakeDependent(EnableMultiSelect, EnableMultiSelectInRaid);
-        MakeDependent(EnableMultiSelect, ShowMultiSelectDebug, false);
-        MakeDependent(EnableMultiSelect, EnableMultiClick);
+        EnableMultiSelectInRaid.DependOn(EnableMultiSelect);
+        ShowMultiSelectDebug.DependOn(EnableMultiSelect, false);
+        EnableMultiClick.DependOn(EnableMultiSelect);
 
-        MakeExclusive(EnableMultiClick, AutoOpenSortingTable, false);
+        EnableMultiClick.MakeExclusive(AutoOpenSortingTable, false);
 
-        MakeRequirement(ReorderGrids, !Plugin.FikaPresent(), "Incompatible with Fika");
-        MakeDependent(ReorderGrids, PrioritizeSmallerGrids, false);
+        ExtraSwapFeedback.DependOn(SwapItems);
+        SwapMags.DependOn(SwapItems);
+        AlwaysSwapMags.DependOn(SwapMags, false);
+        SwapImpossibleContainers.DependOn(SwapItems, false);
 
-        MakeRequirement(ModifyEquippedPlates, !Plugin.FikaPresent(), "Incompatible with Fika");
+        ReorderGrids.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
+        PrioritizeSmallerGrids.DependOn(ReorderGrids, false);
+
+        ModifyEquippedPlates.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
@@ -1479,142 +1404,5 @@ internal class Settings
 
             settingOrder--;
         }
-    }
-
-    private static void MakeExclusive(ConfigEntry<bool> priorityConfig, ConfigEntry<bool> secondaryConfig, bool allowSecondaryToDisablePrimary = true)
-    {
-        if (priorityConfig.Value)
-        {
-            secondaryConfig.Value = false;
-        }
-
-        priorityConfig.SettingChanged += (_, _) =>
-        {
-            if (priorityConfig.Value)
-            {
-                secondaryConfig.Value = false;
-            }
-        };
-
-        secondaryConfig.SettingChanged += (_, _) =>
-        {
-            if (secondaryConfig.Value)
-            {
-                if (allowSecondaryToDisablePrimary)
-                {
-                    priorityConfig.Value = false;
-                }
-                else if (priorityConfig.Value)
-                {
-                    secondaryConfig.Value = false;
-                }
-            }
-        };
-    }
-
-    private static void MakeDependent(ConfigEntry<bool> primaryConfig, ConfigEntry<bool> dependentConfig, bool primaryEnablesDependent = true)
-    {
-        if (!primaryConfig.Value)
-        {
-            dependentConfig.Value = false;
-
-            var attributes = dependentConfig.GetAttributes();
-            attributes.ReadOnly = true;
-            attributes.DispName = $"<color=grey>{dependentConfig.Definition.Key}</color>";
-            attributes.CustomDrawer = MakeDisabledBoolDrawer($"Requires {primaryConfig.Definition.Key}");
-        }
-
-        primaryConfig.SettingChanged += (_, _) =>
-        {
-            if (primaryConfig.Value)
-            {
-                if (primaryEnablesDependent)
-                {
-                    dependentConfig.Value = true;
-                }
-
-                var attributes = dependentConfig.GetAttributes();
-                attributes.ReadOnly = false;
-                attributes.DispName = dependentConfig.Definition.Key;
-                attributes.CustomDrawer = null;
-            }
-            else
-            {
-                dependentConfig.Value = false;
-
-                var attributes = dependentConfig.GetAttributes();
-                attributes.ReadOnly = true;
-                attributes.DispName = $"<color=grey>{dependentConfig.Definition.Key}</color>";
-                attributes.CustomDrawer = MakeDisabledBoolDrawer($"requires {primaryConfig.Definition.Key}");
-            }
-
-            ConfigManager.BuildSettingList(); // refresh drawers
-        };
-    }
-
-    private static void MakeRequirement(ConfigEntry<bool> config, bool requirement, string explanation)
-    {
-        if (!requirement)
-        {
-            Plugin.Instance.Logger.LogInfo($"Disabling '{config.Definition.Key}'; {explanation}");
-
-            config.Value = false;
-
-            var attributes = config.GetAttributes();
-            attributes.ReadOnly = true;
-            attributes.DispName = $"<color=grey>{config.Definition.Key}</color>";
-            attributes.CustomDrawer = MakeDisabledBoolDrawer(explanation);
-        }
-    }
-
-    private static Action<ConfigEntryBase> MakeDisabledBoolDrawer(string explanation)
-    {
-        return config =>
-        {
-            var value = (bool)config.BoxedValue;
-            var state = value ? "Enabled" : "Disabled";
-            GUILayout.Toggle(value, $"<color=grey>{state} ({explanation})</color>", GUILayout.ExpandWidth(true));
-        };
-    }
-}
-
-public static class SettingExtensions
-{
-    public static void Subscribe<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
-    {
-        configEntry.SettingChanged += (_, _) => onChange(configEntry.Value);
-    }
-
-    public static void Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
-    {
-        configEntry.Subscribe(onChange);
-        onChange(configEntry.Value);
-    }
-
-    // KeyboardShortcut methods return false if any other key is down
-    public static bool IsDownIgnoreOthers(this KeyboardShortcut shortcut)
-    {
-        return Input.GetKeyDown(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
-    }
-
-    public static bool IsPressedIgnoreOthers(this KeyboardShortcut shortcut)
-    {
-        return Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
-    }
-
-    public static bool IsUpIgnoreOthers(this KeyboardShortcut shortcut)
-    {
-        return Input.GetKeyUp(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
-    }
-
-    internal static ConfigurationManagerAttributes GetAttributes(this ConfigEntryBase configEntry)
-    {
-        return configEntry.Description.Tags.OfType<ConfigurationManagerAttributes>().FirstOrDefault();
-    }
-
-    public static bool IsSynced(this ConfigEntryBase configEntry)
-    {
-        ConfigurationManagerAttributes attributes = configEntry.GetAttributes();
-        return attributes != null && attributes.Synced.HasValue && attributes.Synced.Value;
     }
 }
