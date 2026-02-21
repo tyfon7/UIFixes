@@ -48,6 +48,8 @@ public static class ContextMenuPatches
         new OpenWhileSearchingPatch().Enable();
 
         new ModdingItemContextPatch().Enable();
+
+        new ContextMenuFontSizePatch().Enable();
     }
 
     // Update display strings with multiselect multipliers
@@ -661,6 +663,20 @@ public static class ContextMenuPatches
 
                 PositionContextMenuFlyout(subInteractionsWrapper);
             }
+        }
+    }
+
+    public class ContextMenuFontSizePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.DeclaredMethod(typeof(ContextMenuButton), nameof(ContextMenuButton.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ContextMenuButton __instance, TextMeshProUGUI ____text)
+        {
+            __instance.R().UI.AddDisposable(Settings.ContextMenuFontSize.Bind(fontSize => ____text.fontSize = fontSize));
         }
     }
 

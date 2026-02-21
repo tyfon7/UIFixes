@@ -8,15 +8,18 @@ namespace UIFixes;
 
 public static class SettingExtensions
 {
-    public static void Subscribe<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
+    public static Action Subscribe<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
     {
-        configEntry.SettingChanged += (_, _) => onChange(configEntry.Value);
+        EventHandler handler = (_, _) => onChange(configEntry.Value);
+        configEntry.SettingChanged += handler;
+        return () => configEntry.SettingChanged -= handler;
     }
 
-    public static void Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
+    public static Action Bind<T>(this ConfigEntry<T> configEntry, Action<T> onChange)
     {
-        configEntry.Subscribe(onChange);
+        var unsubscribe = configEntry.Subscribe(onChange);
         onChange(configEntry.Value);
+        return unsubscribe;
     }
 
     // KeyboardShortcut methods return false if any other key is down

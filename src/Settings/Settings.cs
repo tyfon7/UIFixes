@@ -13,6 +13,7 @@ internal partial class Settings
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
     public static ConfigEntry<bool> ContextMenuOnRight { get; set; }
     public static ConfigEntry<bool> ContextMenuWhileSearching { get; set; }
+    public static ConfigEntry<int> ContextMenuFontSize { get; set; }
     public static ConfigEntry<bool> ShortenKeyBinds { get; set; }
     public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     public static ConfigEntry<int> MailReadQueueTime { get; set; } // Advanced
@@ -126,6 +127,8 @@ internal partial class Settings
     public static ConfigEntry<bool> ExpandDescriptionHeight { get; set; }
     public static ConfigEntry<KeyboardShortcut> SnapLeftKeybind { get; set; }
     public static ConfigEntry<KeyboardShortcut> SnapRightKeybind { get; set; }
+    public static ConfigEntry<int> StatFontSize { get; set; }
+    public static ConfigEntry<int> InspectDescriptionFontSize { get; set; }
     public static ConfigEntry<bool> StyleItemPanel { get; set; } // Advanced
     public static ConfigEntry<bool> AddContainerButtons { get; set; } // Advanced
 
@@ -227,6 +230,15 @@ internal partial class Settings
             new ConfigDescription(
                 "Allow the context menu to work while searching",
                 null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(ContextMenuFontSize = config.Bind(
+            Section.Interface,
+            "Context Menu Font Size",
+            11,
+            new ConfigDescription(
+                "The font size of the context menu. Also controls the buttons in inspect windows.",
+                new AcceptableValueRange<int>(8, 16),
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ShortenKeyBinds = config.Bind(
@@ -1058,6 +1070,24 @@ internal partial class Settings
             new ConfigDescription(
                 "Keybind to snap the inspect panel to the right half of the screen",
                 null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(StatFontSize = config.Bind(
+            Section.InspectWindows,
+            "Stats Font Size",
+            11,
+            new ConfigDescription(
+                "The font size of the statistics text. Limited by how much space there is.",
+                new AcceptableValueRange<int>(8, 20),
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(InspectDescriptionFontSize = config.Bind(
+            Section.InspectWindows,
+            "Description Font Size",
+            13,
+            new ConfigDescription(
+                "The font size of the description text",
+                new AcceptableValueRange<int>(8, 36),
                 new ConfigurationManagerAttributes { })));
 
         configEntries.Add(StyleItemPanel = config.Bind(

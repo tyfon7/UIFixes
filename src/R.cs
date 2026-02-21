@@ -211,7 +211,7 @@ public static class R
         public static void Refresh(IEnumerable<KeyValuePair<ItemAttributeClass, EFT.UI.CompactCharacteristicPanel>> viewList, IReadOnlyCollection<ItemAttributeClass> changedList) => RefreshMethod.Invoke(null, [viewList, changedList]);
     }
 
-    public class CompactCharacteristicPanel(object value) : Wrapper(value)
+    public class CompactCharacteristicPanel(object value) : UIElement(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo ItemAttributeField;
@@ -317,7 +317,7 @@ public static class R
         public SimpleContextMenuButton ContextMenuButton { get { return (SimpleContextMenuButton)ContextMenuButtonField.GetValue(Value); } }
     }
 
-    public class ContextMenuButton(object value) : Wrapper(value)
+    public class ContextMenuButton(object value) : UIElement(value)
     {
         public static Type Type { get; private set; }
         private static FieldInfo TextField;

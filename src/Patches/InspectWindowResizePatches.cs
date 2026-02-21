@@ -6,6 +6,7 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +31,9 @@ internal static class InspectWindowResizePatches
         new AddInspectWindowButtonsPatch().Enable();
         new GrowInspectWindowDescriptionPatch().Enable();
         new LeftRightKeybindsPatch().Enable();
+
+        new StatFontSizePatch().Enable();
+        new DescriptionFontSizePatch().Enable();
     }
 
     public class SaveInspectWindowSizePatch : ModulePatch
@@ -276,6 +280,38 @@ internal static class InspectWindowResizePatches
             {
                 SnapRight(__instance);
             }
+        }
+    }
+
+    public class StatFontSizePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(CompactCharacteristicPanel), nameof(CompactCharacteristicPanel.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___NameText, TextMeshProUGUI ___ValueText)
+        {
+            __instance.R().UI.AddDisposable(Settings.StatFontSize.Bind(fontSize =>
+            {
+                ___NameText.fontSize = fontSize;
+                ___ValueText.fontSize = fontSize;
+            }));
+        }
+    }
+
+    public class DescriptionFontSizePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ItemInfoWindowLabels), nameof(ItemInfoWindowLabels.Show));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(ItemInfoWindowLabels __instance, TextMeshProUGUI ____description)
+        {
+            __instance.R().UI.AddDisposable(Settings.InspectDescriptionFontSize.Bind(fontSize => ____description.fontSize = fontSize));
         }
     }
 }
