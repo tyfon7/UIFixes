@@ -757,6 +757,21 @@ public static class SwapPatches
             }
 
             var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
+            if (result.Failed && result.Error is MoveResizeError)
+            {
+                // When the slot is a weapon mod slot and this swap would trigger a resize, the resize left/up code needs to run
+                Item weapon = itemToAddress.GetRootItemNotEquipment();
+                if (weapon != null)
+                {
+                    WeaponModdingPatches.TryMoving(
+                        weapon,
+                        itemController,
+                        simulate,
+                        ref result,
+                        () => InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate));
+                }
+            }
+
             operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
             return result.Succeeded;
         }

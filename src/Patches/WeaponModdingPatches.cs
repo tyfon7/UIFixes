@@ -25,6 +25,7 @@ public static class WeaponModdingPatches
         new MoveBeforeResizePatch().Enable();
         new MoveBeforeUnfoldPatch().Enable();
         new MoveOperationRollbackPatch().Enable();
+        new SwapOperationRollbackPatch().Enable();
         new MoveBeforeNetworkTransactionPatch().Enable();
 
         new SwapModsPatch().Enable();
@@ -46,7 +47,7 @@ public static class WeaponModdingPatches
         new DisassembleAllPatch().Enable();
     }
 
-    public struct ResizeData
+    public class ResizeData
     {
         public MongoID ItemId;
         public XYCellSizeStruct OldSize;
@@ -55,7 +56,7 @@ public static class WeaponModdingPatches
 
     public class LastResizePatch : ModulePatch
     {
-        public static ResizeData LastResize;
+        public static ResizeData LastResize = null;
 
         protected override MethodBase GetTargetMethod()
         {
@@ -65,6 +66,12 @@ public static class WeaponModdingPatches
         [PatchPostfix]
         public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize)
         {
+            // Only record growths, not reductions
+            if (newSize.X <= oldSize.X && newSize.Y <= oldSize.Y)
+            {
+                return;
+            }
+
             LocationInGrid itemLocation = __instance.GetItemLocation(item);
 
             // The sizes passed in are the template sizes, need to make match the item's rotation
@@ -146,10 +153,10 @@ public static class WeaponModdingPatches
         }
     }
 
-    private static void TryMoving<T>(Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<T> __result, Func<GStruct154<T>> func) where T : IRaiseEvents
+    public static void TryMoving<T>(Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<T> __result, Func<GStruct154<T>> func) where T : IRaiseEvents
     {
         ResizeData resize = LastResizePatch.LastResize;
-        if (targetItem.Id != resize.ItemId || targetItem.Parent is not GridItemAddress gridItemAddress)
+        if (resize == null || targetItem.Id != resize.ItemId || targetItem.Parent is not GridItemAddress gridItemAddress)
         {
             return;
         }
@@ -232,6 +239,21 @@ public static class WeaponModdingPatches
         }
     }
 
+    public class SwapOperationRollbackPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(SwapOperation), nameof(SwapOperation.RollBack));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(SwapOperation __instance)
+        {
+            MoveOperation moveOperation = __instance.GetExtraMoveOperation();
+            moveOperation?.RollBack();
+        }
+    }
+
     public class MoveBeforeNetworkTransactionPatch : ModulePatch
     {
         private static bool InPatch = false;
@@ -249,16 +271,7 @@ public static class WeaponModdingPatches
                 return true;
             }
 
-            MoveOperation extraOperation = null;
-            if (operationResult is MoveOperation moveOperation)
-            {
-                extraOperation = moveOperation.GetExtraMoveOperation();
-            }
-            else if (operationResult is FoldOperation foldOperation)
-            {
-                extraOperation = foldOperation.GetExtraMoveOperation();
-            }
-
+            MoveOperation extraOperation = operationResult.GetExtraMoveOperation();
             if (extraOperation == null)
             {
                 return true;
@@ -311,6 +324,10 @@ public static class WeaponModdingPatches
             if (!simulate)
             {
                 __instance.InventoryController_0.TryRunNetworkTransaction(operation, null);
+            }
+            else
+            {
+                operation.Value.RollBack();
             }
 
             error = null;
