@@ -56,7 +56,7 @@ public static class StashSearchPatches
         [PatchPostfix]
         public static void Postfix(ToggleEFT ____searchTab)
         {
-            if (____searchTab == null)
+            if (____searchTab == null || Plugin.InRaid())
             {
                 return;
             }
@@ -119,7 +119,7 @@ public static class StashSearchPatches
         [PatchPostfix]
         private static void Prefix(ItemContextAbstractClass itemContext, ItemInfoInteractionsAbstractClass<EItemInfoButton> __result)
         {
-            if (!Settings.StashSearchContextMenu.Value)
+            if (!Settings.StashSearchContextMenu.Value || Plugin.InRaid())
             {
                 return;
             }
@@ -166,6 +166,11 @@ public static class StashSearchPatches
         [PatchPostfix]
         public static void Postfix(string key, SimpleContextMenuButton __result)
         {
+            if (Plugin.InRaid())
+            {
+                return;
+            }
+
             if (key == EItemInfoButton.NeededSearch.ToString())
             {
                 TargetSibling = __result.Transform;
