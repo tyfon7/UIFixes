@@ -311,7 +311,13 @@ internal static class InspectWindowResizePatches
         [PatchPostfix]
         public static void Postfix(ItemInfoWindowLabels __instance, TextMeshProUGUI ____description)
         {
-            __instance.R().UI.AddDisposable(Settings.InspectDescriptionFontSize.Bind(fontSize => ____description.fontSize = fontSize));
+            __instance.R().UI.AddDisposable(Settings.InspectDescriptionFontSize.Bind(fontSize =>
+            {
+                if (____description != null)
+                {
+                    ____description.fontSize = fontSize;
+                }
+            }));
         }
     }
 }

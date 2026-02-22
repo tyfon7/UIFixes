@@ -74,7 +74,7 @@ Existing SPT features made better
 - Option to keep the Add Offer window open after placing your offer
 - Set prices in the Add Offer window by clicking the min/avg/max market prices (multiplies for bulk orders)
 - Autoselect Similar checkbox is remembered across sessions and application restarts
-- Replace barter offers icons with actual item images, plus owned/required counts on expansion, ✨ color-coded if you own the items needed
+- Replace barter offers icons with actual item images, plus owned/required counts on expansion, color-coded if you own the items needed
 - Clears filters for you when you type in search bar and there's no match
 
 #### Weapon modding/presets
