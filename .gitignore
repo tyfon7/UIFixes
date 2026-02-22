@@ -399,3 +399,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 /libs
+
+# AI stuff
+.claude/
