@@ -290,10 +290,27 @@ public static class WeaponModdingPatches
                 }
 
                 ItemUiContext.Instance.WaitOneFrame(() => __instance.RunNetworkTransaction(operationResult, result =>
+                {
+                    InPatch = false;
+                    callback?.Invoke(result);
+
+                    // No real elegant way to do this, but if one of these screens is active, refresh the weapon
+                    // This is necessary because those screens make changes and don't wait for network results, 
+                    // and with this compound operation that's needed
+                    var moddingScreen = Singleton<CommonUI>.Instance.WeaponModdingScreen;
+                    if (moddingScreen != null && moddingScreen.isActiveAndEnabled)
                     {
-                        InPatch = false;
-                        callback?.Invoke(result);
-                    }));
+                        moddingScreen.WeaponUpdate();
+                        return;
+                    }
+
+                    var editBuildScreen = Singleton<CommonUI>.Instance.EditBuildScreen;
+                    if (editBuildScreen != null && editBuildScreen.isActiveAndEnabled)
+                    {
+                        moddingScreen.WeaponUpdate();
+                        return;
+                    }
+                }));
             });
 
             return false;
