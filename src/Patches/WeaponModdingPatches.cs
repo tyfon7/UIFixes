@@ -325,10 +325,6 @@ public static class WeaponModdingPatches
             {
                 __instance.InventoryController_0.TryRunNetworkTransaction(operation, null);
             }
-            else
-            {
-                operation.Value.RollBack();
-            }
 
             error = null;
             __result = true;
