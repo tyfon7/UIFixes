@@ -226,6 +226,7 @@ public static class MultiSelectPatches
         }
 
         [PatchPrefix]
+        [HarmonyPriority(Priority.Last)] // Run last so that other click handlers run before I potentially clear the multi-select
         public static bool Prefix(GridItemView __instance, PointerEventData.InputButton button, ItemUiContext ___ItemUiContext, TraderControllerClass ___ItemController)
         {
             if (!MultiSelect.Active || button != PointerEventData.InputButton.Left || ___ItemUiContext == null || !__instance.IsSearched)
