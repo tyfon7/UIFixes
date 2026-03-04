@@ -36,6 +36,8 @@ global using LeftHandController = GClass2725;
 global using QuestController = GClass4005;
 global using WindowContext = GClass3829;
 global using WindowData = EFT.UI.ItemUiContext.Class2918;
+global using QuickBindCommandMap = GClass3744;
+global using BattleUIQuickbarManager = EFT.UI.EftBattleUIScreen.GClass3867;
 
 // Context menus
 global using InventoryInteractions = GClass3757; // There are two child versions?
