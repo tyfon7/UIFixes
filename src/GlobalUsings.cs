@@ -92,6 +92,7 @@ global using DiscardOperation = GClass3408;
 global using TransferOperation = GClass3425;
 global using BindOperation = GClass3431;
 global using UnbindOperation = GClass3432;
+global using PinOperation = GClass3534;
 global using TargetItemOperation = TraderControllerClass.Struct897;
 
 // Interfaces

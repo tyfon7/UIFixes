@@ -60,6 +60,8 @@ public static class MultiSelectPatches
         new DisableSplitPatch().Enable();
         new DisableSplitTargetPatch().Enable();
         new DisableMagnifyPatch().Enable();
+        new MoveOperationDontForgetAboutPinsPatch().Enable();
+        new RememberPinOperationsPatch().Enable();
 
         // Actions
         new ItemViewClickPatch().Enable();
@@ -656,6 +658,61 @@ public static class MultiSelectPatches
         public static bool Prefix()
         {
             return !DisableMagnify;
+        }
+    }
+
+    // InteractionsHandlerClass.Move doesn't properly rollback pin changes in the case of errors. The pin changes get remembered by the MoveOperation,
+    // but if there is an error before that object is created, the list of pin operations is dropped on the ground
+    private static readonly Stack<IRollback> MovePinOperations = [];
+
+    public class MoveOperationDontForgetAboutPinsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Move));
+        }
+
+        [PatchPrefix]
+        public static void Prefix()
+        {
+            RememberPinOperationsPatch.Enabled = true;
+        }
+
+        [PatchPostfix]
+        public static void Postfix(GStruct154<MoveOperation> __result, bool simulate)
+        {
+            if (!simulate && __result.Failed)
+            {
+                while (MovePinOperations.Count > 0)
+                {
+                    MovePinOperations.Pop().RollBack();
+                }
+            }
+            else
+            {
+                MovePinOperations.Clear();
+            }
+
+            RememberPinOperationsPatch.Enabled = false;
+        }
+    }
+
+    public class RememberPinOperationsPatch : ModulePatch
+    {
+        public static bool Enabled = false;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.SetPinLockState));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(GStruct154<PinOperation> __result, bool simulate)
+        {
+            if (Enabled && !simulate && __result.Succeeded)
+            {
+                MovePinOperations.Push(__result.Value);
+            }
         }
     }
 
