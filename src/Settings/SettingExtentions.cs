@@ -88,11 +88,14 @@ public static class SettingExtensions
 
     public static void DependOn(this ConfigEntry<bool> dependentConfig, ConfigEntry<bool> primaryConfig, bool primaryEnablesDependent = true)
     {
+        // Bind runs this handler on startup, because I need to disable the dependentConfig if the primary is disabled. 
+        // But I don't want that to enable the dependent, even with that option, because load isn't the same as toggling it.
+        bool firstRun = true;
         primaryConfig.Bind(value =>
         {
             if (value)
             {
-                if (primaryEnablesDependent)
+                if (primaryEnablesDependent && !firstRun)
                 {
                     dependentConfig.Value = true;
                 }
@@ -103,6 +106,8 @@ public static class SettingExtensions
             }
 
             dependentConfig.SetReadonly(!value, $"Requires {primaryConfig.Definition.Key}");
+
+            firstRun = false;
         });
     }
 
