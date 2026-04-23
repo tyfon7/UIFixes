@@ -115,6 +115,7 @@ public class Plugin : BaseUnityPlugin
         new FixTraderFiltersPatch().Enable();
         QuickMovePreviewPatches.Enable();
         new RotateKeybindPatch().Enable();
+        new HideInviteUIPatch().Enable();
     }
 
     public void Start()

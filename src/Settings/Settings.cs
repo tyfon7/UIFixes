@@ -21,6 +21,7 @@ internal partial class Settings
     public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
     public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
     public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
+    public static ConfigEntry<bool> ShowGroupInvitePanel { get; set; } // Advanced
 
     // Dialogs
     public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
@@ -301,6 +302,15 @@ internal partial class Settings
             false,
             new ConfigDescription(
                 "For some reason vanilla EFT shows the Load From Preset context menu on bullets. It serves no purpose",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
+
+        configEntries.Add(ShowGroupInvitePanel = config.Bind(
+            Section.Interface,
+            "Show Group Panel",
+            false,
+            new ConfigDescription(
+                "Show the group panel on the main task bar. Requires restart. Note that it doesn't work, throws errors, and serves no purpose in SPT.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true })));
 
