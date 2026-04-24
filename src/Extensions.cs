@@ -27,7 +27,7 @@ public static class Extensions
 
     public static bool IsObserved(this InventoryController controller)
     {
-        return controller != null && controller.GetType().FullName == "Fika.Core.Coop.ObservedClasses.ObservedInventoryController";
+        return controller != null && controller.GetType().FullName == "Fika.Core.Main.ObservedClasses.ObservedInventoryController";
     }
 
     public static void AutoExpandCategories(this BrowseCategoriesPanel panel)
