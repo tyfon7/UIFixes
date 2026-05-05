@@ -877,7 +877,7 @@ internal partial class Settings
             "Always Reload Magazines In-Place",
             false,
             new ConfigDescription(
-                "Always reload magazines in-place, even if there's space not to. Note that in-place reloads are slower.",
+                "Force the reload to always be in-place, even if there's space to reload normally. Note that in-place reloads are slower.",
                 null,
                 new ConfigurationManagerAttributes { })));
 
