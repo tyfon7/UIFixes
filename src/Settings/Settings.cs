@@ -50,6 +50,7 @@ internal partial class Settings
 
     // Mouse
     public static ConfigEntry<bool> UnlockCursor { get; set; }
+    public static ConfigEntry<bool> WeaponZoomScroll { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
     public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
     public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
@@ -512,6 +513,15 @@ internal partial class Settings
             true,
             new ConfigDescription(
                 "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take effect.",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(WeaponZoomScroll = config.Bind(
+            Section.Mouse,
+            "Enable Weapon Preview Zoom",
+            true,
+            new ConfigDescription(
+                "Enable zooming in and out on weapon previews using the mouse wheel",
                 null,
                 new ConfigurationManagerAttributes { })));
 

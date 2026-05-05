@@ -32,6 +32,11 @@ public static class WeaponZoomPatches
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
             scrollTrigger.OnOnScroll += eventData =>
             {
+                if (!Settings.WeaponZoomScroll.Value)
+                {
+                    return;
+                }
+
                 if (____weaponPreview != null && __instance != null)
                 {
                     ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
@@ -51,6 +56,11 @@ public static class WeaponZoomPatches
         [PatchPrefix]
         public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
         {
+            if (!Settings.WeaponZoomScroll.Value)
+            {
+                return;
+            }
+
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
             scrollTrigger.OnOnScroll += eventData =>
             {
