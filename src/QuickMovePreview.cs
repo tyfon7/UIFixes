@@ -146,7 +146,10 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
 
         var targetSlotView = _itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
-        HighlightSlot(targetSlotView);
+        if (targetSlotView != null)
+        {
+            HighlightSlot(targetSlotView);
+        }
     }
 
     private void HighlightGridLocation(GridView gridView, GridItemAddress gridAddress)
