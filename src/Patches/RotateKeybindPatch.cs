@@ -17,6 +17,11 @@ public class RotateKeybindPatch : ModulePatch
     [PatchPrefix]
     public static bool Prefix(DraggedItemView __instance, IContainer ___iContainer, ItemContextAbstractClass ___itemContextAbstractClass)
     {
+        if (Settings.RotateKeyBind.Value.MainKey == KeyCode.None)
+        {
+            return true;
+        }
+
         if (Settings.RotateKeyBind.Value.IsDown())
         {
             __instance.method_2((__instance.ItemContext.ItemRotation == ItemRotation.Horizontal) ? ItemRotation.Vertical : ItemRotation.Horizontal);
