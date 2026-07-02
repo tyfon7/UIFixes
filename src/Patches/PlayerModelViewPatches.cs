@@ -56,8 +56,8 @@ public static class PlayerModelViewPatches
 
 			var scrollTrigger = ____dragTrigger.gameObject.AddComponent<ScrollTrigger>();
 
-			____dragTrigger.onDrag += (pointerData) => RotatePanCamera(pointerData, __instance, cameraTransform);
-			scrollTrigger.OnOnScroll += (pointerData) => ZoomCamera(pointerData, cameraTransform);
+			____dragTrigger.onDrag += (eventData) => RotatePanCamera(eventData, __instance, cameraTransform);
+			scrollTrigger.OnOnScroll += (eventData) => ZoomCamera(eventData, cameraTransform);
 
 			___UI.AddDisposable(delegate
 			{
@@ -84,9 +84,9 @@ public static class PlayerModelViewPatches
 			return false;
 		}
 
-		public static void ZoomCamera(PointerEventData pointerData, Transform cameraTransform)
+		public static void ZoomCamera(PointerEventData eventData, Transform cameraTransform)
 		{
-			var zoom = pointerData.scrollDelta.y * 0.12f;
+			var zoom = eventData.scrollDelta.y * 0.12f;
 
             cameraTransform.Translate(Vector3.forward * zoom);
 
@@ -95,21 +95,21 @@ public static class PlayerModelViewPatches
             cameraTransform.localPosition = localPosition;
 		}
 
-		public static void RotatePanCamera(PointerEventData pointerData, InventoryPlayerModelWithStatsWindow __instance, Transform cameraTransform)
+		public static void RotatePanCamera(PointerEventData eventData, InventoryPlayerModelWithStatsWindow __instance, Transform cameraTransform)
 		{
-			if (pointerData.button == PointerEventData.InputButton.Left)
+			if (eventData.button == PointerEventData.InputButton.Left)
 			{
 				// rotate
-				__instance.method_4(pointerData);
+				__instance.method_4(eventData);
 			}
-			if (pointerData.button == PointerEventData.InputButton.Middle)
+			if (eventData.button == PointerEventData.InputButton.Middle)
 			{
 				// pan
 				var baseSpeed = 0.001f;
 	            var currentZ = cameraTransform.localPosition.z;
 	            var zoomFactor = GetZoomFactor(currentZ);
 	            var currentPanSpeed = baseSpeed * zoomFactor;
-	            var deltaMove = pointerData.delta.y * currentPanSpeed * -1;
+	            var deltaMove = eventData.delta.y * currentPanSpeed * -1;
 				cameraTransform.Translate(Vector3.up * deltaMove);
 
 	            var localPosition = cameraTransform.localPosition;
