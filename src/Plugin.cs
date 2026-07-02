@@ -48,6 +48,7 @@ public class Plugin : BaseUnityPlugin
         SwapPatches.Enable();
         SyncScrollPositionPatches.Enable();
         new TransferConfirmPatch().Enable();
+        PlayerModelViewPatches.Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
         new MoveTaskbarPatch().Enable();

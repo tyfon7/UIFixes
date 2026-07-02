@@ -16,6 +16,7 @@ using SPT.Reflection.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace UIFixes;
 
@@ -67,6 +68,8 @@ public static class R
         LightScroller.InitTypes();
         ModSlotView.InitTypes();
         ItemContext.InitTypes();
+        DragTrigger.InitTypes();
+        ScrollTrigger.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -867,6 +870,44 @@ public static class R
             return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value);
         }
     }
+
+    public class DragTrigger(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo onDragField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.DragTrigger);
+
+            onDragField = AccessTools.Field(Type, "onDrag");
+        }
+
+        public Action<PointerEventData> onDrag
+        {
+            get { return (Action<PointerEventData>)onDragField.GetValue(Value); }
+            set { onDragField.SetValue(Value, value); }
+        }
+    }
+
+    public class ScrollTrigger(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo OnOnScrollBackingField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.ScrollTrigger);
+
+            OnOnScrollBackingField = AccessTools.Field(Type, "action_0");
+        }
+
+        public Action<PointerEventData> action_0
+        {
+            get { return (Action<PointerEventData>)OnOnScrollBackingField.GetValue(Value); }
+            set { OnOnScrollBackingField.SetValue(Value, value); }
+        }
+    }
 }
 
 public static class RExtentensions
@@ -904,4 +945,6 @@ public static class RExtentensions
     public static R.LightScroller R(this LightScroller value) => new(value);
     public static R.ModSlotView R(this ModSlotView value) => new(value);
     public static R.ItemContext R(this ItemContextAbstractClass value) => new(value);
+    public static R.DragTrigger R(this DragTrigger value) => new(value);
+    public static R.ScrollTrigger R(this ScrollTrigger value) => new(value);
 }
