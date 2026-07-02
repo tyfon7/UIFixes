@@ -31,21 +31,7 @@ public static class LimitDragPatches
         [PatchPrefix]
         public static bool Prefix(PointerEventData eventData)
         {
-            if (!Settings.LimitNonstandardDrags.Value)
-            {
-                return true;
-            }
-            if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                return !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
-            }
-            if (eventData.button == PointerEventData.InputButton.Middle)
-            {
-                // allow middle button to pan character in overall screen
-                return true;
-            }
-
-            return false;
+            return !Settings.LimitNonstandardDrags.Value || eventData.button == PointerEventData.InputButton.Left && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
         }
     }
 }
