@@ -105,27 +105,14 @@ public static class PlayerModelViewPatches
 			if (eventData.button == PointerEventData.InputButton.Middle)
 			{
 				// pan
-				var baseSpeed = 0.001f;
-	            var currentZ = cameraTransform.localPosition.z;
-	            var zoomFactor = GetZoomFactor(currentZ);
+				var baseSpeed = (0.00056f * 1080f) / Screen.height;
+                var zoomFactor = Mathf.Abs(cameraTransform.localPosition.z - 5);
 	            var currentPanSpeed = baseSpeed * zoomFactor;
-	            var deltaMove = eventData.delta.y * currentPanSpeed * -1;
-				cameraTransform.Translate(Vector3.up * deltaMove);
-
-	            var localPosition = cameraTransform.localPosition;
-	            localPosition.y = Mathf.Clamp(localPosition.y, MIN_Y, MAX_Y);
-	            cameraTransform.localPosition = localPosition;
+                var deltaMove = cameraTransform.up * (eventData.delta.y * currentPanSpeed * -1);
+                var newPosition = cameraTransform.localPosition + deltaMove;
+	            newPosition.y = Mathf.Clamp(newPosition.y, MIN_Y, MAX_Y);
+	            cameraTransform.localPosition = newPosition;
 			}
-		}
-
-		public static float GetZoomFactor(float x)
-		{
-			// approximation of: (yes, I hand picked those)
-			// x: 0.49 1.09 1.57 1.81 2.05 3.13 3.73 4.00 4.33 4.57 4.69
-			// y: 2.68 2.33 1.98 1.9 1.67 1 0.65 0.4925 0.33 0.2 0.13
-			var x3 = x * x * x;
-			var x2 = x * x;
-			return 0.0082f * x3 - 0.0491f * x2 - 0.5536f * x + 2.9671f;
 		}
 	}
 }
