@@ -26,7 +26,7 @@ public static class WeaponPanPatches
         var camera = weaponPreview.WeaponPreviewCamera;
         var cameraTransform = camera.transform;
 
-        var baseSpeed = 0.378f / Screen.height; // 0.378 = 0.00035 * 1080
+        var baseSpeed = (0.00035f * 1080f) / Screen.height;
         var zoomFactor = Mathf.Abs(cameraTransform.localPosition.z);
         var currentPanSpeed = baseSpeed * zoomFactor;
         var deltaMove =
