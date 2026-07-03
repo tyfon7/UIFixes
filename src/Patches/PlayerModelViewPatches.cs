@@ -86,13 +86,16 @@ public static class PlayerModelViewPatches
 
 		public static void ZoomCamera(PointerEventData eventData, Transform cameraTransform)
 		{
-			var zoom = eventData.scrollDelta.y * 0.12f;
+            if (Settings.CharacterPanZoom.Value)
+            {
+    			var zoom = eventData.scrollDelta.y * 0.12f;
 
-            cameraTransform.Translate(Vector3.forward * zoom);
+                cameraTransform.Translate(Vector3.forward * zoom);
 
-            var localPosition = cameraTransform.localPosition;
-            localPosition.z = Mathf.Clamp(localPosition.z, MAX_ZOOM_OUT_Z, MAX_ZOOM_IN_Z);
-            cameraTransform.localPosition = localPosition;
+                var localPosition = cameraTransform.localPosition;
+                localPosition.z = Mathf.Clamp(localPosition.z, MAX_ZOOM_OUT_Z, MAX_ZOOM_IN_Z);
+                cameraTransform.localPosition = localPosition;
+            }
 		}
 
 		public static void RotatePanCamera(PointerEventData eventData, InventoryPlayerModelWithStatsWindow __instance, Transform cameraTransform)
@@ -102,7 +105,7 @@ public static class PlayerModelViewPatches
 				// rotate
 				__instance.method_4(eventData);
 			}
-			if (eventData.button == PointerEventData.InputButton.Middle)
+			if (Settings.CharacterPanZoom.Value && eventData.button == PointerEventData.InputButton.Middle)
 			{
 				// pan
 				var baseSpeed = (0.00056f * 1080f) / Screen.height;
