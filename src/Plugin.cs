@@ -50,6 +50,7 @@ public class Plugin : BaseUnityPlugin
         new TransferConfirmPatch().Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
+        WeaponPreviewPatches.Enable();
         new MoveTaskbarPatch().Enable();
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
