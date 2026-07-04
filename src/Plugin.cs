@@ -12,6 +12,8 @@ namespace UIFixes;
 
 [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("xyz.pit.fireteam", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("com.lacyway.mc", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("com.bepis.bepinex.configurationmanager", BepInDependency.DependencyFlags.HardDependency)]
 public class Plugin : BaseUnityPlugin
 {
@@ -182,5 +184,18 @@ public class Plugin : BaseUnityPlugin
         }
 
         return IsMergeConsumablesPresent.Value;
+    }
+
+    private static bool? IsPITFireteamPresent;
+
+    public static bool PITFireteamPresent()
+    {
+        if (!IsPITFireteamPresent.HasValue)
+        {
+            IsPITFireteamPresent = Chainloader.PluginInfos.ContainsKey("xyz.pit.fireteam");
+            Instance.Logger.LogInfo($"PIT Fireteam: {IsPITFireteamPresent.Value}");
+        }
+
+        return IsPITFireteamPresent.Value;
     }
 }

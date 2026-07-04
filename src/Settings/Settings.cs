@@ -1451,6 +1451,8 @@ internal partial class Settings
         PrioritizeSmallerGrids.DependOn(ReorderGrids, false);
 
         ModifyEquippedPlates.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
+
+        ShowGroupInvitePanel.Force(Plugin.PITFireteamPresent(), "PIT Fireteam is present");
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
