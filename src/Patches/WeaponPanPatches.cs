@@ -36,23 +36,23 @@ public static class WeaponPanPatches
             cameraTransform.right * (eventData.delta.x * currentPanSpeed) +
             cameraTransform.up * (eventData.delta.y * currentPanSpeed);
 
-        // move weapon in camera plane, but not too far away,
+        // move weapon in camera plane
         previewPivot.position += deltaMove;
 
 
         // we change rotation origin, so player can rotate weapon around
         // weapon part thats in front of him, not global origin,
-        // we calculate it as intersection of camera ray and weapon plane
+        // we calculate it as an intersection of camera ray and weapon plane
         var newRotatorPosition = GetWeaponHitPoint(previewPivot, cameraTransform);
         var rotatorDistance = newRotatorPosition - previewPivot.position;
         if (rotatorDistance.sqrMagnitude > panLimit * panLimit)
         {
             // if newRotatorPosition is too far, rotations turn unreasonably wide,
-            // this happens when weapon is viewed at acute angles
+            // this happens when weapon is viewed at acute angles, so clamp rotation origin
             newRotatorPosition = previewPivot.position + rotatorDistance.normalized * panLimit;
         }
 
-        // we change rotation origin, while keeping weapon position on screen the same
+        // change rotation origin, while keeping weapon position on screen the same
         var originOffset = newRotatorPosition - rotator.position;
         rotator.position = newRotatorPosition;
         previewPivot.position -= originOffset;
@@ -60,8 +60,10 @@ public static class WeaponPanPatches
 
         // multiple rotations around different origins can shift weapon pretty
         // far from weapon preview light (turns out its not directional),
-        // which results in visible darker weapon, so move new origin to (0, 0, 0),
+        // which results in visibly darker weapon, so move new origin to (0, 0, 0),
         // and shift camera accordingly to keep weapon in the same spot on screen.
+        // Another option is keeping PreviewPivot at (0, 0, 0), but it makes light
+        // shifting very noticable
 
         cameraTransform.position -= rotator.position;
         rotator.position = Vector3.zero;
