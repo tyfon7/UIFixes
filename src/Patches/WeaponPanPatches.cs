@@ -26,18 +26,65 @@ public static class WeaponPanPatches
         var camera = weaponPreview.WeaponPreviewCamera;
         var cameraTransform = camera.transform;
 
+        var previewPivot = weaponPreview.R().PreviewPivot;
+        var rotator = weaponPreview.Rotator;
+
         var baseSpeed = (0.00035f * 1080f) / Screen.height;
-        var zoomFactor = Mathf.Abs(cameraTransform.localPosition.z);
+        var zoomFactor = (cameraTransform.position - previewPivot.position).magnitude;
         var currentPanSpeed = baseSpeed * zoomFactor;
         var deltaMove =
-            cameraTransform.right * (eventData.delta.x * currentPanSpeed * -1) +
-            cameraTransform.up * (eventData.delta.y * currentPanSpeed * -1);
+            cameraTransform.right * (eventData.delta.x * currentPanSpeed) +
+            cameraTransform.up * (eventData.delta.y * currentPanSpeed);
 
-        var newPosition = cameraTransform.localPosition + deltaMove;
-        newPosition.x = Mathf.Clamp(newPosition.x, -panLimit, panLimit);
-        newPosition.y = Mathf.Clamp(newPosition.y, -panLimit, panLimit);
+        // move weapon in camera plane, but not too far away,
+        previewPivot.position += deltaMove;
 
-        cameraTransform.localPosition = newPosition;
+
+        // we change rotation origin, so player can rotate weapon around
+        // weapon part thats in front of him, not global origin,
+        // we calculate it as intersection of camera ray and weapon plane
+        var newRotatorPosition = GetWeaponHitPoint(previewPivot, cameraTransform);
+        var rotatorDistance = newRotatorPosition - previewPivot.position;
+        if (rotatorDistance.sqrMagnitude > panLimit * panLimit)
+        {
+            // if newRotatorPosition is too far, rotations turn unreasonably wide,
+            // this happens when weapon is viewed at acute angles
+            newRotatorPosition = previewPivot.position + rotatorDistance.normalized * panLimit;
+        }
+
+        // we change rotation origin, while keeping weapon position on screen the same
+        var originOffset = newRotatorPosition - rotator.position;
+        rotator.position = newRotatorPosition;
+        previewPivot.position -= originOffset;
+
+
+        // multiple rotations around different origins can shift weapon pretty
+        // far from weapon preview light (turns out its not directional),
+        // which results in visible darker weapon, so move new origin to (0, 0, 0),
+        // and shift camera accordingly to keep weapon in the same spot on screen.
+
+        cameraTransform.position -= rotator.position;
+        rotator.position = Vector3.zero;
+
+
+        // clamp camera offset in XY plane to keep weapon in sight
+        var cameraPosition = cameraTransform.position;
+        var cameraPositionXY = cameraPosition;
+        cameraPositionXY.z = 0;
+        if (cameraPositionXY.sqrMagnitude > panLimit * panLimit)
+        {
+            cameraPositionXY = cameraPositionXY.normalized * panLimit;
+            cameraTransform.position = new Vector3(cameraPositionXY.x, cameraPositionXY.y, cameraPosition.z);
+        }
+    }
+
+    public static Vector3 GetWeaponHitPoint(Transform previewPivot, Transform cameraTransform)
+    {
+        var plane = new Plane(previewPivot.right, previewPivot.position);
+        var cameraRay = new Ray(cameraTransform.position, cameraTransform.forward);
+        plane.Raycast(cameraRay, out var closestT);
+        var hitPoint = cameraRay.GetPoint(closestT);
+        return hitPoint;
     }
 
     public class EditBuildScreenPanPatch : ModulePatch

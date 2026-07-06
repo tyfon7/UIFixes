@@ -11,6 +11,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
+using EFT.UI.WeaponModding;
 using HarmonyLib;
 using SPT.Reflection.Utils;
 using TMPro;
@@ -67,6 +68,7 @@ public static class R
         LightScroller.InitTypes();
         ModSlotView.InitTypes();
         ItemContext.InitTypes();
+        WeaponPreview.InitTypes();
     }
 
     public abstract class Wrapper(object value)
@@ -867,6 +869,21 @@ public static class R
             return (ItemContextAbstractClass)ItemContextProperty.GetValue(Value);
         }
     }
+
+    public class WeaponPreview(object value) : Wrapper(value)
+    {
+        public static Type Type { get; private set; }
+        private static FieldInfo PreviewPivotField;
+
+        public static void InitTypes()
+        {
+            Type = typeof(EFT.UI.WeaponModding.WeaponPreview);
+
+            PreviewPivotField = AccessTools.Field(Type, "transform_2");
+        }
+
+        public Transform PreviewPivot { get { return (Transform)PreviewPivotField.GetValue(Value); } }
+    }
 }
 
 public static class RExtentensions
@@ -904,4 +921,5 @@ public static class RExtentensions
     public static R.LightScroller R(this LightScroller value) => new(value);
     public static R.ModSlotView R(this ModSlotView value) => new(value);
     public static R.ItemContext R(this ItemContextAbstractClass value) => new(value);
+    public static R.WeaponPreview R(this WeaponPreview value) => new(value);
 }
