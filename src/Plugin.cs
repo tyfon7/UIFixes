@@ -51,6 +51,7 @@ public class Plugin : BaseUnityPlugin
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
         WeaponPanPatches.Enable();
+        WeaponPreviewPatches.Enable();
         new MoveTaskbarPatch().Enable();
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
