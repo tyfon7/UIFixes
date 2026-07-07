@@ -529,10 +529,10 @@ internal partial class Settings
 
         configEntries.Add(WeaponPanDrag = config.Bind(
             Section.Mouse,
-            "Enable Weapon Preview Pan",
+            "Enable Edit Weapon Pan",
             true,
             new ConfigDescription(
-                "Enable panning on weapon previews using the mouse middle button",
+                "Enable panning on weapons on modding and build screens using the mouse middle button",
                 null,
                 new ConfigurationManagerAttributes { })));
 
