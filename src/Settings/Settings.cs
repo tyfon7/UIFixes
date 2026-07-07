@@ -528,7 +528,7 @@ internal partial class Settings
 
         configEntries.Add(CharacterPanZoom = config.Bind(
             Section.Mouse,
-            "Enable Character Preview Pan and Zoom",
+            "Enable Character Preview Pan/Zoom",
             true,
             new ConfigDescription(
                 "Enable panning and zooming in character overall screen",
