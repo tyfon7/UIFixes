@@ -53,6 +53,7 @@ public class Plugin : BaseUnityPlugin
         PlayerModelViewPatches.Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
+        WeaponPanPatches.Enable();
         WeaponPreviewPatches.Enable();
         new MoveTaskbarPatch().Enable();
         FixFleaPatches.Enable();
