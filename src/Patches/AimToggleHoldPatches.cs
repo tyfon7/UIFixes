@@ -94,6 +94,9 @@ public static class AimToggleHoldPatches
             if (__instance.GameKey == EGameKey.ReleaseTactical && ToggleHold.IsEnabled(EGameKey.Tactical))
             {
                 inputKeys = [];
+
+                // Force BSG's tactical mode to "press"
+                Singleton<SharedGameSettingsClass>.Instance.Game.Settings.TacticalInputMode.SetValue(GClass1085.ETacticalInputMode.Press);
             }
         }
 
@@ -107,24 +110,21 @@ public static class AimToggleHoldPatches
         }
     }
 
-    // If using toggle/hold tactical, need to force the "tactical device mode" to be press
+    // If using toggle/hold tactical, need to force the "tactical device mode" to be press.
     public class ForceTacticalModePatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(FirearmInputHandler), nameof(FirearmInputHandler.Boolean_0)).GetMethod;
+            return AccessTools.Property(typeof(FirearmInputHandler), nameof(FirearmInputHandler.Boolean_0)).SetMethod;
         }
 
         [PatchPrefix]
-        public static bool Prefix(ref bool __result)
+        public static void Prefix(ref bool value)
         {
             if (ToggleHold.IsEnabled(EGameKey.Tactical))
             {
-                __result = true;
-                return false;
+                value = true;
             }
-
-            return true;
         }
     }
 
@@ -150,6 +150,9 @@ public static class AimToggleHoldPatches
 
     private static void OnSettingChanged(object sender, EventArgs args)
     {
+        // Force BSG's tactical mode to "press"
+        Singleton<SharedGameSettingsClass>.Instance.Game.Settings.TacticalInputMode.SetValue(GClass1085.ETacticalInputMode.Press);
+
         // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
         Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
     }

@@ -35,16 +35,19 @@ public static class LimitDragPatches
             {
                 return true;
             }
+
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 return !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
             }
+
+            // allow middle button to pan
             if (eventData.button == PointerEventData.InputButton.Middle)
             {
-                // allow middle button to pan
                 return true;
             }
 
+            // right mouse (and anything else) disabled
             return false;
         }
     }

@@ -52,6 +52,7 @@ internal partial class Settings
     public static ConfigEntry<bool> UnlockCursor { get; set; }
     public static ConfigEntry<bool> WeaponZoomScroll { get; set; }
     public static ConfigEntry<bool> WeaponPanDrag { get; set; }
+    public static ConfigEntry<bool> CharacterPanZoom { get; set; }
     public static ConfigEntry<int> MouseScrollMulti { get; set; }
     public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
     public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
@@ -532,6 +533,15 @@ internal partial class Settings
             true,
             new ConfigDescription(
                 "Enable panning on weapon previews using the mouse middle button",
+                null,
+                new ConfigurationManagerAttributes { })));
+
+        configEntries.Add(CharacterPanZoom = config.Bind(
+            Section.Mouse,
+            "Enable Character Preview Pan/Zoom",
+            true,
+            new ConfigDescription(
+                "Enable panning and zooming in character overall screen",
                 null,
                 new ConfigurationManagerAttributes { })));
 
@@ -1461,6 +1471,8 @@ internal partial class Settings
         PrioritizeSmallerGrids.DependOn(ReorderGrids, false);
 
         ModifyEquippedPlates.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
+
+        ShowGroupInvitePanel.Force(Plugin.PITFireteamPresent(), "PIT Fireteam is present");
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
