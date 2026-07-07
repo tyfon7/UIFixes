@@ -31,7 +31,24 @@ public static class LimitDragPatches
         [PatchPrefix]
         public static bool Prefix(PointerEventData eventData)
         {
-            return !Settings.LimitNonstandardDrags.Value || eventData.button == PointerEventData.InputButton.Left && !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
+            if (!Settings.LimitNonstandardDrags.Value)
+            {
+                return true;
+            }
+
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                return !Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift);
+            }
+
+            // allow middle button to pan
+            if (eventData.button == PointerEventData.InputButton.Middle)
+            {
+                return true;
+            }
+
+            // right mouse (and anything else) disabled
+            return false;
         }
     }
 }

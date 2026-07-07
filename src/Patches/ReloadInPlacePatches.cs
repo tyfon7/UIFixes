@@ -157,6 +157,11 @@ public static class ReloadInPlacePatches
                 return true;
             }
 
+            if (____player.IsAI)
+            {
+                return true;
+            }
+
             if (__instance.Blindfire)
             {
                 return false;

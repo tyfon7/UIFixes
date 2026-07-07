@@ -122,6 +122,17 @@ public static class SettingExtensions
         }
     }
 
+    public static void Force(this ConfigEntry<bool> config, bool requirement, string explanation)
+    {
+        if (requirement)
+        {
+            Plugin.Instance.Logger.LogInfo($"Enabling '{config.Definition.Key}'; {explanation}");
+
+            config.Value = true;
+            config.SetReadonly(true, explanation);
+        }
+    }
+
     private static Action<ConfigEntryBase> MakeDisabledDrawer(string explanation)
     {
         // if (explanation.Length > 30)
