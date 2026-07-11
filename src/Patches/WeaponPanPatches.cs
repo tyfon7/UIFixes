@@ -1,5 +1,7 @@
 using System.Reflection;
+using EFT.InputSystem;
 using EFT.UI;
+using EFT.UI.Screens;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -10,6 +12,8 @@ namespace UIFixes;
 
 public static class WeaponPanPatches
 {
+    private static bool IsPanning = false;
+
     public static void Enable()
     {
         new EditBuildScreenPanPatch().Enable();
@@ -95,21 +99,7 @@ public static class WeaponPanPatches
         [PatchPrefix]
         public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview, CameraViewporter ____viewporter)
         {
-            if (____viewporter.TryGetComponent<DragTrigger>(out var dragTrigger))
-            {
-                dragTrigger.onDrag += eventData =>
-                {
-                    if (!Settings.WeaponPanDrag.Value)
-                    {
-                        return;
-                    }
-
-                    if (eventData.button == PointerEventData.InputButton.Middle && __instance && ____weaponPreview)
-                    {
-                        PanCamera(eventData, ____weaponPreview);
-                    }
-                };
-            }
+            SetupPanning(__instance, ____weaponPreview, ____viewporter);
         }
     }
 
@@ -123,24 +113,42 @@ public static class WeaponPanPatches
         [PatchPrefix]
         public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview, CameraViewporter ____viewporter)
         {
-            if (____viewporter.TryGetComponent<DragTrigger>(out var dragTrigger))
-            {
-                dragTrigger.onDrag += eventData =>
-                {
-                    if (!Settings.WeaponPanDrag.Value)
-                    {
-                        return;
-                    }
-
-                    if (eventData.button == PointerEventData.InputButton.Middle && __instance && ____weaponPreview)
-                    {
-                        PanCamera(eventData, ____weaponPreview);
-                    }
-                };
-            }
+            SetupPanning(__instance, ____weaponPreview, ____viewporter);
         }
     }
 
+    private static void SetupPanning(UIScreen screen, WeaponPreview weaponPreview, CameraViewporter viewporter)
+    {
+        if (viewporter.TryGetComponent<DragTrigger>(out var dragTrigger))
+        {
+            dragTrigger.onBeginDrag += eventData =>
+            {
+                IsPanning = eventData.button == PointerEventData.InputButton.Middle;
+            };
+
+            dragTrigger.onDrag += eventData =>
+            {
+                if (!Settings.WeaponPanDrag.Value)
+                {
+                    return;
+                }
+
+                if (eventData.button == PointerEventData.InputButton.Middle && screen != null && weaponPreview != null)
+                {
+                    PanCamera(eventData, weaponPreview);
+                }
+            };
+
+            dragTrigger.onEndDrag += eventData =>
+            {
+                IsPanning = false;
+            };
+        }
+    }
+
+    // Called from OnBeginDrag
+    // Stop cursor from being locked when panning
+    // Needed since LimitDragPatches allows middle mouse drag but locking cursor is only for rotate (left mouse)
     public class WeaponModdingScreenCursorPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -148,10 +156,13 @@ public static class WeaponPanPatches
             return AccessTools.Method(typeof(WeaponModdingScreen), nameof(WeaponModdingScreen.ShouldLockCursor));
         }
 
-        [PatchPrefix]
-        public static bool Prefix()
+        [PatchPostfix]
+        public static void Postfix(ref ECursorResult __result)
         {
-            return !Settings.WeaponPanDrag.Value;
+            if (IsPanning)
+            {
+                __result = ECursorResult.ShowCursor;
+            }
         }
     }
 }
