@@ -60,7 +60,9 @@ public static class PlayerModelViewPatches
             ____dragTrigger.onDrag += OnDrag;
             scrollTrigger.OnOnScroll += OnOnScroll;
 
-            ___UI.AddDisposable(() =>
+            // When clothes change, this screen doesn't get closed but the player view does.
+            // Cleaning up the handlers on the model's cleanup prevents them from piling up
+            ____playerModelView.R().UI.AddDisposable(() =>
             {
                 ____dragTrigger.onDrag -= OnDrag;
                 scrollTrigger.OnOnScroll -= OnOnScroll;
