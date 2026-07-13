@@ -196,7 +196,6 @@ public class Plugin : BaseUnityPlugin
         if (!IsPITFireteamPresent.HasValue)
         {
             IsPITFireteamPresent = Chainloader.PluginInfos.ContainsKey("xyz.pit.fireteam");
-            Instance.Logger.LogInfo($"PIT Fireteam: {IsPITFireteamPresent.Value}");
         }
 
         return IsPITFireteamPresent.Value;
