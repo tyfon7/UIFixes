@@ -52,11 +52,7 @@ public static class PlayerModelViewPatches
 
             ____rotator.Init(____playerModelView.ModelPlayerPoser.transform);
 
-            var dragTriggerGO = ____dragTrigger.gameObject;
-            if (!dragTriggerGO.TryGetComponent<ScrollTrigger>(out var scrollTrigger))
-            {
-                scrollTrigger = dragTriggerGO.AddComponent<ScrollTrigger>();
-            }
+            var scrollTrigger = ____dragTrigger.gameObject.GetOrAddComponent<ScrollTrigger>();
 
             void OnDrag(PointerEventData eventData) => RotatePanCamera(eventData, __instance, cameraTransform);
             void OnOnScroll(PointerEventData eventData) => ZoomCamera(eventData, cameraTransform);
