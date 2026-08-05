@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reflection;
 using EFT.InventoryLogic;
+using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -23,7 +24,7 @@ public static class AddOfferClickablePricesPatches
         protected override MethodBase GetTargetMethod()
         {
             // Called when prices are loaded
-            return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel.method_1));
+            return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel.CG_UpdatePrices));
         }
 
         [PatchPostfix]
@@ -32,13 +33,13 @@ public static class AddOfferClickablePricesPatches
             switch (Settings.AutoOfferPrice.Value)
             {
                 case AutoFleaPrice.Minimum:
-                    __instance.method_0(__instance.Minimum);
+                    __instance.PriceClickInvoke(__instance.Minimum);
                     break;
                 case AutoFleaPrice.Average:
-                    __instance.method_0(__instance.Average);
+                    __instance.PriceClickInvoke(__instance.Average);
                     break;
                 case AutoFleaPrice.Maximum:
-                    __instance.method_0(__instance.Maximum);
+                    __instance.PriceClickInvoke(__instance.Maximum);
                     break;
                 case AutoFleaPrice.None:
                 default:
@@ -53,15 +54,15 @@ public static class AddOfferClickablePricesPatches
         protected override MethodBase GetTargetMethod()
         {
             // The handler for ItemMarketPricesPanel.OnPriceClick
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_2));
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.PricesPanelOnOnPriceClick));
         }
 
         [PatchPrefix]
-        public static void Prefix(AddOfferWindow __instance, ref float priceFloat, bool ___bool_0 /* isBulk */)
+        public static void Prefix(AddOfferWindow __instance, ref float priceFloat, bool ____sellInOnePiece)
         {
-            if (___bool_0)
+            if (____sellInOnePiece)
             {
-                priceFloat *= __instance.Int32_0; // offer item count
+                priceFloat *= __instance.OfferItemCount;
             }
         }
     }
@@ -71,27 +72,31 @@ public static class AddOfferClickablePricesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_18));
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.Awake));
         }
 
         [PatchPostfix]
-        public static void Postfix(AddOfferWindow __instance, bool arg, RequirementView[] ____requirementViews)
+        public static void Postfix(AddOfferWindow __instance)
         {
-            if (!Settings.UpdatePriceOnBulk.Value)
+            __instance._sellInOnePieceToggle.Bind(bulk =>
             {
-                return;
-            }
+                if (!Settings.UpdatePriceOnBulk.Value)
+                {
+                    return;
+                }
 
-            RequirementView rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
-            double currentPrice = rublesRequirement.Requirement.PreciseCount;
-            if (currentPrice <= 0)
-            {
-                return;
-            }
+                RequirementView rublesRequirement = __instance._requirementViews.First(rv => rv.name == "Requirement (RUB)");
+                double currentPrice = rublesRequirement.Requirement.PreciseCount;
+                if (currentPrice <= 0)
+                {
+                    return;
+                }
 
-            // SetRequirement will multiply (or not), so just need the individual price
-            double individualPrice = arg ? currentPrice : currentPrice / __instance.Int32_0;
-            __instance.method_2((float)individualPrice);
+                // SetRequirement will multiply (or not), so just need the individual price
+                double individualPrice = bulk ? currentPrice : currentPrice / __instance.OfferItemCount;
+                __instance.PricesPanelOnOnPriceClick((float)individualPrice);
+            });
+
         }
     }
 
@@ -102,13 +107,13 @@ public static class AddOfferClickablePricesPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_15));
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.ItemSelectionChanged));
         }
 
         [PatchPrefix]
-        public static void Prefix(bool ___bool_0 /* isBulk */)
+        public static void Prefix(bool ____sellInOnePiece)
         {
-            WasBulk = ___bool_0;
+            WasBulk = ____sellInOnePiece;
         }
 
         [PatchPostfix]
@@ -117,20 +122,20 @@ public static class AddOfferClickablePricesPatches
             Item item,
             bool selected,
             RequirementView[] ____requirementViews,
-            bool ___bool_0 /* isBulk */,
-            RagfairOfferSellHelperClass ___ragfairOfferSellHelperClass)
+            bool ____sellInOnePiece,
+            RagfairNewOfferContext ____offerContext)
         {
             // Bulk can autochange when selecting/deselecting, so bail if this isn't a bulk to bulk change
-            if (!WasBulk || !___bool_0)
+            if (!WasBulk || !____sellInOnePiece)
             {
                 return;
             }
 
             // BSG doesn't handle the case of bulk staying true when switching between items
-            __instance.method_9(___bool_0);
+            __instance.SetSellInOnePiece(____sellInOnePiece);
 
             // Bail if option is disabled; if the selected item is null (deselecting/changing items) or if the number of selected itms is 0
-            if (!Settings.UpdatePriceOnBulk.Value || ___ragfairOfferSellHelperClass.SelectedItem == null || __instance.Int32_0 < 1)
+            if (!Settings.UpdatePriceOnBulk.Value || ____offerContext.SelectedItem == null || __instance.OfferItemCount < 1)
             {
                 return;
             }
@@ -139,13 +144,13 @@ public static class AddOfferClickablePricesPatches
             double currentPrice = rublesRequirement.Requirement.PreciseCount;
 
             // Need to figure out the price per item *before* this item was added/removed
-            int oldCount = __instance.Int32_0 + (selected ? -item.StackObjectsCount : item.StackObjectsCount);
+            int oldCount = __instance.OfferItemCount + (selected ? -item.StackObjectsCount : item.StackObjectsCount);
             if (oldCount <= 0)
             {
                 return;
             }
 
-            __instance.method_2((float)(currentPrice / oldCount));
+            __instance.PricesPanelOnOnPriceClick((float)(currentPrice / oldCount));
         }
     }
 }

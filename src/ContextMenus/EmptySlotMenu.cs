@@ -7,7 +7,7 @@ using EFT.UI.Ragfair;
 
 namespace UIFixes;
 
-public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext, Action closeAction) : ContextInteractionsAbstractClass(itemContext, itemUiContext, closeAction)
+public class EmptySlotMenu(Slot slot, ItemContext itemContext, ItemUiContext itemUiContext, Action closeAction) : BaseItemContextInteractions(itemContext, itemUiContext, closeAction)
 {
     private static readonly List<EItemInfoButton> Actions = [EItemInfoButton.LinkedSearch];
 
@@ -39,7 +39,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
     {
         return button switch
         {
-            EItemInfoButton.LinkedSearch => !Plugin.InRaid() && AllowedContextTypes.Contains(ItemUiContext_1.ContextType),
+            EItemInfoButton.LinkedSearch => !Plugin.InRaid() && AllowedContextTypes.Contains(ItemUiContext.ContextType),
             _ => false,
         };
     }
@@ -47,7 +47,7 @@ public class EmptySlotMenu(Slot slot, ItemContextAbstractClass itemContext, Item
     // Base IsInteractive pukes on mannequin slots, reimpliment it here for linked slots without troublesome parts
     public override IResult IsInteractive(EItemInfoButton button)
     {
-        var ragfair = ItemUiContext_1.Session.RagFair;
+        var ragfair = ItemUiContext.Session.RagFair;
         switch (button)
         {
             case EItemInfoButton.LinkedSearch:

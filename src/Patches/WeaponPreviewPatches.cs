@@ -18,11 +18,11 @@ public static class WeaponPreviewPatches
         {
             // this is called when WeaponPreview is opened and fully initialized,
             // WeaponPreview is used both by weapon modding screen, edit build screen, and item overview
-            return AccessTools.Method(typeof(WeaponPreview.Class3271), nameof(WeaponPreview.Class3271.method_1));
+            return AccessTools.Method(typeof(WeaponPreview.CG_SetupItemPreview), nameof(WeaponPreview.CG_SetupItemPreview.method_1));
         }
 
         [PatchPostfix]
-        public static void Postfix(WeaponPreview.Class3271 __instance)
+        public static void Postfix(WeaponPreview.CG_SetupItemPreview __instance)
         {
             __instance.weaponPreview_0.WeaponPreviewCamera.nearClipPlane = 0.01f;
         }

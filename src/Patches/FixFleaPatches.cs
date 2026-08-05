@@ -40,9 +40,9 @@ public static class FixFleaPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ___bool_3)
+        public static void Postfix(Image ____toggleImage, Sprite ____closeSprite, bool ____categoryOpen)
         {
-            if (!___bool_3)
+            if (!____categoryOpen)
             {
                 ____toggleImage.sprite = ____closeSprite;
             }
@@ -57,9 +57,9 @@ public static class FixFleaPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Image ____toggleImage, Sprite ____openSprite, bool ___bool_3)
+        public static void Postfix(Image ____toggleImage, Sprite ____openSprite, bool ____categoryOpen)
         {
-            if (___bool_3)
+            if (____categoryOpen)
             {
                 ____toggleImage.sprite = ____openSprite;
             }
@@ -108,7 +108,7 @@ public static class FixFleaPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagfairCategoriesPanel), nameof(RagfairCategoriesPanel.method_9));
+            return AccessTools.Method(typeof(RagfairCategoriesPanel), nameof(RagfairCategoriesPanel.FindById));
         }
 
         [PatchPrefix]
@@ -119,7 +119,7 @@ public static class FixFleaPatches
                 return true;
             }
 
-            if (arg.StartsWith("#") || __instance.Ragfair == null || __instance.EViewListType_0 != EViewListType.AllOffers)
+            if (arg.StartsWith("#") || __instance.Ragfair == null || __instance.ViewListType != EViewListType.AllOffers)
             {
                 return true;
             }
@@ -148,7 +148,7 @@ public static class FixFleaPatches
 
             panel.Ragfair.CancellableFilters.Clear();
 
-            FilterRule filterRule = panel.Ragfair.method_3(EViewListType.AllOffers);
+            FilterRule filterRule = panel.Ragfair.GetPreferredRule(EViewListType.AllOffers);
             filterRule.HandbookId = string.Empty;
 
             panel.Ragfair.AddSearchesInRule(filterRule, true);
@@ -163,9 +163,9 @@ public static class FixFleaPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(TMP_InputField ___SearchInputField)
+        public static void Postfix(BrowseCategoriesPanel __instance)
         {
-            ___SearchInputField.GetOrAddComponent<SearchKeyListener>();
+            __instance.SearchInputField.GetOrAddComponent<SearchKeyListener>();
         }
     }
 

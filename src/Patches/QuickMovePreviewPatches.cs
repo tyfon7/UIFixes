@@ -1,4 +1,5 @@
 using System.Reflection;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -22,7 +23,7 @@ public static class QuickMovePreviewPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemView __instance, TraderControllerClass ___ItemController, ItemUiContext ___ItemUiContext)
+        public static void Postfix(ItemView __instance, ItemController ___ItemController, ItemUiContext ___ItemUiContext)
         {
             var previewer = __instance.GetOrAddComponent<QuickMovePreview>();
             if (previewer != null)

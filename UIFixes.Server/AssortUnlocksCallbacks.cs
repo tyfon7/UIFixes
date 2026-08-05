@@ -1,20 +1,17 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace UIFixes.Server;
 
 [Injectable]
-public class AssortUnlocksCallbacks(ISptLogger<AssortUnlocksCallbacks> logger, DatabaseService databaseService)
+public class AssortUnlocksCallbacks(TradersTable traders, TemplateTable templates, ISptLogger<AssortUnlocksCallbacks> logger)
 {
     public ValueTask<Dictionary<string, string>> LoadAssorts()
     {
-        var traders = databaseService.GetTraders();
-        var quests = databaseService.GetQuests();
-
         Dictionary<string, string> result = [];
 
         foreach (var (traderId, trader) in traders)
@@ -28,7 +25,7 @@ public class AssortUnlocksCallbacks(ISptLogger<AssortUnlocksCallbacks> logger, D
             {
                 foreach (var (assortId, questId) in questAssorts)
                 {
-                    if (!quests.TryGetValue(questId, out Quest quest))
+                    if (!templates.Quests.TryGetValue(questId, out Quest quest))
                     {
                         logger.Warning($"UIFixes: Trader {traderId} questassort references unknown quest {questId}! Check that whatever mod added that trader and/or quest is installed correctly.");
                         continue;

@@ -1,4 +1,5 @@
 using System.Linq;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using UnityEngine;
@@ -11,13 +12,13 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
 {
     private GameObject _targetBorder;
 
-    private ItemContextAbstractClass _itemContext;
-    private TraderControllerClass _itemController;
+    private ItemContext _itemContext;
+    private ItemController _itemController;
     private ItemUiContext _itemUiContext;
 
     private bool _hovered = false;
 
-    public void Init(ItemContextAbstractClass itemContext, TraderControllerClass itemController, ItemUiContext itemUiContext)
+    public void Init(ItemContext itemContext, ItemController itemController, ItemUiContext itemUiContext)
     {
         _itemContext = itemContext;
         _itemController = itemController;
@@ -98,22 +99,22 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
 
         var quickMoveOperation = _itemUiContext.QuickFindAppropriatePlace(_itemContext, _itemController, false, false, true);
-        if (quickMoveOperation.Failed || !_itemController.CanExecute(quickMoveOperation.Value) || quickMoveOperation.Value is not IMoveResult moveResult)
+        if (quickMoveOperation.Failed || !_itemController.CanExecute(quickMoveOperation.Value) || quickMoveOperation.Value is not IPossibleDestroyResult moveResult)
         {
             return;
         }
 
         if (moveResult.To is GridItemAddress gridAddress)
         {
-            var targetGridView = _itemController.HashSet_0.FirstOrDefault(view => view is GridView gridView && gridView.Grid == gridAddress.Grid) as GridView;
+            var targetGridView = _itemController.Views.FirstOrDefault(view => view is GridView gridView && gridView.Grid == gridAddress.Grid) as GridView;
             if (targetGridView != null)
             {
                 HighlightGridLocation(targetGridView, gridAddress);
             }
         }
-        else if (moveResult.To is SlotAddress slotAddress)
+        else if (moveResult.To is SlotItemAddress slotAddress)
         {
-            var targetSlotView = _itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
+            var targetSlotView = _itemController.Views.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
             if (targetSlotView != null)
             {
                 HighlightSlot(targetSlotView);
@@ -140,12 +141,12 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
 
         var itemAddress = equipment.FindSlotToPickUp(_itemContext.Item);
-        if (itemAddress is not SlotAddress slotAddress)
+        if (itemAddress is not SlotItemAddress slotAddress)
         {
             return;
         }
 
-        var targetSlotView = _itemController.HashSet_0.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
+        var targetSlotView = _itemController.Views.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
         if (targetSlotView != null)
         {
             HighlightSlot(targetSlotView);
@@ -160,7 +161,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
             return;
         }
 
-        XYCellSizeStruct xycellSizeStruct = _itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
+        IntVec2 xycellSizeStruct = _itemContext.Item.CalculateRotatedSize(gridAddress.LocationInGrid.r);
 
         int minX = gridAddress.LocationInGrid.x;
         int minY = gridAddress.LocationInGrid.y;

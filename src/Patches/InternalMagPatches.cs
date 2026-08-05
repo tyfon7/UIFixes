@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Diz.LanguageExtensions;
+using EFT.Builds;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -28,13 +30,13 @@ public static class InternalMagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(MagazineItemClass), nameof(MagazineItemClass.ApplyItem));
+            return AccessTools.DeclaredMethod(typeof(Magazine), nameof(Magazine.ApplyItem));
         }
 
         [PatchPrefix]
-        public static bool Prefix(MagazineItemClass __instance, TraderControllerClass itemController, Item item, int count, bool simulate, ref ItemOperation __result)
+        public static bool Prefix(Magazine __instance, ItemController itemController, Item item, int count, bool simulate, ref OperationResult __result)
         {
-            if (InLoadAmmoByType && item is AmmoItemClass ammo)
+            if (InLoadAmmoByType && item is Ammo ammo)
             {
                 __result = __instance.ApplyWithoutRestrictions(itemController, ammo, count, simulate);
                 return false;
@@ -98,11 +100,11 @@ public static class InternalMagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
+            return AccessTools.Method(typeof(MagBuildsStorage), nameof(MagBuildsStorage.TryFindPresetSource));
         }
 
         [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
+        public static bool Prefix(Item selectedItem, ref Option<Item> __result)
         {
             if (!Settings.LoadAmmoOnInternalMags.Value)
             {
@@ -114,7 +116,7 @@ public static class InternalMagPatches
                 __result = weapon.GetCurrentMagazine();
                 return false;
             }
-            else if (selectedItem is MagazineItemClass)
+            else if (selectedItem is Magazine)
             {
                 __result = selectedItem;
                 return false;
@@ -132,7 +134,7 @@ public static class InternalMagPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance, ItemContextAbstractClass itemContext, InventoryController ___inventoryController_0)
+        public static void Postfix(ItemUiContext __instance, ItemContext itemContext, InventoryController ____inventoryController)
         {
             if (itemContext.Item is not Weapon weapon || !weapon.SupportsInternalReload)
             {
@@ -147,7 +149,7 @@ public static class InternalMagPatches
 
             var equipmentBlocked = itemContext.ViewType == EItemViewType.InventoryDuringMatching;
 
-            __instance.WaitOneFrame(() => BarrelOnlyPatches.UnloadAmmoPatch.UnloadChamber(chamber, ___inventoryController_0, equipmentBlocked).HandleExceptions());
+            __instance.WaitOneFrame(() => BarrelOnlyPatches.UnloadAmmoPatch.UnloadChamber(chamber, ____inventoryController, equipmentBlocked).HandleExceptions());
         }
     }
 }

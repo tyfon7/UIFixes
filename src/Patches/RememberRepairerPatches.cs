@@ -24,13 +24,13 @@ public static class RememberRepairerPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(RepairerParametersPanel __instance, DropDownBox ____tradersDropDown)
+        public static void Postfix(RepairerParametersPanel __instance)
         {
-            __instance.R().UI.AddDisposable(____tradersDropDown.OnValueChanged.Subscribe(index => PlayerPrefs.SetInt(PlayerPrefKey, index)));
+            __instance.R().UI.AddDisposable(__instance._tradersDropDown.OnValueChanged.Subscribe(index => PlayerPrefs.SetInt(PlayerPrefKey, index)));
 
             if (PlayerPrefs.HasKey(PlayerPrefKey))
             {
-                ____tradersDropDown.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey));
+                __instance._tradersDropDown.UpdateValue(PlayerPrefs.GetInt(PlayerPrefKey));
             }
         }
     }
@@ -39,13 +39,13 @@ public static class RememberRepairerPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.method_7));
+            return AccessTools.Method(typeof(RepairerParametersPanel), nameof(RepairerParametersPanel.TraderSelected));
         }
 
         [PatchPostfix]
-        public static void Postfix(ConditionCharacteristicsSlider ____conditionSlider)
+        public static void Postfix(RepairerParametersPanel __instance)
         {
-            ____conditionSlider.method_1(); // like clicking >>, aka select max value
+            __instance._conditionSlider.CG_Awake(); // like clicking >>, aka select max value
         }
     }
 }

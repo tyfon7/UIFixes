@@ -18,11 +18,11 @@ public static class StackFirItemsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_0));
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.TryFindMergeableItem));
         }
 
         [PatchPrefix]
-        public static bool Prefix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, Item itemToMerge, ref Item mergeableItem, int overrideCount, ref bool __result)
+        public static bool Prefix(IEnumerable<IContainer> containersToPut, Item itemToMerge, ref Item mergeableItem, int overrideCount, ref bool __result)
         {
             __result = Sorter.FindStackForMerge(containersToPut, itemToMerge, out mergeableItem, overrideCount);
             return false;

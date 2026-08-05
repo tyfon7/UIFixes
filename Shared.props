@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Version>5.3.11</Version>
-    <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.0</SPTPath>
+    <Version>6.0.0</Version>
+    <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.1</SPTPath>
     <FikaPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\Fika</FikaPath>
     <AssemblySearchPaths>
       $(SPTPath)\EscapeFromTarkov_Data\Managed;
@@ -37,10 +37,10 @@
   <Target Name="SPTServerDeploy" AfterTargets="PostBuildEvent" Condition="'$(SPTModType)'=='Server'">
     <Exec
       Command='
-        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
+        xcopy /F /Y "$(TargetPath)" "%(DeployTarget.Path)\SPT_Runtime\user\mods\$(TargetName)\"
 
         if $(ConfigurationName) == Debug (
-          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\SPT\user\mods\$(TargetName)\"
+          xcopy /F /Y "$(ProjectDir)$(OutDir)$(TargetName).pdb" "%(DeployTarget.Path)\SPT_Runtime\user\mods\$(TargetName)\"
         )'
     />
   </Target>

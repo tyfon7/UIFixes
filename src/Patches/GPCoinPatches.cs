@@ -45,7 +45,7 @@ public static class GPCoinPatches
 
                 Image icon = (gpCoinsTransform.Find("Image") ?? gpCoinsTransform.Find("DollarsImage")).GetComponent<Image>();
                 icon.name = "GPImage";
-                icon.sprite = EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(CurrencyInfo.GetCurrencyId(ECurrencyType.GP));
+                icon.sprite = EFTHardSettings.Instance.StaticIcons.GetSmallCurrencySign(CurrencyUtil.GetCurrencyId(ECurrencyType.GP));
 
                 LayoutElement imageLayout = icon.GetComponent<LayoutElement>();
                 imageLayout.preferredHeight = -1f;
@@ -65,7 +65,7 @@ public static class GPCoinPatches
 
             TextMeshProUGUI gpLabel = gpCoinsTransform.Find("GPLabel").GetComponent<TextMeshProUGUI>();
 
-            var sums = R.Money.GetMoneySums(inventoryItems);
+            var sums = InventoryExtension.GetMoneySums(inventoryItems);
 
             NumberFormatInfo numberFormatInfo = new() { NumberGroupSeparator = " " };
 
@@ -113,13 +113,13 @@ public static class GPCoinPatches
 
             TextMeshProUGUI gpCoins = gpCoinsTransform.GetComponent<TextMeshProUGUI>();
 
-            var sums = R.Money.GetMoneySums(inventoryItems);
+            var sums = InventoryExtension.GetMoneySums(inventoryItems);
 
             NumberFormatInfo numberFormatInfo = new() { NumberGroupSeparator = " " };
 
-            ____roubles.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.RUB) + " " + sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
-            ____euros.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.EUR) + " " + sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
-            ____dollars.text = CurrencyInfo.GetCurrencyChar(ECurrencyType.USD) + " " + sums[ECurrencyType.USD].ToString("N0", numberFormatInfo);
+            ____roubles.text = CurrencyUtil.GetCurrencyChar(ECurrencyType.RUB) + " " + sums[ECurrencyType.RUB].ToString("N0", numberFormatInfo);
+            ____euros.text = CurrencyUtil.GetCurrencyChar(ECurrencyType.EUR) + " " + sums[ECurrencyType.EUR].ToString("N0", numberFormatInfo);
+            ____dollars.text = CurrencyUtil.GetCurrencyChar(ECurrencyType.USD) + " " + sums[ECurrencyType.USD].ToString("N0", numberFormatInfo);
             gpCoins.text = "GP " + sums[ECurrencyType.GP].ToString("N0", numberFormatInfo);
 
             return false;

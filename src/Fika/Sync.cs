@@ -79,7 +79,7 @@ public static class Sync
         if (!ev.IsServer && !ConfigReceived)
         {
             Plugin.Instance.Logger.LogError("Fika sync config not received! UI Fixes missing from host?");
-            NotificationManagerClass.DisplayWarningNotification("UI Fixes sync failed! UI Fixes is required on host", ENotificationDurationType.Long);
+            NotificationManager.DisplayWarningNotification("UI Fixes sync failed! UI Fixes is required on host", ENotificationDurationType.Long);
         }
     }
 
@@ -116,7 +116,7 @@ public static class Sync
         if (packet.Version != PluginInfo.PLUGIN_VERSION)
         {
             Plugin.Instance.Logger.LogError($"UIFixes version mismatch: your client has {PluginInfo.PLUGIN_VERSION}, host has {packet.Version}");
-            NotificationManagerClass.DisplayWarningNotification($"UIFixes version mismatch! You: {PluginInfo.PLUGIN_VERSION}, Host: {packet.Version}", ENotificationDurationType.Long);
+            NotificationManager.DisplayWarningNotification($"UIFixes version mismatch! You: {PluginInfo.PLUGIN_VERSION}, Host: {packet.Version}", ENotificationDurationType.Long);
             return;
         }
 
@@ -131,6 +131,6 @@ public static class Sync
             config.SetReadonly(true, "Set by Fika host");
         }
 
-        NotificationManagerClass.DisplayMessageNotification("UIFixes configuration synced from host");
+        NotificationManager.DisplayMessageNotification("UIFixes configuration synced from host");
     }
 }

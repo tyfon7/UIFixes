@@ -39,7 +39,7 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ModdingScreenSlotView), nameof(ModdingScreenSlotView.method_5));
+            return AccessTools.Method(typeof(ModdingScreenSlotView), nameof(ModdingScreenSlotView.MenuOpenHandler));
         }
 
         [PatchPostfix]
@@ -56,7 +56,7 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ModdingScreenSlotView), nameof(ModdingScreenSlotView.method_4));
+            return AccessTools.Method(typeof(ModdingScreenSlotView), nameof(ModdingScreenSlotView.MenuClosedHandler));
         }
 
         [PatchPostfix]
@@ -81,7 +81,7 @@ public static class DropdownPatches
                 if (OpenSlotView != null)
                 {
                     Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                    OpenSlotView.method_3();
+                    OpenSlotView.DropDownButtonClickHandler();
                 }
             });
         }
@@ -106,7 +106,7 @@ public static class DropdownPatches
                 }
 
                 Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                parentView.method_3();
+                parentView.DropDownButtonClickHandler();
             }
         }
     }
@@ -124,7 +124,7 @@ public static class DropdownPatches
             __instance.GetOrAddComponent<ClickHandler>().Init(() =>
             {
                 Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                __instance.method_2();
+                __instance.DropdownButtonClickHandler();
             });
         }
     }
@@ -134,7 +134,8 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(EmptyItemView), nameof(EmptyItemView.OnPointerDown));
+            // Fully qualified because declared with the interface in the name
+            return AccessTools.Method(typeof(EmptyItemView), "UnityEngine.EventSystems.IPointerDownHandler.OnPointerDown");
         }
 
         [PatchPrefix]
@@ -152,37 +153,31 @@ public static class DropdownPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(bool value, ref bool ___bool_0)
+        public static bool Prefix(bool value, ref bool ____interactable)
         {
-            ___bool_0 = value;
+            ____interactable = value;
             return false;
         }
     }
 
     public class EmptySlotClickPatch : ModulePatch
     {
-        private static FieldInfo ModdingContextField;
-
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(EmptyItemView);
-            ModdingContextField = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(f => f.FieldType == typeof(ModdingItemContext));
-
-            return AccessTools.DeclaredMethod(type, nameof(EmptyItemView.Show));
+            return AccessTools.DeclaredMethod(typeof(EmptyItemView), nameof(EmptyItemView.Show));
         }
 
         [PatchPostfix]
-        public static void Postfix(EmptyItemView __instance, ref bool ___bool_0)
+        public static void Postfix(EmptyItemView __instance, ref bool ____interactable, ModdingSelectableItemContext ____itemContext)
         {
-            // initialize bool_0 since BSG can't be bothered to
-            ___bool_0 = true;
+            // initialize _interactable since BSG can't be bothered to
+            ____interactable = true;
 
             __instance.GetOrAddComponent<ClickHandler>().Init(() =>
             {
                 if (__instance.Interactable) // normal behavior
                 {
-                    var moddingItemContext = ModdingContextField.GetValue(__instance) as ModdingItemContext;
-                    moddingItemContext?.ToggleSelection();
+                    ____itemContext?.ToggleSelection();
                 }
                 else // Patched behavior
                 {
@@ -193,7 +188,7 @@ public static class DropdownPatches
                     }
 
                     Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                    parentView.method_3();
+                    parentView.DropDownButtonClickHandler();
                 }
             });
         }
@@ -204,11 +199,11 @@ public static class DropdownPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(BuildItemSelector), nameof(BuildItemSelector.Select));
+            return AccessTools.DeclaredMethod(typeof(EditBuildManipulation), nameof(EditBuildManipulation.Select));
         }
 
         [PatchPrefix]
-        public static bool Prefix(BuildItemSelector __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
+        public static bool Prefix(EditBuildManipulation __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
         {
             if (item?.TemplateId == slot.ContainedItem?.TemplateId)
             {
@@ -217,10 +212,10 @@ public static class DropdownPatches
                 return false;
             }
 
-            ItemOperation removeOperation = default;
+            OperationResult removeOperation = default;
             if (slot.ContainedItem != null)
             {
-                removeOperation = InteractionsHandlerClass.Remove(slot.ContainedItem, __instance.InventoryController_0, item == null && simulate);
+                removeOperation = ItemManipulator.Remove(slot.ContainedItem, __instance.InventoryController, item == null && simulate);
                 error = removeOperation.Error;
                 __result = removeOperation.Succeeded;
                 if (removeOperation.Failed)
@@ -229,13 +224,13 @@ public static class DropdownPatches
                 }
             }
 
-            GStruct154<AddOperation> addOperation = default;
+            OperationResult<AddResult> addOperation = default;
             if (item != null)
             {
-                addOperation = InteractionsHandlerClass.Add(
-                    item.CloneItem(__instance.InventoryController_0),
+                addOperation = ItemManipulator.Add(
+                    item.CloneItem(__instance.InventoryController),
                     slot.CreateItemAddress(),
-                    __instance.InventoryController_0,
+                    __instance.InventoryController,
                     simulate);
                 error = addOperation.Error;
                 __result = addOperation.Succeeded;

@@ -24,9 +24,9 @@ public static class SliderPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Slider ____slider)
+        public static void Postfix(IntSlider __instance)
         {
-            ____slider.GetOrAddComponent<SliderMouseListener>().Init(____slider);
+            __instance._slider.GetOrAddComponent<SliderMouseListener>().Init(__instance._slider);
         }
     }
 
@@ -39,9 +39,9 @@ public static class SliderPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Slider ____slider)
+        public static void Postfix(StepSlider __instance)
         {
-            ____slider.GetOrAddComponent<SliderMouseListener>().Init(____slider);
+            __instance._slider.GetOrAddComponent<SliderMouseListener>().Init(__instance._slider);
         }
     }
 

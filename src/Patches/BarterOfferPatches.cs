@@ -148,15 +148,15 @@ public static class BarterOfferPatches
             }
 
             return requirement.Item.GetItemComponent<DogtagComponent>() != null
-                ? allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+                ? allItems.Where(item => RagFair.CanUseForBarterExchange(item, out string error))
                     .Select(item => item.GetItemComponent<DogtagComponent>())
                     .Where(dogtag => dogtag != null)
                     .Where(dogtag => dogtag.Level >= handoverRequirement.Level)
                     .Count(dogtag => handoverRequirement.Side == EDogtagExchangeSide.Any || dogtag.Side.ToString() == handoverRequirement.Side.ToString())
-                : allItems.Where(item => RagFairClass.CanUseForBarterExchange(item, out string error))
+                : allItems.Where(item => RagFair.CanUseForBarterExchange(item, out string error))
                 .Where(item => item.TemplateId == requirement.Item.TemplateId)
                 .Where(item => !requirement.OnlyFunctional || item is not CompoundItem compoundItem || !compoundItem.MissingVitalParts.Any())
-                .Where(item => item is not IEncodable encodable || requirement.Item is not IEncodable || encodable.IsEncoded() == requirement.IsEncoded)
+                .Where(item => item is not IRecodableItem encodable || requirement.Item is not IRecodableItem || encodable.IsEncoded() == requirement.IsEncoded)
                 .Sum(item => item.StackObjectsCount);
         }
     }
@@ -193,18 +193,18 @@ public static class BarterOfferPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(RagfairOfferItemView __instance, TextMeshProUGUI ___Caption)
+        public static void Postfix(RagfairOfferItemView __instance)
         {
             if (__instance.GetShowCaption())
             {
-                ___Caption.gameObject.SetActive(true);
+                __instance.Caption.gameObject.SetActive(true);
             }
 
             string inscription = __instance.GetInscription();
             if (!string.IsNullOrEmpty(inscription))
             {
-                __instance.TextMeshProUGUI_0.text = inscription;
-                __instance.TextMeshProUGUI_0.gameObject.SetActive(true);
+                __instance.ItemInscription.text = inscription;
+                __instance.ItemInscription.gameObject.SetActive(true);
             }
 
             string value = __instance.GetCount();
@@ -334,13 +334,13 @@ public static class BarterOfferPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_18));
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.OfferPurchaseHandler));
         }
 
         [PatchPostfix]
-        public static void Postfix(ref InventoryController ___inventoryController_0)
+        public static void Postfix(ref InventoryController ____inventoryController)
         {
-            ItemCacheHelper.UpdateAllItemsCache(___inventoryController_0);
+            ItemCacheHelper.UpdateAllItemsCache(____inventoryController);
         }
     }
 

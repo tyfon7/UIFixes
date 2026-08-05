@@ -183,7 +183,7 @@ public class DrawMultiSelect : MonoBehaviour
     private bool MouseIsOverItem()
     {
         // checking ItemUiContext is a quick and easy way to know the mouse is over an item
-        return ItemUiContext.Instance.R().ItemContext != null;
+        return ItemUiContext.Instance.CurrentItemContext != null;
     }
 
     private GameObject GetMouseTarget()

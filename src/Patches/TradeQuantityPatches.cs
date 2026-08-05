@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using EFT.Trading;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -19,17 +20,17 @@ public static class TradeQuantityPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BarterSchemePanel), nameof(BarterSchemePanel.method_0));
+            return AccessTools.Method(typeof(BarterSchemePanel), nameof(BarterSchemePanel.UpdateValidDealWarning));
         }
 
         // Gets called on the ValidityChanged event. 
         // The reason quantity isn't focused on the 2nd+ purchase is that BSG calls ActivateInputField() and Select() before the transaction is finished
         // During the transaction, the whole canvas group is not interactable, and these methods don't work on non-interactable fields
         [PatchPostfix]
-        public static void Postfix(TMP_InputField ____quantity)
+        public static void Postfix(BarterSchemePanel __instance)
         {
-            ____quantity.ActivateInputField();
-            ____quantity.Select();
+            __instance._quantity.ActivateInputField();
+            __instance._quantity.Select();
         }
     }
 
@@ -41,16 +42,16 @@ public static class TradeQuantityPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(BarterSchemePanel __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass, TMP_InputField ____quantity)
+        public static void Postfix(BarterSchemePanel __instance, Assortment ____traderAssortment)
         {
             FocusFleaOfferNumberPatches.AllButtonKeybind allKeybind = __instance.GetOrAddComponent<FocusFleaOfferNumberPatches.AllButtonKeybind>();
             allKeybind.Init(() =>
             {
                 if (EventSystem.current?.currentSelectedGameObject != null &&
-                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() == ____quantity)
+                    EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() == __instance._quantity)
                 {
-                    ___traderAssortmentControllerClass.CurrentQuantity = ___traderAssortmentControllerClass.SelectedItem.StackObjectsCount;
-                    ____quantity.MoveTextEnd(false);
+                    ____traderAssortment.CurrentQuantity = ____traderAssortment.SelectedItem.StackObjectsCount;
+                    __instance._quantity.MoveTextEnd(false);
                 }
             });
         }

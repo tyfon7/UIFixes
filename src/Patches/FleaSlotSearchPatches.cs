@@ -3,6 +3,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Comfort.Common;
+using Diz.Utils;
+using EFT;
 using EFT.HandBook;
 using EFT.UI.Ragfair;
 using HarmonyLib;
@@ -24,11 +26,11 @@ public static class FleaSlotSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagFairClass), nameof(RagFairClass.method_24));
+            return AccessTools.Method(typeof(RagFair), nameof(RagFair.SetSearches));
         }
 
         [PatchPrefix]
-        public static void Prefix(RagFairClass __instance, RagfairSearch[] searches, ref string __state)
+        public static void Prefix(RagFair __instance, RagfairSearch[] searches, ref string __state)
         {
             if (!Settings.EnableSlotSearch.Value)
             {
@@ -39,7 +41,7 @@ public static class FleaSlotSearchPatches
             if (search != null)
             {
                 __state = search.StringValue.Split(':')[0];
-                EntityNodeClass node = __instance.HandbookClass[__state];
+                HandbookNode node = __instance._handbook[__state];
                 if (node != null)
                 {
                     // If the id is in the handbook (any mod slots on actual items), 
@@ -53,19 +55,19 @@ public static class FleaSlotSearchPatches
                     {
                         Id = search.StringValue
                     };
-                    EntityNodeClass dummyNode = new()
+                    HandbookNode dummyNode = new()
                     {
                         Data = dummyData,
                         IsDummy = true
                     };
-                    __instance.HandbookClass.StructuredItems.AddVirtual(__state, dummyNode);
+                    __instance._handbook.StructuredItems.AddVirtual(__state, dummyNode);
                 }
                 searches[searches.IndexOf(search)] = new(EFilterType.LinkedSearch, __state, search.Add);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(RagFairClass __instance, ref string __state)
+        public static void Postfix(RagFair __instance, ref string __state)
         {
             if (!Settings.EnableSlotSearch.Value)
             {
@@ -74,11 +76,11 @@ public static class FleaSlotSearchPatches
 
             if (__state != null)
             {
-                EntityNodeClass node = __instance.HandbookClass[__state];
+                HandbookNode node = __instance._handbook[__state];
                 if (node.IsDummy)
                 {
                     // We injected this dummy node, remove it
-                    __instance.HandbookClass.StructuredItems.RemoveVirtual(__state);
+                    __instance._handbook.StructuredItems.RemoveVirtual(__state);
                 }
                 else
                 {
@@ -94,29 +96,31 @@ public static class FleaSlotSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(Class308), nameof(Class308.GetOffers));
+            return AccessTools.DeclaredMethod(typeof(EftClientBackendSession), nameof(EftClientBackendSession.GetOffers));
         }
 
         [PatchPrefix]
-        public static bool Prefix(Class308 __instance, ref Task<Result<OffersList>> __result, int page, int limit, int sortType, bool direction, int currency, int priceFrom, int priceTo, int quantityFrom, int quantityTo, int conditionFrom, int conditionTo, bool oneHourExpiration, bool removeBartering, int offerOwnerType, bool onlyFunctional, string handbookId, string linkedSearchId, string neededSearchId, Dictionary<string, int> buildItems, int buildCount, bool updateOfferCount)
+        public static bool Prefix(EftClientBackendSession __instance, ref Task<Result<OffersList>> __result, int page, int limit, int sortType, bool direction, int currency, int priceFrom, int priceTo, int quantityFrom, int quantityTo, int conditionFrom, int conditionTo, bool oneHourExpiration, bool removeBartering, int offerOwnerType, bool onlyFunctional, string handbookId, string linkedSearchId, string neededSearchId, Dictionary<string, int> buildItems, int buildCount, bool updateOfferCount)
         {
             if (string.IsNullOrEmpty(linkedSearchId) || !linkedSearchId.Contains(":"))
             {
                 return true;
             }
 
-            Class308.Class1594 callback = new()
+            var completionSource = new TaskCompletionSource<Result<OffersList>>();
+
+            __instance.method_5(new SendRequest
             {
-                completionSource = new()
-            };
-            __instance.method_5(new LegacyParamsStruct
-            {
-                Url = __instance.Gclass1392_0.RagFair + "/uifixes/ragfair/find",
+                Url = __instance._backendUrls.RagFair + "/uifixes/ragfair/find",
                 ParseInBackground = true,
-                Params = new Class54<int, int, int, int, int, int, int, int, int, int, int, bool, bool, int, bool, bool, string, string, string, Dictionary<string, int>, int, int, int>(page, limit, sortType, direction ? 1 : 0, currency, priceFrom, priceTo, quantityFrom, quantityTo, conditionFrom, conditionTo, oneHourExpiration, removeBartering, offerOwnerType, onlyFunctional, updateOfferCount, handbookId, linkedSearchId, neededSearchId, buildItems, buildCount, 18, 11),
+                Params = new GetOffersRequestParams<int, int, int, int, int, int, int, int, int, int, int, bool, bool, int, bool, bool, string, string, string, Dictionary<string, int>, int, int, int>(page, limit, sortType, direction ? 1 : 0, currency, priceFrom, priceTo, quantityFrom, quantityTo, conditionFrom, conditionTo, oneHourExpiration, removeBartering, offerOwnerType, onlyFunctional, updateOfferCount, handbookId, linkedSearchId, neededSearchId, buildItems, buildCount, 18, 11),
                 Retries = new byte?(1)
-            }, new Callback<OffersList>(callback.method_0));
-            __result = callback.completionSource.Task;
+            }, delegate (Result<OffersList> result)
+            {
+                completionSource.SetFromRequestResult<Result<OffersList>>(result);
+            });
+
+            __result = completionSource.Task;
 
             return false;
         }
@@ -130,11 +134,11 @@ public static class FleaSlotSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagFairClass), nameof(RagFairClass.FilterMyOffers));
+            return AccessTools.Method(typeof(RagFair), nameof(RagFair.FilterMyOffers));
         }
 
         [PatchPrefix]
-        public static bool Prefix(RagFairClass __instance)
+        public static bool Prefix(RagFair __instance)
         {
             return __instance.FilterRule.ViewListType == EViewListType.MyOffers;
         }

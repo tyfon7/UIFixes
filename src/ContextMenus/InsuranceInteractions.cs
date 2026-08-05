@@ -2,23 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using Comfort.Common;
+using Diz.Utils;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.Insurance;
 
 namespace UIFixes;
 
-public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : ItemInfoInteractionsAbstractClass<InsuranceInteractions.EInsurers>(uiContext)
+public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiContext, int playerRubles) : ContextInteractions<InsuranceInteractions.EInsurers>(uiContext)
 {
-    private readonly InsuranceCompanyClass _insurance = uiContext.Session.InsuranceCompany;
+    private readonly InsuranceCompany _insurance = uiContext.Session.InsuranceCompany;
     private readonly List<Item> _items = [.. items];
-    private List<InsuranceItem> _insurableItems;
+    private List<InsuredItem> _insurableItems;
     private readonly Dictionary<string, int> _prices = [];
 
     public InsuranceInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
 
     public void LoadAsync(Action callback)
     {
-        IEnumerable<InsuranceItem> insuranceItems = _items.Select(InsuranceItem.FindOrCreate);
+        IEnumerable<InsuredItem> insuranceItems = _items.Select(InsuredItem.FindOrCreate);
         _insurableItems = insuranceItems.SelectMany(_insurance.GetItemChildren)
             .Flatten(_insurance.GetItemChildren)
             .Concat(insuranceItems)
@@ -96,7 +98,7 @@ public class InsuranceInteractions(IEnumerable<Item> items, ItemUiContext uiCont
 
 public static class InsuranceExtensions
 {
-    public static bool IsInsuranceInteraction(this DynamicInteractionClass interaction)
+    public static bool IsInsuranceInteraction(this DynamicContextInteraction interaction)
     {
         return interaction.Id.StartsWith("UIFixesInsurerId:");
     }

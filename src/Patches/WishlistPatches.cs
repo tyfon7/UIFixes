@@ -59,7 +59,7 @@ public static class WishlistPatches
             }
 
             // If its in this dictionary, it's manually wishlisted
-            if (__instance.Dictionary_0.ContainsKey(itemToCheck.TemplateId))
+            if (__instance._userItems.ContainsKey(itemToCheck.TemplateId))
             {
                 return;
             }
@@ -74,7 +74,7 @@ public static class WishlistPatches
         {
             if (!FiRRequired.HasValue)
             {
-                var hideout = Singleton<HideoutClass>.Instance;
+                var hideout = Singleton<HideoutRepresentation>.Instance;
 
                 // Find the first ItemRequirement and assume all the others are the same
                 foreach (var areaData in hideout?.AreaDatas ?? [])
@@ -85,7 +85,7 @@ public static class WishlistPatches
                         foreach (var requirement in stage.Requirements ?? [])
                         {
                             // Not counting money, since that's never FIR
-                            if (requirement is ItemRequirement itemRequirement && itemRequirement.Item is not MoneyItemClass)
+                            if (requirement is ItemRequirement itemRequirement && itemRequirement.Item is not Money)
                             {
                                 FiRRequired = itemRequirement.IsSpawnedInSession;
 
@@ -108,7 +108,7 @@ public static class WishlistPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(HideoutClass), nameof(HideoutClass.AreaDatas)).GetMethod;
+            return AccessTools.Property(typeof(HideoutRepresentation), nameof(HideoutRepresentation.AreaDatas)).GetMethod;
         }
 
         [PatchPostfix]
@@ -184,7 +184,7 @@ public static class WishlistPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ItemContextAbstractClass itemContext)
+        public static void Prefix(ItemContext itemContext)
         {
             IsInWishlistPatch.ItemToCheck = itemContext.Item;
         }
@@ -200,7 +200,7 @@ public static class WishlistPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_2));
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.TryShowWishlistPurchaseNotification));
         }
 
         [PatchPrefix]

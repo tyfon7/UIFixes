@@ -29,7 +29,7 @@ public static class HideoutCameraPatches
         public static bool Prefix(HideoutCameraController __instance)
         {
             return !__instance.AreaSelected &&
-                CurrentScreenSingletonClass.Instance?.CurrentScreenController?.ScreenType is EEftScreenType.Hideout &&
+                EftScreenManager.Instance?.CurrentScreenController?.ScreenType is EEftScreenType.Hideout &&
                 !Singleton<CommonUI>.Instance.ChatScreen.gameObject.activeInHierarchy;
         }
     }

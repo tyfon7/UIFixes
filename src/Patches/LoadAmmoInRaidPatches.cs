@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT.Builds;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -22,11 +23,11 @@ public class LoadAmmoInRaidPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsActive));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
+        public static bool Prefix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref bool __result)
         {
             if (button != EItemInfoButton.LoadAmmo || !Plugin.InRaid() || !Settings.EnableLoadAmmoInRaid.Value)
             {
@@ -34,12 +35,12 @@ public class LoadAmmoInRaidPatches
             }
 
             // Doing these in raid would be a) somewhat cheaty, and b) a ton of work
-            if (__instance.Weapon_0 != null && (__instance.Weapon_0.SupportsInternalReload || __instance.Weapon_0.ReloadMode == Weapon.EReloadMode.OnlyBarrel))
+            if (__instance.Weapon != null && (__instance.Weapon.SupportsInternalReload || __instance.Weapon.ReloadMode == Weapon.EReloadMode.OnlyBarrel))
             {
                 return true;
             }
 
-            __result = MagazineBuildClass.TryFindPresetSource(__instance.Item_0_1).Succeeded;
+            __result = MagBuildsStorage.TryFindPresetSource(__instance._item).Succeeded;
             return false;
         }
     }
@@ -53,29 +54,28 @@ public class LoadAmmoInRaidPatches
 
         // This code is a mix of ItemUiContext.LoadAmmoByType, but then switching over to GridView.AcceptItem
         [PatchPrefix]
-        public static bool Prefix(ItemUiContext __instance, MagazineItemClass magazine, string ammoTemplateId, ref Task __result)
+        public static bool Prefix(ItemUiContext __instance, Magazine magazine, string ammoTemplateId, InventoryController ____inventoryController, ref Task __result)
         {
             if (!Plugin.InRaid() || !Settings.EnableLoadAmmoInRaid.Value)
             {
                 return true;
             }
 
-            InventoryController inventoryController = __instance.R().InventoryController;
-            InventoryEquipment equipment = inventoryController.Inventory.Equipment;
+            InventoryEquipment equipment = ____inventoryController.Inventory.Equipment;
 
-            List<AmmoItemClass> ammo = [];
+            List<Ammo> ammo = [];
             equipment.GetAllAssembledItems(ammo);
 
             // Just do the first stack
-            AmmoItemClass bullets = ammo.Where(a => a.TemplateId == ammoTemplateId && a.Parent.Container is not Slot)
+            Ammo bullets = ammo.Where(a => a.TemplateId == ammoTemplateId && a.Parent.Container is not Slot)
                 .OrderBy(a => a.SpawnedInSession)
                 .ThenBy(a => a.StackObjectsCount)
                 .FirstOrDefault();
 
             if (bullets != null)
             {
-                int count = GridView.smethod_0(magazine, bullets);
-                __result = inventoryController.LoadMagazine(bullets, magazine, count, false);
+                int count = GridView.CG_smethod_0(magazine, bullets);
+                __result = ____inventoryController.LoadMagazine(bullets, magazine, count, false);
             }
             else
             {

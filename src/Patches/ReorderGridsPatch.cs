@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Diz.Utils;
 using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -36,7 +37,7 @@ public static class ReorderGridsPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TemplatedGridsView __instance, CompoundItem compoundItem, ref GridView[] ____presetGridViews)
+        public static void Prefix(TemplatedGridsView __instance, CompoundItem compoundItem)
         {
             if (!Settings.ReorderGrids.Value)
             {
@@ -45,7 +46,7 @@ public static class ReorderGridsPatches
                 // 2. If this TemplatedGridsView was sorted, it needs to be unsorted to match
                 if (compoundItem.GetReordered() && GridMaps.TryGetValue(compoundItem.TemplateId, out int[] unwantedMap))
                 {
-                    StashGridClass[] orderedGrids = new StashGridClass[compoundItem.Grids.Length];
+                    Grid[] orderedGrids = new Grid[compoundItem.Grids.Length];
                     for (int i = 0; i < compoundItem.Grids.Length; i++)
                     {
                         orderedGrids[i] = compoundItem.Grids[unwantedMap[i]];
@@ -56,13 +57,13 @@ public static class ReorderGridsPatches
 
                     if (__instance.GetReordered())
                     {
-                        GridView[] orderedGridView = new GridView[____presetGridViews.Length];
-                        for (int i = 0; i < ____presetGridViews.Length; i++)
+                        GridView[] orderedGridView = new GridView[__instance._presetGridViews.Length];
+                        for (int i = 0; i < __instance._presetGridViews.Length; i++)
                         {
-                            orderedGridView[i] = ____presetGridViews[unwantedMap[i]];
+                            orderedGridView[i] = __instance._presetGridViews[unwantedMap[i]];
                         }
 
-                        ____presetGridViews = orderedGridView;
+                        __instance._presetGridViews = orderedGridView;
                         __instance.SetReordered(false);
                     }
 
@@ -77,13 +78,13 @@ public static class ReorderGridsPatches
                 // This is a new context of a sorted Item, need to presort the GridViews
                 if (GridMaps.TryGetValue(compoundItem.TemplateId, out int[] map))
                 {
-                    GridView[] orderedGridView = new GridView[____presetGridViews.Length];
-                    for (int i = 0; i < ____presetGridViews.Length; i++)
+                    GridView[] orderedGridView = new GridView[__instance._presetGridViews.Length];
+                    for (int i = 0; i < __instance._presetGridViews.Length; i++)
                     {
-                        orderedGridView[map[i]] = ____presetGridViews[i];
+                        orderedGridView[map[i]] = __instance._presetGridViews[i];
                     }
 
-                    ____presetGridViews = orderedGridView;
+                    __instance._presetGridViews = orderedGridView;
                     __instance.SetReordered(true);
                 }
                 else
@@ -94,14 +95,14 @@ public static class ReorderGridsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(TemplatedGridsView __instance, CompoundItem compoundItem, ref GridView[] ____presetGridViews)
+        public static void Postfix(TemplatedGridsView __instance, CompoundItem compoundItem)
         {
             if (!Settings.ReorderGrids.Value || compoundItem.GetReordered())
             {
                 return;
             }
 
-            var pairs = compoundItem.Grids.Zip(____presetGridViews, (g, gv) => new KeyValuePair<StashGridClass, GridView>(g, gv));
+            var pairs = compoundItem.Grids.Zip(__instance._presetGridViews, (g, gv) => new KeyValuePair<Grid, GridView>(g, gv));
             var sortedPairs = SortGrids(__instance, pairs);
 
             GridView[] orderedGridViews = [.. sortedPairs.Select(pair => pair.Value)];
@@ -109,31 +110,31 @@ public static class ReorderGridsPatches
             // Populate the gridmap
             if (!GridMaps.ContainsKey(compoundItem.TemplateId))
             {
-                int[] map = new int[____presetGridViews.Length];
-                for (int i = 0; i < ____presetGridViews.Length; i++)
+                int[] map = new int[__instance._presetGridViews.Length];
+                for (int i = 0; i < __instance._presetGridViews.Length; i++)
                 {
-                    map[i] = orderedGridViews.IndexOf(____presetGridViews[i]);
+                    map[i] = orderedGridViews.IndexOf(__instance._presetGridViews[i]);
                 }
 
                 GridMaps.Add(compoundItem.TemplateId, map);
             }
 
             compoundItem.Grids = [.. sortedPairs.Select(pair => pair.Key)];
-            ____presetGridViews = orderedGridViews;
+            __instance._presetGridViews = orderedGridViews;
 
             compoundItem.SetReordered(true);
             __instance.SetReordered(true);
         }
 
-        private static IOrderedEnumerable<KeyValuePair<StashGridClass, GridView>> SortGrids(
+        private static IOrderedEnumerable<KeyValuePair<Grid, GridView>> SortGrids(
             TemplatedGridsView __instance,
-            IEnumerable<KeyValuePair<StashGridClass, GridView>> pairs)
+            IEnumerable<KeyValuePair<Grid, GridView>> pairs)
         {
             RectTransform parentView = __instance.RectTransform();
             Vector2 parentPosition = parentView.pivot.y == 1 ? parentView.position : new Vector2(parentView.position.x, parentView.position.y + parentView.sizeDelta.y);
             Vector2 gridSize = new(64f * parentView.lossyScale.x, 64f * parentView.lossyScale.y);
 
-            int CalculateCoords(KeyValuePair<StashGridClass, GridView> pair)
+            int CalculateCoords(KeyValuePair<Grid, GridView> pair)
             {
                 var grid = pair.Key;
                 var gridView = pair.Value;

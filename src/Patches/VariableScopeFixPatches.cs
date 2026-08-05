@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using EFT;
 using EFT.CameraControl;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -16,29 +17,29 @@ public static class VariableScopeFixPatches
     {
         if (!Plugin.FikaPresent() && Settings.VariableScopeFix.Value)
         {
-            new WeaponManagerClass_method_12_Patch().Enable();
-            new WeaponManagerClass_ValidateScopeSmoothZoomUpdate_Patch().Enable();
-            new PlayerCameraController_LateUpdate_Transpiler().Enable();
-            new OpticRetrice_UpdateTransform_Patch().Enable();
+            new FirearmsUpdateModsPatch().Enable();
+            new FirearmsValidateScopeSmoothZoomPatch().Enable();
+            new PlayerCameraLateUpdateTranspiler().Enable();
+            new OpticRetriceUpdateTransformPatch().Enable();
         }
     }
 
-    public class WeaponManagerClass_method_12_Patch : ModulePatch
+    public class FirearmsUpdateModsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return typeof(WeaponManagerClass).GetMethod(nameof(WeaponManagerClass.method_12));
+            return typeof(Firearms).GetMethod(nameof(Firearms.UpdateModsVisualControllers));
         }
 
         [PatchPrefix]
-        public static bool Prefix(WeaponManagerClass __instance)
+        public static bool Prefix(Firearms __instance)
         {
             if (__instance.Player != null && !__instance.Player.IsYourPlayer)
             {
-                __instance.TacticalComboVisualController_0 = [.. __instance.Transform_1.GetComponentsInChildrenActiveIgnoreFirstLevel<TacticalComboVisualController>()];
-                __instance.SightModVisualControllers_0 = [.. __instance.Transform_1.GetComponentsInChildrenActiveIgnoreFirstLevel<SightModVisualControllers>()];
-                __instance.LauncherViauslController_0 = [.. __instance.Transform_1.GetComponentsInChildrenActiveIgnoreFirstLevel<LauncherViauslController>()];
-                __instance.BipodViewController_0 = __instance.Transform_1.GetComponentsInChildrenActiveIgnoreFirstLevel<BipodViewController>().FirstOrDefault();
+                __instance._tacticalComboVisualControllers = [.. __instance._weaponHierarchy.GetComponentsInChildrenActiveIgnoreFirstLevel<TacticalComboVisualController>()];
+                __instance._sightModVisualControllers = [.. __instance._weaponHierarchy.GetComponentsInChildrenActiveIgnoreFirstLevel<SightModVisualControllers>()];
+                __instance._launcherViauslControllers = [.. __instance._weaponHierarchy.GetComponentsInChildrenActiveIgnoreFirstLevel<LauncherViauslController>()];
+                __instance._bipodViewController = __instance._weaponHierarchy.GetComponentsInChildrenActiveIgnoreFirstLevel<BipodViewController>().FirstOrDefault();
 
                 return false;
             }
@@ -46,21 +47,21 @@ public static class VariableScopeFixPatches
             return true;
         }
     }
-    public class WeaponManagerClass_ValidateScopeSmoothZoomUpdate_Patch : ModulePatch
+    public class FirearmsValidateScopeSmoothZoomPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return typeof(WeaponManagerClass).GetMethod(nameof(WeaponManagerClass.ValidateScopeSmoothZoomUpdate));
+            return typeof(Firearms).GetMethod(nameof(Firearms.ValidateScopeSmoothZoomUpdate));
         }
 
         [PatchPrefix]
-        public static bool Prefix(WeaponManagerClass __instance)
+        public static bool Prefix(Firearms __instance)
         {
             return __instance.Player == null || __instance.Player.IsYourPlayer;
         }
     }
 
-    public class PlayerCameraController_LateUpdate_Transpiler : ModulePatch
+    public class PlayerCameraLateUpdateTranspiler : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -79,7 +80,7 @@ public static class VariableScopeFixPatches
         }
     }
 
-    public class OpticRetrice_UpdateTransform_Patch : ModulePatch
+    public class OpticRetriceUpdateTransformPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
@@ -87,9 +88,9 @@ public static class VariableScopeFixPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(OpticSight opticSight, SkinnedMeshRenderer ____renderer)
+        public static bool Prefix(OpticRetrice __instance, OpticSight opticSight)
         {
-            return opticSight.ScopeData != null && opticSight.ScopeData.Reticle != null && ____renderer != null;
+            return opticSight.ScopeData != null && opticSight.ScopeData.Reticle != null && __instance.Renderer != null;
         }
     }
 }

@@ -5,6 +5,8 @@ using System.Reflection;
 using Comfort.Common;
 using EFT;
 using EFT.InputSystem;
+using EFT.Settings;
+using EFT.Settings.Game;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -34,20 +36,20 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.GetDeclaredConstructors(typeof(ToggleKeyCombination)).Single();
+            return AccessTools.GetDeclaredConstructors(typeof(ToggleInputKeyCombination)).Single();
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
+        public static void Postfix(ToggleInputKeyCombination __instance, EGameKey gameKey)
         {
             if (!ToggleHold.IsEnabled(gameKey))
             {
                 return;
             }
 
-            __instance.KeyCombinationState_1 =
+            __instance.States =
             [
-                .. __instance.KeyCombinationState_1,
+                .. __instance.States,
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance)
@@ -59,20 +61,20 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.GetDeclaredConstructors(typeof(KeyBindingClass)).Single();
+            return AccessTools.GetDeclaredConstructors(typeof(InputKeyCombination)).Single();
         }
 
         [PatchPostfix]
-        public static void Postfix(ToggleKeyCombination __instance, EGameKey gameKey)
+        public static void Postfix(ToggleInputKeyCombination __instance, EGameKey gameKey)
         {
             if (!ToggleHold.IsEnabled(gameKey))
             {
                 return;
             }
 
-            __instance.KeyCombinationState_1 =
+            __instance.States =
             [
-                .. __instance.KeyCombinationState_1,
+                .. __instance.States,
                 new ToggleHoldIdleState(__instance),
                 new ToggleHoldClickOrHoldState(__instance),
                 new ToggleHoldHoldState(__instance)
@@ -84,11 +86,11 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(KeyBindingClass), nameof(KeyBindingClass.UpdateInput));
+            return AccessTools.Method(typeof(InputKeyCombination), nameof(InputKeyCombination.UpdateInput));
         }
 
         [PatchPrefix]
-        public static void Prefix(KeyBindingClass __instance, ref List<IInputKey> inputKeys)
+        public static void Prefix(InputKeyCombination __instance, ref List<IGameKey> inputKeys)
         {
             // BSG implemented tactical as an entirely new abomination, so I have to disable the "release tactical" 
             if (__instance.GameKey == EGameKey.ReleaseTactical && ToggleHold.IsEnabled(EGameKey.Tactical))
@@ -96,16 +98,16 @@ public static class AimToggleHoldPatches
                 inputKeys = [];
 
                 // Force BSG's tactical mode to "press"
-                Singleton<SharedGameSettingsClass>.Instance.Game.Settings.TacticalInputMode.SetValue(GClass1085.ETacticalInputMode.Press);
+                Singleton<SettingsManager>.Instance.Game.Settings.TacticalInputMode.SetValue(GameSettingsGroup.ETacticalInputMode.Press);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(KeyBindingClass __instance)
+        public static void Postfix(InputKeyCombination __instance)
         {
             if (ToggleHold.IsEnabled(__instance.GameKey))
             {
-                __instance.method_0((KeyBindingClass.EKeyState)ToggleHoldState.Idle);
+                __instance.ChangeState((InputKeyCombination.EKeyState)ToggleHoldState.Idle);
             }
         }
     }
@@ -115,7 +117,7 @@ public static class AimToggleHoldPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(FirearmInputHandler), nameof(FirearmInputHandler.Boolean_0)).SetMethod;
+            return AccessTools.Property(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.IsPressTacticalInteraction)).SetMethod;
         }
 
         [PatchPrefix]
@@ -138,9 +140,9 @@ public static class AimToggleHoldPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ref ECommand command, GamePlayerOwner ___gamePlayerOwner_0)
+        public static void Prefix(ref ECommand command, GamePlayerOwner ____owner)
         {
-            if (command == ECommand.BeginInteracting && ___gamePlayerOwner_0 != null && ___gamePlayerOwner_0.Player.CurrentManagedState is PlantStateClass)
+            if (command == ECommand.BeginInteracting && ____owner != null && ____owner.Player.CurrentManagedState is PlantPlayerState)
             {
                 command = ECommand.EndInteracting;
             }
@@ -151,9 +153,9 @@ public static class AimToggleHoldPatches
     private static void OnSettingChanged(object sender, EventArgs args)
     {
         // Force BSG's tactical mode to "press"
-        Singleton<SharedGameSettingsClass>.Instance.Game.Settings.TacticalInputMode.SetValue(GClass1085.ETacticalInputMode.Press);
+        Singleton<SettingsManager>.Instance.Game.Settings.TacticalInputMode.SetValue(GameSettingsGroup.ETacticalInputMode.Press);
 
-        // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
-        Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
+        // Will "save" control settings, running InputKeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+        Singleton<SettingsManager>.Instance.Control.Controller.UpdateBindings();
     }
 }

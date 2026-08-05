@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using Comfort.Common;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -30,12 +31,7 @@ public static class GridHighlightPatches
         }
 
         [PatchPostfix]
-        public static void PatchPostfix(
-            GridView __instance,
-            ItemContextClass itemContext,
-            bool preview,
-            Image ____highlightPanel,
-            Color ___InvalidOperationColor)
+        public static void PatchPostfix(GridView __instance, DragItemContext itemContext, bool preview, Color ___InvalidOperationColor)
         {
             if (!Settings.NoFitBorder.Value || preview)
             {
@@ -43,7 +39,7 @@ public static class GridHighlightPatches
             }
 
             var border = __instance.transform.Find("NoFitBorder")?.gameObject;
-            if (!____highlightPanel.IsActive() || ____highlightPanel.color != ___InvalidOperationColor)
+            if (!__instance._highlightPanel.IsActive() || __instance._highlightPanel.color != ___InvalidOperationColor)
             {
                 if (border != null)
                 {
@@ -75,7 +71,7 @@ public static class GridHighlightPatches
                 }
             }
 
-            XYCellSizeStruct xycellSizeStruct = itemContext.Item.CalculateRotatedSize(itemContext.ItemRotation);
+            IntVec2 xycellSizeStruct = itemContext.Item.CalculateRotatedSize(itemContext.ItemRotation);
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
 
             int minX = locationInGrid.x;
@@ -129,7 +125,7 @@ public static class GridHighlightPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridView), nameof(GridView.method_7));
+            return AccessTools.Method(typeof(GridView), nameof(GridView.HideHighlightPanel));
         }
 
         [PatchPostfix]

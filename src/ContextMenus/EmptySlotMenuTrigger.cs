@@ -10,10 +10,10 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
 {
     private ItemUiContext _itemUiContext;
     private Slot _slot;
-    private ItemContextAbstractClass _parentContext;
+    private ItemContext _parentContext;
     private bool _hovered = false;
 
-    public void Init(Slot slot, ItemContextAbstractClass parentContext, ItemUiContext itemUiContext)
+    public void Init(Slot slot, ItemContext parentContext, ItemUiContext itemUiContext)
     {
         _itemUiContext = itemUiContext;
         _slot = slot;
@@ -62,21 +62,21 @@ public class EmptySlotMenuTrigger : MonoBehaviour, IPointerClickHandler, IPointe
     public void OnPointerUp(PointerEventData eventData) { }
 }
 
-public class EmptySlotContext(Slot slot, ItemContextAbstractClass parentContext, ItemUiContext itemUiContext) : ItemContextAbstractClass(parentContext.Item, parentContext.ViewType, parentContext)
+public class EmptySlotContext(Slot slot, ItemContext parentContext, ItemUiContext itemUiContext) : ItemContext(parentContext.Item, parentContext.ViewType, parentContext)
 {
     private readonly Slot _slot = slot;
     private readonly ItemUiContext _itemUiContext = itemUiContext;
 
-    public override ItemInfoInteractionsAbstractClass<EItemInfoButton> GetItemContextInteractions(Action closeAction)
+    public override ContextInteractions<EItemInfoButton> GetItemContextInteractions(Action closeAction)
     {
-        return new EmptySlotMenu(_slot, ItemContextAbstractClass, _itemUiContext, () =>
+        return new EmptySlotMenu(_slot, Source, _itemUiContext, () =>
         {
             Dispose();
             closeAction?.Invoke();
         });
     }
 
-    public override ItemContextAbstractClass CreateChild(Item item)
+    public override ItemContext CreateChild(Item item)
     {
         // Should never happen
         throw new NotImplementedException();

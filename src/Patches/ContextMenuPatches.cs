@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Comfort.Common;
+using Diz.LanguageExtensions;
+using Diz.Utils;
 using EFT;
+using EFT.Builds;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using EFT.UI.Insurance;
+using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using TMPro;
@@ -47,7 +52,7 @@ public static class ContextMenuPatches
 
         new OpenWhileSearchingPatch().Enable();
 
-        new ModdingItemContextPatch().Enable();
+        new ModdingSelectableItemContextPatch().Enable();
 
         new ContextMenuFontSizePatch().Enable();
     }
@@ -73,8 +78,8 @@ public static class ContextMenuPatches
             int count = 0;
             if (caption == EItemInfoButton.Insure.ToString())
             {
-                InsuranceCompanyClass insurance = ItemUiContext.Instance.Session.InsuranceCompany;
-                count = MultiSelect.ItemContexts.Select(ic => InsuranceItem.FindOrCreate(ic.Item))
+                InsuranceCompany insurance = ItemUiContext.Instance.Session.InsuranceCompany;
+                count = MultiSelect.ItemContexts.Select(ic => InsuredItem.FindOrCreate(ic.Item))
                     .Count(i => insurance.ItemTypeAvailableForInsurance(i) && !insurance.InsuredItems.Contains(i));
 
             }
@@ -139,15 +144,15 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredProperty(typeof(InventoryInteractions), nameof(InventoryInteractions.SubInteractions)).GetMethod;
+            return AccessTools.DeclaredProperty(typeof(BaseInventoryItemContextInteractions), nameof(BaseInventoryItemContextInteractions.SubInteractions)).GetMethod;
         }
 
         [PatchPostfix]
-        public static void Postfix(InventoryInteractions __instance, ref IEnumerable<EItemInfoButton> __result)
+        public static void Postfix(BaseInventoryItemContextInteractions __instance, ref IEnumerable<EItemInfoButton> __result)
         {
             __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
 
-            if (__instance.Item_0 is CompoundItem container && container.Grids.Any())
+            if (__instance.Item is CompoundItem container && container.Grids.Any())
             {
                 var innerContainers = container.GetFirstLevelItems()
                     .Where(i => i != container)
@@ -167,22 +172,22 @@ public static class ContextMenuPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
+            return AccessTools.Method(typeof(BaseInventoryItemContextInteractions), nameof(BaseInventoryItemContextInteractions.CreateSubInteractions));
         }
 
         [PatchPrefix]
-        public static bool Prefix(InventoryInteractions __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper)
+        public static bool Prefix(BaseInventoryItemContextInteractions __instance, EItemInfoButton parentInteraction, ISubInteractionsWrapper subInteractionsWrapper)
         {
             // Clear this, since something else should be active (even a different mouseover of the insurance button) 
             LoadingInsuranceActions = false;
 
             if (parentInteraction == EItemInfoButton.Insure)
             {
-                int playerRubles = GetPlayerRubles(__instance.ItemUiContext_1);
+                int playerRubles = GetPlayerRubles(__instance.ItemUiContext);
 
                 CurrentInsuranceInteractions = MultiSelect.Active ?
-                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.ItemUiContext_1, playerRubles) :
-                    new(__instance.Item_0, __instance.ItemUiContext_1, playerRubles);
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.ItemUiContext, playerRubles) :
+                    new(__instance.Item, __instance.ItemUiContext, playerRubles);
 
                 // Because this is async, need to protect against a different subInteractions activating before loading is done
                 // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
@@ -201,11 +206,11 @@ public static class ContextMenuPatches
 
             if (parentInteraction == EItemInfoButton.Repair)
             {
-                int playerRubles = GetPlayerRubles(__instance.ItemUiContext_1);
+                int playerRubles = GetPlayerRubles(__instance.ItemUiContext);
 
                 CurrentRepairInteractions = MultiSelect.Active ?
-                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.ItemUiContext_1, playerRubles) :
-                    new(__instance.Item_0, __instance.ItemUiContext_1, playerRubles);
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.ItemUiContext, playerRubles) :
+                    new(__instance.Item, __instance.ItemUiContext, playerRubles);
 
                 subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
@@ -214,7 +219,7 @@ public static class ContextMenuPatches
 
             if (Settings.OpenAllContextMenu.Value && parentInteraction == EItemInfoButton.Open)
             {
-                subInteractionsWrapper.SetSubInteractions(new OpenInteractions(__instance.ItemContextAbstractClass, __instance.ItemUiContext_1));
+                subInteractionsWrapper.SetSubInteractions(new OpenInteractions(__instance.ItemContext, __instance.ItemUiContext));
                 return false;
             }
 
@@ -228,16 +233,16 @@ public static class ContextMenuPatches
         protected override MethodBase GetTargetMethod()
         {
             return AccessTools.PropertyGetter(
-                typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
-                nameof(ItemInfoInteractionsAbstractClass<>.SubInteractions));
+                typeof(ContextInteractions<EItemInfoButton>),
+                nameof(ContextInteractions<>.SubInteractions));
         }
 
         [PatchPostfix]
         public static void Postfix(
-            ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance,
+            ContextInteractions<EItemInfoButton> __instance,
             ref IEnumerable<EItemInfoButton> __result)
         {
-            if (__instance is TradingPlayerInteractions)
+            if (__instance is TradingPlayerContextInteractions)
             {
                 __result = __result.Append(EItemInfoButton.Repair).Append(EItemInfoButton.Insure);
             }
@@ -251,38 +256,26 @@ public static class ContextMenuPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(
-                typeof(ItemInfoInteractionsAbstractClass<EItemInfoButton>),
-                nameof(ItemInfoInteractionsAbstractClass<>.CreateSubInteractions));
+            return AccessTools.Method(typeof(TradingPlayerContextInteractions), nameof(TradingPlayerContextInteractions.CreateSubInteractions));
         }
 
         [PatchPrefix]
         public static bool Prefix(
-            ItemInfoInteractionsAbstractClass<EItemInfoButton> __instance,
+            TradingPlayerContextInteractions __instance,
             EItemInfoButton parentInteraction,
-            ISubInteractions subInteractionsWrapper)
+            ISubInteractionsWrapper subInteractionsWrapper)
         {
-            if (__instance is not TradingPlayerInteractions)
-            {
-                return true;
-            }
-
             // Clear this, since something else should be active (even a different mouseover of the insurance button) 
             LoadingInsuranceActions = false;
 
-            var wrappedInstance = new R.TradingInteractions(__instance);
-
             if (parentInteraction == EItemInfoButton.Insure)
             {
-                int playerRubles = GetPlayerRubles(__instance.ItemUiContext_0);
+                int playerRubles = GetPlayerRubles(__instance.UIContext);
 
-                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a TradingPlayerInteractions
-                Item item = wrappedInstance.Item;
-
-                CurrentInsuranceInteractions = new(item, __instance.ItemUiContext_0, playerRubles);
+                CurrentInsuranceInteractions = new(__instance.Item, __instance.UIContext, playerRubles);
                 CurrentInsuranceInteractions = MultiSelect.Active ?
-                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.ItemUiContext_0, playerRubles) :
-                    new(item, __instance.ItemUiContext_0, playerRubles);
+                    new(MultiSelect.ItemContexts.Select(ic => ic.Item), __instance.UIContext, playerRubles) :
+                    new(__instance.Item, __instance.UIContext, playerRubles);
 
                 // Because this is async, need to protect against a different subInteractions activating before loading is done
                 // This isn't thread-safe at all but now the race condition is a microsecond instead of hundreds of milliseconds.
@@ -301,12 +294,9 @@ public static class ContextMenuPatches
 
             if (parentInteraction == EItemInfoButton.Repair)
             {
-                int playerRubles = GetPlayerRubles(__instance.ItemUiContext_0);
+                int playerRubles = GetPlayerRubles(__instance.UIContext);
 
-                // CreateSubInteractions is only on the base class here, which doesn't have an Item. But __instance is actually a TradingPlayerInteractions
-                Item item = wrappedInstance.Item;
-
-                CurrentRepairInteractions = new(item, __instance.ItemUiContext_0, playerRubles);
+                CurrentRepairInteractions = new(__instance.Item, __instance.UIContext, playerRubles);
                 subInteractionsWrapper.SetSubInteractions(CurrentRepairInteractions);
 
                 return false;
@@ -321,11 +311,11 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_3));
+            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.CreateDynamicContextButton));
         }
 
         [PatchPrefix]
-        public static void Prefix(DynamicInteractionClass interaction)
+        public static void Prefix(DynamicContextInteraction interaction)
         {
             if (interaction.IsInsuranceInteraction() || interaction.IsRepairInteraction())
             {
@@ -345,7 +335,7 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.method_5));
+            return AccessTools.Method(typeof(InteractionButtonsContainer), nameof(InteractionButtonsContainer.BindButton));
         }
 
         [PatchPrefix]
@@ -386,23 +376,23 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsInteractive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsInteractive));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
+        public static bool Prefix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref IResult __result)
         {
             if (button != EItemInfoButton.Insure)
             {
                 return true;
             }
 
-            IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [__instance.Item_0];
-            IEnumerable<InsuranceItem> insuranceItemes = items.Select(InsuranceItem.FindOrCreate);
-            IEnumerable<InsuranceItem> insurableItems = insuranceItemes.SelectMany(__instance.InsuranceCompanyClass.GetItemChildren)
-                .Flatten(__instance.InsuranceCompanyClass.GetItemChildren)
+            IEnumerable<Item> items = MultiSelect.Active ? MultiSelect.ItemContexts.Select(ic => ic.Item) : [__instance._item];
+            IEnumerable<InsuredItem> insuranceItemes = items.Select(InsuredItem.FindOrCreate);
+            IEnumerable<InsuredItem> insurableItems = insuranceItemes.SelectMany(__instance._insurance.GetItemChildren)
+                .Flatten(__instance._insurance.GetItemChildren)
                 .Concat(insuranceItemes)
-                .Where(i => __instance.InsuranceCompanyClass.ItemTypeAvailableForInsurance(i) && !__instance.InsuranceCompanyClass.InsuredItems.Contains(i));
+                .Where(i => __instance._insurance.ItemTypeAvailableForInsurance(i) && !__instance._insurance.InsuredItems.Contains(i));
 
             if (insurableItems.Any())
             {
@@ -418,11 +408,11 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsActive));
         }
 
         [PatchPostfix]
-        public static void Postfix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
+        public static void Postfix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref bool __result)
         {
             if (button != EItemInfoButton.Insure || !__result)
             {
@@ -430,7 +420,7 @@ public static class ContextMenuPatches
             }
 
             // This check is taken directly from IsInteractive, why they didn't check this here in IsActive I have no idea
-            if (__instance.InsuranceCompanyClass == null || !__instance.InsuranceCompanyClass.ItemTypeAvailableForInsurance(__instance.Item_0))
+            if (__instance._insurance == null || !__instance._insurance.ItemTypeAvailableForInsurance(__instance._item))
             {
                 __result = false;
             }
@@ -442,20 +432,20 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.TryFindPresetSource));
+            return AccessTools.Method(typeof(MagBuildsStorage), nameof(MagBuildsStorage.TryFindPresetSource));
         }
 
         [PatchPrefix]
-        public static bool Prefix(Item selectedItem, ref GStruct156<Item> __result)
+        public static bool Prefix(Item selectedItem, ref Option<Item> __result)
         {
             if (Settings.LoadMagPresetOnBullets.Value)
             {
                 return true;
             }
 
-            if (selectedItem is AmmoItemClass)
+            if (selectedItem is Ammo)
             {
-                __result = new InvalidMagPresetError(selectedItem);
+                __result = new MagBuildsStorage.PresetSourceError(selectedItem);
                 return false;
             }
 
@@ -472,7 +462,7 @@ public static class ContextMenuPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ModSlotView __instance, Slot slot, ItemContextAbstractClass parentItemContext, ItemUiContext itemUiContext)
+        public static void Postfix(ModSlotView __instance, Slot slot, ItemContext parentItemContext, ItemUiContext itemUiContext)
         {
             if (!Settings.EnableSlotSearch.Value || slot.ContainedItem != null)
             {
@@ -549,12 +539,12 @@ public static class ContextMenuPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
+            return AccessTools.Method(typeof(BaseInventoryItemContextInteractions), nameof(BaseInventoryItemContextInteractions.CreateSubInteractions));
         }
 
         // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
         [PatchPostfix]
-        public static void Postfix(ISubInteractions subInteractionsWrapper)
+        public static void Postfix(ISubInteractionsWrapper subInteractionsWrapper)
         {
             PositionContextMenuFlyout(subInteractionsWrapper);
         }
@@ -572,9 +562,9 @@ public static class ContextMenuPatches
 
         // Existing logic tries to place it on the right, moving to the left if necessary. They didn't do it correctly, so it always goes on the left.
         [PatchPostfix]
-        public static void Postfix(SimpleContextMenuButton ___simpleContextMenuButton_0, SimpleContextMenu ___simpleContextMenu_0)
+        public static void Postfix(SimpleContextMenuButton ____subMenuButton, SimpleContextMenu ____subMenu)
         {
-            PositionContextMenuFlyout(___simpleContextMenuButton_0, ___simpleContextMenu_0);
+            PositionContextMenuFlyout(____subMenuButton, ____subMenu);
         }
     }
 
@@ -588,10 +578,10 @@ public static class ContextMenuPatches
         [PatchPrefix]
         public static bool Prefix(
             ItemUiContext __instance,
-            ItemContextAbstractClass itemContext,
+            ItemContext itemContext,
             Vector2 position,
-            TraderControllerClass ___traderControllerClass,
-            Dictionary<EItemInfoButton, string> ___dictionary_0)
+            ItemController ____itemController,
+            Dictionary<EItemInfoButton, string> ____contextMenuCustomNames)
         {
             if (!Settings.ContextMenuWhileSearching.Value)
             {
@@ -599,7 +589,7 @@ public static class ContextMenuPatches
             }
 
             // Default impl would have skipped this. Do it anyway
-            if (___traderControllerClass.SearchController is IPlayerSearchController playerSearchController && playerSearchController.SearchOperations.Any())
+            if (____itemController.SearchController is IPlayerSearchController playerSearchController && playerSearchController.SearchOperations.Any())
             {
                 var wrappedInstance = __instance.R();
                 wrappedInstance.ItemInfoInteractions = __instance.GetItemContextInteractions(itemContext, null);
@@ -607,14 +597,14 @@ public static class ContextMenuPatches
                 // Yes, they really special case add-offer here
                 if (wrappedInstance.ItemInfoInteractions.AllInteractions.Contains(EItemInfoButton.AddOffer))
                 {
-                    RagFairClass ragFair = __instance.Session.RagFair;
+                    RagFair ragFair = __instance.Session.RagFair;
                     if (ragFair != null && ragFair.Available)
                     {
-                        ___dictionary_0[EItemInfoButton.AddOffer] = string.Format("AddOfferButton{0}/{1}".Localized(null), ragFair.MyOffersCount, ragFair.MaxOffersCount);
+                        ____contextMenuCustomNames[EItemInfoButton.AddOffer] = string.Format("AddOfferButton{0}/{1}".Localized(null), ragFair.MyOffersCount, ragFair.MaxOffersCount);
                     }
                 }
 
-                __instance.ContextMenu.Show(position, wrappedInstance.ItemInfoInteractions, ___dictionary_0, itemContext.Item);
+                __instance.ContextMenu.Show(position, wrappedInstance.ItemInfoInteractions, ____contextMenuCustomNames, itemContext.Item);
                 return false;
             }
 
@@ -622,25 +612,25 @@ public static class ContextMenuPatches
         }
     }
 
-    public class ModdingItemContextPatch : ModulePatch
+    public class ModdingSelectableItemContextPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            var moddingContextOptions = ModdingItemInteractions.Ienumerable_2 as List<EItemInfoButton>;
+            var moddingContextOptions = ModdingContextInteractions._interactions as List<EItemInfoButton>;
             moddingContextOptions.Add(EItemInfoButton.AddToWishlist);
 
-            return AccessTools.Method(typeof(ModdingItemContext), nameof(ModdingItemContext.GetItemContextInteractions));
+            return AccessTools.Method(typeof(ModdingSelectableItemContext), nameof(ModdingSelectableItemContext.GetItemContextInteractions));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ModdingItemContext __instance, Action closeAction, ref ItemInfoInteractionsAbstractClass<EItemInfoButton> __result)
+        public static bool Prefix(ModdingSelectableItemContext __instance, Action closeAction, ref ContextInteractions<EItemInfoButton> __result)
         {
             __result = new ExtraModdingItemInteractions(__instance, ItemUiContext.Instance, closeAction);
             return false;
         }
 
-        public class ExtraModdingItemInteractions(ModdingItemContext itemContext, ItemUiContext itemUiContext, Action closeAction)
-            : ModdingItemInteractions(itemContext, itemUiContext, closeAction)
+        public class ExtraModdingItemInteractions(ModdingSelectableItemContext itemContext, ItemUiContext itemUiContext, Action closeAction)
+            : ModdingContextInteractions(itemContext, itemUiContext, closeAction)
         {
             public override IEnumerable<EItemInfoButton> SubInteractions
             {
@@ -650,11 +640,11 @@ public static class ContextMenuPatches
                 }
             }
 
-            public override void CreateSubInteractions(EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper)
+            public override void CreateSubInteractions(EItemInfoButton parentInteraction, ISubInteractionsWrapper subInteractionsWrapper)
             {
                 if (parentInteraction == EItemInfoButton.AddToWishlist)
                 {
-                    subInteractionsWrapper.SetSubInteractions(new WishListInteractions(ItemContextAbstractClass, ItemUiContext_1));
+                    subInteractionsWrapper.SetSubInteractions(new WishlistContextInteractions(ItemContext, ItemUiContext));
                 }
                 else
                 {
@@ -680,7 +670,7 @@ public static class ContextMenuPatches
         }
     }
 
-    private static void PositionContextMenuFlyout(ISubInteractions subInteractions)
+    private static void PositionContextMenuFlyout(ISubInteractionsWrapper subInteractions)
     {
         if (subInteractions is not InteractionButtonsContainer buttonsContainer)
         {
@@ -740,7 +730,7 @@ public static class ContextMenuPatches
 
     private static int GetPlayerRubles(ItemUiContext itemUiContext)
     {
-        StashItemClass stash = itemUiContext.R().InventoryController.Inventory.Stash;
-        return stash == null ? 0 : R.Money.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
+        Stash stash = itemUiContext.R().InventoryController.Inventory.Stash;
+        return stash == null ? 0 : InventoryExtension.GetMoneySums(stash.Grid.ContainedItems.Keys)[ECurrencyType.RUB];
     }
 }

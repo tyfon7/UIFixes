@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using Diz.Utils;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -16,8 +18,9 @@ public static class LimitDragPatches
         new OnDragEventPatch(typeof(DragTrigger), nameof(DragTrigger.OnBeginDrag)).Enable();
         new OnDragEventPatch(typeof(DragTrigger), nameof(DragTrigger.OnEndDrag)).Enable();
 
-        new OnDragEventPatch(typeof(UIDragComponent), nameof(UIDragComponent.OnDrag)).Enable();
-        new OnDragEventPatch(typeof(UIDragComponent), nameof(UIDragComponent.OnBeginDrag)).Enable();
+        // Delightfully, these have to be fully qualified because they are declared with the interface name
+        new OnDragEventPatch(typeof(UIDragComponent), "UnityEngine.EventSystems.IDragHandler.OnDrag").Enable();
+        new OnDragEventPatch(typeof(UIDragComponent), "UnityEngine.EventSystems.IBeginDragHandler.OnBeginDrag").Enable();
     }
 
     // Prevent drag events with right mouse, or when shift is down (to avoid multiselect conflicts)

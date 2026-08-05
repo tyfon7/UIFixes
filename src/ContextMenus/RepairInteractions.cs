@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Comfort.Common;
+using EFT;
 using EFT.Communications;
 using EFT.InventoryLogic;
+using EFT.Repairing;
 using EFT.UI;
 
 namespace UIFixes;
 
-public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairInteractions.ERepairers>
+public class RepairInteractions : ContextInteractions<RepairInteractions.ERepairers>
 {
-    private readonly RepairControllerClass _repairController;
+    private readonly RepairController _repairController;
     private readonly int _playerRubles;
-    private readonly IEnumerable<R.RepairStrategy> _repairStrategies;
+    private readonly IEnumerable<IRepairStrategy> _repairStrategies;
     private readonly IEnumerable<IRepairer> _repairers;
 
     public RepairInteractions(Item item, ItemUiContext uiContext, int playerRubles) : this([item], uiContext, playerRubles) { }
@@ -22,12 +24,15 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
     {
         _repairController = uiContext.Session.RepairController;
 
-        // Add empty action because otherwise RepairControllerClass.action_0 is null and it pukes on successful repair
+        // Add empty action because otherwise it's null and it pukes on successful repair
         _repairController.OnSuccessfulRepairChangedEvent += () => { };
 
         _playerRubles = playerRubles;
 
-        _repairStrategies = items.Where(IsRepairable).Select(i => R.RepairStrategy.Create(i, _repairController));
+        _repairStrategies = items.Where(IsRepairable).Select<Item, IRepairStrategy>(item => item.GetItemComponent<ArmorHolderComponent>() != null ?
+            new ArmorRepairStrategy(item, _repairController) :
+            new DefaultRepairStrategy(item, _repairController));
+
         _repairers = _repairStrategies.SelectMany(rs => rs.Repairers).DistinctBy(r => r.RepairerId);
 
         Load();
@@ -54,10 +59,9 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
                 {
                     continue;
                 }
-                else if (R.RepairKit.Type.IsInstanceOfType(repairer))
+                else if (repairer is RepairKitsCollection repairKit)
                 {
-                    var repairKit = new R.RepairKit(repairer);
-                    totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
+                    totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit);
                 }
                 else
                 {
@@ -68,7 +72,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             string text;
             if (totalKitAmount > double.Epsilon)
             {
-                var repairKit = new R.RepairKit(repairer);
+                var repairKit = repairer as RepairKitsCollection;
                 float pointsLeft = repairKit.GetRepairPoints();
 
                 string costColor = totalKitAmount > pointsLeft ? "#FF0000" : "#ADB8BC";
@@ -88,7 +92,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             // Multiple repair kit types with the same short name will result in dupes that throw exceptions.
             string dedupedText = text;
             int dupeCount = 1;
-            while (Dictionary_0.ContainsKey(dedupedText))
+            while (_dynamicInteractions.ContainsKey(dedupedText))
             {
                 dupeCount++;
                 dedupedText = text + string.Format("<b><color=#C6C4B2> #{0}</color></b>", dupeCount);
@@ -104,7 +108,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             (item.TryGetItemComponent(out ArmorHolderComponent armorHolderComponent) && armorHolderComponent.ArmorPlates.Any());
     }
 
-    private static float GetClampedRepairAmount(R.RepairStrategy repairStrategy)
+    private static float GetClampedRepairAmount(IRepairStrategy repairStrategy)
     {
         float repairAmount = repairStrategy.HowMuchRepairScoresCanAccept();
 
@@ -131,7 +135,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             if (result.Succeed)
             {
                 anySuccess = true;
-                NotificationManagerClass.DisplayMessageNotification(string.Format("{0} {1:F1}", "Item successfully repaired to".Localized(null), repairStrategy.Durability()), ENotificationDurationType.Default, ENotificationIconType.Default, null);
+                NotificationManager.DisplayMessageNotification(string.Format("{0} {1:F1}", "Item successfully repaired to".Localized(null), repairStrategy.Durability()), ENotificationDurationType.Default, ENotificationIconType.Default, null);
             }
         }
 
@@ -154,6 +158,8 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
         double totalKitAmount = 0f;
         int totalPrice = 0;
 
+        var repairKit = repairer as RepairKitsCollection;
+
         foreach (var repairStrategy in _repairStrategies)
         {
             repairStrategy.CurrentRepairer = repairer;
@@ -163,10 +169,9 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             {
                 continue;
             }
-            else if (R.RepairKit.Type.IsInstanceOfType(repairer))
+            else if (repairKit != null)
             {
-                var repairKit = new R.RepairKit(repairer);
-                totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit.Value);
+                totalKitAmount += repairStrategy.GetRepairPrice(repairAmount, repairKit);
             }
             else
             {
@@ -174,7 +179,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
             }
         }
 
-        if (totalKitAmount > double.Epsilon && R.RepairKit.Type.IsInstanceOfType(repairer))
+        if (totalKitAmount > double.Epsilon && repairKit != null)
         {
             // This check is only for repair kits
             if (_repairStrategies.Any(rs => rs.IsNoCorrespondingArea()))
@@ -182,7 +187,6 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
                 return new FailedResult(ERepairStatusWarning.NoCorrespondingArea.ToString());
             }
 
-            var repairKit = new R.RepairKit(repairer);
             float pointsLeft = repairKit.GetRepairPoints();
             if (totalKitAmount > pointsLeft)
             {
@@ -247,7 +251,7 @@ public class RepairInteractions : ItemInfoInteractionsAbstractClass<RepairIntera
 
 public static class RepairExtensions
 {
-    public static bool IsRepairInteraction(this DynamicInteractionClass interaction)
+    public static bool IsRepairInteraction(this DynamicContextInteraction interaction)
     {
         return interaction.Id.StartsWith("UIFixesRepairerId:");
     }

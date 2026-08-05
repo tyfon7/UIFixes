@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using EFT.InputSystem;
+using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -43,9 +44,9 @@ public static class WindowPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(List<WindowData> ___list_1)
+        public static void Postfix(List<ItemUiContext.WindowData> ____windows)
         {
-            if (___list_1.LastOrDefault() is WindowData windowData)
+            if (____windows.LastOrDefault() is ItemUiContext.WindowData windowData)
             {
                 WindowManager.Instance.OnOpen(windowData);
             }
@@ -56,7 +57,7 @@ public static class WindowPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(Window<>).MakeGenericType([typeof(WindowContext)]), nameof(Window<>.method_0));
+            return AccessTools.Method(typeof(Window<>).MakeGenericType([typeof(WindowContext)]), nameof(Window<>.CloseAsync));
         }
 
         [PatchPostfix]
@@ -70,12 +71,12 @@ public static class WindowPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(InventoryScreen), nameof(InventoryScreen.method_4));
+            return AccessTools.DeclaredMethod(typeof(InventoryScreen), nameof(InventoryScreen.ShowWithTab));
         }
 
-        // The actual work of showing the inventory is in a coroutine that runs method_4, so wrap it and run after
+        // The actual work of showing the inventory is in a coroutine that runs ShowWithTab, so wrap it and run after
         [PatchPostfix]
-        public static void Postfix(ref IEnumerator __result, ItemContextAbstractClass ___itemContextAbstractClass)
+        public static void Postfix(ref IEnumerator __result, ItemContext ____itemContext)
         {
             // Only restore windows out of raid
             if (Plugin.InRaid())
@@ -84,10 +85,10 @@ public static class WindowPatches
                 return;
             }
 
-            __result = PostfixEnumerator(__result, ___itemContextAbstractClass);
+            __result = PostfixEnumerator(__result, ____itemContext);
         }
 
-        private static IEnumerator PostfixEnumerator(IEnumerator enumerator, ItemContextAbstractClass itemContext)
+        private static IEnumerator PostfixEnumerator(IEnumerator enumerator, ItemContext itemContext)
         {
             while (enumerator.MoveNext())
             {
@@ -120,9 +121,9 @@ public static class WindowPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(List<InputNode> ____children)
+        public static void Postfix(ItemUiContext __instance)
         {
-            if (____children.LastOrDefault() is UIInputNode newWindow)
+            if (__instance._children.LastOrDefault() is UIInputNode newWindow)
             {
                 newWindow.CorrectPosition();
             }
@@ -136,14 +137,16 @@ public static class WindowPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("GetTopLeftToPivotDelta") != null); // GClass949
-            return AccessTools.Method(type, "CorrectPositionResolution", [typeof(RectTransform), typeof(RectTransform), typeof(MarginsStruct)]);
+            return AccessTools.Method(
+                typeof(RectTransformExtensions),
+                nameof(RectTransformExtensions.CorrectPositionResolution),
+                [typeof(RectTransform), typeof(RectTransform), typeof(MarginsRect)]);
         }
 
         [PatchPostfix]
-        public static void Postfix(RectTransform transform, RectTransform referenceTransform, MarginsStruct margins)
+        public static void Postfix(RectTransform transform, RectTransform referenceTransform, MarginsRect margins)
         {
-            MarginsStruct distanceToBorders = transform.GetDistanceToBorders(referenceTransform, margins);
+            MarginsRect distanceToBorders = transform.GetDistanceToBorders(referenceTransform, margins);
             if (distanceToBorders.Top.Negative())
             {
                 Vector2 vector = transform.position;
@@ -164,7 +167,7 @@ public static class WindowPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(GridWindow __instance, bool selected, Color ____iconColorSelected, Color ____iconColorIdle)
+        public static void Postfix(GridWindow __instance, bool selected)
         {
             if (!Settings.HighlightPrioritizedWindowBorder.Value)
             {
@@ -178,7 +181,7 @@ public static class WindowPatches
                 return;
             }
 
-            border.color = selected ? ____iconColorSelected : ____iconColorIdle;
+            border.color = selected ? __instance._iconColorSelected : __instance._iconColorIdle;
         }
     }
 }

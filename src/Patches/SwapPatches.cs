@@ -15,13 +15,14 @@ using SPT.Reflection.Utils;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using static EFT.Player;
 
 namespace UIFixes;
 
 public static class SwapPatches
 {
     // Source container for the drag - grab this early to check it
-    private static IContainer SourceContainer;
+    private static IContainerView SourceContainer;
 
     // Whether it's being called from the "check every slot" loop
     private static bool InHighlight = false;
@@ -71,7 +72,7 @@ public static class SwapPatches
         new ScavInventorySplitPatch().Enable();
     }
 
-    private static bool ValidPrerequisites(DragItemContext itemContext, Item targetItem, IInventoryEventResult operation, bool prefix)
+    private static bool ValidPrerequisites(DragItemContext itemContext, Item targetItem, OperationResult operation, bool prefix)
     {
         if (!Settings.SwapItems.Value)
         {
@@ -114,7 +115,7 @@ public static class SwapPatches
 
         // Since 3.9 containers and items with slots return the same "no free room" error. If the item doesn't have grids it's not a container.
         bool isContainer = targetItem is CompoundItem compoundItem && compoundItem.Grids.Length > 0;
-        if (Settings.SwapImpossibleContainers.Value && isContainer && error is NoRoomError)
+        if (Settings.SwapImpossibleContainers.Value && isContainer && error is NoFreeSpaceError)
         {
             // Disallow in-raid, unless it's an equipment slot
             if (Plugin.InRaid() && targetItem.Parent.Container.ParentItem is not InventoryEquipment)
@@ -135,7 +136,7 @@ public static class SwapPatches
             }
         }
 
-        return error is NotApplicableError or CannotApplyError or NoPossibleActionsError or null;
+        return error is NoPossibleActionsError or CannotApplyItemError or NoPossibleActionsError or null;
     }
 
     private static bool CouldEverFit(DragItemContext itemContext, Item containerItem)
@@ -149,7 +150,7 @@ public static class SwapPatches
         var size = item.CalculateCellSize();
         var rotatedSize = item.CalculateRotatedSize(itemContext.ItemRotation == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal);
 
-        foreach (StashGridClass grid in container.Grids)
+        foreach (Grid grid in container.Grids)
         {
             if (size.X <= grid.GridWidth && size.Y <= grid.GridHeight ||
                 rotatedSize.X <= grid.GridWidth && rotatedSize.Y <= grid.GridHeight)
@@ -223,19 +224,19 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(
             DraggedItemView __instance,
-            IContainer ___iContainer,
-            ItemContextAbstractClass ___itemContextAbstractClass,
-            ItemUiContext ___itemUiContext_0)
+            IContainerView ____currentContainerUnderCursor,
+            ItemContext ____currentTargetItemContext,
+            ItemUiContext ____uiContext)
         {
             if (DidForceSwapChange())
             {
-                ___itemUiContext_0.method_2(); // Rerun highlighting
-                if (___iContainer != null)
+                ____uiContext.CheckCompatibleItems(); // Rerun highlighting
+                if (____currentContainerUnderCursor != null)
                 {
                     // Clear tooltip since the following won't
-                    ___itemUiContext_0.Tooltip.Close();
-                    ___iContainer.HighlightItemViewPosition(__instance.ItemContext, ___itemContextAbstractClass, false);
-                    UpdateSwapHighlight(__instance, ___iContainer, ___itemContextAbstractClass);
+                    ____uiContext.Tooltip.Close();
+                    ____currentContainerUnderCursor.HighlightItemViewPosition(__instance.ItemContext, ____currentTargetItemContext, false);
+                    UpdateSwapHighlight(__instance, ____currentContainerUnderCursor, ____currentTargetItemContext);
                 }
             }
         }
@@ -252,16 +253,16 @@ public static class SwapPatches
         [PatchPrefix]
         public static void Prefix(
             DraggedItemView __instance,
-            IContainer containerUnderCursor,
-            ItemContextAbstractClass itemUnderCursor,
-            IContainer ___iContainer,
-            ItemContextAbstractClass ___itemContextAbstractClass,
-            LocationInGrid ___locationInGrid_0)
+            IContainerView containerUnderCursor,
+            ItemContext itemUnderCursor,
+            IContainerView ____currentContainerUnderCursor,
+            ItemContext ____currentTargetItemContext,
+            LocationInGrid ____currentLocationInGrid)
         {
             // Copy logic to avoid running unless pointer location changes
             GridView gridView = containerUnderCursor as GridView;
             LocationInGrid locationInGrid = gridView != null ? gridView.CalculateItemLocation(__instance.ItemContext) : null;
-            if (containerUnderCursor == ___iContainer && itemUnderCursor == ___itemContextAbstractClass && locationInGrid == ___locationInGrid_0)
+            if (containerUnderCursor == ____currentContainerUnderCursor && itemUnderCursor == ____currentTargetItemContext && locationInGrid == ____currentLocationInGrid)
             {
                 return;
             }
@@ -270,7 +271,7 @@ public static class SwapPatches
         }
     }
 
-    private static void UpdateSwapHighlight(DraggedItemView draggedItemView, IContainer containerUnderCursor, ItemContextAbstractClass itemUnderCursor)
+    private static void UpdateSwapHighlight(DraggedItemView draggedItemView, IContainerView containerUnderCursor, ItemContext itemUnderCursor)
     {
         if (!Settings.ExtraSwapFeedback.Value)
         {
@@ -298,8 +299,8 @@ public static class SwapPatches
         ItemRotation rotation = ItemRotation.Horizontal;
         Item targetItem;
 
-        containerUnderCursor.CanAccept(draggedItemView.ItemContext, itemUnderCursor, out ItemOperation operation);
-        if (operation.Succeeded && operation.Value is SwapOperation swapOperation)
+        containerUnderCursor.CanAccept(draggedItemView.ItemContext, itemUnderCursor, out OperationResult operation);
+        if (operation.Succeeded && operation.Value is SwapResult swapOperation)
         {
             // show blue highlight
             color = R.GridView.SwapColor;
@@ -309,14 +310,14 @@ public static class SwapPatches
                 rotation = gridAddress.LocationInGrid.r;
             }
         }
-        else if (operation.Error is GridSpaceTakenError error && // compare x and y but NOT r (rotation). Same x,y, same grid, only swap would error like this
-            error.LocationInGrid_0.x == gridItemAddress.LocationInGrid.x &&
-            error.LocationInGrid_0.y == gridItemAddress.LocationInGrid.y &&
-            error.StashGridClass == gridItemAddress.Grid)
+        else if (operation.Error is Grid.PlaceTakenByAnotherItemError error && // compare x and y but NOT r (rotation). Same x,y, same grid, only swap would error like this
+            error._location.x == gridItemAddress.LocationInGrid.x &&
+            error._location.y == gridItemAddress.LocationInGrid.y &&
+            error._grid == gridItemAddress.Grid)
         {
             // show red highlight
             color = R.GridView.InvalidOperationColor;
-            targetItem = error.Item_0;
+            targetItem = error._item;
         }
         else
         {
@@ -334,7 +335,7 @@ public static class SwapPatches
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.localPosition = Vector3.zero;
 
-        XYCellSizeStruct xycellSizeStruct = targetItem.CalculateRotatedSize(rotation);
+        IntVec2 xycellSizeStruct = targetItem.CalculateRotatedSize(rotation);
         LocationInGrid panelLocation = gridItemAddress.LocationInGrid;
 
         int minX = panelLocation.x;
@@ -359,7 +360,7 @@ public static class SwapPatches
         var panel = transform != null ? transform.GetComponent<Image>() : null;
         if (panel == null && create)
         {
-            var template = sourceGridView.R().HighlightPanel;
+            var template = sourceGridView._highlightPanel;
             panel = UnityEngine.Object.Instantiate(template, sourceGridView.transform);
             panel.name = "SwapHighlightPanel";
             panel.transform.SetSiblingIndex(template.transform.GetSiblingIndex());
@@ -395,7 +396,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridView), nameof(GridView.method_8));
+            return AccessTools.Method(typeof(GridView), nameof(GridView.GetTargetItem));
         }
 
         [PatchPostfix]
@@ -417,7 +418,7 @@ public static class SwapPatches
             return AccessTools.Method(typeof(GridView), nameof(GridView.CanAccept));
         }
 
-        // Essentially doing what happens in StashGridClass.method_6, which checks if any of the squares are already taken
+        // Essentially doing what happens in Grid.FindFreeSpaceInGrid, which checks if any of the squares are already taken
         // This looks at the squares taken by the two items and sees if any are the same
         private static bool ItemsOverlap(Item itemA, ItemAddress itemAddressA, Item itemB, ItemAddress itemAddressB)
         {
@@ -430,7 +431,7 @@ public static class SwapPatches
             {
                 LocationInGrid locationA = gridItemAddressA.LocationInGrid;
                 LocationInGrid locationB = gridItemAddressB.LocationInGrid;
-                StashGridClass grid = gridItemAddressA.Grid;
+                Grid grid = gridItemAddressA.Grid;
 
                 var itemASize = itemA.CalculateRotatedSize(locationA.r);
                 var itemASlots = new List<int>();
@@ -463,14 +464,15 @@ public static class SwapPatches
         public static bool Prefix(
             GridView __instance,
             DragItemContext itemContext,
-            ItemContextAbstractClass targetItemContext,
-            ref IInventoryEventResult operation,
+            ItemContext targetItemContext,
+            ref OperationResult operation,
             ref bool __result,
-            Dictionary<string, ItemView> ___ItemViews)
+            Dictionary<string, ItemView> ___ItemViews,
+            ItemController ____itemController)
         {
             if (IsForceSwapPressed())
             {
-                __result = CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, true);
+                __result = CanSwap(__instance, itemContext, targetItemContext, ____itemController, ref operation, ___ItemViews, true);
                 return false;
             }
 
@@ -481,19 +483,20 @@ public static class SwapPatches
         public static void Postfix(
             GridView __instance,
             DragItemContext itemContext,
-            ItemContextAbstractClass targetItemContext,
-            ref IInventoryEventResult operation,
+            ItemContext targetItemContext,
+            ref OperationResult operation,
             ref bool __result,
-            Dictionary<string, ItemView> ___ItemViews)
+            Dictionary<string, ItemView> ___ItemViews,
+            ItemController ____itemController)
         {
             // Unsure if this runs when the prefix returns false, so only do anything if !force
-            if (!IsForceSwapPressed() && CanSwap(__instance, itemContext, targetItemContext, ref operation, ___ItemViews, false))
+            if (!IsForceSwapPressed() && CanSwap(__instance, itemContext, targetItemContext, ____itemController, ref operation, ___ItemViews, false))
             {
                 __result = true;
             }
         }
 
-        private static bool CanSwap(GridView gridView, DragItemContext itemContext, ItemContextAbstractClass targetItemContext, ref IInventoryEventResult operation, Dictionary<string, ItemView> itemViews, bool prefix)
+        private static bool CanSwap(GridView gridView, DragItemContext itemContext, ItemContext targetItemContext, ItemController itemController, ref OperationResult operation, Dictionary<string, ItemView> itemViews, bool prefix)
         {
             // BSG's "move entire stacks" code loops inside AcceptItem - don't want this method to run on 2nd+ calls. Swap only happens
             // on the first. This still works fine with multi-select since that calls AcceptItem per item 
@@ -540,7 +543,7 @@ public static class SwapPatches
             // LootRadius workaround - if the item is on the ground, the address is NOT a GridItemAddress
             if (targetGridItemAddress == null)
             {
-                if (targetItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
+                if (targetItemContext.Source?.Item is Stash stash && stash.Grid.ItemCollection.ContainsKey(targetItem))
                 {
                     targetGridItemAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[targetItem]);
                 }
@@ -550,7 +553,7 @@ public static class SwapPatches
                 }
             }
 
-            ItemAddress itemToAddress = new StashGridItemAddress(targetGridItemAddress.Grid, itemToLocation);
+            ItemAddress itemToAddress = new Grid.ProtectedGridItemAddress(targetGridItemAddress.Grid, itemToLocation);
 
             ItemAddress targetToAddress;
             if (itemAddress is GridItemAddress gridItemAddress)
@@ -558,13 +561,13 @@ public static class SwapPatches
                 LocationInGrid targetToLocation = gridItemAddress.LocationInGrid.Clone();
                 targetToLocation.r = targetGridItemAddress.LocationInGrid.r;
 
-                targetToAddress = new StashGridItemAddress(gridItemAddress.Grid, targetToLocation);
+                targetToAddress = new Grid.ProtectedGridItemAddress(gridItemAddress.Grid, targetToLocation);
             }
-            else if (R.SlotItemAddress.Type.IsInstanceOfType(itemAddress))
+            else if (itemAddress is SlotItemAddress slotItemAddress)
             {
-                targetToAddress = R.SlotItemAddress.Create(new R.SlotItemAddress(itemAddress).Slot);
+                targetToAddress = new Slot.ProtectedSlotItemAddress(slotItemAddress.Slot);
             }
-            else if (itemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+            else if (itemContext.Source?.Item is Stash stash && stash.Grid.ItemCollection.ContainsKey(item))
             {
                 // LootRadius workaround
                 targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
@@ -574,23 +577,19 @@ public static class SwapPatches
                 return false;
             }
 
-            // Get the TraderControllerClass
-            TraderControllerClass traderControllerClass = gridView.R().TraderController;
-
             // Check that the destinations won't overlap (Swap won't check this)
             if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
             {
                 // Try original rotations
-                var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
-                operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
-                if (result.Succeeded)
+                operation = ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, true);
+                if (operation.Succeeded)
                 {
                     return true;
                 }
             }
             else if (targetToAddress is GridItemAddress badTargetToAddress)
             {
-                operation = new ItemOperation(new GridSpaceTakenError(targetItem, badTargetToAddress.LocationInGrid, badTargetToAddress.Grid));
+                operation = new OperationResult(new Grid.PlaceTakenByAnotherItemError(targetItem, badTargetToAddress.LocationInGrid, badTargetToAddress.Grid));
             }
 
             // If the target is going to a grid, try rotating it. This address is already a new object, safe to modify
@@ -599,11 +598,11 @@ public static class SwapPatches
                 targetToGridItemAddress.LocationInGrid.r = targetToGridItemAddress.LocationInGrid.r == ItemRotation.Horizontal ? ItemRotation.Vertical : ItemRotation.Horizontal;
                 if (!ItemsOverlap(item, itemToAddress, targetItem, targetToAddress))
                 {
-                    var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, traderControllerClass, true);
+                    var result = ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, true);
                     if (result.Succeeded)
                     {
                         // Only save this operation result if it succeeded, otherwise return the non-rotated result from above
-                        operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
+                        operation = result;
                         return true;
                     }
                 }
@@ -620,20 +619,20 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.SwapOperation.Type.GenericTypeArguments[0], "RaiseEvents"); // SwapOperation
+            return AccessTools.Method(typeof(SwapResult), nameof(SwapResult.RaiseEvents));
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderControllerClass controller, CommandStatus status, Item ___Item, Item ___Item2)
+        public static void Postfix(SwapResult __instance, ItemController controller, CommandStatus status)
         {
-            if (status != CommandStatus.Succeed || ___Item == null || ___Item2 == null || controller is not InventoryController inventoryController)
+            if (status != CommandStatus.Succeed || __instance.Item == null || __instance.Item2 == null || controller is not InventoryController inventoryController)
             {
                 return;
             }
 
-            if (!inventoryController.IsAtBindablePlace(___Item))
+            if (!inventoryController.IsAtBindablePlace(__instance.Item))
             {
-                var result = inventoryController.UnbindItemDirect(___Item, false);
+                var result = inventoryController.UnbindItemDirect(__instance.Item, false);
                 if (result.Succeeded)
                 {
                     result.Value.RaiseEvents(controller, CommandStatus.Begin);
@@ -641,9 +640,9 @@ public static class SwapPatches
                 }
             }
 
-            if (!inventoryController.IsAtBindablePlace(___Item2))
+            if (!inventoryController.IsAtBindablePlace(__instance.Item2))
             {
-                var result = inventoryController.UnbindItemDirect(___Item2, false);
+                var result = inventoryController.UnbindItemDirect(__instance.Item2, false);
                 if (result.Succeeded)
                 {
                     result.Value.RaiseEvents(controller, CommandStatus.Begin);
@@ -686,8 +685,8 @@ public static class SwapPatches
         public static bool Prefix(
             DragItemContext __instance,
             Slot slot,
-            ref IInventoryEventResult operation,
-            TraderControllerClass itemController,
+            ref OperationResult operation,
+            ItemController itemController,
             bool simulate,
             ref bool __result)
         {
@@ -705,8 +704,8 @@ public static class SwapPatches
         public static void Postfix(
             DragItemContext __instance,
             Slot slot,
-            ref IInventoryEventResult operation,
-            TraderControllerClass itemController,
+            ref OperationResult operation,
+            ItemController itemController,
             bool simulate,
             ref bool __result)
         {
@@ -717,7 +716,7 @@ public static class SwapPatches
             }
         }
 
-        private static bool CanSwap(DragItemContext dragItemContext, Slot slot, ref IInventoryEventResult operation, TraderControllerClass itemController, bool simulate, bool prefix)
+        private static bool CanSwap(DragItemContext dragItemContext, Slot slot, ref OperationResult operation, ItemController itemController, bool simulate, bool prefix)
         {
             // Do a few more checks
             if (slot.ContainedItem == null || dragItemContext.Item == slot.ContainedItem || slot.ContainedItem.GetAllParentItems().Contains(dragItemContext.Item))
@@ -732,21 +731,20 @@ public static class SwapPatches
 
             var item = dragItemContext.Item;
             var targetItem = slot.ContainedItem;
-            var itemToAddress = R.SlotItemAddress.Create(slot);
+            var itemToAddress = new Slot.ProtectedSlotItemAddress(slot);
             var targetToAddress = item.Parent;
 
             // Repair kits again
             // Don't have access to ItemView to call CanInteract, but repair kits can't go into any slot I'm aware of, so...
-            if (item is RepairKitsItemClass)
+            if (item is RepairKit)
             {
                 return false;
             }
 
             // Make sure it's a grid or a slot we're sending the target to - LootRadius workaround
-            if (targetToAddress is not GridItemAddress && !R.SlotItemAddress.Type.IsInstanceOfType(targetToAddress))
+            if (targetToAddress is not GridItemAddress && targetToAddress is not SlotItemAddress)
             {
-                // _1 is the root item (i.e. the stash)
-                if (dragItemContext.R().GetParentContext()?.Item is StashItemClass stash && stash.Grid.ItemCollection.ContainsKey(item))
+                if (dragItemContext.Source?.Item is Stash stash && stash.Grid.ItemCollection.ContainsKey(item))
                 {
                     targetToAddress = stash.Grid.CreateItemAddress(stash.Grid.ItemCollection[item]);
                 }
@@ -756,8 +754,8 @@ public static class SwapPatches
                 }
             }
 
-            var result = InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
-            if (result.Failed && result.Error is MoveResizeError)
+            var result = ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate);
+            if (result.Failed && result.Error is ItemManipulator.ResizeError)
             {
                 // When the slot is a weapon mod slot and this swap would trigger a resize, the resize left/up code needs to run
                 Item weapon = itemToAddress.GetRootItemNotEquipment();
@@ -768,11 +766,11 @@ public static class SwapPatches
                         itemController,
                         simulate,
                         ref result,
-                        () => InteractionsHandlerClass.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate));
+                        () => ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate));
                 }
             }
 
-            operation = new R.SwapOperation(result).ToGridViewCanAcceptOperation();
+            operation = result;
             return result.Succeeded;
         }
     }
@@ -786,7 +784,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Weapon __instance, TraderControllerClass itemController, Item item, bool simulate, ref ItemOperation __result)
+        public static void Postfix(Weapon __instance, ItemController itemController, Item item, bool simulate, ref OperationResult __result)
         {
             if (!Settings.SwapItems.Value || MultiSelect.Active)
             {
@@ -799,7 +797,7 @@ public static class SwapPatches
                 return;
             }
 
-            if (__result.Succeeded || item is not MagazineItemClass || __result.Error is not SlotNotEmptyError)
+            if (__result.Succeeded || item is not Magazine || __result.Error is not Slot.SlotNotEmptyError)
             {
                 return;
             }
@@ -821,7 +819,7 @@ public static class SwapPatches
                 }
             }
 
-            __result = InteractionsHandlerClass.Swap(item, magazineSlot.ContainedItem.Parent, magazineSlot.ContainedItem, itemAddress, itemController, simulate);
+            __result = ItemManipulator.Swap(item, magazineSlot.ContainedItem.Parent, magazineSlot.ContainedItem, itemAddress, itemController, simulate);
         }
     }
 
@@ -831,7 +829,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_13));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.ShowAcceptHighlight));
         }
 
         [PatchPrefix]
@@ -853,7 +851,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_1));
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.CheckAcceptHandler));
 
         }
 
@@ -876,8 +874,7 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CheckItemFilter", BindingFlags.Public | BindingFlags.Static) != null); // GClass2928
-            return AccessTools.Method(type, "CheckItemFilter");
+            return AccessTools.Method(typeof(ItemFilterExtension), nameof(ItemFilterExtension.CheckItemFilter));
         }
 
         [PatchPostfix]
@@ -893,16 +890,15 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(InteractionsHandlerClass).GetNestedTypes().Single(t => t.GetField("noSpaceError") != null); // InteractionsHandlerClass.Class2347
-            return AccessTools.Method(type, "method_1");
+            return AccessTools.Method(typeof(ItemManipulator.CG_QuickFindAppropriatePlace), nameof(ItemManipulator.CG_QuickFindAppropriatePlace.method_1));
         }
 
         [PatchPostfix]
-        public static void Postfix(IEnumerable<EFT.InventoryLogic.IContainer> containersToPut, ref GStruct154<IItemResult> __result, Error ___noSpaceError, Error ___noActionsError)
+        public static void Postfix(ItemManipulator.CG_QuickFindAppropriatePlace __instance, IEnumerable<IContainer> containersToPut, ref OperationResult<IItemOperationResult> __result)
         {
-            if (!containersToPut.Any(c => c is StashGridClass) && __result.Error == ___noSpaceError)
+            if (!containersToPut.Any(c => c is Grid) && __result.Error == __instance.noSpaceError)
             {
-                __result = new(___noActionsError);
+                __result = new(__instance.noActionsError);
             }
         }
     }
@@ -917,7 +913,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(DraggedItemView __instance, ItemContextAbstractClass itemUnderCursor)
+        public static void Postfix(DraggedItemView __instance, ItemContext itemUnderCursor)
         {
             if (__instance.ItemContext == null || itemUnderCursor?.Item == __instance.ItemContext.Item)
             {
@@ -927,13 +923,11 @@ public static class SwapPatches
             if (SourceContainer is Component sourceComponent)
             {
                 ItemSpecificationPanel panel = sourceComponent.GetComponentInParent<ItemSpecificationPanel>();
-                if (panel != null)
+                if (panel != null && __instance.ItemContext.ItemAddress is SlotItemAddress slotItemAddress)
                 {
-                    Slot slot = new R.SlotItemAddress(__instance.ItemContext.ItemAddress).Slot;
-
                     // DragItemContext must be disposed after using, or its buggy implementation causes an infinite loop / stack overflow
                     using DragItemContext itemUnderCursorContext = itemUnderCursor != null ? new DragItemContext(itemUnderCursor, ItemRotation.Horizontal) : null;
-                    panel.method_19(slot, itemUnderCursorContext);
+                    panel.OnCompareRequired(slotItemAddress.Slot, itemUnderCursorContext);
                 }
             }
         }
@@ -949,7 +943,7 @@ public static class SwapPatches
         [PatchPrefix]
         public static bool Prefix(SimpleTooltip __instance, InventoryError error)
         {
-            if (error is GridNoRoomError || error is GridSpaceTakenError)
+            if (error is Grid.WontFitToGridError || error is Grid.PlaceTakenByAnotherItemError)
             {
                 __instance.Close();
                 return false;
@@ -965,11 +959,11 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Property(typeof(ItemContextAbstractClass), nameof(ItemContextAbstractClass.SplitAvailable)).GetMethod;
+            return AccessTools.Property(typeof(ItemContext), nameof(ItemContext.SplitAvailable)).GetMethod;
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemContextAbstractClass __instance, ref bool __result)
+        public static void Postfix(ItemContext __instance, ref bool __result)
         {
             if (__instance.ViewType == EItemViewType.ScavInventory)
             {
@@ -982,42 +976,42 @@ public static class SwapPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(FirearmAddingModState), nameof(FirearmAddingModState.OnModChanged));
+            return AccessTools.Method(typeof(FirearmController.AddModOperation), nameof(FirearmController.AddModOperation.OnModChanged));
         }
 
         // This is the state machine's "adding mod" state
         // Unpatched, it fires off the success callback before returning to ready state
         // Patched to not be that stupid
         [PatchPrefix]
-        public static bool Prefix(FirearmAddingModState __instance)
+        public static bool Prefix(FirearmController.AddModOperation __instance)
         {
-            if (__instance.Bool_0)
+            if (__instance._onModChanged)
             {
                 return false;
             }
-            __instance.Bool_0 = true;
-            __instance.FirearmsAnimator_0.SetupMod(false);
-            GameObject gameObject = Singleton<PoolManagerClass>.Instance.CreateItem(__instance.Item_0, true);
-            __instance.WeaponManagerClass.SetupMod(__instance.Slot_0, gameObject);
-            __instance.FirearmsAnimator_0.Fold(__instance.Weapon_0.Folded);
+            __instance._onModChanged = true;
+            __instance.FirearmsAnimator.SetupMod(false);
+            GameObject gameObject = Singleton<ObjectsFactory>.Instance.CreateItem(__instance._item, true);
+            __instance.Firearms.SetupMod(__instance._slot, gameObject);
+            __instance.FirearmsAnimator.Fold(__instance.Weapon.Folded);
             __instance.State = Player.EOperationState.Finished;
 
             // Begin change (moved from bottom)
-            __instance.FirearmController_0.InitiateOperation<FirearmReadyState>().Start(null);
-            __instance.method_5(gameObject);
+            __instance.Controller.InitiateOperation<FirearmController.Idling>().Start(null);
+            __instance.CheckUnderbarrelMode(gameObject);
             // End change
 
-            __instance.Callback_0.Succeed();
+            __instance._callback.Succeed();
 
-            __instance.Player_0.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, (float)__instance.Weapon_0.CalculateCellSize().X);
-            __instance.Player_0.UpdateFirstPersonGrip(GripPose.EGripType.Common, __instance.FirearmController_0.HandsHierarchy);
+            __instance.Player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, __instance.Weapon.CalculateCellSize().X);
+            __instance.Player.UpdateFirstPersonGrip(GripPose.EGripType.Common, __instance.Controller.HandsHierarchy);
 
-            if (__instance.Item_0 is Mod mod && mod.HasLightComponent)
+            if (__instance._item is Mod mod && mod.HasLightComponent)
             {
-                __instance.Player_0.SendWeaponLightPacket();
+                __instance.Player.SendWeaponLightPacket();
             }
 
-            __instance.FirearmController_0.WeaponModified();
+            __instance.Controller.WeaponModified();
 
             return false;
         }

@@ -3,6 +3,8 @@ using Bsg.GameSettings;
 using Comfort.Common;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
+using EFT.Settings;
+using EFT.Settings.Control;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Settings;
@@ -33,11 +35,11 @@ public static class QuickAccessPanelPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ControlSettingsClass), nameof(ControlSettingsClass.GetBoundItemNames));
+            return AccessTools.Method(typeof(ControlSettingsGroup), nameof(ControlSettingsGroup.GetBoundItemNames));
         }
 
         [PatchPostfix]
-        public static void Postfix(ControlSettingsClass __instance, EBoundItem boundItem, ref string __result)
+        public static void Postfix(ControlSettingsGroup __instance, EBoundItem boundItem, ref string __result)
         {
             switch (boundItem)
             {
@@ -63,15 +65,15 @@ public static class QuickAccessPanelPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext itemUiContext, TextMeshProUGUI ___HotKey)
+        public static void Postfix(BoundItemView __instance, ItemUiContext itemUiContext)
         {
-            if (___HotKey == null || ___HotKey.text == null)
+            if (__instance.HotKey == null || __instance.HotKey.text == null)
             {
                 return;
             }
 
-            var bindPanel = ___HotKey.transform.parent.gameObject;
-            ShortenText(bindPanel, ___HotKey, itemUiContext);
+            var bindPanel = __instance.HotKey.transform.parent.gameObject;
+            ShortenText(bindPanel, __instance.HotKey, itemUiContext);
         }
     }
 
@@ -84,10 +86,10 @@ public static class QuickAccessPanelPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(BindPanel __instance, TextMeshProUGUI ____hotKey)
+        public static void Postfix(BindPanel __instance)
         {
             // Required because there's some kind of late adjustment that screws with the offset
-            ShortenText(__instance.gameObject, ____hotKey, ItemUiContext.Instance);
+            ShortenText(__instance.gameObject, __instance._hotKey, ItemUiContext.Instance);
         }
     }
 
@@ -147,7 +149,7 @@ public static class QuickAccessPanelPatches
             }
 
             // Still need to be scaled though!
-            XYCellSizeStruct cellSize = __instance.Item.CalculateCellSize();
+            IntVec2 cellSize = __instance.Item.CalculateCellSize();
             if (cellSize.X == cellSize.Y)
             {
                 Transform transform = ___MainImage.transform;
@@ -167,7 +169,7 @@ public static class QuickAccessPanelPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.method_5));
+            return AccessTools.Method(typeof(InventoryScreenQuickAccessPanel), nameof(InventoryScreenQuickAccessPanel.SetVisibility));
         }
 
         // This method is a mess. The visibility setting has to be ignored in some cases, respected in others
@@ -178,7 +180,7 @@ public static class QuickAccessPanelPatches
         [PatchPrefix]
         public static bool Prefix(InventoryScreenQuickAccessPanel __instance, bool visible)
         {
-            GameSetting<EVisibilityMode> quickSlotsVisibility = Singleton<SharedGameSettingsClass>.Instance.Game.Settings.QuickSlotsVisibility;
+            GameSetting<EVisibilityMode> quickSlotsVisibility = Singleton<SettingsManager>.Instance.Game.Settings.QuickSlotsVisibility;
 
             bool shouldShow = visible && !__instance.IsDisabled;
             bool blocked = Ignorable && quickSlotsVisibility == EVisibilityMode.Never;
@@ -208,7 +210,7 @@ public static class QuickAccessPanelPatches
         [PatchPrefix]
         public static void Prefix(ECommand command)
         {
-            FixVisibilityPatch.Ignorable = QuickBindCommandMap.SlotBySelectCommandDictionary.ContainsKey(command);
+            FixVisibilityPatch.Ignorable = QuickUseSelectorUtil.SlotBySelectCommandDictionary.ContainsKey(command);
         }
 
         [PatchPostfix]
@@ -222,14 +224,14 @@ public static class QuickAccessPanelPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BattleUIQuickbarManager), nameof(BattleUIQuickbarManager.method_14));
+            return AccessTools.Method(typeof(EftBattleUIScreen.HideoutBattleUIScreenController), nameof(EftBattleUIScreen.HideoutBattleUIScreenController.UnSubscribe));
         }
 
         // Upon entering the hideout (in first person), the quickbar is disabled. BSG never re-enables it!
         [PatchPostfix]
-        public static void Postfix(BattleUIQuickbarManager __instance)
+        public static void Postfix(EftBattleUIScreen.HideoutBattleUIScreenController __instance)
         {
-            __instance.method_11(true);
+            __instance.OnShootingRangeStatus(true);
         }
     }
 }

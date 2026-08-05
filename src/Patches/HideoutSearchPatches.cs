@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EFT;
 using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.UI;
@@ -36,17 +37,14 @@ public static class HideoutSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.ProductionPanelShowSubclass.Type, "method_2");
+            return AccessTools.Method(typeof(ProductionPanel.CG_Class1944), nameof(ProductionPanel.CG_Class1944.method_2));
         }
 
         [PatchPostfix]
-        public static void Postfix(object __instance, object scheme, ProduceView view)
+        public static void Postfix(ProductionPanel.CG_Class1944 __instance, ProductionScheme scheme, ProduceView view)
         {
-            var instance = new R.ProductionPanelShowSubclass(__instance);
-            var productScheme = new R.Scheme(scheme);
-
-            ValidationInputField searchField = instance.ProductionPanel.R().SeachInputField;
-            if (searchField.text.Length > 0 && productScheme.EndProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
+            ValidationInputField searchField = __instance.productionPanel_0._searchInputField;
+            if (searchField.text.Length > 0 && scheme.endProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
             {
                 view.GameObject.SetActive(false);
             }
@@ -98,12 +96,12 @@ public static class HideoutSearchPatches
         public static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
         {
             // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
-            if (__instance.method_10(true).Count() > 2)
+            if (__instance.GetSortedSchemes(true).Count() > 2)
             {
                 AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-                LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
+                LayoutElement layoutElement = areaScreenSubstrate._contentLayout;
                 layoutElement.minHeight = 750f; // aka areaScreenSubstrate._maxHeight
-                areaScreenSubstrate.method_8();
+                areaScreenSubstrate.ViewListCreated();
             }
 
             ____searchInputField.GetOrAddComponent<SearchKeyListener>();
@@ -113,21 +111,21 @@ public static class HideoutSearchPatches
         }
     }
 
-    //method_10 gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
+    // GetSortedSchemes gets the sorted list of products. If there's a search term, prioritize the matching items so they load first
     public class FastHideoutSearchPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_10));
+            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.GetSortedSchemes));
         }
 
-        // Copied directly from method_10
+        // Copied directly from GetSortedSchemes
         [PatchPrefix]
-        public static bool Prefix(ProductionPanel __instance, ref IEnumerable<Scheme> __result, ValidationInputField ____searchInputField)
+        public static bool Prefix(ProductionPanel __instance, ref IEnumerable<ProductionScheme> __result, BaseHideoutScheme[] ____schemes)
         {
-            __result = __instance.R().ProductionBuilds.OfType<Scheme>().Where(scheme => !scheme.locked)
-                .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(____searchInputField.text) ? 0 : 1) // search-matching items first
-                .ThenBy(__instance.method_19)
+            __result = ____schemes.OfType<ProductionScheme>().Where(scheme => !scheme.locked)
+                .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(__instance._searchInputField.text) ? 0 : 1) // search-matching items first
+                .ThenBy(__instance.CG_GetSortedSchemes)
                 .ThenBy(scheme => scheme.FavoriteIndex)
                 .ThenBy(scheme => scheme.Level);
 
@@ -135,18 +133,18 @@ public static class HideoutSearchPatches
         }
     }
 
-    // method_16 activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
+    // Search() activates/deactivates the product game objects based on the search. Need to resort the list due to above patch
     public class FixHideoutSearchAgainPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.method_16));
+            return AccessTools.Method(typeof(ProductionPanel), nameof(ProductionPanel.Search));
         }
 
         [PatchPrefix]
         public static void Prefix(ProductionPanel __instance)
         {
-            __instance.method_14(); // update sort order
+            __instance.UpdateOrder();
         }
     }
 
@@ -159,15 +157,15 @@ public static class HideoutSearchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+        public static void Prefix(ProductionPanel __instance)
         {
             // There can be multiple panels! But there's only one active search box.
-            if (!____searchInputField.isActiveAndEnabled)
+            if (!__instance._searchInputField.isActiveAndEnabled)
             {
                 return;
             }
 
-            LastSearches[__instance.AreaData.ToString()] = ____searchInputField.text;
+            LastSearches[__instance.AreaData.ToString()] = __instance._searchInputField.text;
 
             ScrollRect scrollRect = __instance.GetComponentInParent<ScrollRect>();
             if (scrollRect != null)
@@ -184,7 +182,7 @@ public static class HideoutSearchPatches
 
             // Reset the default behavior
             AreaScreenSubstrate areaScreenSubstrate = __instance.GetComponentInParent<AreaScreenSubstrate>();
-            LayoutElement layoutElement = areaScreenSubstrate.R().ContentLayout;
+            LayoutElement layoutElement = areaScreenSubstrate._contentLayout;
             layoutElement.minHeight = -1f;
         }
     }

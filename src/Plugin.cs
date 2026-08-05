@@ -10,7 +10,7 @@ using UnityEngine.EventSystems;
 
 namespace UIFixes;
 
-[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInPlugin("com.tyfon.uifixes", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("xyz.pit.fireteam", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("com.lacyway.mc", BepInDependency.DependencyFlags.SoftDependency)]
@@ -153,7 +153,7 @@ public class Plugin : BaseUnityPlugin
     }
 
     private static bool? IsFikaPresent;
-    private static readonly Version MinimumFikaVersion = new("1.1.3");
+    private static readonly System.Version MinimumFikaVersion = new("1.1.3");
 
     public static bool FikaPresent()
     {

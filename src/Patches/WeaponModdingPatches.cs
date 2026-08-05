@@ -50,8 +50,8 @@ public static class WeaponModdingPatches
     public class ResizeData
     {
         public MongoID ItemId;
-        public XYCellSizeStruct OldSize;
-        public XYCellSizeStruct NewSize;
+        public IntVec2 OldSize;
+        public IntVec2 NewSize;
     }
 
     public class LastResizePatch : ModulePatch
@@ -60,11 +60,11 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(StashGridClass), nameof(StashGridClass.Resize));
+            return AccessTools.Method(typeof(Grid), nameof(Grid.Resize));
         }
 
         [PatchPostfix]
-        public static void Postfix(StashGridClass __instance, Item item, XYCellSizeStruct oldSize, XYCellSizeStruct newSize)
+        public static void Postfix(Grid __instance, Item item, IntVec2 oldSize, IntVec2 newSize)
         {
             // Only record growths, not reductions
             if (newSize.X <= oldSize.X && newSize.Y <= oldSize.Y)
@@ -90,13 +90,13 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Move));
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.Move));
         }
 
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, bool simulate, ref GStruct154<MoveOperation> __result)
+        public static void Postfix(Item item, ItemAddress to, ItemController itemController, bool simulate, ref OperationResult<MoveResult> __result)
         {
-            if (__result.Succeeded || InPatch || __result.Error is not MoveResizeError)
+            if (__result.Succeeded || InPatch || __result.Error is not ItemManipulator.ResizeError)
             {
                 return;
             }
@@ -110,7 +110,7 @@ public static class WeaponModdingPatches
             try
             {
                 InPatch = true;
-                TryMoving(targetItem, itemController, simulate, ref __result, () => InteractionsHandlerClass.Move(item, to, itemController, simulate));
+                TryMoving(targetItem, itemController, simulate, ref __result, () => ItemManipulator.Move(item, to, itemController, simulate));
             }
             finally
             {
@@ -125,13 +125,13 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Fold));
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.Fold));
         }
 
         [PatchPostfix]
-        public static void Postfix(FoldableComponent foldable, bool folded, bool simulate, ref GStruct154<FoldOperation> __result)
+        public static void Postfix(FoldableComponent foldable, bool folded, bool simulate, ref OperationResult<FoldResult> __result)
         {
-            if (__result.Succeeded || InPatch || __result.Error is not MoveResizeError)
+            if (__result.Succeeded || InPatch || __result.Error is not ItemManipulator.ResizeError)
             {
                 return;
             }
@@ -144,7 +144,7 @@ public static class WeaponModdingPatches
             try
             {
                 InPatch = true;
-                TryMoving(foldable.Item, inventoryController, simulate, ref __result, () => InteractionsHandlerClass.Fold(foldable, folded, simulate));
+                TryMoving(foldable.Item, inventoryController, simulate, ref __result, () => ItemManipulator.Fold(foldable, folded, simulate));
             }
             finally
             {
@@ -153,7 +153,7 @@ public static class WeaponModdingPatches
         }
     }
 
-    public static void TryMoving<T>(Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<T> __result, Func<GStruct154<T>> func) where T : IRaiseEvents
+    public static void TryMoving<T>(Item targetItem, ItemController itemController, bool simulate, ref OperationResult<T> __result, Func<OperationResult<T>> func) where T : IOperationResult
     {
         ResizeData resize = LastResizePatch.LastResize;
         if (resize == null || targetItem.Id != resize.ItemId || targetItem.Parent is not GridItemAddress gridItemAddress)
@@ -161,7 +161,7 @@ public static class WeaponModdingPatches
             return;
         }
 
-        StashGridClass grid = gridItemAddress.Grid;
+        Grid grid = gridItemAddress.Grid;
         LocationInGrid itemLocation = gridItemAddress.LocationInGrid;
 
         // Figure out which direction(s) its growing
@@ -182,12 +182,12 @@ public static class WeaponModdingPatches
                 }
 
                 LocationInGrid newLocation = new(x, y, itemLocation.r);
-                ItemAddress newAddress = new StashGridItemAddress(grid, newLocation);
+                ItemAddress newAddress = new Grid.ProtectedGridItemAddress(grid, newLocation);
 
-                var extraMoveResult = InteractionsHandlerClass.Move(targetItem, newAddress, itemController, false);
+                var extraMoveResult = ItemManipulator.Move(targetItem, newAddress, itemController, false);
                 if (extraMoveResult.Failed || extraMoveResult.Value == null)
                 {
-                    if (extraMoveResult.Error is GridSpaceTakenError)
+                    if (extraMoveResult.Error is Grid.PlaceTakenByAnotherItemError)
                     {
                         // If this x value collided before going up, it's over
                         if (y == itemLocation.y)
@@ -228,13 +228,13 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MoveOperation), nameof(MoveOperation.RollBack));
+            return AccessTools.Method(typeof(MoveResult), nameof(MoveResult.RollBack));
         }
 
         [PatchPostfix]
-        public static void Postfix(MoveOperation __instance)
+        public static void Postfix(MoveResult __instance)
         {
-            MoveOperation moveOperation = __instance.GetExtraMoveOperation();
+            MoveResult moveOperation = __instance.GetExtraMoveOperation();
             moveOperation?.RollBack();
         }
     }
@@ -243,13 +243,13 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SwapOperation), nameof(SwapOperation.RollBack));
+            return AccessTools.Method(typeof(SwapResult), nameof(SwapResult.RollBack));
         }
 
         [PatchPostfix]
-        public static void Postfix(SwapOperation __instance)
+        public static void Postfix(SwapResult __instance)
         {
-            MoveOperation moveOperation = __instance.GetExtraMoveOperation();
+            MoveResult moveOperation = __instance.GetExtraMoveOperation();
             moveOperation?.RollBack();
         }
     }
@@ -260,18 +260,18 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.RunNetworkTransaction));
+            return AccessTools.Method(typeof(ItemController), nameof(ItemController.RunNetworkTransaction));
         }
 
         [PatchPrefix]
-        public static bool Prefix(TraderControllerClass __instance, IRaiseEvents operationResult, Callback callback)
+        public static bool Prefix(ItemController __instance, IOperationResult operationResult, Callback callback)
         {
             if (InPatch)
             {
                 return true;
             }
 
-            MoveOperation extraOperation = operationResult.GetExtraMoveOperation();
+            MoveResult extraOperation = operationResult.GetExtraMoveOperation();
             if (extraOperation == null)
             {
                 return true;
@@ -321,18 +321,18 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(ModdingItemSelector), nameof(ModdingItemSelector.Select));
+            return AccessTools.DeclaredMethod(typeof(WeaponModdingManipulation), nameof(WeaponModdingManipulation.Select));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ModdingItemSelector __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
+        public static bool Prefix(WeaponModdingManipulation __instance, Item item, Slot slot, bool simulate, ref Error error, ref bool __result)
         {
             if (item == null || slot.ContainedItem == null || item == slot.ContainedItem)
             {
                 return true;
             }
 
-            var operation = InteractionsHandlerClass.Swap(item, slot.ContainedItem.Parent, slot.ContainedItem, item.Parent, __instance.InventoryController_0, simulate);
+            var operation = ItemManipulator.Swap(item, slot.ContainedItem.Parent, slot.ContainedItem, item.Parent, __instance.InventoryController, simulate);
             if (operation.Failed)
             {
                 return true;
@@ -340,7 +340,7 @@ public static class WeaponModdingPatches
 
             if (!simulate)
             {
-                __instance.InventoryController_0.TryRunNetworkTransaction(operation, null);
+                __instance.InventoryController.TryRunNetworkTransaction(operation, null);
             }
 
             error = null;
@@ -353,12 +353,12 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsInteractive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsInteractive));
         }
 
         // Enable/disable options in the context menu
         [PatchPostfix]
-        public static void Postfix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
+        public static void Postfix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref IResult __result)
         {
             // These two are only visible out of raid, enable them
             if (Settings.ModifyEquippedWeapons.Value && (button == EItemInfoButton.Modding || button == EItemInfoButton.EditBuild))
@@ -386,7 +386,7 @@ public static class WeaponModdingPatches
             // Need to do the disabling as appropriate
             if (button == EItemInfoButton.Uninstall || button == EItemInfoButton.Discard)
             {
-                if (!CanModify(__instance.Item_0_1, __instance.TraderControllerClass as InventoryController, out string error))
+                if (!CanModify(__instance._item, __instance._itemController as InventoryController, out string error))
                 {
                     __result = new FailedResult(error);
                     return;
@@ -399,20 +399,20 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ModSlotView), nameof(ModSlotView.method_13));
+            return AccessTools.Method(typeof(ModSlotView), nameof(ModSlotView.ModLock));
         }
 
         // Enable context menu on normally unmoddable slots, maybe keep them gray
         [PatchPostfix]
-        public static void Postfix(ModSlotView __instance, ref bool ___bool_1, CanvasGroup ____canvasGroup, TraderControllerClass ___ItemController)
+        public static void Postfix(ModSlotView __instance, ref bool ____locked, CanvasGroup ____canvasGroup, ItemController ___ItemController)
         {
             if (__instance.Slot.Locked)
             {
                 // Soft armor slots - make them interactable for basic functionality (still can't be moved)
-                if (__instance.method_15(out _, out _))
+                if (__instance.TryGetArmorSlot(out _, out _))
                 {
-                    ____canvasGroup.blocksRaycasts = true;
-                    ____canvasGroup.interactable = true;
+                    __instance._canvasGroup.blocksRaycasts = true;
+                    __instance._canvasGroup.interactable = true;
                 }
 
                 return;
@@ -421,26 +421,26 @@ public static class WeaponModdingPatches
             // Keep it grayed out and warning text if its not draggable, even if context menu is enabled
             if (CanModify(__instance.Slot.ContainedItem, ___ItemController as InventoryController, out _))
             {
-                ___bool_1 = false;
-                ____canvasGroup.alpha = 1f;
+                ____locked = false;
+                __instance._canvasGroup.alpha = 1f;
             }
 
-            ____canvasGroup.blocksRaycasts = true;
-            ____canvasGroup.interactable = true;
+            __instance._canvasGroup.blocksRaycasts = true;
+            __instance._canvasGroup.interactable = true;
         }
     }
 
     public class MoveCanExecutePatch : ModulePatch
     {
-        public static TraderControllerClass TraderController;
+        public static ItemController TraderController;
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MoveOperation), nameof(MoveOperation.CanExecute));
+            return AccessTools.Method(typeof(MoveResult), nameof(MoveResult.CanExecute));
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderControllerClass itemController)
+        public static void Prefix(ItemController itemController)
         {
             TraderController = itemController;
         }
@@ -460,7 +460,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(Mod __instance, IContainer toContainer, ref GStruct156<bool> __result)
+        public static void Postfix(Mod __instance, IContainer toContainer, ref Option<bool> __result)
         {
             if (__result.Succeeded)
             {
@@ -473,7 +473,7 @@ public static class WeaponModdingPatches
                 return;
             }
 
-            if (toContainer is not Slot toSlot || !CanModify(R.SlotItemAddress.Create(toSlot), inventoryController, out _))
+            if (toContainer is not Slot toSlot || !CanModify(new Slot.ProtectedSlotItemAddress(toSlot), inventoryController, out _))
             {
                 return;
             }
@@ -484,20 +484,16 @@ public static class WeaponModdingPatches
 
     public class CanDetachPatch : ModulePatch
     {
-        private static Type TargetMethodReturnType;
-
         protected override MethodBase GetTargetMethod()
         {
-            MethodInfo method = AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_3));
-            TargetMethodReturnType = method.ReturnType;
-            return method;
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.MovePathCheck));
         }
 
         // This gets invoked when dragging items around between slots
         [PatchPostfix]
-        public static void Postfix(Item item, ItemAddress to, TraderControllerClass itemController, ref GStruct156<UnsetError> __result)
+        public static void Postfix(Item item, ItemAddress to, ItemController itemController, ref Option<None> __result)
         {
-            if (item is not Mod && item is not ArmorPlateItemClass)
+            if (item is not Mod && item is not ArmorPlate)
             {
                 return;
             }
@@ -509,7 +505,7 @@ public static class WeaponModdingPatches
             {
                 // In agreement, just check the error is best to show
                 if (Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool &&
-                    (__result.Error is NotModdableInRaidError || __result.Error is ModVitalPartInRaidError))
+                    (__result.Error is NotRaidModdableError || __result.Error is CannotModifyVitalInRaidError))
                 {
                     // Double check this is an unequipped weapon
                     Weapon weapon = item.GetRootItemNotEquipment() as Weapon ?? to.GetRootItemNotEquipment() as Weapon;
@@ -517,7 +513,7 @@ public static class WeaponModdingPatches
                     if (weapon != null)
                     {
                         bool equipped = inventoryController != null && inventoryController.ID == weapon.Owner.ID && inventoryController.IsItemEquipped(weapon);
-                        __result = equipped ? new VitalPartInHandsError() : new MultitoolNeededError(item);
+                        __result = equipped ? new VitalPartInHandsError() : new NotModdableWithoutMultitoolError(item);
                     }
                 }
             }
@@ -525,7 +521,7 @@ public static class WeaponModdingPatches
             if (__result.Failed && canModify)
             {
                 // Override result with success if DestinationCheck passes
-                var destinationCheck = InteractionsHandlerClass.DestinationCheck(item.Parent, to, itemController);
+                var destinationCheck = ItemManipulator.DestinationCheck(item.Parent, to, itemController);
                 if (destinationCheck.Failed)
                 {
                     return;
@@ -540,13 +536,13 @@ public static class WeaponModdingPatches
                 {
                     __result = new VitalPartInHandsError();
                 }
-                else if (item is ArmorPlateItemClass)
+                else if (item is ArmorPlate)
                 {
                     __result = new ArmorPlatesInRaidError();
                 }
                 else
                 {
-                    __result = new GenericError("UIFixes: Unexpected type failed CanModify");
+                    __result = new StringError("UIFixes: Unexpected type failed CanModify");
                 }
             }
         }
@@ -588,7 +584,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(CompoundItem __instance, TraderControllerClass itemController, Item item)
+        public static void Prefix(CompoundItem __instance, ItemController itemController, Item item)
         {
             if (!Plugin.InRaid())
             {
@@ -619,7 +615,7 @@ public static class WeaponModdingPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(CompoundItem __instance, TraderControllerClass itemController, Item item, ref ItemOperation __result)
+        public static void Postfix(CompoundItem __instance, ItemController itemController, Item item, ref OperationResult __result)
         {
             SuccessOverride = false;
 
@@ -646,9 +642,9 @@ public static class WeaponModdingPatches
             // If setting is multitool, may need to change some errors
             if (!equipped && Settings.ModifyRaidWeapons.Value == ModRaidWeapon.WithTool)
             {
-                if (__result.Error is NotModdableInRaidError || __result.Error is ModVitalPartInRaidError)
+                if (__result.Error is NotRaidModdableError || __result.Error is CannotModifyVitalInRaidError)
                 {
-                    __result = new MultitoolNeededError(__instance);
+                    __result = new NotModdableWithoutMultitoolError(__instance);
                 }
             }
         }
@@ -658,15 +654,15 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_21));
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.GetModLockedState));
         }
 
         [PatchPostfix]
-        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.GStruct448> __result, TraderControllerClass ___traderControllerClass)
+        public static void Postfix(Slot slot, ref KeyValuePair<EModLockedState, ModSlotView.TooltipData> __result, ItemController ____itemController)
         {
             if (__result.Value.Error == "<color=red>" + "Raid lock".Localized() + "</color>")
             {
-                if (CanModify(slot, ___traderControllerClass as InventoryController, out string error))
+                if (CanModify(slot, ____itemController as InventoryController, out string error))
                 {
                     __result = new(EModLockedState.Unlocked, new()
                     {
@@ -692,7 +688,7 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(PatchConstants.EftTypes.Single(t => t.IsSubclassOf(typeof(Slot)) && !t.IsNested), "CanAcceptRaid");
+            return AccessTools.Method(typeof(ArmorSlot), nameof(ArmorSlot.CanAcceptRaid));
         }
 
         [PatchPostfix]
@@ -747,7 +743,7 @@ public static class WeaponModdingPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(WeaponBuilder), nameof(WeaponBuilder.smethod_0));
+            return AccessTools.Method(typeof(WeaponAssembler), nameof(WeaponAssembler.AssembleAsync));
         }
 
         [PatchPrefix]
@@ -788,12 +784,12 @@ public static class WeaponModdingPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_17));
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.DisassembleOperationsList));
         }
 
         // BSG's implemention uses a lazy-eval linq that doesn't see mods that are nested once the higher level mod is removed
         [PatchPrefix]
-        public static bool Prefix(ItemUiContext __instance, ItemContextAbstractClass itemContext, bool simulate, ref List<ItemOperation> __result, TraderControllerClass ___traderControllerClass)
+        public static bool Prefix(ItemUiContext __instance, ItemContext itemContext, bool simulate, ref List<OperationResult> __result, ItemController ____itemController)
         {
             if (!Settings.FullyDisassemble.Value)
             {
@@ -806,11 +802,11 @@ public static class WeaponModdingPatches
                 throw new ArgumentException("Item to disassemble is not a weapon");
             }
 
-            List<ItemOperation> operations = [];
-            foreach (Mod mod in weapon.Mods.Where(__instance.method_19).ToArray()) // ToArray copies the list so it's set
+            List<OperationResult> operations = [];
+            foreach (Mod mod in weapon.Mods.Where(__instance.CG_DisassembleOperationsList).ToArray()) // ToArray copies the list so it's set
             {
-                ItemContextAbstractClass itemContextAbstractClass = itemContext.CreateChild(mod);
-                ItemOperation operation = __instance.QuickFindAppropriatePlace(itemContextAbstractClass, ___traderControllerClass, !Plugin.InRaid(), false, false);
+                ItemContext itemContextAbstractClass = itemContext.CreateChild(mod);
+                OperationResult operation = __instance.QuickFindAppropriatePlace(itemContextAbstractClass, ____itemController, !Plugin.InRaid(), false, false);
                 if (operation.Succeeded)
                 {
                     operations.Add(operation);
@@ -853,12 +849,13 @@ public static class WeaponModdingPatches
             return false;
         }
 
-        Slot slot = R.SlotItemAddress.Type.IsAssignableFrom(itemAddress.GetType()) ? new R.SlotItemAddress(itemAddress).Slot : null;
-        if (slot == null)
+        if (itemAddress is not SlotItemAddress slotItemAddress)
         {
             // If there's no slot, it's just a normal grid?
             return true;
         }
+
+        var slot = slotItemAddress.Slot;
 
         // Locked slots: never
         if (slot.Locked)
@@ -883,7 +880,7 @@ public static class WeaponModdingPatches
             // If the slot is not a required slot, allow it (item is null here, checking the empty destination slot)
             return !slot.Required || CanModify(weapon, inventoryController, out error);
         }
-        else if (item is ArmorPlateItemClass && rootItem is ArmorItemClass or VestItemClass)
+        else if (item is ArmorPlate && rootItem is Armor or Vest)
         {
             if (!Plugin.InRaid())
             {

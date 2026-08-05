@@ -77,7 +77,7 @@ public static class FilterOutOfStockPatches
             check.gameObject.SetActive(ShowOutOfStockItems);
 
             LocalizedText text = UnityEngine.Object.Instantiate(____updateAssort.transform.Find("TextWhite").GetComponent<LocalizedText>(), OutOfStockPanel.transform, false);
-            text.R().StringCase = EStringCase.Upper;
+            text._stringCase = EStringCase.Upper;
             text.LocalizationKey = "OUT OF STOCK";
 
             TextMeshProUGUI textMesh = text.GetComponent<TextMeshProUGUI>();
@@ -95,8 +95,8 @@ public static class FilterOutOfStockPatches
                 check.gameObject.SetActive(ShowOutOfStockItems);
 
                 Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonOver);
-                ____traderGridView.method_16(); // Refreshes the grid
-                ____traderGridView.method_18(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
+                ____traderGridView.ApplyFilterAndRefresh(); // Refreshes the grid
+                ____traderGridView.InvokeFilterChanged(); // Resets scrolling position, which has the necessary side effect of refreshing what the scrollview is masking
             });
         }
     }

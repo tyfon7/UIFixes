@@ -5,14 +5,14 @@ namespace UIFixes;
 
 public static class InputHelper
 {
-    private static readonly Dictionary<EGameKey, KeyBindingClass> KeyBindings = [];
+    private static readonly Dictionary<EGameKey, InputKeyCombination> KeyBindings = [];
 
-    public static void MapKeyBindings(InputBindingsDataClass bindingsData)
+    public static void MapKeyBindings(InputPreset bindingsData)
     {
         KeyBindings.Clear();
-        foreach (var entry in bindingsData.Gclass2408_0)
+        foreach (var entry in bindingsData._workingKeyCombinations)
         {
-            if (entry is not KeyBindingClass keyBinding)
+            if (entry is not InputKeyCombination keyBinding)
             {
                 continue;
             }
@@ -21,20 +21,19 @@ public static class InputHelper
         }
     }
 
-    public static KeyBindingClass GetKeyBinding(EGameKey gameKey)
+    public static InputKeyCombination GetKeyBinding(EGameKey gameKey)
     {
-        return KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding) ? keyBinding : null;
+        return KeyBindings.TryGetValue(gameKey, out InputKeyCombination keyBinding) ? keyBinding : null;
     }
 
     public static bool IsKeyHeld(EGameKey gameKey)
     {
-        if (!KeyBindings.TryGetValue(gameKey, out KeyBindingClass keyBinding))
+        if (!KeyBindings.TryGetValue(gameKey, out InputKeyCombination keyBinding))
         {
             return false;
         }
 
-        // KeyCombinationState_0 is the current state
-        if (keyBinding.KeyCombinationState_0.GetKeysStatus(out EKeyPress keyPress))
+        if (keyBinding._state.GetKeysStatus(out EKeyPress keyPress))
         {
             return keyPress switch
             {

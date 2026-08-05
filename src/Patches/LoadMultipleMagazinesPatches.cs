@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT.Builds;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -38,7 +39,7 @@ public static class LoadMultipleMagazinesPatches
             {
                 CombinedFilters = MultiSelect.SortedItemContexts()
                     .Select(itemContext => itemContext.Item)
-                    .OfType<MagazineItemClass>()
+                    .OfType<Magazine>()
                     .SelectMany(mag => mag.Cartridges.Filters)
                     .ToArray();
             }
@@ -55,7 +56,7 @@ public static class LoadMultipleMagazinesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemFilterExtensions), nameof(ItemFilterExtensions.CheckItemFilter));
+            return AccessTools.Method(typeof(ItemFilterExtension), nameof(ItemFilterExtension.CheckItemFilter));
         }
 
         [PatchPrefix]
@@ -74,19 +75,18 @@ public static class LoadMultipleMagazinesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagInteraction") != null);
-            return AccessTools.Method(type, "method_6");
+            return AccessTools.Method(typeof(LoadMagContextInteractions), nameof(LoadMagContextInteractions.LoadAmmo));
         }
 
         [PatchPrefix]
-        public static bool Prefix(string ammoTemplateId, ref Task __result, ItemUiContext ___ItemUiContext_0)
+        public static bool Prefix(LoadMagContextInteractions __instance, string ammoTemplateId, ref Task __result)
         {
             if (!MultiSelect.Active)
             {
                 return true;
             }
 
-            __result = MultiSelect.LoadAmmoAll(___ItemUiContext_0, ammoTemplateId, false);
+            __result = MultiSelect.LoadAmmoAll(__instance.UIContext, ammoTemplateId, false);
             return false;
         }
     }
@@ -95,8 +95,7 @@ public static class LoadMultipleMagazinesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
-            return AccessTools.Method(type, "method_7");
+            return AccessTools.Method(typeof(MagPresetContextInteractions), nameof(MagPresetContextInteractions.IsPresetCompatible));
         }
 
         [PatchPrefix]
@@ -106,7 +105,7 @@ public static class LoadMultipleMagazinesPatches
             {
                 CombinedFilters = MultiSelect.SortedItemContexts()
                     .Select(itemContext => itemContext.Item)
-                    .OfType<MagazineItemClass>()
+                    .OfType<Magazine>()
                     .SelectMany(mag => mag.Cartridges.Filters)
                     .ToArray();
             }
@@ -123,12 +122,11 @@ public static class LoadMultipleMagazinesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetNestedType("EMagPresetInteraction") != null);
-            return AccessTools.Method(type, "method_6");
+            return AccessTools.Method(typeof(MagPresetContextInteractions), nameof(MagPresetContextInteractions.PresetSelectHandler));
         }
 
         [PatchPrefix]
-        public static bool Prefix(MagazineBuildPresetClass preset, ItemUiContext ___ItemUiContext_1)
+        public static bool Prefix(MagPresetContextInteractions __instance, MagPreset preset)
         {
             if (!MultiSelect.Active)
             {
@@ -140,8 +138,8 @@ public static class LoadMultipleMagazinesPatches
                 return true;
             }
 
-            var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<MagazineItemClass>();
-            ___ItemUiContext_1.ApplyMagPreset(preset, [.. magazines]).HandleExceptions();
+            var magazines = MultiSelect.SortedItemContexts().Select(itemContext => itemContext.Item).OfType<Magazine>();
+            __instance._uiContext.ApplyMagPreset(preset, [.. magazines]).HandleExceptions();
 
             return false;
         }

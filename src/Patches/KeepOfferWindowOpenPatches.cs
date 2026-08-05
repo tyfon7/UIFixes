@@ -20,11 +20,11 @@ public static class KeepOfferWindowOpenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.method_5));
+            return AccessTools.Method(typeof(AddOfferWindow), nameof(AddOfferWindow.AddOffer));
         }
 
         [PatchPrefix]
-        public static void Prefix(AddOfferWindow __instance)
+        public static void Prefix(AddOfferWindow __instance, RagFair ____ragfair)
         {
             if (!Settings.KeepAddOfferOpen.Value)
             {
@@ -32,15 +32,14 @@ public static class KeepOfferWindowOpenPatches
             }
 
             // Close the window if you're gonna hit max offers
-            var ragfair = __instance.R().Ragfair;
-            if (Settings.KeepAddOfferOpenIgnoreMaxOffers.Value || ragfair.MyOffersCount + 1 < ragfair.GetMaxOffersCount(ragfair.MyRating))
+            if (Settings.KeepAddOfferOpenIgnoreMaxOffers.Value || ____ragfair.MyOffersCount + 1 < ____ragfair.GetMaxOffersCount(____ragfair.MyRating))
             {
                 BlockClose = true;
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(RequirementView[] ____requirementViews)
+        public static void Postfix(AddOfferWindow __instance)
         {
             BlockClose = false;
             bool closeBlocked = CloseBlocked;
@@ -54,7 +53,7 @@ public static class KeepOfferWindowOpenPatches
             if (closeBlocked)
             {
                 // clear old prices
-                foreach (var requirementView in ____requirementViews)
+                foreach (var requirementView in __instance._requirementViews)
                 {
                     requirementView.ResetRequirementInformation();
                 }

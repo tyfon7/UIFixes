@@ -26,7 +26,7 @@ public static class UnloadAmmoPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredProperty(typeof(TradingPlayerInteractions), nameof(TradingPlayerInteractions.AvailableInteractions)).GetMethod;
+            return AccessTools.DeclaredProperty(typeof(TradingPlayerContextInteractions), nameof(TradingPlayerContextInteractions.AvailableInteractions)).GetMethod;
         }
 
         [PatchPostfix]
@@ -43,7 +43,7 @@ public static class UnloadAmmoPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredProperty(typeof(TransferPlayerInteractions), nameof(TransferPlayerInteractions.AvailableInteractions)).GetMethod;
+            return AccessTools.DeclaredProperty(typeof(TransferItemPlayerContextInteractions), nameof(TransferItemPlayerContextInteractions.AvailableInteractions)).GetMethod;
         }
 
         [PatchPostfix]
@@ -67,7 +67,7 @@ public static class UnloadAmmoPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(InventoryController __instance, MagazineItemClass magazine, bool equipmentBlocked, ref Task<IResult> __result)
+        public static bool Prefix(InventoryController __instance, Magazine magazine, bool equipmentBlocked, ref Task<IResult> __result)
         {
             if (ItemUiContext.Instance.ContextType != EItemUiContextType.ScavengerInventoryScreen)
             {
@@ -91,8 +91,7 @@ public static class UnloadAmmoPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ScavengerInventoryScreen).GetNestedTypes().Single(t => t.GetField("ScavController") != null); // ScavengerInventoryScreen.GClass3597
-            return AccessTools.GetDeclaredConstructors(type).Single();
+            return AccessTools.GetDeclaredConstructors(typeof(ScavengerInventoryScreen.ScavengerInventoryScreenController)).Single();
         }
 
         [PatchPrefix]

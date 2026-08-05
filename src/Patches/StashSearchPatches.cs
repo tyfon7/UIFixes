@@ -1,6 +1,9 @@
+using System;
 using System.Reflection;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.Utilities;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using TMPro;
@@ -83,7 +86,7 @@ public static class StashSearchPatches
             }
 
             // Item under cursor
-            ItemContextAbstractClass itemContext = ItemUiContext.Instance.R().ItemContext;
+            ItemContext itemContext = ItemUiContext.Instance.CurrentItemContext;
 
             // Item being dragged
             DragItemContext dragItemContext = ItemUiContext.Instance.R().DragItemContext;
@@ -102,10 +105,11 @@ public static class StashSearchPatches
     {
         if (SearchButton != null && !SearchButton.IsOn)
         {
-            SearchButton.method_1(true);
-            SearchButton.method_2(true);
-            SearchButton.method_2(false);
-            SearchButton.method_1(false);
+            // Yes, this is the only way to invoke the button without causing issues. BSG never ceases to impress.
+            SearchButton.SetHover(true);
+            SearchButton.SetClick(true);
+            SearchButton.SetClick(false);
+            SearchButton.SetHover(false);
         }
     }
 
@@ -117,7 +121,7 @@ public static class StashSearchPatches
         }
 
         [PatchPostfix]
-        private static void Prefix(ItemContextAbstractClass itemContext, ItemInfoInteractionsAbstractClass<EItemInfoButton> __result)
+        private static void Prefix(ItemContext itemContext, ContextInteractions<EItemInfoButton> __result)
         {
             if (!Settings.StashSearchContextMenu.Value || Plugin.InRaid())
             {
@@ -142,7 +146,7 @@ public static class StashSearchPatches
             }
 
             var text = "UI/SearchWindow/Tooltip/SearchInStash".Localized(EFT.EStringCase.Upper);
-            __result.Dictionary_0["StashSearch"] = new(
+            __result._dynamicInteractions["StashSearch"] = new(
                 "StashSearch",
                 text,
                 () =>
@@ -150,7 +154,7 @@ public static class StashSearchPatches
                     Query = item.Name.Localized();
                     OpenSearch();
                 },
-                CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/FilterSearch"));
+                ResourcesCache.Pop<Sprite>("Characteristics/Icons/FilterSearch"));
         }
     }
 
@@ -160,7 +164,10 @@ public static class StashSearchPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionButtonsContainer), "method_1");
+            return AccessTools.Method(
+                typeof(InteractionButtonsContainer),
+                nameof(InteractionButtonsContainer.CreateContextButton),
+                [typeof(string), typeof(string), typeof(SimpleContextMenuButton), typeof(RectTransform), typeof(Sprite), typeof(Action), typeof(Action), typeof(bool), typeof(bool)]);
         }
 
         [PatchPostfix]
@@ -177,7 +184,7 @@ public static class StashSearchPatches
             }
 
             // Dynamic actions use the localized string for the key, because BSG
-            var text = "UI/SearchWindow/Tooltip/SearchInStash".Localized(EFT.EStringCase.Upper);
+            var text = "UI/SearchWindow/Tooltip/SearchInStash".Localized(EStringCase.Upper);
             if (key != text)
             {
                 return;

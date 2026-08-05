@@ -3,26 +3,26 @@ using SPTarkov.Server.Core.Models.Spt.Mod;
 
 namespace UIFixes.Server;
 
-public record ModMetadata : AbstractModMetadata
+public record ModMetadata : IModMetadata
 {
-    public override string ModGuid { get; init; } = "com.tyfon.uifixes";
-    public override string Name { get; init; } = "UI Fixes";
+    public string ModGuid { get; init; } = "com.tyfon.uifixes";
+    public string Name { get; init; } = "UI Fixes";
 
-    public override string Author { get; init; } = "Tyfon";
+    public string Author { get; init; } = "Tyfon";
 
-    public override List<string> Contributors { get; init; }
+    public List<string> Contributors { get; init; }
 
-    public override SemanticVersioning.Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version.ToString(3));
+    public SemanticVersioning.Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version.ToString(3));
 
-    public override SemanticVersioning.Range SptVersion { get; init; } = new("~4.0.0");
+    public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
 
-    public override List<string> Incompatibilities { get; init; }
+    public List<string> Incompatibilities { get; init; }
 
-    public override Dictionary<string, SemanticVersioning.Range> ModDependencies { get; init; }
+    public Dictionary<string, SemanticVersioning.Range> ModDependencies { get; init; }
 
-    public override string Url { get; init; } = "https://github.com/tyfon7/uifixes";
+    public string Url { get; init; } = "https://github.com/tyfon7/uifixes";
 
-    public override bool? IsBundleMod { get; init; } = false;
+    public string License { get; init; } = "MIT";
 
-    public override string License { get; init; } = "MIT";
+    public bool HasPrepatcher { get; init; } = false;
 }

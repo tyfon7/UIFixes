@@ -9,18 +9,18 @@ public class HideInviteUIPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(MenuTaskBar), nameof(MenuTaskBar.method_1));
+        return AccessTools.Method(typeof(MenuTaskBar), nameof(MenuTaskBar.method_1)); // OnGroupStatusChanged
     }
 
     [PatchPrefix]
-    public static bool Prefix(GroupPanel ____groupPanel)
+    public static bool Prefix(MenuTaskBar __instance)
     {
         if (Settings.ShowGroupInvitePanel.Value)
         {
             return true;
         }
 
-        ____groupPanel.Close();
+        __instance._groupPanel.Close();
         return false;
     }
 }

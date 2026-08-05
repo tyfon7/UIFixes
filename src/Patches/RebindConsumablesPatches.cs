@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Diz.LanguageExtensions;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -24,61 +25,56 @@ public static class RebindConsumablesPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.Discard));
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.Discard), [typeof(Item), typeof(ItemController), typeof(bool)]);
         }
 
         [PatchPostfix]
-        public static void Postfix(Item item, bool simulate, GStruct154<DiscardOperation> __result)
+        public static void Postfix(Item item, bool simulate, OperationResult<DiscardResult> __result)
         {
             if (!Settings.RebindConsumables.Value || simulate || !__result.Succeeded)
             {
                 return;
             }
 
-            if (item is not MedsItemClass && item is not FoodDrinkItemClass)
+            if (item is not Meds && item is not FoodDrink)
             {
                 return;
             }
 
-            var unbindOperation = __result.Value.List_0.FirstOrDefault();
+            var unbindOperation = __result.Value._unbindResults.FirstOrDefault();
             Rebind(unbindOperation);
         }
     }
 
     public class RebindGrenadesPatch : ModulePatch
     {
-        private static FieldInfo DiscardOperationField;
-
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(Player).GetNestedTypes().Single(t => t.GetField("ThrowWeapItemClass", BindingFlags.Public | BindingFlags.Instance) != null);
-            DiscardOperationField = AccessTools.GetDeclaredFields(type).Single(f => f.FieldType == typeof(DiscardOperation));
-            return AccessTools.Method(type, "RaiseEvents");
+            return AccessTools.Method(typeof(Player.GrenadeThrowResult), nameof(Player.GrenadeThrowResult.RaiseEvents));
         }
 
         // This is a grenade specific event emitter that has all the info needed to do this
         [PatchPostfix]
-        public static void Postfix(object __instance, CommandStatus status)
+        public static void Postfix(Player.GrenadeThrowResult __instance, CommandStatus status)
         {
             if (!Settings.RebindGrenades.Value || status != CommandStatus.Succeed)
             {
                 return;
             }
 
-            DiscardOperation discardOperation = (DiscardOperation)DiscardOperationField.GetValue(__instance);
-            var unbindOperation = discardOperation.List_0.FirstOrDefault();
+            var unbindOperation = __instance._discardResult._unbindResults.FirstOrDefault();
             Rebind(unbindOperation);
         }
     }
 
-    private static void Rebind(UnbindOperation unbindOperation)
+    private static void Rebind(UnbindResult unbindOperation)
     {
         if (unbindOperation == null)
         {
             return;
         }
 
-        InventoryController controller = unbindOperation.InventoryController_0;
+        InventoryController controller = unbindOperation._controller;
 
         // Don't run the rebind on fika remote - the remote client will run this and send the rebind separately
         if (controller.IsObserved())
@@ -94,7 +90,7 @@ public static class RebindConsumablesPatches
             var nextItem = matchItems.FirstOrDefault(g => controller.IsAtBindablePlace(g));
             if (nextItem != null)
             {
-                controller.TryRunNetworkTransaction(BindOperation.Run(controller, nextItem, unbindOperation.Index, true), null);
+                controller.TryRunNetworkTransaction(BindResult.Run(controller, nextItem, unbindOperation.Index, true), null);
             }
         });
     }

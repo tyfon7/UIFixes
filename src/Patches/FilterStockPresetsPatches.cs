@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT.HandBook;
 using EFT.UI;
+using EFT.UI.Builds;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -33,10 +35,10 @@ public static class FilterStockPresetsPatches
         [PatchPrefix]
         public static bool Prefix(
             BuildsCategoriesPanel __instance,
-            RagFairClass ragfair,
-            HandbookClass handbook,
-            EntityNodeDictionary nodes,
-            EntityNodeDictionary filteredNodes,
+            RagFair ragfair,
+            Handbook handbook,
+            HandbookNodes nodes,
+            HandbookNodes filteredNodes,
             SimpleContextMenu contextMenu,
             EViewListType viewListType,
             EWindowType windowType,
@@ -57,8 +59,8 @@ public static class FilterStockPresetsPatches
                 LastSearch = null;
             }
 
-            var originalNodes = new EntityNodeDictionary(nodes);
-            var originalFilteredNodes = new EntityNodeDictionary(filteredNodes);
+            var originalNodes = new HandbookNodes(nodes);
+            var originalFilteredNodes = new HandbookNodes(filteredNodes);
             void Reload(object sender, EventArgs args)
             {
                 LastSearch = ___SearchInputField.text;
@@ -72,7 +74,7 @@ public static class FilterStockPresetsPatches
             if (!Settings.ShowStockPresets.Value)
             {
                 // These entity node things are a disaster, the only way to filter to is to competely clone the whole tree
-                EntityNodeDictionary root = new(new Dictionary<string, EntityNodeClass>());
+                HandbookNodes root = new(new Dictionary<string, HandbookNode>());
                 foreach (var node in nodes.Values)
                 {
                     // CreateDummy is in fact dummy and doesn't set child count properly; then I manually clone & add children
@@ -83,7 +85,7 @@ public static class FilterStockPresetsPatches
                 }
 
                 InPatch = true;
-                __result = __instance.Show(ragfair, handbook, root, new EntityNodeDictionary(root), contextMenu, viewListType, windowType, initialNodeId, onSelection, onConfirmedSelection);
+                __result = __instance.Show(ragfair, handbook, root, new HandbookNodes(root), contextMenu, viewListType, windowType, initialNodeId, onSelection, onConfirmedSelection);
                 InPatch = false;
                 return false;
             }
@@ -100,9 +102,9 @@ public static class FilterStockPresetsPatches
             }
         }
 
-        private static void CloneAndFilter(EntityNodeClass parent)
+        private static void CloneAndFilter(HandbookNode parent)
         {
-            WeaponBuildsStorageClass builds = PatchConstants.BackEndSession.WeaponBuildsStorage;
+            WeaponBuildsStorage builds = PatchConstants.BackEndSession.WeaponBuildsStorage;
 
             foreach (var node in parent.OriginalChildren)
             {
@@ -154,7 +156,7 @@ public static class FilterStockPresetsPatches
             stockCheckbox.transform.SetSiblingIndex(2);
 
             var localizedText = stockCheckbox.GetComponentInChildren<LocalizedText>();
-            localizedText.R().StringCase = EFT.EStringCase.Upper;
+            localizedText._stringCase = EFT.EStringCase.Upper;
             localizedText.LocalizationKey = "Stock build";
 
             TextMeshProUGUI textMesh = localizedText.GetComponent<TextMeshProUGUI>();

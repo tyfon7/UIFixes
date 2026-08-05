@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
@@ -20,17 +21,17 @@ public static class CursorPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(CursorManager), nameof(CursorManager.SetCursorLockMode));
+            return AccessTools.Method(typeof(CursorSwitcher), nameof(CursorSwitcher.SetCursorLockMode));
         }
 
         [PatchPrefix]
-        public static bool Prefix(bool cursorVisible, FullScreenMode fullscreenMode, Action ___action_0)
+        public static bool Prefix(bool cursorVisible, FullScreenMode fullscreenMode, Action ____lockModeChanged)
         {
             Cursor.lockState = cursorVisible ?
                 Settings.UnlockCursor.Value && WindowedModes.Contains(fullscreenMode) ? CursorLockMode.None : CursorLockMode.Confined :
                 CursorLockMode.Locked;
 
-            ___action_0?.Invoke();
+            ____lockModeChanged?.Invoke();
 
             return false;
         }

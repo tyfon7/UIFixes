@@ -1,5 +1,6 @@
 using System.Reflection;
 using Diz.LanguageExtensions;
+using EFT.InventoryLogic;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
@@ -9,7 +10,7 @@ public class ModifyUnsearchedContainerPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.smethod_24));
+        return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.CanTransferTo));
     }
 
     [PatchPostfix]
@@ -20,7 +21,7 @@ public class ModifyUnsearchedContainerPatch : ModulePatch
             return;
         }
 
-        if (!__result && error is UnsearchedContainerError)
+        if (!__result && error is UnknownAddressError)
         {
             error = null;
             __result = true;

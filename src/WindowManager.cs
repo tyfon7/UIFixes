@@ -36,7 +36,7 @@ public class WindowManager : MonoBehaviour
         }
     }
 
-    public void OnOpen(WindowData windowData)
+    public void OnOpen(ItemUiContext.WindowData windowData)
     {
         if (windowData.WindowType != typeof(InfoWindow) && windowData.WindowType != typeof(GridWindow))
         {
@@ -120,7 +120,7 @@ public class WindowManager : MonoBehaviour
         }
     }
 
-    public void RestoreWindows(ItemContextAbstractClass baseContext)
+    public void RestoreWindows(ItemContext baseContext)
     {
         var allItems = ItemUiContext.Instance.R().Inventory.GetPlayerItems();
         foreach (var openWindow in _openWindows.ToArray()) // copy since I might modify original

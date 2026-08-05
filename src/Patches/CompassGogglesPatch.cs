@@ -11,7 +11,7 @@ public class CompassGogglesPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(Player), nameof(Player.method_15));
+        return AccessTools.Method(typeof(Player), nameof(Player.ToggleGoggles));
     }
 
     [PatchPrefix]
@@ -30,7 +30,7 @@ public class CompassGogglesPatch : ModulePatch
             if (____leftHandController is LeftHandController leftHandController)
             {
                 Continuation continuation = new(__instance, leftHandController);
-                leftHandController.IleftHandInteractionEvents_0.OnActionEndedEvent += continuation.Continue;
+                leftHandController._events.OnActionEndedEvent += continuation.Continue;
             }
 
             return false;
@@ -43,9 +43,9 @@ public class CompassGogglesPatch : ModulePatch
     {
         public void Continue(IAnimatorEventParameter param)
         {
-            leftHandController.IleftHandInteractionEvents_0.OnActionEndedEvent -= this.Continue;
+            leftHandController._events.OnActionEndedEvent -= this.Continue;
 
-            player.method_15();
+            player.ToggleGoggles();
         }
     }
 }

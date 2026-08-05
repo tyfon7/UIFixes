@@ -22,7 +22,7 @@ public class FixTraderFiltersPatch : ModulePatch
 
         // What's more, the whole point of this parameter is likely so that Select itself would be called
         // recursively, but they don't do that, they use a different method (UpdateVisual). So this parameter 
-        // servers absolutely no purpose and I can just force it true so it's passed that way to the parents.
+        // serves absolutely no purpose and I can just force it true so it's passed that way to the parents.
         uiOnly = true;
     }
 }

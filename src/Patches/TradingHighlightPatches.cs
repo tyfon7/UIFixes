@@ -1,4 +1,5 @@
 using System.Reflection;
+using EFT.Trading;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -17,15 +18,15 @@ public static class TradingHighlightPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TradingGridView), nameof(TradingGridView.method_15));
+            return AccessTools.Method(typeof(TradingGridView), nameof(TradingGridView.LateInit));
         }
 
         [PatchPostfix]
-        public static void Postfix(TradingGridView __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass)
+        public static void Postfix(TradingGridView __instance, Assortment ____traderAssortment)
         {
-            if (___traderAssortmentControllerClass != null)
+            if (____traderAssortment != null)
             {
-                ___traderAssortmentControllerClass.RequisiteChanged += __instance.method_19;
+                ____traderAssortment.RequisiteChanged += __instance.RequisiteChangedHandler;
             }
         }
     }
@@ -38,11 +39,11 @@ public static class TradingHighlightPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TradingGridView __instance, TraderAssortmentControllerClass ___traderAssortmentControllerClass)
+        public static void Prefix(TradingGridView __instance, Assortment ____traderAssortment)
         {
-            if (___traderAssortmentControllerClass != null)
+            if (____traderAssortment != null)
             {
-                ___traderAssortmentControllerClass.RequisiteChanged -= __instance.method_19;
+                ____traderAssortment.RequisiteChanged -= __instance.RequisiteChangedHandler;
             }
         }
     }

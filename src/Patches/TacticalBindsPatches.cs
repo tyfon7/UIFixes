@@ -5,6 +5,7 @@ using Comfort.Common;
 using EFT;
 using EFT.InputSystem;
 using EFT.InventoryLogic;
+using EFT.Settings;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
@@ -90,7 +91,7 @@ public static class TacticalBindsPatches
             if (nightVisionComponent != null)
             {
                 Item rootItem = boundItem.GetRootItemNotEquipment();
-                if (rootItem is HeadwearItemClass helmet &&
+                if (rootItem is Headwear helmet &&
                     __instance.Inventory.Equipment.GetSlot(EquipmentSlot.Headwear).ContainedItem == helmet)
                 {
                     __instance.InventoryController.TryRunNetworkTransaction(
@@ -106,7 +107,7 @@ public static class TacticalBindsPatches
 
         private static void ToggleLight(Player player, Item boundItem, LightComponent lightComponent)
         {
-            FirearmLightStateStruct lightState = new()
+            LightsState lightState = new()
             {
                 Id = lightComponent.Item.Id,
                 IsActive = lightComponent.IsActive,
@@ -130,7 +131,7 @@ public static class TacticalBindsPatches
                 firearmController.SetLightsState([lightState], false);
             }
 
-            if (rootItem is HeadwearItemClass helmet &&
+            if (rootItem is Headwear helmet &&
                 player.Inventory.Equipment.GetSlot(EquipmentSlot.Headwear).ContainedItem == helmet)
             {
                 lightComponent.SetLightState(lightState);
@@ -144,11 +145,11 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MainMenuControllerClass), nameof(MainMenuControllerClass.method_5));
+            return AccessTools.Method(typeof(MainMenuShowOperation), nameof(MainMenuShowOperation.Init));
         }
 
         [PatchPostfix]
-        public static async void Postfix(MainMenuControllerClass __instance, Task __result)
+        public static async void Postfix(MainMenuShowOperation __instance, Task __result)
         {
             await __result;
 
@@ -160,8 +161,8 @@ public static class TacticalBindsPatches
                 }
             }
 
-            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
-            Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
+            // Will "save" control settings, running InputKeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            Singleton<SettingsManager>.Instance.Control.Controller.UpdateBindings();
         }
     }
 
@@ -169,7 +170,7 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(BindOperation), nameof(BindOperation.Run));
+            return AccessTools.Method(typeof(BindResult), nameof(BindResult.Run));
         }
 
         [PatchPostfix]
@@ -183,8 +184,8 @@ public static class TacticalBindsPatches
 
             UpdateQuickbindType(item, index);
 
-            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
-            Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
+            // Will "save" control settings, running InputKeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            Singleton<SettingsManager>.Instance.Control.Controller.UpdateBindings();
         }
     }
 
@@ -192,7 +193,7 @@ public static class TacticalBindsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(UnbindOperation), nameof(UnbindOperation.Run));
+            return AccessTools.Method(typeof(UnbindResult), nameof(UnbindResult.Run));
         }
 
         [PatchPostfix]
@@ -206,8 +207,8 @@ public static class TacticalBindsPatches
 
             UpdateQuickbindType(null, index);
 
-            // Will "save" control settings, running KeyBindingClass.UpdateInput, which will set (or unset) toggle/hold behavior
-            Singleton<SharedGameSettingsClass>.Instance.Control.Controller.method_3();
+            // Will "save" control settings, running InputKeyCombination.UpdateInput, which will set (or unset) toggle/hold behavior
+            Singleton<SettingsManager>.Instance.Control.Controller.UpdateBindings();
         }
     }
 
@@ -221,7 +222,7 @@ public static class TacticalBindsPatches
         }
 
         Item rootItem = item.GetRootItemNotEquipment();
-        return (rootItem is Weapon || rootItem is HeadwearItemClass) && inventoryController.Inventory.Equipment.Contains(rootItem);
+        return (rootItem is Weapon || rootItem is Headwear) && inventoryController.Inventory.Equipment.Contains(rootItem);
     }
 
     private static bool IsTacticalModeModifierPressed()
@@ -254,7 +255,7 @@ public static class TacticalBindsPatches
                 return;
             }
 
-            if (rootItem is HeadwearItemClass)
+            if (rootItem is Headwear)
             {
                 Quickbind.SetType(index, Quickbind.ItemType.Headlight);
                 return;

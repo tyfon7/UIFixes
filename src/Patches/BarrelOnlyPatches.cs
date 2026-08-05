@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Comfort.Common;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using HarmonyLib;
@@ -29,11 +30,11 @@ public static class BarrelOnlyPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(TraderControllerClass), nameof(TraderControllerClass.LoadMultiBarrelWeapon));
+            return AccessTools.DeclaredMethod(typeof(ItemController), nameof(ItemController.LoadMultiBarrelWeapon));
         }
 
         [PatchPrefix]
-        public static bool Prefix(TraderControllerClass __instance, Weapon weapon, AmmoItemClass ammo, int ammoCount, ref Task<IResult> __result)
+        public static bool Prefix(ItemController __instance, Weapon weapon, Ammo ammo, int ammoCount, ref Task<IResult> __result)
         {
             if (InPatch || ammoCount < 1)
             {
@@ -81,24 +82,23 @@ public static class BarrelOnlyPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsActive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsActive));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref bool __result)
+        public static bool Prefix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref bool __result)
         {
             if (!Settings.LoadAmmoOnInternalMags.Value)
             {
                 return true;
             }
 
-            // Boolean_1 is InRaid
-            if (__instance.Boolean_1 || (button != EItemInfoButton.LoadAmmo && button != EItemInfoButton.UnloadAmmo))
+            if (__instance.Gameplay || (button != EItemInfoButton.LoadAmmo && button != EItemInfoButton.UnloadAmmo))
             {
                 return true;
             }
 
-            if (__instance.Weapon_0 == null || __instance.Weapon_0.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
+            if (__instance.Weapon == null || __instance.Weapon.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
             {
                 return true;
             }
@@ -112,11 +112,11 @@ public static class BarrelOnlyPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ContextInteractionSwitcherClass), nameof(ContextInteractionSwitcherClass.IsInteractive));
+            return AccessTools.Method(typeof(ItemContextInteractionsSwitcher), nameof(ItemContextInteractionsSwitcher.IsInteractive));
         }
 
         [PatchPrefix]
-        public static bool Prefix(ContextInteractionSwitcherClass __instance, EItemInfoButton button, ref IResult __result)
+        public static bool Prefix(ItemContextInteractionsSwitcher __instance, EItemInfoButton button, ref IResult __result)
         {
             if (!Settings.LoadAmmoOnInternalMags.Value)
             {
@@ -128,18 +128,18 @@ public static class BarrelOnlyPatches
                 return true;
             }
 
-            if (__instance.Weapon_0 == null || __instance.Weapon_0.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
+            if (__instance.Weapon == null || __instance.Weapon.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
             {
                 return true;
             }
 
-            if (button == EItemInfoButton.LoadAmmo && __instance.Weapon_0.FreeChamberSlotsCount == 0)
+            if (button == EItemInfoButton.LoadAmmo && __instance.Weapon.FreeChamberSlotsCount == 0)
             {
                 __result = new FailedResult("InventoryError/You can't load ammo into this item", 0);
                 return false;
             }
 
-            if (button == EItemInfoButton.UnloadAmmo && __instance.Weapon_0.ChamberAmmoCount == 0)
+            if (button == EItemInfoButton.UnloadAmmo && __instance.Weapon.ChamberAmmoCount == 0)
             {
                 __result = new FailedResult("InventoryError/You can't unload from this item", 0);
                 return false;
@@ -154,24 +154,24 @@ public static class BarrelOnlyPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(InventoryInteractions), nameof(InventoryInteractions.CreateSubInteractions));
+            return AccessTools.DeclaredMethod(typeof(BaseInventoryItemContextInteractions), nameof(BaseInventoryItemContextInteractions.CreateSubInteractions));
         }
 
         [PatchPrefix]
-        public static bool Prefix(InventoryInteractions __instance, EItemInfoButton parentInteraction, ISubInteractions subInteractionsWrapper)
+        public static bool Prefix(BaseInventoryItemContextInteractions __instance, EItemInfoButton parentInteraction, ISubInteractionsWrapper subInteractionsWrapper)
         {
             if (parentInteraction != EItemInfoButton.LoadAmmo ||
-                __instance.ItemContextAbstractClass.Item is not Weapon weapon ||
+                __instance.ItemContext.Item is not Weapon weapon ||
                 weapon.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
             {
                 return true;
             }
 
-            subInteractionsWrapper.SetSubInteractions(new BarrelLoadAmmoInteractions(weapon, __instance.ItemUiContext_1));
+            subInteractionsWrapper.SetSubInteractions(new BarrelLoadAmmoInteractions(weapon, __instance.ItemUiContext));
             return false;
         }
 
-        public class BarrelLoadAmmoInteractions : ItemInfoInteractionsAbstractClass<BarrelLoadAmmoInteractions.EMagInteraction>
+        public class BarrelLoadAmmoInteractions : ContextInteractions<BarrelLoadAmmoInteractions.EMagInteraction>
         {
             public override bool HasIcons => false;
 
@@ -199,14 +199,14 @@ public static class BarrelOnlyPatches
             {
                 var inventory = _itemUiContext.R().Inventory;
 
-                List<AmmoItemClass> ammo = [];
+                List<Ammo> ammo = [];
                 inventory.Stash.GetAllAssembledItems(ammo);
                 inventory.Equipment.GetAllAssembledItems(ammo);
 
                 Dictionary<string, int> results = [];
                 foreach (var ammoItem in ammo)
                 {
-                    if (_itemUiContext.method_12(ammoItem) && CheckCompatability(ammoItem))
+                    if (_itemUiContext.IsAvailable(ammoItem) && CheckCompatability(ammoItem))
                     {
                         if (!results.TryGetValue(ammoItem.TemplateId, out int existingCount))
                         {
@@ -220,7 +220,7 @@ public static class BarrelOnlyPatches
                 return results;
             }
 
-            private bool CheckCompatability(AmmoItemClass ammo)
+            private bool CheckCompatability(Ammo ammo)
             {
                 return _weapon.Chambers[0].Filters.CheckItemFilter(ammo);
             }
@@ -243,14 +243,14 @@ public static class BarrelOnlyPatches
 
             private async Task<bool> TryLoadFromContainer(CompoundItem container, string ammoTemplateId)
             {
-                List<AmmoItemClass> ammo = [];
+                List<Ammo> ammo = [];
                 container.GetAllAssembledItems(ammo);
 
-                var matchingAmmo = ammo.Where(a => a.TemplateId == ammoTemplateId && _itemUiContext.method_12(a))
+                var matchingAmmo = ammo.Where(a => a.TemplateId == ammoTemplateId && _itemUiContext.IsAvailable(a))
                     .OrderBy(a => a.SpawnedInSession)
                     .ThenBy(a => a.StackObjectsCount);
 
-                var traderController = _itemUiContext.R().TraderController;
+                var traderController = _itemUiContext.R().ItemController;
 
                 foreach (var ammoItem in matchingAmmo)
                 {
@@ -310,7 +310,7 @@ public static class BarrelOnlyPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(ItemContextAbstractClass itemContext, ref Task __result, InventoryController ___inventoryController_0)
+        public static bool Prefix(ItemContext itemContext, ref Task __result, InventoryController ____inventoryController)
         {
             if (itemContext.Item is not Weapon weapon || weapon.ReloadMode != Weapon.EReloadMode.OnlyBarrel)
             {
@@ -322,14 +322,14 @@ public static class BarrelOnlyPatches
             var taskSerializer = ItemUiContext.Instance.gameObject.AddComponent<UnloadChambersTaskSerializer>();
             __result = taskSerializer.Initialize(
                 weapon.Chambers,
-                c => UnloadChamber(c, ___inventoryController_0, equipmentBlocked));
+                c => UnloadChamber(c, ____inventoryController, equipmentBlocked));
 
             return false;
         }
 
         public static async Task UnloadChamber(Slot chamber, InventoryController inventoryController, bool equipmentBlocked)
         {
-            if (chamber.ContainedItem is not AmmoItemClass ammoItem)
+            if (chamber.ContainedItem is not Ammo ammoItem)
             {
                 return;
             }
@@ -345,11 +345,11 @@ public static class BarrelOnlyPatches
                 destinations.Add(inventoryController.Inventory.Stash);
             }
 
-            var operation = InteractionsHandlerClass.QuickFindAppropriatePlace(
+            var operation = ItemManipulator.QuickFindAppropriatePlace(
                 ammoItem,
                 inventoryController,
                 destinations,
-                InteractionsHandlerClass.EMoveItemOrder.UnloadAmmo,
+                ItemManipulator.EMoveItemOrder.UnloadAmmo,
                 true);
 
 

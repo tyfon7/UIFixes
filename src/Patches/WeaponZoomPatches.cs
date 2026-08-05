@@ -27,7 +27,7 @@ public static class WeaponZoomPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview)
+        public static void Prefix(EditBuildScreen __instance)
         {
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
             scrollTrigger.OnOnScroll += eventData =>
@@ -37,9 +37,9 @@ public static class WeaponZoomPatches
                     return;
                 }
 
-                if (____weaponPreview != null && __instance != null)
+                if (__instance._weaponPreview != null && __instance != null)
                 {
-                    ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                    __instance._weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
                     __instance.UpdatePositions();
                 }
             };
@@ -54,7 +54,7 @@ public static class WeaponZoomPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview)
+        public static void Prefix(WeaponModdingScreen __instance)
         {
             if (!Settings.WeaponZoomScroll.Value)
             {
@@ -64,9 +64,9 @@ public static class WeaponZoomPatches
             var scrollTrigger = __instance.gameObject.AddComponent<ScrollTrigger>();
             scrollTrigger.OnOnScroll += eventData =>
             {
-                if (____weaponPreview != null && __instance != null)
+                if (__instance._weaponPreview != null && __instance != null)
                 {
-                    ____weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
+                    __instance._weaponPreview.Zoom(eventData.scrollDelta.y * 0.12f);
                     __instance.UpdatePositions();
                 }
             };

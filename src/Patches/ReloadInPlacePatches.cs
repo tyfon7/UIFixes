@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using AnimationSystem;
 using Comfort.Common;
+using Diz.LanguageExtensions;
 using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -15,7 +17,7 @@ namespace UIFixes;
 public static class ReloadInPlacePatches
 {
     private static bool IsReloading = false;
-    private static MagazineItemClass FoundMagazine = null;
+    private static Magazine FoundMagazine = null;
     private static ItemAddress FoundAddress = null;
 
     public static void Enable()
@@ -57,11 +59,11 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.method_18));
+            return AccessTools.Method(typeof(ItemUiContext), nameof(ItemUiContext.FindSuitableMagazine));
         }
 
         [PatchPostfix]
-        public static void Postfix(MagazineItemClass __result)
+        public static void Postfix(Magazine __result)
         {
             if (__result != null && IsReloading)
             {
@@ -75,12 +77,11 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("currentMagazine") != null); // ItemUiContext.Class2775
-            return AccessTools.Method(type, "method_0");
+            return AccessTools.Method(typeof(ItemUiContext.CG_ReloadWeapon), nameof(ItemUiContext.CG_ReloadWeapon.method_0));
         }
 
         [PatchPrefix]
-        public static void Prefix(StashGridClass grid, ref GStruct154<RemoveOperation> __state)
+        public static void Prefix(Grid grid, ref OperationResult<RemoveResult> __state)
         {
             if (!Settings.SwapMags.Value)
             {
@@ -89,12 +90,12 @@ public static class ReloadInPlacePatches
 
             if (grid.Contains(FoundMagazine))
             {
-                __state = InteractionsHandlerClass.Remove(FoundMagazine, grid.ParentItem.Owner as TraderControllerClass, false);
+                __state = ItemManipulator.Remove(FoundMagazine, grid.ParentItem.Owner as ItemController, false);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(GStruct154<RemoveOperation> __state)
+        public static void Postfix(OperationResult<RemoveResult> __state)
         {
             if (!Settings.SwapMags.Value || __state.Value == null)
             {
@@ -112,8 +113,7 @@ public static class ReloadInPlacePatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = typeof(ItemUiContext).GetNestedTypes().Single(t => t.GetField("func_3") != null); // ItemUiContext.Class2755
-            return AccessTools.Method(type, "method_5");
+            return AccessTools.Method(typeof(ItemUiContext.CG_Class2919), nameof(ItemUiContext.CG_Class2919.method_5));
         }
 
         [PatchPostfix]
@@ -149,7 +149,7 @@ public static class ReloadInPlacePatches
         // This tied to a different animation state machine sequence than Swap(), and is faster than Swap.
         // So only use Swap if *needed*, otherwise its penalizing all reload speeds
         [PatchPrefix]
-        public static bool Prefix(Player.FirearmController __instance, MagazineItemClass magazine, ItemAddress itemAddress, Callback callback, Player ____player)
+        public static bool Prefix(Player.FirearmController __instance, Magazine magazine, ItemAddress itemAddress, Callback callback)
         {
             // If itemAddress isn't null, it already found a place for the current mag, so let it run (unless always swap is enabled)
             if (!Settings.SwapMags.Value || (itemAddress != null && !Settings.AlwaysSwapMags.Value))
@@ -157,7 +157,7 @@ public static class ReloadInPlacePatches
                 return true;
             }
 
-            if (____player.IsAI)
+            if (__instance._player.IsAI)
             {
                 return true;
             }
@@ -167,9 +167,9 @@ public static class ReloadInPlacePatches
                 return false;
             }
 
-            ____player.RemoveLeftHandItem(3f);
-            ____player.MovementContext.PlayerAnimator.AnimatedInteractions.ForceStopInteractions();
-            if (____player.MovementContext.PlayerAnimator.AnimatedInteractions.IsInteractionPlaying)
+            __instance._player.RemoveLeftHandItem(3f);
+            __instance._player.MovementContext.PlayerAnimator.AnimatedInteractions.ForceStopInteractions();
+            if (__instance._player.MovementContext.PlayerAnimator.AnimatedInteractions.IsInteractionPlaying)
             {
                 return false;
             }
@@ -181,7 +181,7 @@ public static class ReloadInPlacePatches
             }
 
             // Weapon doesn't currently have a magazine, let the default run (will load one)
-            MagazineItemClass currentMagazine = __instance.Weapon.GetCurrentMagazine();
+            Magazine currentMagazine = __instance.Weapon.GetCurrentMagazine();
             if (currentMagazine == null)
             {
                 return true;
@@ -191,7 +191,7 @@ public static class ReloadInPlacePatches
             ItemAddress magAddress = magazine.Parent;
 
             // Null address means it couldn't find a spot. Try to remove magazine (temporarily) and try again
-            var operation = InteractionsHandlerClass.Remove(magazine, controller, false);
+            var operation = ItemManipulator.Remove(magazine, controller, false);
             if (operation.Failed)
             {
                 return true;
@@ -214,7 +214,7 @@ public static class ReloadInPlacePatches
             }
 
             controller.TryRunNetworkTransaction(
-                InteractionsHandlerClass.Swap(currentMagazine, itemAddress, magazine, __instance.Weapon.GetMagazineSlot().CreateItemAddress(), controller, true),
+                ItemManipulator.Swap(currentMagazine, itemAddress, magazine, __instance.Weapon.GetMagazineSlot().CreateItemAddress(), controller, true),
                 callback);
             return false;
         }
@@ -223,19 +223,16 @@ public static class ReloadInPlacePatches
     // Dumps the animator parameters, lol. Desparate times and all that
     public class InsertMagDebugPatch : ModulePatch
     {
-        private static FieldInfo ParameterListField;
-
         protected override MethodBase GetTargetMethod()
         {
-            ParameterListField = AccessTools.Field(typeof(AnimatorWrapper), "animatorControllerParameter_0");
-            return AccessTools.DeclaredMethod(typeof(FirearmInsertedMagState), nameof(FirearmInsertedMagState.Start));
+            return AccessTools.DeclaredMethod(typeof(Player.FirearmController.InsertMagOperation), nameof(Player.FirearmController.InsertMagOperation.Start));
         }
 
         [PatchPrefix]
-        public static void Prefix(FirearmsAnimator ___firearmsAnimator_0)
+        public static void Prefix(Player.FirearmController.InsertMagOperation __instance)
         {
             StringBuilder sb = new();
-            if (___firearmsAnimator_0.Animator is AnimatorWrapper animator)
+            if (__instance.FirearmsAnimator.Animator is UnityAnimatorWrapper animator)
             {
                 for (int i = 0; i < animator.parameterCount; i++)
                 {

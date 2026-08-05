@@ -24,6 +24,7 @@ public static class ConfirmDialogKeysPatches
     }
 
     // Close dialogs with enter/space
+    // Note that this patch generates a warning from harmony, but it appears to be ok. Not sure how else to do this.
     public class DialogWindowPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -32,7 +33,7 @@ public static class ConfirmDialogKeysPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(object __instance, bool ___bool_0)
+        public static void Postfix(object __instance, bool ____availableToAccept)
         {
             var instance = new R.DialogWindow(__instance);
 
@@ -42,7 +43,7 @@ public static class ConfirmDialogKeysPatches
                 return;
             }
 
-            if (!___bool_0)
+            if (!____availableToAccept)
             {
                 return;
             }
@@ -64,19 +65,19 @@ public static class ConfirmDialogKeysPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(SplitDialog ___splitDialog_0, ItemsListWindow ____itemsListWindow)
+        public static void Postfix(ItemUiContext __instance, SplitDialog ____splitDialog)
         {
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                if (___splitDialog_0 != null && ___splitDialog_0.gameObject.activeSelf)
+                if (____splitDialog != null && ____splitDialog.gameObject.activeSelf)
                 {
-                    ___splitDialog_0.Accept();
+                    ____splitDialog.Accept();
                     return;
                 }
 
-                if (____itemsListWindow.isActiveAndEnabled)
+                if (__instance.ItemsListWindow.isActiveAndEnabled)
                 {
-                    ____itemsListWindow.Close();
+                    __instance.ItemsListWindow.Close();
                     return;
                 }
             }
@@ -96,7 +97,7 @@ public static class ConfirmDialogKeysPatches
         {
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                __instance.method_4();
+                __instance.CloseSilent();
             }
         }
     }
@@ -119,7 +120,7 @@ public static class ConfirmDialogKeysPatches
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                __instance.method_5();
+                __instance.AddOffer();
             }
         }
     }
@@ -158,8 +159,8 @@ public static class ConfirmDialogKeysPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            // Using method_0 because there's 2 Show(), and they have 10+ args and f that
-            return AccessTools.Method(typeof(SplitDialog), nameof(SplitDialog.method_0));
+            // Using UpdateAcceptSubscription because there's 2 Show(), and they have 10+ args and f that
+            return AccessTools.Method(typeof(SplitDialog), nameof(SplitDialog.UpdateAcceptSubscription));
         }
 
         [PatchPostfix]
@@ -175,7 +176,7 @@ public static class ConfirmDialogKeysPatches
             {
                 button.transition = Selectable.Transition.None;
                 button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
-                button.onClick.AddListener(__instance.method_2);
+                button.onClick.AddListener(__instance.CG_Awake);
             }
         }
     }
@@ -230,7 +231,7 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                button.onClick.AddListener(__instance.method_4);
+                button.onClick.AddListener(__instance.CloseSilent);
                 __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }

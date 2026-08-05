@@ -16,7 +16,7 @@ UI Fixes Multi-Select InterOp
 
 First, add the following attribute to your plugin class:
 
-[BepInDependency("Tyfon.UIFixes", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency("com.tyfon.uifixes", BepInDependency.DependencyFlags.SoftDependency)]
 
 This will ensure UI Fixes is loaded already when your code is run. It will fail gracefully if UI Fixes is missing.
 
@@ -41,7 +41,7 @@ namespace UIFixesInterop
     /// </summary>
     internal static class MultiSelect
     {
-        private static readonly Version RequiredVersion = new Version(2, 5);
+        private static readonly Version RequiredVersion = new Version(6, 0);
 
         private static bool? UIFixesLoaded;
 
@@ -121,7 +121,7 @@ namespace UIFixesInterop
         {
             if (!UIFixesLoaded.HasValue)
             {
-                bool present = Chainloader.PluginInfos.TryGetValue("Tyfon.UIFixes", out PluginInfo pluginInfo);
+                bool present = Chainloader.PluginInfos.TryGetValue("com.tyfon.uifixes", out PluginInfo pluginInfo);
                 UIFixesLoaded = present && pluginInfo.Metadata.Version >= RequiredVersion;
 
                 if (UIFixesLoaded.Value)

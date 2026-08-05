@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using EFT;
+using EFT.Builds;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Builds;
@@ -21,7 +23,7 @@ public static class MagPresetsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MagazineBuildPresetClass), nameof(MagazineBuildPresetClass.smethod_0));
+            return AccessTools.Method(typeof(MagPreset), nameof(MagPreset.GetUserContainers));
         }
 
         // This method returns a list of places to search for ammo. For whatever reason, it only looks
@@ -64,7 +66,7 @@ public static class MagPresetsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MagazineBuildClass), nameof(MagazineBuildClass.GetDefaultPresetName));
+            return AccessTools.Method(typeof(MagBuildsStorage), nameof(MagBuildsStorage.GetDefaultPresetName));
         }
 
         [PatchPrefix]
@@ -87,20 +89,20 @@ public static class MagPresetsPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            ButtonErrorField = AccessTools.Field(typeof(DefaultUiButtonNewStyle), "string_0");
+            ButtonErrorField = AccessTools.Field(typeof(DefaultUiButtonNewStyle), "_tooltip");
 
-            return AccessTools.Method(typeof(MagPresetsWindow), nameof(MagPresetsWindow.method_16));
+            return AccessTools.Method(typeof(MagPresetsWindow), nameof(MagPresetsWindow.UpdateButtonsState));
         }
 
         [PatchPostfix]
-        public static void Postfix(MagPresetEditor ____presetEditor, DefaultUiButtonNewStyle ____saveButton)
+        public static void Postfix(MagPresetsWindow __instance)
         {
-            string name = ____presetEditor.PresetName;
+            string name = __instance._presetEditor.PresetName;
             if (string.IsNullOrEmpty(name))
             {
-                string tooltip = (string)ButtonErrorField.GetValue(____saveButton);
-                string nameRequiredError = "<color=red>" + "MagPreset/SetNameWindowPlaceholder".Localized(null) + "</color>";
-                int index = tooltip.IndexOf("MagPreset/Tooltip/HasNoChanges".Localized(null));
+                string tooltip = (string)ButtonErrorField.GetValue(__instance._saveButton);
+                string nameRequiredError = "<color=red>" + "MagPreset/SetNameWindowPlaceholder".Localized() + "</color>";
+                int index = tooltip.IndexOf("MagPreset/Tooltip/HasNoChanges".Localized());
                 if (index >= 0)
                 {
                     tooltip = tooltip.Insert(index, nameRequiredError + "\n");
@@ -110,7 +112,7 @@ public static class MagPresetsPatches
                     tooltip += nameRequiredError;
                 }
 
-                ____saveButton.SetAvailability(false, tooltip);
+                __instance._saveButton.SetAvailability(false, tooltip);
             }
         }
     }

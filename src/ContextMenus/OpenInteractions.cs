@@ -8,9 +8,9 @@ using EFT.UI.DragAndDrop;
 
 namespace UIFixes;
 
-public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContext itemUiContext) : ItemInfoInteractionsAbstractClass<OpenInteractions.Options>(itemUiContext)
+public class OpenInteractions(ItemContext itemContext, ItemUiContext itemUiContext) : ContextInteractions<OpenInteractions.Options>(itemUiContext)
 {
-    private readonly ItemContextAbstractClass _itemContext = itemContext;
+    private readonly ItemContext _itemContext = itemContext;
 
     public override void ExecuteInteractionInternal(Options interaction)
     {
@@ -19,12 +19,12 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
             return;
         }
 
-        var taskSerializer = ItemUiContext_0.gameObject.AddComponent<NestedContainerTaskSerializer>();
+        var taskSerializer = UIContext.gameObject.AddComponent<NestedContainerTaskSerializer>();
         taskSerializer.Initialize(GetNestedContainers(_itemContext), containerContext =>
         {
             if (containerContext != null)
             {
-                ItemUiContext_0.OpenItem(containerContext.Item as CompoundItem, containerContext);
+                UIContext.OpenItem(containerContext.Item as CompoundItem, containerContext);
             }
 
             return Task.CompletedTask;
@@ -51,7 +51,7 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
         All
     }
 
-    private IEnumerable<ItemContextAbstractClass> GetNestedContainers(ItemContextAbstractClass first)
+    private IEnumerable<ItemContext> GetNestedContainers(ItemContext first)
     {
         var windowRoot = Singleton<PreloaderUI>.Instance;
         CompoundItem parent = first.Item as CompoundItem;
@@ -81,4 +81,4 @@ public class OpenInteractions(ItemContextAbstractClass itemContext, ItemUiContex
     }
 }
 
-public class NestedContainerTaskSerializer : TaskSerializer<ItemContextAbstractClass> { }
+public class NestedContainerTaskSerializer : TaskSerializer<ItemContext> { }

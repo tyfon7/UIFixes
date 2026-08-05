@@ -9,11 +9,11 @@ public class TransferMergePatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.DeclaredProperty(typeof(ItemContextAbstractClass), nameof(ItemContextAbstractClass.MergeAvailable)).GetMethod;
+        return AccessTools.DeclaredProperty(typeof(ItemContext), nameof(ItemContext.MergeAvailable)).GetMethod;
     }
 
     [PatchPostfix]
-    public static void Postfix(ItemContextAbstractClass __instance, ref bool __result)
+    public static void Postfix(ItemContext __instance, ref bool __result)
     {
         // Allow merges from mail, like how it's already allowed from Scav transfer
         if (__instance.ViewType == EItemViewType.TransferTrader)

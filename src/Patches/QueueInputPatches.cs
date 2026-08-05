@@ -85,24 +85,24 @@ public static class QueueInputPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.method_13));
+            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.QuickReload));
         }
 
         [PatchPrefix]
-        public static void Postfix(FirearmHandsInputTranslator __instance, Player ___Player_0)
+        public static void Postfix(FirearmHandsInputTranslator __instance)
         {
             if (!Settings.QueueHeldInputs.Value || InAttempt)
             {
                 return;
             }
 
-            var inputTranslator = __instance;
-            var firearmController = inputTranslator.IfirearmHandsController_0 as Player.FirearmController;
+            var firearmController = __instance._controller as Player.FirearmController;
 
             InputRepeater repeater;
             if (firearmController == null || !firearmController.CanStartReload())
             {
-                repeater = ___Player_0.GetOrAddComponent<InputRepeater>();
+                var inputTranslator = __instance;
+                repeater = __instance._player.GetOrAddComponent<InputRepeater>();
                 repeater.BeginTrying(EGameKey.ReloadWeapon, () =>
                 {
                     if (firearmController == null)
@@ -114,7 +114,7 @@ public static class QueueInputPatches
                             return true;
                         }
 
-                        firearmController = inputTranslator.IfirearmHandsController_0 as Player.FirearmController;
+                        firearmController = inputTranslator._controller as Player.FirearmController;
                         if (firearmController == null)
                         {
                             // For some reason the firearm controller is destroyed way before the input translator is. Just keep trying
@@ -128,15 +128,15 @@ public static class QueueInputPatches
                     }
 
                     InAttempt = true;
-                    inputTranslator.method_13();
+                    inputTranslator.QuickReload();
                     InAttempt = false;
 
-                    return firearmController.CurrentHandsOperation is FirearmReloadingState;
+                    return firearmController.CurrentHandsOperation is Player.FirearmController.ReloadExternalMagOperation;
                 });
             }
             else
             {
-                repeater = ___Player_0.GetComponent<InputRepeater>();
+                repeater = __instance._player.GetComponent<InputRepeater>();
                 if (repeater != null)
                 {
                     repeater.StopTrying();
@@ -228,11 +228,11 @@ public static class QueueInputPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(IdleStateClass), nameof(IdleStateClass.Enter));
+            return AccessTools.Method(typeof(IdlePlayerState), nameof(IdlePlayerState.Enter));
         }
 
         [PatchPostfix]
-        public static void Postfix(IdleStateClass __instance)
+        public static void Postfix(IdlePlayerState __instance)
         {
             if (!Settings.QueueHeldInputs.Value)
             {
@@ -258,11 +258,11 @@ public static class QueueInputPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InputBindingsDataClass), nameof(InputBindingsDataClass.UpdateBindings));
+            return AccessTools.Method(typeof(InputPreset), nameof(InputPreset.UpdateBindings));
         }
 
         [PatchPostfix]
-        public static void Postfix(InputBindingsDataClass __instance)
+        public static void Postfix(InputPreset __instance)
         {
             InputHelper.MapKeyBindings(__instance);
         }

@@ -44,17 +44,17 @@ internal static class InspectWindowResizePatches
         }
 
         [PatchPostfix]
-        public static void Postfix(LayoutElement ___layoutElement_0)
+        public static void Postfix(LayoutElement ____stretchableObject)
         {
-            if (!Settings.RememberInspectSize.Value || ___layoutElement_0.GetComponent<ItemSpecificationPanel>() == null)
+            if (!Settings.RememberInspectSize.Value || ____stretchableObject.GetComponent<ItemSpecificationPanel>() == null)
             {
                 return;
             }
 
-            SavedPreferredWidth = ___layoutElement_0.preferredWidth;
-            SavedPreferredHeight = ___layoutElement_0.preferredHeight;
+            SavedPreferredWidth = ____stretchableObject.preferredWidth;
+            SavedPreferredHeight = ____stretchableObject.preferredHeight;
 
-            Button resizeButton = ___layoutElement_0.transform.Find("Inner/Caption Panel/Restore")?.GetComponent<Button>();
+            Button resizeButton = ____stretchableObject.transform.Find("Inner/Caption Panel/Restore")?.GetComponent<Button>();
             if (resizeButton != null && !resizeButton.IsActive())
             {
                 resizeButton.gameObject.SetActive(true);
@@ -70,16 +70,16 @@ internal static class InspectWindowResizePatches
         }
 
         [PatchPrefix]
-        public static void Prefix(LayoutElement ___layoutElement_0)
+        public static void Prefix(LayoutElement ____layoutElement)
         {
             if (Settings.RememberInspectSize.Value)
             {
-                RestoreSavedSize(___layoutElement_0);
+                RestoreSavedSize(____layoutElement);
             }
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, LayoutElement ___layoutElement_0, ItemUiContext ___itemUiContext_0)
+        public static void Postfix(ItemSpecificationPanel __instance, LayoutElement ____layoutElement, ItemUiContext ____itemUiContext)
         {
             if (Settings.LockInspectPreviewSize.Value)
             {
@@ -93,7 +93,7 @@ internal static class InspectWindowResizePatches
             if (ButtonBackground == null)
             {
                 // Steal the background image fom gridwindow sort
-                ButtonBackground = ___itemUiContext_0.R().GridWindowTemplate.R().GridSortPanel.R().Button.image;
+                ButtonBackground = ____itemUiContext._gridWindowTemplate._sortPanel._button.image;
             }
 
             Button closeButton = __instance.transform.Find("Inner/Caption Panel/Close Button")?.GetComponent<Button>();
@@ -101,7 +101,7 @@ internal static class InspectWindowResizePatches
             {
                 CreateRightButton(__instance, closeButton);
                 CreateLeftButton(__instance, closeButton);
-                CreateRestoreButton(__instance, ___layoutElement_0, closeButton);
+                CreateRestoreButton(__instance, ____layoutElement, closeButton);
             }
         }
 
@@ -291,12 +291,12 @@ internal static class InspectWindowResizePatches
         }
 
         [PatchPostfix]
-        public static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___NameText, TextMeshProUGUI ___ValueText)
+        public static void Postfix(CompactCharacteristicPanel __instance)
         {
             __instance.R().UI.AddDisposable(Settings.StatFontSize.Bind(fontSize =>
             {
-                ___NameText.fontSize = fontSize;
-                ___ValueText.fontSize = fontSize;
+                __instance.NameText.fontSize = fontSize;
+                __instance.ValueText.fontSize = fontSize;
             }));
         }
     }
@@ -309,13 +309,13 @@ internal static class InspectWindowResizePatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemInfoWindowLabels __instance, TextMeshProUGUI ____description)
+        public static void Postfix(ItemInfoWindowLabels __instance)
         {
             __instance.R().UI.AddDisposable(Settings.InspectDescriptionFontSize.Bind(fontSize =>
             {
-                if (____description != null)
+                if (__instance._description != null)
                 {
-                    ____description.fontSize = fontSize;
+                    __instance._description.fontSize = fontSize;
                 }
             }));
         }

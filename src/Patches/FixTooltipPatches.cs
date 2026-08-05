@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -21,7 +22,7 @@ public static class FixTooltipPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(QuestItemViewPanel), nameof(QuestItemViewPanel.method_2));
+            return AccessTools.Method(typeof(QuestItemViewPanel), nameof(QuestItemViewPanel.CG_Awake1)); // OnHoverEnd
         }
 
         [PatchPostfix]
@@ -49,22 +50,22 @@ public static class FixTooltipPatches
             if (trigger == null)
             {
                 trigger = __instance.ItemValue.gameObject.AddComponent<HoverTrigger>();
-                trigger.OnHoverStart += eventData => __instance.method_34();
+                trigger.OnHoverStart += eventData => __instance.ValueProxyPointerEnterHandler();
                 trigger.OnHoverEnd += eventData =>
                 {
-                    __instance.method_35();
+                    __instance.ValueProxyPointerExitHandler();
                     __instance.ShowTooltip();
                 };
 
                 // Need a child component for some reason, copying how the quest item tooltip does it
-                Transform hover = __instance.QuestItemViewPanel_0?.transform.Find("Hover");
+                Transform hover = __instance.QuestsItemViewPanel?.transform.Find("Hover");
                 if (hover != null)
                 {
                     UnityEngine.Object.Instantiate(hover, trigger.transform, false);
                 }
 
                 // Remove old hover handler that covered the whole info panel
-                UnityEngine.Object.Destroy(__instance.PointerEventsProxy_0);
+                UnityEngine.Object.Destroy(__instance.ValuePointerEventsProxy);
             }
         }
     }
@@ -85,9 +86,9 @@ public static class FixTooltipPatches
                 return true;
             }
 
-            if (modSlotView.method_15(out ArmorSlot armorSlot, out ArmorPlateItemClass armor))
+            if (modSlotView.TryGetArmorSlot(out ArmorSlot armorSlot, out ArmorPlate armor))
             {
-                ___ItemUiContext.Tooltip.Show(ArmorFormatter.FormatArmorPlateTooltip(armor, armorSlot, modSlotView.R().Error), null, 0.6f, null);
+                ___ItemUiContext.Tooltip.Show(ArmorPlatesFormatter.FormatArmorPlateTooltip(armor, armorSlot, modSlotView.R().TooltipData.Error), null, 0.6f, null);
                 return false;
             }
 

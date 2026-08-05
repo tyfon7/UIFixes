@@ -3,8 +3,11 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Comfort.Common;
+using Diz.Binding;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT.UI.Builds;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
@@ -18,7 +21,7 @@ public static class WeaponPresetConfirmPatches
     public static void Enable()
     {
         // Two patches are required for the edit preset screen - one to grab the value of moveForward from CloseScreenInterruption(), and one to use it.
-        // This is because BSG didn't think to pass the argument in to.method_35
+        // This is because BSG didn't think to pass the argument
         new DetectWeaponPresetCloseTypePatch().Enable();
         new ConfirmDiscardWeaponPresetChangesPatch().Enable();
 
@@ -50,7 +53,7 @@ public static class WeaponPresetConfirmPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.method_35));
+            return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.TryCloseScreen));
         }
 
         [PatchPrefix]
@@ -76,7 +79,7 @@ public static class WeaponPresetConfirmPatches
         protected override MethodBase GetTargetMethod()
         {
             // TODO: This was rewritten, probably doesn't work
-            return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.method_20));
+            return AccessTools.Method(typeof(EditBuildScreen), nameof(EditBuildScreen.SaveAsBuild));
         }
 
         [PatchPrefix]
@@ -100,15 +103,15 @@ public static class WeaponPresetConfirmPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(string savedName, ref NaiveAcceptable __result)
+        public static bool Prefix(string savedName, ref EditBuildNameWindowContext __result)
         {
             if (string.IsNullOrEmpty(savedName) || !InstantSavePreset || !Settings.OneClickPresetSave.Value)
             {
                 return true;
             }
 
-            __result = new NaiveAcceptable();
-            __result.TaskCompletionSource_1.SetResult(savedName); // Don't use Accept(), it's stupid
+            __result = new EditBuildNameWindowContext();
+            __result.AcceptCompletionSource.SetResult(savedName); // Don't use Accept(), it's stupid
             Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.ButtonClick);
             return false;
         }
@@ -116,26 +119,18 @@ public static class WeaponPresetConfirmPatches
 
     public class NoUnsavedChangesPatch : ModulePatch
     {
-        private static FieldInfo DirtyFlagField;
-
         protected override MethodBase GetTargetMethod()
         {
-            DirtyFlagField = AccessTools.GetDeclaredFields(typeof(EditBuildScreen)).First(
-                f => f.FieldType.IsGenericType &&
-                f.FieldType.GetGenericTypeDefinition() == typeof(BindableStateClass<>) &&
-                f.Name.EndsWith("_0"));
-
             return AccessTools.DeclaredMethod(
                 typeof(EditBuildScreen),
                 nameof(EditBuildScreen.Show),
-                [typeof(Item), typeof(Item), typeof(InventoryController), typeof(ISession)]);
+                [typeof(Item), typeof(Item), typeof(InventoryController), typeof(IEftSession)]);
         }
 
         [PatchPostfix]
-        public static void Postfix(EditBuildScreen __instance)
+        public static void Postfix(BindableState<bool> ____itemChanged)
         {
-            var bindable = DirtyFlagField.GetValue(__instance) as BindableStateClass<bool>;
-            bindable.Value = false;
+            ____itemChanged.Value = false;
         }
     }
 }

@@ -4,21 +4,21 @@ namespace UIFixes;
 
 public class MultiSelectItemContext : DragItemContext
 {
-    public MultiSelectItemContext(ItemContextAbstractClass itemContext, ItemRotation rotation) : base(itemContext, rotation)
+    public MultiSelectItemContext(ItemContext itemContext, ItemRotation rotation) : base(itemContext, rotation)
     {
         // Adjust event handlers
-        if (ItemContextAbstractClass != null)
+        if (Source != null)
         {
             // Listen for underlying context being disposed, it might mean the item is gone (merged, destroyed, etc)
-            ItemContextAbstractClass.OnDisposed += OnParentDispose;
+            Source.OnDisposed += OnParentDispose;
             // This serves no purpose and causes stack overflows
-            ItemContextAbstractClass.OnCloseDependentWindow -= CloseDependentWindows;
+            Source.OnCloseDependentWindow -= CloseDependentWindows;
         }
     }
 
     public MultiSelectItemContext Refresh()
     {
-        return Item == ItemContextAbstractClass.Item ? new MultiSelectItemContext(ItemContextAbstractClass, ItemRotation) : null;
+        return Item == Source.Item ? new MultiSelectItemContext(Source, ItemRotation) : null;
     }
 
     public void UpdateDragContext(DragItemContext itemContext)
@@ -30,17 +30,17 @@ public class MultiSelectItemContext : DragItemContext
     public override void Dispose()
     {
         base.Dispose();
-        if (ItemContextAbstractClass != null)
+        if (Source != null)
         {
-            ItemContextAbstractClass.OnDisposed -= OnParentDispose;
+            Source.OnDisposed -= OnParentDispose;
         }
     }
 
     private void OnParentDispose()
     {
         if (Item.CurrentAddress == null ||
-            (Item.CurrentAddress.Container.ParentItem is MagazineItemClass &&
-            Item.CurrentAddress.Container.ParentItem is not CylinderMagazineItemClass))
+            (Item.CurrentAddress.Container.ParentItem is Magazine &&
+            Item.CurrentAddress.Container.ParentItem is not CylinderMagazine))
         {
             // This item was entirely merged away, or went into a magazine
             MultiSelect.Deselect(this);
@@ -51,8 +51,8 @@ public class MultiSelectItemContext : DragItemContext
     // DragItemContext (drag) defaults to None, but we want what the underlying item allows
     public override bool CanQuickMoveTo(ETargetContainer targetContainer)
     {
-        return ItemContextAbstractClass != null
-            ? ItemContextAbstractClass.CanQuickMoveTo(targetContainer)
+        return Source != null
+            ? Source.CanQuickMoveTo(targetContainer)
             : base.CanQuickMoveTo(targetContainer);
     }
 }

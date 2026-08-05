@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using UnityEngine;
@@ -34,7 +35,7 @@ public class MultiSelectDebug : MonoBehaviour
 
         builder.Append("<b>MultiSelect</b>\n");
         builder.AppendFormat("Active: <color={0}>{1}</color>\n", MultiSelect.Active ? "green" : "red", MultiSelect.Active);
-        builder.AppendFormat("Hovered: <color=aqua>{0}</color>\n", FormatItemContext(ItemUiContext.Instance.R().ItemContext));
+        builder.AppendFormat("Hovered: <color=aqua>{0}</color>\n", FormatItemContext(ItemUiContext.Instance.CurrentItemContext));
         builder.AppendFormat("Items: <color=yellow>{0}</color>\n", MultiSelect.Count);
 
         foreach (MultiSelectItemContext itemContext in MultiSelect.SortedItemContexts())
@@ -68,7 +69,7 @@ public class MultiSelectDebug : MonoBehaviour
         GUI.Box(_guiRect, _guiContent, _guiStyle);
     }
 
-    private string FormatItemContext(ItemContextAbstractClass itemContext)
+    private string FormatItemContext(ItemContext itemContext)
     {
         if (itemContext == null)
         {

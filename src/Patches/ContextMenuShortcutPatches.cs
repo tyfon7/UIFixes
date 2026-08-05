@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Comfort.Common;
+using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -29,7 +30,7 @@ public static class ContextMenuShortcutPatches
 
     public class ItemUiContextPatch : ModulePatch
     {
-        private static ItemInfoInteractionsAbstractClass<EItemInfoButton> Interactions;
+        private static ContextInteractions<EItemInfoButton> Interactions;
 
         protected override MethodBase GetTargetMethod()
         {
@@ -37,15 +38,15 @@ public static class ContextMenuShortcutPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance, DragItemContext ___itemContextClass)
+        public static void Postfix(ItemUiContext __instance, DragItemContext ____dragItemContext)
         {
             // Need an item context to operate on
-            ItemContextAbstractClass itemContext = __instance.R().ItemContext;
+            ItemContext itemContext = __instance.CurrentItemContext;
 
             // itemContext is what the mouse is over
             // ___itemContextClass is the currently dragged item
             // Only do anything if the mouse is over an item and nothing is being dragged
-            if (itemContext == null || ___itemContextClass != null)
+            if (itemContext == null || ____dragItemContext != null)
             {
                 return;
             }
@@ -149,7 +150,7 @@ public static class ContextMenuShortcutPatches
             Interactions = null;
         }
 
-        private static void TryInteraction(ItemUiContext itemUiContext, ItemContextAbstractClass itemContext, EItemInfoButton interaction, EItemInfoButton[] fallbackInteractions = null)
+        private static void TryInteraction(ItemUiContext itemUiContext, ItemContext itemContext, EItemInfoButton interaction, EItemInfoButton[] fallbackInteractions = null)
         {
             Interactions ??= itemUiContext.GetItemContextInteractions(itemContext, null);
             if (!Interactions.ExecuteInteraction(interaction) && fallbackInteractions != null)
@@ -164,7 +165,7 @@ public static class ContextMenuShortcutPatches
             }
         }
 
-        private static void MoveToFromSortingTable(ItemContextAbstractClass itemContext, ItemUiContext itemUiContext)
+        private static void MoveToFromSortingTable(ItemContext itemContext, ItemUiContext itemUiContext)
         {
             Item item = itemContext.Item;
             if (item.Owner is not InventoryController controller)
@@ -172,7 +173,7 @@ public static class ContextMenuShortcutPatches
                 return;
             }
 
-            SortingTableItemClass sortingTable = controller.Inventory.SortingTable;
+            SortingTable sortingTable = controller.Inventory.SortingTable;
             bool isInSortingTable = sortingTable != null && item.Parent.Container.ParentItem == sortingTable;
 
             var operation = isInSortingTable ?
@@ -182,7 +183,7 @@ public static class ContextMenuShortcutPatches
             {
                 if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)
                 {
-                    NotificationManagerClass.DisplayWarningNotification(new DestroyError(item, destroyResult.ItemsToDestroy).GetLocalizedDescription());
+                    NotificationManager.DisplayWarningNotification(new DiscardLimitsReachedError(item, destroyResult.ItemsToDestroy).GetLocalizedDescription());
                     return;
                 }
 
@@ -217,13 +218,13 @@ public static class ContextMenuShortcutPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_1)); // OnHoverStart
+            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.CG_Awake)); // OnHoverStart
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
+        public static void Postfix(ItemUiContext ____itemUiContext, ItemContext ____itemContext)
         {
-            ___itemUiContext_0.RegisterCurrentItemContext(___itemContextAbstractClass);
+            ____itemUiContext.RegisterCurrentItemContext(____itemContext);
         }
     }
 
@@ -231,13 +232,13 @@ public static class ContextMenuShortcutPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.method_2)); // OnHoverEnd
+            return AccessTools.Method(typeof(TradingRequisitePanel), nameof(TradingRequisitePanel.CG_Awake1)); // OnHoverEnd
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext ___itemUiContext_0, ItemContextAbstractClass ___itemContextAbstractClass)
+        public static void Postfix(ItemUiContext ____itemUiContext, ItemContext ____itemContext)
         {
-            ___itemUiContext_0.UnregisterCurrentItemContext(___itemContextAbstractClass);
+            ____itemUiContext.UnregisterCurrentItemContext(____itemContext);
         }
     }
 

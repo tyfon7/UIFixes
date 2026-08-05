@@ -2,6 +2,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Diz.LanguageExtensions;
+using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -20,32 +21,32 @@ public static class SortPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridSortPanel), nameof(GridSortPanel.method_1));
+            return AccessTools.Method(typeof(GridSortPanel), nameof(GridSortPanel.Sort));
         }
 
-        // Normally this method just calls method_2 and eats the exceptions
-        // This reimplements method_2, calling stack before InteractionsHandlerClass.Sort()
+        // Normally this method just calls SortAsync and eats the exceptions
+        // This reimplements SortAsync, calling stack before ItemManipulator.Sort()
         [PatchPrefix]
-        public static bool Prefix(GridSortPanel __instance, CompoundItem ___compoundItem_0, InventoryController ___inventoryController_0)
+        public static bool Prefix(GridSortPanel __instance, CompoundItem ____item, InventoryController ____controller)
         {
             if (!Settings.StackBeforeSort.Value)
             {
                 return true;
             }
 
-            Sort(__instance, ___compoundItem_0, ___inventoryController_0).HandleExceptions();
+            Sort(__instance, ____item, ____controller).HandleExceptions();
             return false;
         }
 
         private static async Task Sort(GridSortPanel instance, CompoundItem compoundItem, InventoryController inventoryController)
         {
-            instance.method_3(true);
+            instance.ChangeProgress(true);
 
             Error error = await StackAll(compoundItem, inventoryController);
 
             if (error == null)
             {
-                var sortOperation = InteractionsHandlerClass.Sort(compoundItem, inventoryController, false);
+                var sortOperation = ItemManipulator.Sort(compoundItem, inventoryController, false);
                 if (sortOperation.Succeeded)
                 {
                     await inventoryController.TryRunNetworkTransaction(sortOperation);
@@ -58,10 +59,10 @@ public static class SortPatches
 
             if (error is InventoryError inventoryError)
             {
-                NotificationManagerClass.DisplayWarningNotification(inventoryError.GetLocalizedDescription());
+                NotificationManager.DisplayWarningNotification(inventoryError.GetLocalizedDescription());
             }
 
-            instance.method_3(false);
+            instance.ChangeProgress(false);
         }
 
         private static async Task<Error> StackAll(CompoundItem compoundItem, InventoryController inventoryController)
@@ -82,7 +83,7 @@ public static class SortPatches
 
                 if (Sorter.FindStackForMerge(compoundItem.Grids, item, out Item targetItem, 1))
                 {
-                    var operation = InteractionsHandlerClass.TransferOrMerge(item, targetItem, inventoryController, true);
+                    var operation = ItemManipulator.TransferOrMerge(item, targetItem, inventoryController, true);
                     if (operation.Succeeded)
                     {
                         await inventoryController.TryRunNetworkTransaction(operation);

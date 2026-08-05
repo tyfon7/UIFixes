@@ -6,9 +6,9 @@ namespace UIFixes;
 
 public static class Sorter
 {
-    // Recreation of InteractionsHandlerClass.smethod_0, but without the out type being StackableItemItemClass. 
+    // Recreation of ItemManipulator.TryFindMergeableItem, but without the out type being StackableItem. 
     // minimumStackSpace of 0 means complete merge only, i.e. mininumStackSpace = itemToMerge.StackObjectCount
-    public static bool FindStackForMerge(IEnumerable<EFT.InventoryLogic.IContainer> containers, Item itemToMerge, out Item mergeableItem, int minimumStackSpace = 0)
+    public static bool FindStackForMerge(IEnumerable<IContainer> containers, Item itemToMerge, out Item mergeableItem, int minimumStackSpace = 0)
     {
         if (minimumStackSpace <= 0)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -37,11 +38,11 @@ public static class TagPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(EditTagWindow __instance, ValidationInputField ____tagInput)
+        public static void Postfix(EditTagWindow __instance)
         {
-            ____tagInput.onSubmit.AddListener(value => __instance.method_4());
-            ____tagInput.ActivateInputField();
-            ____tagInput.Select();
+            __instance._tagInput.onSubmit.AddListener(value => __instance.Save());
+            __instance._tagInput.ActivateInputField();
+            __instance._tagInput.Select();
         }
     }
 
@@ -50,43 +51,43 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.method_22));
+            return AccessTools.Method(typeof(GridItemView), nameof(GridItemView.ResizeTag));
         }
 
         [PatchPostfix]
-        public static async void Postfix(GridItemView __instance, TextMeshProUGUI ___TagName, TextMeshProUGUI ___Caption, Image ____tagColor, Image ___MainImage, Task __result)
+        public static async void Postfix(GridItemView __instance, Task __result)
         {
             await __result;
 
             // Rerun logic with preferred priority. Running again rather than prefix overwrite because this also fixes the existing race condition
-            ___TagName.gameObject.SetActive(false);
-            ___Caption.gameObject.SetActive(true);
+            __instance.TagName.gameObject.SetActive(false);
+            __instance.Caption.gameObject.SetActive(true);
             await Task.Yield();
-            RectTransform tagTransform = ____tagColor.rectTransform;
-            float tagSpace = __instance.RectTransform.rect.width - ___Caption.renderedWidth - 2f;
+            RectTransform tagTransform = __instance._tagColor.rectTransform;
+            float tagSpace = __instance.RectTransform.rect.width - __instance.Caption.renderedWidth - 2f;
             if (tagSpace < 40f)
             {
                 tagTransform.sizeDelta = new Vector2(__instance.RectTransform.sizeDelta.x, tagTransform.sizeDelta.y);
                 if (Settings.TagsOverCaptions.Value)
                 {
-                    ___TagName.gameObject.SetActive(true);
-                    float tagSize = Mathf.Clamp(___TagName.preferredWidth + 12f, 40f, __instance.RectTransform.sizeDelta.x - 2f);
-                    tagTransform.sizeDelta = new Vector2(tagSize, ____tagColor.rectTransform.sizeDelta.y);
+                    __instance.TagName.gameObject.SetActive(true);
+                    float tagSize = Mathf.Clamp(__instance.TagName.preferredWidth + 12f, 40f, __instance.RectTransform.sizeDelta.x - 2f);
+                    tagTransform.sizeDelta = new Vector2(tagSize, __instance._tagColor.rectTransform.sizeDelta.y);
 
-                    ___Caption.gameObject.SetActive(false);
+                    __instance.Caption.gameObject.SetActive(false);
                 }
             }
             else
             {
-                ___TagName.gameObject.SetActive(true);
-                float tagSize = Mathf.Clamp(___TagName.preferredWidth + 12f, 40f, tagSpace);
-                tagTransform.sizeDelta = new Vector2(tagSize, ____tagColor.rectTransform.sizeDelta.y);
+                __instance.TagName.gameObject.SetActive(true);
+                float tagSize = Mathf.Clamp(__instance.TagName.preferredWidth + 12f, 40f, tagSpace);
+                tagTransform.sizeDelta = new Vector2(tagSize, __instance._tagColor.rectTransform.sizeDelta.y);
             }
 
             // Make sure it's on top of the image
-            if (____tagColor.transform.GetSiblingIndex() < ___MainImage.transform.GetSiblingIndex())
+            if (__instance._tagColor.transform.GetSiblingIndex() < __instance.MainImage.transform.GetSiblingIndex())
             {
-                ____tagColor.transform.SetSiblingIndex(___MainImage.transform.GetSiblingIndex() + 1);
+                __instance._tagColor.transform.SetSiblingIndex(__instance.MainImage.transform.GetSiblingIndex() + 1);
             }
         }
     }
@@ -133,12 +134,9 @@ public static class TagPatches
     // Adds a TagComponent to types when they are constructed completely new
     public class AddTagNewItemPatch : ModulePatch
     {
-        private static FieldInfo ComponentsField;
-
         protected override MethodBase GetTargetMethod()
         {
-            ComponentsField = AccessTools.Field(typeof(Item), "Components");
-            return AccessTools.Method(typeof(ItemFactoryClass), nameof(ItemFactoryClass.CreateItem));
+            return AccessTools.Method(typeof(ItemFactory), nameof(ItemFactory.CreateItem));
         }
 
         [PatchPostfix]
@@ -147,8 +145,7 @@ public static class TagPatches
             // If itemDiff is null, there's no deserialization, so just create the component
             if (itemDiff == null && IsTaggingEnabled(__result))
             {
-                var components = (List<IItemComponent>)ComponentsField.GetValue(__result);
-                components.Add(new TagComponent(__result));
+                __result.Components.Add(new TagComponent(__result));
             }
         }
     }
@@ -159,20 +156,19 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            Type type = PatchConstants.EftTypes.Single(t => t.GetMethod("CreateItem", BindingFlags.Public | BindingFlags.Static) != null); // GClass1682
-            return AccessTools.Method(type, "CreateItem");
+            return AccessTools.Method(typeof(ItemDeserializer), nameof(ItemDeserializer.CreateItem));
         }
 
         [PatchPostfix]
-        public static void Postfix(Item item, ItemProperties properties)
+        public static void Postfix(Item item, UnparsedData properties)
         {
             if (IsTaggingEnabled(item))
             {
                 TagComponent tagComponent = new(item);
                 item.Components.Add(tagComponent);
 
-                var propDictionary = properties.JToken.ToObject<Dictionary<string, ItemProperties>>();
-                if (propDictionary.TryGetValue("Tag", out ItemProperties tagProperty))
+                var propDictionary = properties.JToken.ToObject<Dictionary<string, UnparsedData>>();
+                if (propDictionary.TryGetValue("Tag", out UnparsedData tagProperty))
                 {
                     tagProperty.ParseJsonTo(tagComponent.GetType(), tagComponent);
                 }
@@ -187,7 +183,7 @@ public static class TagPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(EFTItemSerializerClass), nameof(EFTItemSerializerClass.smethod_2));
+            return AccessTools.Method(typeof(ItemBinarySerializer), nameof(ItemBinarySerializer.SerializeComponent));
         }
 
         [PatchPrefix]
@@ -195,7 +191,7 @@ public static class TagPatches
         {
             if (component is TagComponent tagComponent)
             {
-                if (tagComponent.Item is BackpackItemClass or VestItemClass)
+                if (tagComponent.Item is Backpack or Vest)
                 {
                     __result = null;
                     return false;
@@ -210,8 +206,8 @@ public static class TagPatches
     {
         return instance switch
         {
-            BackpackItemClass => Settings.TagBackpacks.Value,
-            VestItemClass => Settings.TagVests.Value,
+            Backpack => Settings.TagBackpacks.Value,
+            Vest => Settings.TagVests.Value,
             _ => false
         };
     }

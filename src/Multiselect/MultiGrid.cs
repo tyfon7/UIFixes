@@ -23,7 +23,7 @@ public static class MultiGrid
         return new LocationInGrid(realAddress.LocationInGrid.x + gridOffset.x, realAddress.LocationInGrid.y + gridOffset.y, realAddress.LocationInGrid.r);
     }
 
-    public static GridItemAddress GetRealAddress(StashGridClass originGrid, LocationInGrid multigridLocation)
+    public static GridItemAddress GetRealAddress(Grid originGrid, LocationInGrid multigridLocation)
     {
         if (!IsMultiGrid(originGrid.ParentItem))
         {
@@ -31,7 +31,7 @@ public static class MultiGrid
             multigridLocation.x = Math.Max(0, Math.Min(originGrid.GridWidth, multigridLocation.x));
             multigridLocation.y = Math.Max(0, Math.Min(originGrid.GridHeight, multigridLocation.y));
 
-            return new StashGridItemAddress(originGrid, multigridLocation);
+            return new Grid.ProtectedGridItemAddress(originGrid, multigridLocation);
         }
 
         var gridsByLocation = GridsByLocation[originGrid.ParentItem.TemplateId];
@@ -49,11 +49,11 @@ public static class MultiGrid
         }
 
         string gridId = gridsByLocation[x][y];
-        StashGridClass grid = (originGrid.ParentItem as CompoundItem).Grids.Single(g => g.ID == gridId);
+        Grid grid = (originGrid.ParentItem as CompoundItem).Grids.Single(g => g.ID == gridId);
         Vector2Int offsets = GridOffsets[originGrid.ParentItem.TemplateId][gridId];
 
         LocationInGrid location = new(x - offsets.x, y - offsets.y, multigridLocation.r);
-        return new StashGridItemAddress(grid, location);
+        return new Grid.ProtectedGridItemAddress(grid, location);
     }
 
     public static void Cache(GridView initialGridView)

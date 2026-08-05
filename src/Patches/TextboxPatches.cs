@@ -17,11 +17,11 @@ public static class TextboxPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(KeyPressState), nameof(KeyPressState.Update));
+            return AccessTools.DeclaredMethod(typeof(InputKey), nameof(InputKey.Update));
         }
 
         [PatchPrefix]
-        public static bool Prefix(KeyPressState __instance)
+        public static bool Prefix(InputKey __instance)
         {
             if (!Settings.SuppressKeybindsInTextbox.Value)
             {

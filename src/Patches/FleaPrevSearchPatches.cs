@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
@@ -47,7 +48,7 @@ public static class FleaPrevSearchPatches
 
     public class PreviousFilterButton : MonoBehaviour
     {
-        private RagFairClass _ragfair;
+        private RagFair _ragfair;
         private RagfairScreen _ragfairScreen;
         private DefaultUIButton _button;
         private LayoutElement _layoutElement;
@@ -66,7 +67,7 @@ public static class FleaPrevSearchPatches
             _button.OnClick.AddListener(OnClick);
         }
 
-        public void Show(RagfairScreen ragfairScreen, RagFairClass ragfair)
+        public void Show(RagfairScreen ragfairScreen, RagFair ragfair)
         {
             _ragfair = ragfair;
             _ragfairScreen = ragfairScreen;
@@ -79,7 +80,7 @@ public static class FleaPrevSearchPatches
             // Prime the first filter
             if (!History.Any())
             {
-                History.Push(new HistoryEntry() { FilterRule = ragfair.method_3(EViewListType.AllOffers) }); // Player's saved default rule
+                History.Push(new HistoryEntry() { FilterRule = ragfair.GetPreferredRule(EViewListType.AllOffers) }); // Player's saved default rule
             }
 
             // Load what they're searching now, which may or may not be the same as the default
@@ -106,18 +107,18 @@ public static class FleaPrevSearchPatches
         {
             if (!String.IsNullOrEmpty(DelayedHandbookId))
             {
-                // Super important to clear DelayedHandbookId *before* calling method_10, or infinite loops can occur!
+                // Super important to clear DelayedHandbookId *before* calling HandbookNodeIdChangedHandler, or infinite loops can occur!
                 string newHandbookId = DelayedHandbookId;
                 DelayedHandbookId = string.Empty;
 
-                offerViewList.method_10(newHandbookId, false);
+                offerViewList.HandbookNodeIdChangedHandler(newHandbookId, false);
                 return;
             }
 
             // Restore scroll position now that offers are loaded
             if (History.Any())
             {
-                offerViewList.R().Scroller.SetScrollPosition(History.Peek().ScrollPosition);
+                offerViewList._scroller.SetScrollPosition(History.Peek().ScrollPosition);
             }
         }
 
@@ -132,14 +133,14 @@ public static class FleaPrevSearchPatches
             HistoryEntry previousEntry = History.Peek();
 
             // Manually update parts of the UI because BSG sucks
-            UpdateColumnHeaders(_ragfairScreen.R().OfferViewList.R().FiltersPanel, previousEntry.FilterRule.SortType, previousEntry.FilterRule.SortDirection);
+            UpdateColumnHeaders(_ragfairScreen.R().OfferViewList._filtersPanel, previousEntry.FilterRule.SortType, previousEntry.FilterRule.SortDirection);
 
             _goingBack = true;
             ApplyFullFilter(previousEntry.FilterRule);
             _goingBack = false;
         }
 
-        private void OnFilterRuleChanged(RagFairClass.ESetFilterSource source = 0, bool clear = false, bool updateCategories = false)
+        private void OnFilterRuleChanged(RagFair.ESetFilterSource source = 0, bool clear = false, bool updateCategories = false)
         {
             if (_goingBack || !string.IsNullOrEmpty(DelayedHandbookId) || _ragfair.FilterRule.ViewListType != EViewListType.AllOffers)
             {
@@ -163,7 +164,7 @@ public static class FleaPrevSearchPatches
                 }
                 else
                 {
-                    LightScroller scroller = _ragfairScreen.R().OfferViewList.R().Scroller;
+                    LightScroller scroller = _ragfairScreen.R().OfferViewList._scroller;
                     current.ScrollPosition = scroller.NormalizedScrollPosition;
                 }
             }
@@ -193,7 +194,7 @@ public static class FleaPrevSearchPatches
             }
         }
 
-        // Copied from RagFairClass.AddSearchesInRule, but actually all of the properties
+        // Copied from RagFair.AddSearchesInRule, but actually all of the properties
         private void ApplyFullFilter(FilterRule filterRule)
         {
             // Order impacts the order the filters show in the UI
@@ -232,7 +233,7 @@ public static class FleaPrevSearchPatches
             searches.Add(new(EFilterType.OfferOwnerType, filterRule.OfferOwnerType, filterRule.OfferOwnerType != 0));
             searches.Add(new(EFilterType.OnlyFunctional, filterRule.OnlyFunctional ? 1 : 0, filterRule.OnlyFunctional));
 
-            _ragfair.method_24(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
+            _ragfair.SetSearches(filterRule.ViewListType, [.. searches], false, out FilterRule newRule);
 
             // These properties don't consistute a new search, so much as a different view of the same search
             newRule.Page = filterRule.Page;
@@ -247,17 +248,16 @@ public static class FleaPrevSearchPatches
 
         private static void UpdateColumnHeaders(FiltersPanel filtersPanel, ESortType sortType, bool sortDirection)
         {
-            var wrappedFiltersPanel = filtersPanel.R();
             RagfairFilterButton button = sortType switch
             {
-                ESortType.Barter => wrappedFiltersPanel.BarterButton,
-                ESortType.Rating => wrappedFiltersPanel.RatingButton,
-                ESortType.OfferItem => wrappedFiltersPanel.OfferItemButton,
-                ESortType.ExpirationDate => wrappedFiltersPanel.ExpirationButton,
-                _ => wrappedFiltersPanel.PriceButton,
+                ESortType.Barter => filtersPanel._barterButton,
+                ESortType.Rating => filtersPanel._ratingButton,
+                ESortType.OfferItem => filtersPanel._offerItemButton,
+                ESortType.ExpirationDate => filtersPanel._expirationButton,
+                _ => filtersPanel._priceButton
             };
-            wrappedFiltersPanel.SortDescending = sortDirection;
-            filtersPanel.method_4(button);
+            filtersPanel.Ascending = sortDirection;
+            filtersPanel.UpdateVisualStateButtons(button);
         }
     }
 
@@ -269,7 +269,7 @@ public static class FleaPrevSearchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(DefaultUIButton ____addOfferButton, ref PreviousFilterButton __state)
+        public static void Prefix(RagfairScreen __instance, ref PreviousFilterButton __state)
         {
             // Create previous button
             if (!Settings.EnableFleaHistory.Value)
@@ -277,10 +277,10 @@ public static class FleaPrevSearchPatches
                 return;
             }
 
-            __state = ____addOfferButton.transform.parent.Find("PreviousFilterButton")?.GetComponent<PreviousFilterButton>();
+            __state = __instance._addOfferButton.transform.parent.Find("PreviousFilterButton")?.GetComponent<PreviousFilterButton>();
             if (__state == null)
             {
-                var clone = UnityEngine.Object.Instantiate(____addOfferButton, ____addOfferButton.transform.parent, false);
+                var clone = UnityEngine.Object.Instantiate(__instance._addOfferButton, __instance._addOfferButton.transform.parent, false);
                 clone.name = "PreviousFilterButton";
                 clone.transform.SetAsFirstSibling();
 
@@ -289,7 +289,7 @@ public static class FleaPrevSearchPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(RagfairScreen __instance, ISession session, DefaultUIButton ____addOfferButton, PreviousFilterButton __state)
+        public static void Postfix(RagfairScreen __instance, IEftSession session, PreviousFilterButton __state)
         {
             // Delete the upper right display options, since they aren't even implemented
             var tabs = __instance.transform.Find("TopRightPanel/Tabs");
@@ -304,12 +304,12 @@ public static class FleaPrevSearchPatches
             __instance.R().UI.AddDisposable(__state.Close);
 
             // Resize the Add Offer button to use less extra space
-            var addOfferLayout = ____addOfferButton.GetComponent<LayoutElement>();
+            var addOfferLayout = __instance._addOfferButton.GetComponent<LayoutElement>();
             addOfferLayout.minWidth = -1;
             addOfferLayout.preferredWidth = -1;
 
             // Recenter the add offer text
-            var addOfferLabel = ____addOfferButton.transform.Find("SizeLabel");
+            var addOfferLabel = __instance._addOfferButton.transform.Find("SizeLabel");
             addOfferLabel.localPosition = new Vector3(0f, 0f, 0f);
 
             // Tighten up the spacing
@@ -322,7 +322,7 @@ public static class FleaPrevSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.method_12));
+            return AccessTools.Method(typeof(RagfairScreen), nameof(RagfairScreen.SelectTab));
         }
 
         [PatchPostfix]
@@ -339,7 +339,7 @@ public static class FleaPrevSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.method_10));
+            return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.HandbookNodeIdChangedHandler));
         }
 
         // The first thing this method does is set scrollposition to 0, so grab it first
@@ -360,15 +360,15 @@ public static class FleaPrevSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.method_12));
+            return AccessTools.Method(typeof(OfferViewList), nameof(OfferViewList.GetOffers), [typeof(bool), typeof(Action)]);
         }
 
         [PatchPostfix]
-        public static async void Postfix(OfferViewList __instance, Task __result, EViewListType ___eviewListType_0, BrowseCategoriesPanel ____browseCategoriesPanel)
+        public static async void Postfix(OfferViewList __instance, Task __result, EViewListType ____viewListType, BrowseCategoriesPanel ____browseCategoriesPanel)
         {
             await __result;
 
-            if (___eviewListType_0 != EViewListType.AllOffers)
+            if (____viewListType != EViewListType.AllOffers)
             {
                 return;
             }

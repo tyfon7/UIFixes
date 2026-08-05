@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using EFT;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Screens;
@@ -21,7 +22,7 @@ public static class KeepMessagesOpenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ChatScreen), nameof(ChatScreen.method_6));
+            return AccessTools.Method(typeof(ChatScreen), nameof(ChatScreen.ProcessRewards));
         }
 
         [PatchPostfix]
@@ -38,11 +39,11 @@ public static class KeepMessagesOpenPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(MainMenuControllerClass), nameof(MainMenuControllerClass.method_0));
+            return AccessTools.Method(typeof(MainMenuShowOperation), nameof(MainMenuShowOperation.ScreenChangeHandler));
         }
 
         [PatchPostfix]
-        public static void Postfix(MainMenuControllerClass __instance, EEftScreenType eftScreenType)
+        public static void Postfix(MainMenuShowOperation __instance, EEftScreenType eftScreenType)
         {
             if (Settings.KeepMessagesOpen.Value && eftScreenType != EEftScreenType.TransferItems && ReopenMessages)
             {

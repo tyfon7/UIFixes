@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using EFT.Utilities;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using TMPro;
@@ -37,56 +38,53 @@ public static class InspectWindowStatsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_5));
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.RecreateAttributeBars));
         }
 
         [PatchPostfix]
         public static void Postfix(
             ItemSpecificationPanel __instance,
-            Item ___item_0,
-            CompactCharacteristicPanel ____compactCharTemplate,
-            Transform ____compactPanel,
-            SimpleTooltip ___simpleTooltip_0)
+            Item ____item,
+            SimpleTooltip ____secondaryTooltip,
+            ref ViewList<ItemAttribute, CompactCharacteristicPanel> ____compactBarAttributeViewers,
+            ViewList<ItemAttribute, CompactCharacteristicDropdownPanel> ____createdCompatibleAttrivieViewers)
         {
-            var instance = __instance.R();
-
-            if (!Settings.ShowModStats.Value || ___item_0 is not Mod)
+            if (!Settings.ShowModStats.Value || ____item is not Mod)
             {
                 return;
             }
 
-            var deepAttributes = GetDeepAttributes(___item_0, out bool changed);
+            var deepAttributes = GetDeepAttributes(____item, out bool changed);
             if (!changed)
             {
                 return;
             }
 
             // Clean up existing one
-            if (instance.CompactCharacteristicPanels is IDisposable compactPanels)
+            if (____compactBarAttributeViewers is IDisposable compactPanels)
             {
                 compactPanels.Dispose();
             }
 
-            var newCompactPanels = R.ItemSpecificationPanel.CreateCompactCharacteristicPanels(
+            ____compactBarAttributeViewers = new ViewList<ItemAttribute, CompactCharacteristicPanel>(
                 deepAttributes,
-                ____compactCharTemplate,
-                ____compactPanel,
-                (attribute, viewer) => viewer.Show(attribute, ___simpleTooltip_0, __instance.Boolean_0, 100));
+                __instance._compactCharTemplate,
+                __instance._compactPanel,
+                (attribute, viewer) => viewer.Show(attribute, ____secondaryTooltip, __instance.Examined, 100)); ;
 
-            instance.CompactCharacteristicPanels = newCompactPanels;
-
-            if (newCompactPanels.Any())
+            if (____compactBarAttributeViewers.Any())
             {
-                newCompactPanels.Last().Value.OnTextWidthCalculated += __instance.method_3;
-                int siblingIndex = newCompactPanels.Last().Value.Transform.GetSiblingIndex();
+                ____compactBarAttributeViewers.Last().Value.OnTextWidthCalculated += __instance.CompactItemTextCalculated;
+                int siblingIndex = ____compactBarAttributeViewers.Last().Value.Transform.GetSiblingIndex();
 
-                foreach (var item in instance.CompactCharacteristicDropdowns)
+                foreach (var item in ____createdCompatibleAttrivieViewers)
                 {
                     item.Value.Transform.SetSiblingIndex(++siblingIndex);
                 }
             }
-            __instance.method_14(0f);
-            __instance.method_6(null);
+
+            __instance.ProcessCompactCells(0f);
+            __instance.Compare(null);
         }
     }
 
@@ -94,14 +92,14 @@ public static class InspectWindowStatsPatches
     // I guess weapons figure out their stats by deeply iterating all mods, rather than just their direct mods
     // As a result, the compare method that works with weapons/armor doesn't work with mods. Normally, it "adds" the mod, clones the result, then reverts the "add". Hence
     // the compareItem is the item with the mods. But again, as mods don't change their values, we see no change.
-    // I wish I could prefix method_6 and update the compare item with the deep attributes, but that only works when adding a mod
+    // I wish I could prefix Compare() and update the compare item with the deep attributes, but that only works when adding a mod
     // When removing, current item and compare item end up the same since current item never considers the mod anyway
     // So I have to forcably call the refresh values method
     public class CompareModStatsPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_6));
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.Compare));
         }
 
         [PatchPrefix]
@@ -112,13 +110,13 @@ public static class InspectWindowStatsPatches
                 return;
             }
 
-            // Armor points is added in method_5, but not in other places so it's missed by compare
+            // Armor points is added in RecreateAttributeBars, but not in other places so it's missed by compare
             var armorComponents = compareItem.GetItemComponentsInChildren<ArmorComponent>(true).Where(c => c.ArmorClass > 0).ToArray<ArmorComponent>();
             if (armorComponents.Any())
             {
                 float maxDurability = armorComponents.Sum(c => c.Repairable.Durability);
 
-                var itemAttributeClass = new ItemAttributeClass(EItemAttributeId.ArmorPoints)
+                var itemAttributeClass = new ItemAttribute(EItemAttributeId.ArmorPoints)
                 {
                     Name = EItemAttributeId.ArmorPoints.GetName(),
                     Base = () => maxDurability,
@@ -131,21 +129,20 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, Item compareItem)
+        public static void Postfix(ItemSpecificationPanel __instance, Item compareItem, ViewList<ItemAttribute, CompactCharacteristicPanel> ____compactBarAttributeViewers)
         {
             if (!Settings.ShowModStats.Value || compareItem is not Mod)
             {
                 return;
             }
 
-            List<ItemAttributeClass> deepAttributes = GetDeepAttributes(compareItem, out bool changed);
+            List<ItemAttribute> deepAttributes = GetDeepAttributes(compareItem, out bool changed);
             if (!changed)
             {
                 return;
             }
 
-            var compactPanels = __instance.R().CompactCharacteristicPanels;
-            R.ItemSpecificationPanel.Refresh(compactPanels, deepAttributes);
+            ItemSpecificationPanel.CG_Compare(____compactBarAttributeViewers, deepAttributes); // Updates attributes, name is due to be called from Compare
         }
     }
 
@@ -153,7 +150,7 @@ public static class InspectWindowStatsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.method_4));
+            return AccessTools.Method(typeof(ItemSpecificationPanel), nameof(ItemSpecificationPanel.InitInteractionButtonsPanel));
         }
 
         private static string GetLabel()
@@ -162,24 +159,24 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, ItemInfoInteractionsAbstractClass<EItemInfoButton> contextInteractions, Item ___item_0, InteractionButtonsContainer ____interactionButtonsContainer)
+        public static void Postfix(ItemSpecificationPanel __instance, ContextInteractions<EItemInfoButton> contextInteractions, Item ____item)
         {
-            if (___item_0 is not Mod)
+            if (____item is not Mod)
             {
                 return;
             }
 
-            var buttonsContainer = ____interactionButtonsContainer.R();
+            var buttonsContainer = __instance._interactionButtonsContainer;
 
             ContextMenuButton toggleButton = null;
 
             // Listen to the setting and the work there to handle multiple windows open at once
             void OnSettingChanged(object sender, EventArgs args)
             {
-                var text = toggleButton.R().Text;
+                var text = toggleButton._text;
                 text.text = GetLabel();
 
-                __instance.method_5(); // rebuild stat panels
+                __instance.RecreateAttributeBars(); // rebuild stat panels
             }
             Settings.ShowModStats.SettingChanged += OnSettingChanged;
 
@@ -190,18 +187,18 @@ public static class InspectWindowStatsPatches
 
             void CreateButton()
             {
-                Sprite sprite = CacheResourcesPopAbstractClass.Pop<Sprite>("Characteristics/Icons/Modding");
-                toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer.ButtonTemplate, buttonsContainer.Container, false);
+                Sprite sprite = ResourcesCache.Pop<Sprite>("Characteristics/Icons/Modding");
+                toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer._buttonTemplate, buttonsContainer._buttonsContainer, false);
                 toggleButton.Show(GetLabel(), null, sprite, OnClick, null);
                 toggleButton.transform.SetSiblingIndex(toggleButton.transform.GetSiblingIndex() - 1);
-                ____interactionButtonsContainer.method_5(toggleButton); // add to disposable list
+                buttonsContainer.BindButton(toggleButton); // add to disposable list
             }
 
             // Subscribe to redraws to recreate when mods get dropped in
             contextInteractions.OnRedrawRequired += CreateButton;
 
             // And unsubscribe when the window goes away
-            buttonsContainer.UI.AddDisposable(() =>
+            buttonsContainer.R().UI.AddDisposable(() =>
             {
                 contextInteractions.OnRedrawRequired -= CreateButton;
                 Settings.ShowModStats.SettingChanged -= OnSettingChanged;
@@ -219,11 +216,11 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(CompactCharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
+        public static void Postfix(CompactCharacteristicPanel __instance)
         {
             try
             {
-                FormatText(__instance, ___ValueText);
+                FormatText(__instance, __instance.ValueText);
             }
             catch (Exception ex)
             {
@@ -246,11 +243,11 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(CharacteristicPanel __instance, TextMeshProUGUI ___ValueText)
+        public static void Postfix(CharacteristicPanel __instance)
         {
             try
             {
-                FormatText(__instance, ___ValueText, true);
+                FormatText(__instance, __instance.ValueText, true);
             }
             catch (Exception ex)
             {
@@ -311,11 +308,11 @@ public static class InspectWindowStatsPatches
             return AccessTools.DeclaredMethod(typeof(DurabilityPanel), nameof(DurabilityPanel.SetValues));
         }
         [PatchPostfix]
-        public static void Postfix(Image ___Current)
+        public static void Postfix(DurabilityPanel __instance)
         {
-            ___Current.rectTransform.anchorMax = new Vector2(
-                Mathf.Min(___Current.rectTransform.anchorMax.x, 1f),
-                ___Current.rectTransform.anchorMax.y);
+            __instance.Current.rectTransform.anchorMax = new Vector2(
+                Mathf.Min(__instance.Current.rectTransform.anchorMax.x, 1f),
+                __instance.Current.rectTransform.anchorMax.y);
         }
     }
 
@@ -328,7 +325,7 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, ItemContextAbstractClass itemContext, ItemUiContext itemUiContext)
+        public static void Postfix(ItemSpecificationPanel __instance, ItemContext itemContext, ItemUiContext itemUiContext)
         {
             if (!Settings.HighlightEmptySlots.Value)
             {
@@ -344,7 +341,7 @@ public static class InspectWindowStatsPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(SlotView), nameof(SlotView.method_1));
+            return AccessTools.Method(typeof(SlotView), nameof(SlotView.CheckAcceptHandler));
         }
 
         [PatchPostfix]
@@ -375,7 +372,7 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderControllerClass itemController, ref InventoryEquipment equipment)
+        public static void Prefix(ItemController itemController, ref InventoryEquipment equipment)
         {
             if (equipment == null && itemController is InventoryController inventoryController)
             {
@@ -405,7 +402,7 @@ public static class InspectWindowStatsPatches
 
         string text = textMesh.text;
         var wrappedPanel = panel.R();
-        ItemAttributeClass attribute = wrappedPanel.ItemAttribute;
+        ItemAttribute attribute = wrappedPanel.ItemAttribute;
 
         // Holy shit did they mess up MOA. Half of the calculation is done in the StringValue() method, so calculating delta from Base() loses all that
         // Plus, they round the difference to the nearest integer (!?)
@@ -501,7 +498,7 @@ public static class InspectWindowStatsPatches
         textMesh.text = text;
     }
 
-    private static List<ItemAttributeClass> GetDeepAttributes(Item item, out bool changed)
+    private static List<ItemAttribute> GetDeepAttributes(Item item, out bool changed)
     {
         changed = false;
         var itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
@@ -520,7 +517,7 @@ public static class InspectWindowStatsPatches
         return itemAttributes;
     }
 
-    private static IEnumerable<ItemAttributeClass> CombineAttributes(IList<ItemAttributeClass> first, IList<ItemAttributeClass> second)
+    private static IEnumerable<ItemAttribute> CombineAttributes(IList<ItemAttribute> first, IList<ItemAttribute> second)
     {
         foreach (EItemAttributeId id in first.Select(a => a.Id).Union(second.Select(a => a.Id)).Select(v => (EItemAttributeId)v))
         {

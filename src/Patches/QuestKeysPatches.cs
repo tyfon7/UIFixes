@@ -41,11 +41,11 @@ public static class QuestKeysPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(QuestController), nameof(QuestController.TryNotifyConditionalStatusChanged));
+            return AccessTools.DeclaredMethod(typeof(QuestControllerClient), nameof(QuestControllerClient.TryNotifyConditionalStatusChanged));
         }
 
         [PatchPrefix]
-        public static bool Prefix(QuestClass quest)
+        public static bool Prefix(Quest quest)
         {
             if (RecentQuestStatuses.TryGetValue(quest.Template.Id, out EQuestStatus status) && status == quest.QuestStatus)
             {
@@ -68,7 +68,7 @@ public static class QuestKeysPatches
 
         public void Update()
         {
-            bool questDialogVisible = ItemUiContext.Instance.R().DelayTypeWindow.gameObject.activeSelf;
+            bool questDialogVisible = ItemUiContext.Instance._delayTypeWindow.gameObject.activeSelf;
             if (!questDialogVisible && Button.Interactable && Input.GetKeyDown(KeyCode.Return))
             {
                 Button.OnClick.Invoke();

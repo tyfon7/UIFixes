@@ -1,5 +1,6 @@
 using System.Reflection;
 using EFT;
+using EFT.InventoryLogic;
 using EFT.UI.Matchmaker;
 using HarmonyLib;
 using SPT.Reflection.Patching;
@@ -12,11 +13,11 @@ public class FixPlayerInspectPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(PartyInfoPanel), nameof(PartyInfoPanel.method_3));
+        return AccessTools.Method(typeof(PartyInfoPanel), nameof(PartyInfoPanel.CG_method_3)); // OnViewEquipmentClick
     }
 
     [PatchPrefix]
-    public static bool Prefix(GroupPlayerViewModelClass raidPlayer)
+    public static bool Prefix(RaidPlayer raidPlayer)
     {
         var equipment = raidPlayer.PlayerVisualRepresentation.Equipment;
         return equipment.CurrentAddress.GetOwnerOrNull() is not Player.PlayerOwnerInventoryController;

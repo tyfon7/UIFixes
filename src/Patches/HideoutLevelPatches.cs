@@ -40,7 +40,7 @@ public static class HideoutLevelPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.method_6));
+            return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.SetState));
         }
 
         [PatchPrefix]
@@ -54,7 +54,7 @@ public static class HideoutLevelPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.method_3));
+            return AccessTools.Method(typeof(AreaScreenSubstrate), nameof(AreaScreenSubstrate.GetAppropriateState));
         }
 
         [PatchPrefix]

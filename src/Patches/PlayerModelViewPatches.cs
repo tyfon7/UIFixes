@@ -12,15 +12,15 @@ public static class PlayerModelViewPatches
 {
     public static void Enable()
     {
-        new Patch_InventoryPlayerModelWithStatsWindow_method_5().Enable();
+        new PlayerModelPreviewPatch().Enable();
     }
 
-    public class Patch_InventoryPlayerModelWithStatsWindow_method_5 : ModulePatch
+    public class PlayerModelPreviewPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
         {
             // this method is called when PlayerModelView is loaded
-            return AccessTools.Method(typeof(InventoryPlayerModelWithStatsWindow), nameof(InventoryPlayerModelWithStatsWindow.method_5));
+            return AccessTools.Method(typeof(InventoryPlayerModelWithStatsWindow), nameof(InventoryPlayerModelWithStatsWindow.CG_ShowPreview));
         }
 
         private const float MAX_ZOOM_IN_Z = 4.69f;
@@ -33,8 +33,7 @@ public static class PlayerModelViewPatches
             InventoryPlayerModelWithStatsWindow __instance,
             PlayerModelView ____playerModelView,
             XCoordRotation ____rotator,
-            DragTrigger ____dragTrigger,
-            AddViewListClass ___UI)
+            DragTrigger ____dragTrigger)
         {
             if (!____playerModelView)
             {
@@ -101,12 +100,12 @@ public static class PlayerModelViewPatches
             }
         }
 
-        public static void RotatePanCamera(PointerEventData eventData, InventoryPlayerModelWithStatsWindow __instance, Transform cameraTransform)
+        public static void RotatePanCamera(PointerEventData eventData, InventoryPlayerModelWithStatsWindow window, Transform cameraTransform)
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
                 // rotate
-                __instance.method_4(eventData);
+                window.DragHandler(eventData);
             }
 
             if (Settings.CharacterPanZoom.Value && eventData.button == PointerEventData.InputButton.Middle)

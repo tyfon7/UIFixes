@@ -37,13 +37,13 @@ public class MultiSelect
 
         if (SelectedMarkTemplate == null)
         {
-            SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedMark, null, false);
+            SelectedMarkTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView._selectedMark, null, false);
             UnityEngine.Object.DontDestroyOnLoad(SelectedMarkTemplate);
         }
 
         if (SelectedBackgroundTemplate == null)
         {
-            SelectedBackgroundTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView.R().SelectedBackground, null, false);
+            SelectedBackgroundTemplate = UnityEngine.Object.Instantiate(ragfairNewOfferItemView._selectedBackground, null, false);
             UnityEngine.Object.DontDestroyOnLoad(SelectedBackgroundTemplate);
         }
 
@@ -178,7 +178,7 @@ public class MultiSelect
 
     // Occurs when an item is added somewhere. If it's from a move, and that item was multiselected,
     // the context needs to be updated with the new address
-    private static void OnItemAdded(GEventArgs2 eventArgs)
+    private static void OnItemAdded(AddItemEventArgs eventArgs)
     {
         if (eventArgs.Status != CommandStatus.Succeed)
         {
@@ -352,26 +352,26 @@ public class MultiSelect
     private static bool InteractionAvailable(DragItemContext itemContext, EItemInfoButton interaction, ItemUiContext itemUiContext)
     {
         // Since itemContext is for "drag", no context actions are allowed. Get the underlying "inventory" context
-        ItemContextAbstractClass innerContext = itemContext.ItemContextAbstractClass;
-        if (innerContext == null)
+        ItemContext sourceContext = itemContext.Source;
+        if (sourceContext == null)
         {
             return false;
         }
 
         bool createdContext = false;
-        if (innerContext.Item != itemContext.Item)
+        if (sourceContext.Item != itemContext.Item)
         {
             // Actual context went away and we're looking at inventory/stash context
-            innerContext = innerContext.CreateChild(itemContext.Item);
+            sourceContext = sourceContext.CreateChild(itemContext.Item);
             createdContext = true;
         }
 
-        var contextInteractions = itemUiContext.GetItemContextInteractions(innerContext, null);
+        var contextInteractions = itemUiContext.GetItemContextInteractions(sourceContext, null);
         var result = contextInteractions.IsInteractionAvailable(interaction);
 
         if (createdContext)
         {
-            innerContext.Dispose();
+            sourceContext.Dispose();
         }
 
         return result.Succeed;
@@ -409,8 +409,8 @@ public class MultiSelect
                         continue;
                     }
 
-                    // I don't think I need to clean this up, method_4 adds it to the gridview's collection so it's not orphaned or anything
-                    var newItemView = gridView.method_4(item, gridAddress.LocationInGrid, ItemUiContext.Instance, item.Parent.GetOwnerOrNull());
+                    // I don't think I need to clean this up, CreateItemView adds it to the gridview's collection so it's not orphaned or anything
+                    var newItemView = gridView.CreateItemView(item, gridAddress.LocationInGrid, ItemUiContext.Instance, item.Parent.GetOwnerOrNull());
                     if (newItemView is GridItemView newGridItemView)
                     {
                         Select(newGridItemView);
@@ -448,12 +448,12 @@ public class MultiSelect
             var serializer = CreateLoadUnloadSerializer(itemUiContext.gameObject);
             serializer.Initialize(
                 SortedItemContexts()
-                    .Where(ic => ic.Item is MagazineItemClass && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
+                    .Where(ic => ic.Item is Magazine && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
                     .SelectMany(ic => ic.RepeatUntilFull()),
                 itemContext =>
                 {
                     IgnoreStopLoading = true;
-                    return itemUiContext.LoadAmmoByType(itemContext.Item as MagazineItemClass, ammoTemplateId, itemContext.UpdateView);
+                    return itemUiContext.LoadAmmoByType(itemContext.Item as Magazine, ammoTemplateId, itemContext.UpdateView);
                 });
 
             itemUiContext.Tooltip?.Close();
@@ -487,7 +487,7 @@ public class MultiSelect
 
     public static void InstallAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Install, context => itemUiContext.InstallMod(context, itemUiContext.CompoundItem_0), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Install, context => itemUiContext.InstallMod(context, itemUiContext.PlayerCollections), allOrNothing);
     }
 
     public static void UninstallAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -649,7 +649,7 @@ public static class MultiSelectExtensions
 
     // Be Careful!!
     // This enum will never end unless things are actively moving/checking. Calling Count() on this will live-lock the app!!
-    public static IEnumerable<T> RepeatUntilEmpty<T>(this T itemContext) where T : ItemContextAbstractClass
+    public static IEnumerable<T> RepeatUntilEmpty<T>(this T itemContext) where T : ItemContext
     {
         while (itemContext.Item.StackObjectsCount > 0)
         {
@@ -657,9 +657,9 @@ public static class MultiSelectExtensions
         }
     }
 
-    public static IEnumerable<T> RepeatUntilFull<T>(this T itemContext) where T : ItemContextAbstractClass
+    public static IEnumerable<T> RepeatUntilFull<T>(this T itemContext) where T : ItemContext
     {
-        if (itemContext.Item is MagazineItemClass magazine)
+        if (itemContext.Item is Magazine magazine)
         {
             int ammoCount = -1;
             while (magazine.Count > ammoCount && magazine.Count < magazine.MaxCount)

@@ -33,14 +33,14 @@ public static class TraderAvatarPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderAvatar __instance, GameObject ____availableToStartQuestsIcon, GameObject ____availableToFinishQuestsIcon)
+        public static void Prefix(TraderAvatar __instance)
         {
             Transform operationalQuests = __instance.transform.Find("QuestsIcons/AvailableOperationsQuests");
             if (operationalQuests == null && Settings.DailyQuestIcon.Value)
             {
-                var clone = UnityEngine.Object.Instantiate(____availableToStartQuestsIcon, ____availableToStartQuestsIcon.transform.parent, false);
+                var clone = UnityEngine.Object.Instantiate(__instance._availableToStartQuestsIcon, __instance._availableToStartQuestsIcon.transform.parent, false);
                 clone.name = "AvailableOperationsQuests";
-                clone.transform.SetSiblingIndex(____availableToStartQuestsIcon.transform.GetSiblingIndex() + 1);
+                clone.transform.SetSiblingIndex(__instance._availableToStartQuestsIcon.transform.GetSiblingIndex() + 1);
 
                 var image = clone.GetComponent<Image>();
                 image.sprite = EFTHardSettings.Instance.StaticIcons.QuestIconTypeSprites[EQuestIconType.Daily];
@@ -58,9 +58,9 @@ public static class TraderAvatarPatches
             Transform handInQuests = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
             if (handInQuests == null && Settings.HandOverQuestItemsIcon.Value)
             {
-                var clone = UnityEngine.Object.Instantiate(____availableToFinishQuestsIcon, ____availableToFinishQuestsIcon.transform.parent, false);
+                var clone = UnityEngine.Object.Instantiate(__instance._availableToFinishQuestsIcon, __instance._availableToFinishQuestsIcon.transform.parent, false);
                 clone.name = "AvailableHandInQuests";
-                clone.transform.SetSiblingIndex(____availableToFinishQuestsIcon.transform.GetSiblingIndex());
+                clone.transform.SetSiblingIndex(__instance._availableToFinishQuestsIcon.transform.GetSiblingIndex());
 
                 var image = clone.GetComponent<Image>();
                 image.sprite = EFTHardSettings.Instance.StaticIcons.QuestIconTypeSprites[EQuestIconType.PickUp];
@@ -74,18 +74,17 @@ public static class TraderAvatarPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderAvatar), nameof(TraderAvatar.method_0));
+            return AccessTools.Method(typeof(TraderAvatar), nameof(TraderAvatar.UpdateConditionalStatus));
         }
 
         [PatchPostfix]
         public static void Postfix(
             TraderAvatar __instance,
-            Profile.TraderInfo ___traderInfo_0,
-            AbstractQuestControllerClass ___abstractQuestControllerClass,
-            GameObject ____availableToStartQuestsIcon)
+            Profile.TraderInfo ____traderInfo,
+            QuestController ____questController)
         {
-            var quests = ___abstractQuestControllerClass.Quests;
-            var traderQuests = quests.method_11(___traderInfo_0.Id);
+            var quests = ____questController.Quests;
+            var traderQuests = quests.GetQuests(____traderInfo.Id);
 
             // Differentiate between daily and non-daily quests aviailable for start
             bool showDailyIcon = Settings.DailyQuestIcon.Value;
@@ -95,7 +94,7 @@ public static class TraderAvatarPatches
                 var availableDailyForStart = availableForStart.Where(q => q is DailyQuest);
                 if (availableForStart.Count() - availableDailyForStart.Count() == 0)
                 {
-                    ____availableToStartQuestsIcon.SetActive(false);
+                    __instance._availableToStartQuestsIcon.SetActive(false);
                     showDailyIcon = availableDailyForStart.Any();
                 }
                 else
@@ -111,7 +110,7 @@ public static class TraderAvatarPatches
             }
 
             // Show quests that have turn-ins available
-            bool handInsAvailable = Settings.HandOverQuestItemsIcon.Value && QuestHandInAvailable(traderQuests, ___abstractQuestControllerClass.InventoryController_0.Inventory);
+            bool handInsAvailable = Settings.HandOverQuestItemsIcon.Value && QuestHandInAvailable(traderQuests, ____questController.InventoryController.Inventory);
             Transform handInQuestsIcon = __instance.transform.Find("QuestsIcons/AvailableHandInQuests");
             if (handInQuestsIcon != null)
             {
@@ -167,24 +166,23 @@ public static class TraderAvatarPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(LocalQuestControllerClass), nameof(LocalQuestControllerClass.HandoverItem));
+            return AccessTools.DeclaredMethod(typeof(QuestControllerClientBackend), nameof(QuestControllerClientBackend.HandoverItem));
         }
 
         [PatchPostfix]
-        public static async void Postfix(QuestClass quest, Task<IResult> __result)
+        public static async void Postfix(Quest quest, Task<IResult> __result)
         {
             var result = await __result;
 
-            // quest.method_0 will trigger AbstractQuestClass.OnStatusChanged.
             // The status possibly didn't change, but it will still cause the trader avatar to update
             if (result.Succeed)
             {
-                quest.method_0(quest, false);
+                quest.CallOnStatusChangedEvent(quest, false);
             }
         }
     }
 
-    private static bool QuestHandInAvailable(IEnumerable<QuestClass> quests, Inventory inventory)
+    private static bool QuestHandInAvailable(IEnumerable<Quest> quests, Inventory inventory)
     {
         var inProgressQuests = quests.Where(q => q.QuestStatus == EQuestStatus.Started);
         foreach (var quest in inProgressQuests)
@@ -214,20 +212,20 @@ public static class TraderAvatarPatches
                 return false;
             }
 
-            if (!Singleton<ItemFactoryClass>.Instance.ItemTemplates.TryGetValue(targetItem, out var template))
+            if (!Singleton<ItemFactory>.Instance.ItemTemplates.TryGetValue(targetItem, out var template))
             {
                 return false;
             }
 
-            if (template is MoneyTemplateClass)
+            if (template is MoneyTemplate)
             {
-                var sums = R.Money.GetMoneySums(inventory.Stash.Grid.ContainedItems.Keys);
-                ECurrencyType currencyTypeById = CurrentyHelper.GetCurrencyTypeById(conditionHandoverItem.target[0]);
+                var sums = InventoryExtension.GetMoneySums(inventory.Stash.Grid.ContainedItems.Keys);
+                ECurrencyType currencyTypeById = CurrencyUtil.GetCurrencyTypeById(conditionHandoverItem.target[0]);
                 return sums[currencyTypeById] > 0;
             }
             else
             {
-                return AbstractQuestControllerClass.GetItemsForCondition(inventory, conditionHandoverItem).Any();
+                return QuestController.GetItemsForCondition(inventory, conditionHandoverItem).Any();
             }
         }
         else if (condition is ConditionWeaponAssembly conditionWeaponAssembly)

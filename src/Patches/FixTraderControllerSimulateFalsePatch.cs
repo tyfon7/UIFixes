@@ -20,19 +20,19 @@ public static class FixTraderControllerPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(TraderControllerClass), nameof(TraderControllerClass.ExecutePossibleAction), [typeof(ItemContextAbstractClass), typeof(Item), typeof(bool), typeof(bool)]);
+            return AccessTools.Method(typeof(ItemController), nameof(ItemController.ExecutePossibleAction), [typeof(ItemContext), typeof(Item), typeof(bool), typeof(bool)]);
         }
 
         // Recreating this function to add the comment section, so calling this with simulate = false doesn't break everything
         [PatchPrefix]
         [HarmonyPriority(Priority.Last)]
         public static bool Prefix(
-            TraderControllerClass __instance,
-            ItemContextAbstractClass itemContext,
+            ItemController __instance,
+            ItemContext itemContext,
             Item targetItem,
             bool partialTransferOnly, // I think this is supposed to be partialTransferAllowed, but you know, BSG
             bool simulate,
-            ref ItemOperation __result,
+            ref OperationResult __result,
             bool __runOriginal)
         {
             if (!__runOriginal)
@@ -45,9 +45,9 @@ public static class FixTraderControllerPatches
                 }
             }
 
-            TargetItemOperation opStruct;
+            ItemController.CG_ExecutePossibleAction1 opStruct;
             opStruct.targetItem = targetItem;
-            opStruct.TraderControllerClass = __instance;
+            opStruct.ItemController = __instance;
             opStruct.simulate = simulate;
             opStruct.item = itemContext.Item;
 
@@ -60,11 +60,11 @@ public static class FixTraderControllerPatches
             {
                 if (partialTransferOnly)
                 {
-                    __result = __instance.method_24(ref error, ref opStruct);
+                    __result = __instance.CG_ExecutePossibleAction2(ref error, ref opStruct);
                     return false;
                 }
 
-                var operation = __instance.method_22(ref error, ref opStruct);
+                var operation = __instance.CG_ExecutePossibleAction(ref error, ref opStruct);
                 if (operation.Succeeded)
                 {
                     __result = operation;
@@ -80,7 +80,7 @@ public static class FixTraderControllerPatches
                     BlockPartialTransfers = true;
                 }
 
-                var operation = __instance.method_23(applicable, ref error, ref opStruct);
+                var operation = __instance.CG_ExecutePossibleAction1(applicable, ref error, ref opStruct);
 
                 // Restore default behavior
                 BlockPartialTransfers = false;
@@ -105,7 +105,7 @@ public static class FixTraderControllerPatches
 
             if (mergeAvailable && splitAvailable)
             {
-                var operation = __instance.method_24(ref error, ref opStruct);
+                var operation = __instance.CG_ExecutePossibleAction2(ref error, ref opStruct);
                 if (operation.Succeeded)
                 {
                     __result = operation;
@@ -122,22 +122,22 @@ public static class FixTraderControllerPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(InteractionsHandlerClass), nameof(InteractionsHandlerClass.TransferOrMerge));
+            return AccessTools.Method(typeof(ItemManipulator), nameof(ItemManipulator.TransferOrMerge));
         }
 
         // Copied from original but without TransferMax call - just Merge
         [PatchPrefix]
-        public static bool Prefix(Item item, Item targetItem, TraderControllerClass itemController, bool simulate, ref GStruct154<ITargetItemResult> __result)
+        public static bool Prefix(Item item, Item targetItem, ItemController itemController, bool simulate, ref OperationResult<ITransferOrMergeResult> __result)
         {
             if (!BlockPartialTransfers)
             {
                 return true;
             }
 
-            GStruct154<MergeOperation> operation = InteractionsHandlerClass.Merge(item, targetItem, itemController, simulate);
+            OperationResult<MergeResult> operation = ItemManipulator.Merge(item, targetItem, itemController, simulate);
             if (operation.Succeeded)
             {
-                __result = operation.Cast<MergeOperation, ITargetItemResult>();
+                __result = operation.Cast<MergeResult, ITransferOrMergeResult>();
                 return false;
             }
 

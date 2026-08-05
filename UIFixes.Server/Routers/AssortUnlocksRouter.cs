@@ -4,14 +4,14 @@ using SPTarkov.Server.Core.Utils;
 
 namespace UIFixes.Server;
 
-[Injectable]
+[Injectable(TypePriority = OnLoadOrder.Routers + 1)]
 public class AssortUnlocks(JsonUtil jsonUtil, AssortUnlocksCallbacks assortUnlocksCallbacks)
     : StaticRouter(
         jsonUtil,
         [
             new RouteAction(
                 "/uifixes/assortUnlocks",
-                async (url, info, sessionId, output) => {
+                async (url, info, sessionId, output, cancellationToken) => {
                     var results = await assortUnlocksCallbacks.LoadAssorts();
                     return jsonUtil.Serialize(results);
                 }

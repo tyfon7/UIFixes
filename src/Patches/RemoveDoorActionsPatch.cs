@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using EFT;
+using EFT.UI;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 
@@ -12,16 +14,11 @@ public class RemoveDoorActionsPatch : ModulePatch
 
     protected override MethodBase GetTargetMethod()
     {
-        Type type = typeof(GetActionsClass);
-        return AccessTools.GetDeclaredMethods(type).FirstOrDefault(x =>
-        {
-            var parameters = x.GetParameters();
-            return x.Name == nameof(GetActionsClass.GetAvailableActions) && parameters[0].Name == "owner";
-        });
+        return AccessTools.Method(typeof(InteractionContextHelper), nameof(InteractionContextHelper.GetAvailableActions), [typeof(GamePlayerOwner), typeof(IInteractive)]);
     }
 
     [PatchPostfix]
-    public static void Postfix(ref ActionsReturnClass __result)
+    public static void Postfix(ref AvailableInteractionState __result)
     {
         if (Settings.RemoveDisabledActions.Value && __result != null)
         {

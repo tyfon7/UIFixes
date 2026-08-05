@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Reflection;
+using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
@@ -17,18 +18,18 @@ public class FixGridPrepareItemsPatch : ModulePatch
     // There appears to be a race condition here, something modifies ContainedItems while this method iterates it.
     // Reimplementing to make a copy of it before iterating
     [PatchPrefix]
-    public static bool Prefix(GridView __instance, FilterPanel ____filterPanel, TraderControllerClass ____itemController, ItemUiContext ___itemUiContext_0)
+    public static bool Prefix(GridView __instance, ItemController ____itemController, ItemUiContext ____itemUiContext)
     {
         foreach (var (item, location) in __instance.Grid.ContainedItems.ToArray())
         {
-            if (____filterPanel != null && ____itemController.SearchController.IsItemKnown(item, item.Parent))
+            if (__instance._filterPanel != null && ____itemController.SearchController.IsItemKnown(item, item.Parent))
             {
-                ____filterPanel.RegisterItem(item);
+                __instance._filterPanel.RegisterItem(item);
             }
 
             if (!__instance.IsMagnified)
             {
-                __instance.method_4(item, location, ___itemUiContext_0, null);
+                __instance.CreateItemView(item, location, ____itemUiContext, null);
             }
         }
 

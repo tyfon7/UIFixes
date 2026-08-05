@@ -97,9 +97,9 @@ public static class WeaponPanPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(EditBuildScreen __instance, WeaponPreview ____weaponPreview, CameraViewporter ____viewporter)
+        public static void Prefix(EditBuildScreen __instance)
         {
-            SetupPanning(__instance, ____weaponPreview, ____viewporter);
+            SetupPanning(__instance, __instance._weaponPreview, __instance._viewporter);
         }
     }
 
@@ -111,9 +111,9 @@ public static class WeaponPanPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(WeaponModdingScreen __instance, WeaponPreview ____weaponPreview, CameraViewporter ____viewporter)
+        public static void Prefix(WeaponModdingScreen __instance)
         {
-            SetupPanning(__instance, ____weaponPreview, ____viewporter);
+            SetupPanning(__instance, __instance._weaponPreview, __instance._viewporter);
         }
     }
 

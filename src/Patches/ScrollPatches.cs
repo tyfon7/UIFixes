@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using EFT.Hideout;
+using EFT.Quests;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.Ragfair;
@@ -95,12 +96,12 @@ public static class ScrollPatches
             {
                 if (Input.GetKeyDown(KeyCode.Home))
                 {
-                    lightScroller.SetScrollPosition(lightScroller.R().Order == LightScroller.EScrollOrder.Straight ? 0f : 1f);
+                    lightScroller.SetScrollPosition(lightScroller._order == LightScroller.EScrollOrder.Straight ? 0f : 1f);
                     return true;
                 }
                 if (Input.GetKeyDown(KeyCode.End))
                 {
-                    lightScroller.SetScrollPosition(lightScroller.R().Order == LightScroller.EScrollOrder.Straight ? 1f : 0f);
+                    lightScroller.SetScrollPosition(lightScroller._order == LightScroller.EScrollOrder.Straight ? 1f : 0f);
                     return true;
                 }
             }
@@ -186,10 +187,10 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll, ItemUiContext ___itemUiContext_0)
+        public static void Prefix(SimpleStashPanel __instance, ScrollRect ____stashScroll, ItemUiContext ____itemUiContext)
         {
             // Ignore Trading screen, that is handled separately
-            if (___itemUiContext_0?.R().ContextType == EItemUiContextType.TraderScreen)
+            if (____itemUiContext?.ContextType == EItemUiContextType.TraderScreen)
             {
                 return;
             }
@@ -213,9 +214,9 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ETradeMode ___etradeMode_0, ScrollRect ____traderScroll, ScrollRect ____stashScroll)
+        public static void Prefix(TraderDealScreen __instance)
         {
-            HandleInput(___etradeMode_0 == ETradeMode.Purchase ? ____traderScroll : ____stashScroll);
+            HandleInput(__instance.TradeMode == ETradeMode.Purchase ? __instance._traderScroll : __instance._stashScroll);
         }
 
         [PatchTranspiler]
@@ -233,9 +234,9 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(LightScroller ____scroller)
+        public static void Prefix(OfferViewList __instance)
         {
-            HandleInput(____scroller);
+            HandleInput(__instance._scroller);
         }
 
         [PatchTranspiler]
@@ -273,9 +274,9 @@ public static class ScrollPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(LightScroller ____scroller)
+        public static void Prefix(MessagesContainer __instance)
         {
-            HandleInput(____scroller);
+            HandleInput(__instance._scroller);
         }
 
         [PatchTranspiler]
@@ -304,7 +305,7 @@ public static class ScrollPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(LightScroller), nameof(LightScroller.method_1));
+            return AccessTools.Method(typeof(LightScroller), nameof(LightScroller.Scroll));
         }
 
         [PatchPrefix]
@@ -323,10 +324,10 @@ public static class ScrollPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ScrollRect ____scrollRect)
+        public static void Postfix(TasksPanel __instance)
         {
-            var keyScroller = ____scrollRect.GetOrAddComponent<KeyScroller>();
-            keyScroller.Init(____scrollRect);
+            var keyScroller = __instance._scrollRect.GetOrAddComponent<KeyScroller>();
+            keyScroller.Init(__instance._scrollRect);
         }
     }
 
@@ -355,7 +356,7 @@ public static class ScrollPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(NotesTask __instance, QuestClass quest)
+        public static void Postfix(NotesTask __instance, Quest quest)
         {
             void OnTaskSelected(bool open)
             {

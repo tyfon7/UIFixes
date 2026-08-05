@@ -76,13 +76,13 @@ public static class ExtraItemViewStatsProperties
 
 public static class ExtraOperationProperties
 {
-    private static readonly ConditionalWeakTable<IRaiseEvents, Properties> PropertiesTable = [];
+    private static readonly ConditionalWeakTable<IOperationResult, Properties> PropertiesTable = [];
 
     private class Properties
     {
-        public MoveOperation ExtraMoveOperation;
+        public MoveResult ExtraMoveOperation;
     }
 
-    public static MoveOperation GetExtraMoveOperation(this IRaiseEvents op) => PropertiesTable.GetOrCreateValue(op).ExtraMoveOperation;
-    public static void SetExtraMoveOperation(this IRaiseEvents op, MoveOperation operation) => PropertiesTable.GetOrCreateValue(op).ExtraMoveOperation = operation;
+    public static MoveResult GetExtraMoveOperation(this IOperationResult op) => PropertiesTable.GetOrCreateValue(op).ExtraMoveOperation;
+    public static void SetExtraMoveOperation(this IOperationResult op, MoveResult operation) => PropertiesTable.GetOrCreateValue(op).ExtraMoveOperation = operation;
 }

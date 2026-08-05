@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using EFT;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
@@ -18,7 +19,7 @@ public class AssortUnlocksPatch : ModulePatch
 
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(OfferView), nameof(OfferView.method_10));
+        return AccessTools.Method(typeof(OfferView), nameof(OfferView.AvailableOfferStatus));
     }
 
     [PatchPostfix]
@@ -53,11 +54,11 @@ public class AssortUnlocksPatch : ModulePatch
             });
         }
 
-        if (__instance.Offer_0.Locked)
+        if (__instance.Offer.Locked)
         {
-            if (AssortUnlocks != null && AssortUnlocks.TryGetValue(__instance.Offer_0.Item.Id, out string questName))
+            if (AssortUnlocks != null && AssortUnlocks.TryGetValue(__instance.Offer.Item.Id, out string questName))
             {
-                ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.String_1 + " (" + questName.Localized() + ")", true);
+                ____hoverTooltipArea.SetMessageText(____hoverTooltipArea.Message + " (" + questName.Localized() + ")", true);
             }
         }
     }

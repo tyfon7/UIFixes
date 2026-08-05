@@ -2,12 +2,15 @@
 using System.Linq;
 using System.Reflection;
 using Comfort.Common;
+using EFT.Trading;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static EFT.UI.TraderScreensGroup;
+using static EFT.UI.TradingScreen;
 
 namespace UIFixes;
 
@@ -38,12 +41,10 @@ public static class TradingAutoSwitchPatches
         [PatchPostfix]
         public static void Postfix(TraderDealScreen __instance)
         {
-            var wrappedInstance = __instance.R();
+            BuyTab = __instance._buyTab;
+            SellTab = __instance._sellTab;
 
-            BuyTab = wrappedInstance.BuyTab;
-            SellTab = wrappedInstance.SellTab;
-
-            wrappedInstance.UI.AddDisposable(() =>
+            __instance.R().UI.AddDisposable(() =>
             {
                 BuyTab = null;
                 SellTab = null;
@@ -65,21 +66,21 @@ public static class TradingAutoSwitchPatches
             TradingItemView __instance,
             PointerEventData.InputButton button,
             bool doubleClick,
-            ETradingItemViewType ___etradingItemViewType_0,
-            bool ___bool_8)
+            ETradingItemViewType ____itemViewType,
+            Assortment ____traderAssortment,
+            bool ____canSelect)
         {
             if (!Settings.AutoSwitchTrading.Value || SellTab == null || BuyTab == null)
             {
                 return true;
             }
 
-            var assortmentController = __instance.R().TraderAssortmentController;
-            if (assortmentController == null)
+            if (____traderAssortment == null)
             {
                 return true;
             }
 
-            if (button != PointerEventData.InputButton.Left || ___etradingItemViewType_0 == ETradingItemViewType.TradingTable)
+            if (button != PointerEventData.InputButton.Left || ____itemViewType == ETradingItemViewType.TradingTable)
             {
                 return true;
             }
@@ -92,10 +93,10 @@ public static class TradingAutoSwitchPatches
 
             try
             {
-                if (!___bool_8 && ctrlPressed)
+                if (!____canSelect && ctrlPressed)
                 {
                     SellTab.OnPointerClick(null);
-                    if (assortmentController.QuickFindTradingAppropriatePlace(__instance.Item, null))
+                    if (____traderAssortment.QuickFindTradingAppropriatePlace(__instance.Item, null))
                     {
                         __instance.ItemContext?.CloseDependentWindows();
                         __instance.HideTooltip();
@@ -105,10 +106,10 @@ public static class TradingAutoSwitchPatches
                     return false;
                 }
 
-                if (___bool_8)
+                if (____canSelect)
                 {
                     BuyTab.OnPointerClick(null);
-                    assortmentController.SelectItem(__instance.Item);
+                    ____traderAssortment.SelectItem(__instance.Item);
 
                     return false;
                 }
@@ -128,26 +129,25 @@ public static class TradingAutoSwitchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            // method_5() is called from the Tab click
-            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.method_5));
+            return AccessTools.Method(typeof(TraderDealScreen), nameof(TraderDealScreen.TraderModeChanged));
         }
 
         [PatchPostfix]
-        public static void Postfix(TraderClass ___traderClass_1)
+        public static void Postfix(Trader ____trader)
         {
-            if (___traderClass_1.CurrentAssortment == null)
+            if (____trader.CurrentAssortment == null)
             {
                 return;
             }
 
             // Normally this is invoked on selected item change, etc. 
-            ___traderClass_1.CurrentAssortment.PreparedItemsChanged.Invoke();
-            ___traderClass_1.CurrentAssortment.PreparedSumChanged.Invoke();
+            ____trader.CurrentAssortment.PreparedItemsChanged.Invoke();
+            ____trader.CurrentAssortment.PreparedSumChanged.Invoke();
         }
     }
 
     private static string LastTraderId = null;
-    private static TraderScreensGroup.ETraderMode LastTraderMode = TraderScreensGroup.ETraderMode.Trade;
+    private static ETraderMode LastTraderMode = ETraderMode.Trade;
 
     public class RestoreTraderPatch : ModulePatch
     {
@@ -157,7 +157,7 @@ public static class TradingAutoSwitchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TradingScreenController controller)
+        public static void Prefix(TraderScreenController controller)
         {
             // controller.Trader is null when first opening the trader screen, it's set when returning to it as a previous screen
             if (controller.Trader == null && Settings.RememberLastTrader.Value && !string.IsNullOrEmpty(LastTraderId))
@@ -168,7 +168,7 @@ public static class TradingAutoSwitchPatches
             if (controller.Trader == null && !Settings.RememberLastTrader.Value)
             {
                 // First opening screen and setting is off, clear the last tab as well
-                LastTraderMode = TraderScreensGroup.ETraderMode.Trade;
+                LastTraderMode = ETraderMode.Trade;
             }
         }
     }
@@ -177,17 +177,17 @@ public static class TradingAutoSwitchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            // method_4 is called near the end of TraderScreensGroup.Show(), right before method_6, which sets the trader and tab
+            // method_4 is called near the end of TraderScreensGroup.Show(), right before SelectTrader(), which sets the trader and tab
             return AccessTools.Method(typeof(TraderScreensGroup), nameof(TraderScreensGroup.method_4));
         }
 
         [PatchPrefix]
-        public static void Postfix(TraderScreensGroup __instance, ref TraderScreensGroup.ETraderMode ___etraderMode_0)
+        public static void Postfix(TraderScreensGroup __instance, ref ETraderMode ____traderMode)
         {
-            if (LastTraderMode != TraderScreensGroup.ETraderMode.Trade)
+            if (LastTraderMode != ETraderMode.Trade)
             {
-                ___etraderMode_0 = LastTraderMode;
-                __instance.method_3(___etraderMode_0);
+                ____traderMode = LastTraderMode;
+                __instance.SetMode(____traderMode);
             }
         }
     }
@@ -200,10 +200,10 @@ public static class TradingAutoSwitchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(TraderScreensGroup __instance, TraderScreensGroup.ETraderMode ___etraderMode_0)
+        public static void Prefix(TraderScreensGroup __instance, ETraderMode ____traderMode)
         {
-            LastTraderId = __instance.TraderClass.Id;
-            LastTraderMode = ___etraderMode_0;
+            LastTraderId = __instance.Trader.Id;
+            LastTraderMode = ____traderMode;
         }
     }
 }

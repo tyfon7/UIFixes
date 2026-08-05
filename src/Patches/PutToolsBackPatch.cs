@@ -4,6 +4,7 @@ using System.Reflection;
 using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using JsonType;
 using SPT.Reflection.Patching;
 
 namespace UIFixes;
@@ -12,22 +13,22 @@ public class PutToolsBackPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(ItemReceiver), nameof(ItemReceiver.method_9));
+        return AccessTools.Method(typeof(ProfileUpdatesHandler), nameof(ProfileUpdatesHandler.ManageNewItems));
     }
 
     // The patched method can't handle new items that aren't in stash root.
     // Find items that are in subcontainers and handle them first - the patched method will ignore items that have a CurrentAddress
     // This is a subset of the original method - doesn't handle slots, equipment containers, etc.
     [PatchPrefix]
-    public static void Prefix(ItemReceiver __instance, ref FlatItemsDataClass[] newItems)
+    public static void Prefix(ProfileUpdatesHandler __instance, ref FlatItem[] newItems)
     {
         if (!newItems.Any())
         {
             return;
         }
 
-        Inventory inventory = __instance.Profile_0.Inventory;
-        StashItemClass stash = inventory.Stash;
+        Inventory inventory = __instance._profile.Inventory;
+        Stash stash = inventory.Stash;
         if (inventory == null || stash == null)
         {
             return;
@@ -57,9 +58,7 @@ public class PutToolsBackPatch : ModulePatch
 
         List<Item> stashItems = [.. stash.GetNotMergedItems()];
 
-        InventoryController inventoryController = new R.ItemReceiver(__instance).InventoryController;
-
-        var tree = __instance.ItemFactoryClass.FlatItemsToTree([.. unhandledItems], true, null);
+        var tree = __instance._itemFactory.FlatItemsToTree([.. unhandledItems], true, null);
         foreach (Item item in tree.Items.Values.Where(i => i.CurrentAddress == null))
         {
             var newItem = unhandledItems.First(i => i._id == item.Id);
@@ -71,19 +70,19 @@ public class PutToolsBackPatch : ModulePatch
             // Assuming here that unhandled items are trying to go into containers in the stash - find that container
             Item parent = stashItems.FirstOrDefault(i => i.Id == newItem.parentId);
             if (parent is not ContainerCollection containerCollection ||
-                containerCollection.GetContainer(newItem.slotId) is not StashGridClass grid)
+                containerCollection.GetContainer(newItem.slotId) is not Grid grid)
             {
                 continue;
             }
 
-            LocationInGrid location = LocationJsonParser.CreateItemLocation<LocationInGrid>(newItem.location);
-            ItemAddress itemAddress = new StashGridItemAddress(grid, location);
+            LocationInGrid location = ItemDeserializer.CreateItemLocation<LocationInGrid>(newItem.location);
+            ItemAddress itemAddress = new Grid.ProtectedGridItemAddress(grid, location);
 
-            var operation = InteractionsHandlerClass.Add(item, itemAddress, inventoryController, false);
+            var operation = ItemManipulator.Add(item, itemAddress, __instance._inventoryController, false);
             if (operation.Succeeded)
             {
-                operation.Value.RaiseEvents(inventoryController, CommandStatus.Begin);
-                operation.Value.RaiseEvents(inventoryController, CommandStatus.Succeed);
+                operation.Value.RaiseEvents(__instance._inventoryController, CommandStatus.Begin);
+                operation.Value.RaiseEvents(__instance._inventoryController, CommandStatus.Succeed);
             }
         }
     }
