@@ -55,7 +55,7 @@
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent"
     Condition="'$(Configuration)'=='Release'">
     <Exec
-      Command='7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\SPT' />
+      Command='7z a -tzip dist\$(TargetName.Replace(".", "-"))-$(Version).zip $(SolutionDir)dist\BepInEx $(SolutionDir)dist\SPT_Runtime' />
   </Target>
 
 </Project>
