@@ -6,7 +6,7 @@ using SPTarkov.Server.Core.Utils;
 
 namespace UIFixes.Server;
 
-// This class completely reimplements the ProfileDataService because that thing is broken until 4.1
+// This is a sync version of the ProfileDataService (and not generic). It's challenging to use the ProfileDataService in a sync patch since all the methods are async.
 
 [Injectable(InjectionType = InjectionType.Singleton)]
 public class ProfileDataHelper(FileUtil fileUtil, JsonUtil jsonUtil)
