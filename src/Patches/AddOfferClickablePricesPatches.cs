@@ -78,7 +78,7 @@ public static class AddOfferClickablePricesPatches
         [PatchPostfix]
         public static void Postfix(AddOfferWindow __instance)
         {
-            __instance._sellInOnePieceToggle.Bind(bulk =>
+            __instance._sellInOnePieceToggle.onValueChanged.AddListener(bulk =>
             {
                 if (!Settings.UpdatePriceOnBulk.Value)
                 {
