@@ -85,7 +85,7 @@ public static class QueueInputPatches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.QuickReload));
+            return AccessTools.DeclaredMethod(typeof(FirearmHandsInputTranslator), nameof(FirearmHandsInputTranslator.Reload));
         }
 
         [PatchPrefix]
@@ -128,7 +128,7 @@ public static class QueueInputPatches
                     }
 
                     InAttempt = true;
-                    inputTranslator.QuickReload();
+                    inputTranslator.Reload();
                     InAttempt = false;
 
                     return firearmController.CurrentHandsOperation is Player.FirearmController.ReloadExternalMagOperation;
