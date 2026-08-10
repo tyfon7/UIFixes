@@ -121,6 +121,7 @@ public class Plugin : BaseUnityPlugin
         QuickMovePreviewPatches.Enable();
         new RotateKeybindPatch().Enable();
         new HideInviteUIPatch().Enable();
+        ServicesPatches.Enable();
     }
 
     public void Start()
