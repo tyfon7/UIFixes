@@ -43,6 +43,7 @@ public static class WeaponModdingPatches
 
         new InAssemblePatch().Enable();
         new LongerFullIdPatch().Enable();
+        new CheckIfAlreadyBuiltPatch().Enable();
 
         new DisassembleAllPatch().Enable();
     }
@@ -770,13 +771,76 @@ public static class WeaponModdingPatches
         [PatchPrefix]
         public static bool Prefix(Slot __instance, ref string __result)
         {
-            if (InAssemblePatch.Assembling && __instance.ParentItem.Parent?.Container is Slot parentSlot)
+            if (!InAssemblePatch.Assembling)
             {
-                __result = $"{__instance.ID} {__instance.ParentItem.TemplateId} {parentSlot.ID}";
+                return true;
+            }
+
+            __result = FullSlotPath(__instance);
+
+            return false;
+        }
+    }
+
+    // Builds a full slot/parent path up to the weapon, for a truly unique name
+    private static string FullSlotPath(Slot slot)
+    {
+        string fullId = $"{slot.ID} in {slot.ParentItem.TemplateId}";
+
+        if (slot.ParentItem is Weapon)
+        {
+            return fullId;
+        }
+
+        if (slot.ParentItem.Parent?.Container is Slot parentSlot)
+        {
+            return $"{fullId} in {FullSlotPath(parentSlot)}";
+        }
+
+        return fullId;
+    }
+
+    // WeaponAssembler.CheckIfAlreadyBuilt is dumb, and at one point it unions the desired mods with the installed mods, then 
+    // calls DistinctBy using this method. The default looks at TemplateId, meaning if you have two of the same item in your build it's always wrong.
+    // It would also be wrong if it's the same items but in different arrangements.
+    // Use the full slot path instead to be correct.
+    public class CheckIfAlreadyBuiltPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(WeaponAssembler), nameof(WeaponAssembler.CheckIfAlreadyBuilt));
+        }
+
+        [PatchPrefix]
+        public static bool Prefix(IEnumerable<Item> installedMods, Weapon assemblingWeapon, ref bool __result)
+        {
+            if (assemblingWeapon == null || installedMods == null)
+            {
+                __result = false;
                 return false;
             }
 
-            return true;
+            int installedCount = installedMods.Count();
+
+            var currentMods = assemblingWeapon.AllSlots.Select(slot => slot.ContainedItem).OfType<Mod>();
+            if (installedCount != currentMods.Count())
+            {
+                __result = false;
+                return false;
+            }
+
+            var dedupedMods = installedMods.Union(currentMods).DistinctBy(item =>
+            {
+                if (item.Parent?.Container is Slot parentSlot)
+                {
+                    return $"{item.TemplateId} in {FullSlotPath(parentSlot)}";
+                }
+
+                return item.TemplateId.ToString();
+            });
+
+            __result = dedupedMods.Count() == installedCount;
+            return false;
         }
     }
 
