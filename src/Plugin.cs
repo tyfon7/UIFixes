@@ -1,38 +1,48 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Bootstrap;
-using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using Comfort.Common;
 using EFT;
+using SPTushonka.Reflection.Il2Cpp;
 using TMPro;
 using UnityEngine.EventSystems;
 
 namespace UIFixes;
 
-[BepInPlugin("com.tyfon.uifixes", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
-[BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInDependency("xyz.pit.fireteam", BepInDependency.DependencyFlags.SoftDependency)]
-[BepInDependency("com.lacyway.mc", BepInDependency.DependencyFlags.SoftDependency)]
+[BepInPlugin("com.tyfon.uifixes", "Tyfon.UIFixes", "7.0.0")]
+// [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
+// [BepInDependency("xyz.pit.fireteam", BepInDependency.DependencyFlags.SoftDependency)]
+// [BepInDependency("com.lacyway.mc", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency("com.bepis.bepinex.configurationmanager", BepInDependency.DependencyFlags.HardDependency)]
-public class Plugin : BaseUnityPlugin
+public class Plugin : BasePlugin
 {
     public static Plugin Instance;
 
-    public new ManualLogSource Logger => base.Logger;
-
-    public void Awake()
+    public override void Load()
     {
         Instance = this;
 
+        // TODO: needed this for some logging, check if I still need it later
+        AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(LogUnhandled);
+        TaskScheduler.UnobservedTaskException += new EventHandler<UnobservedTaskExceptionEventArgs>(LogUnobserved);
+        Il2CppInjection.RegisterAll(typeof(Plugin).Assembly, Log);
+
         Settings.Init(Config);
 
-        R.Init();
+        //R.Init();
 
-        if (FikaPresent())
-        {
-            Fika.Sync.Init();
-        }
+        // if (FikaPresent())
+        // {
+        //     Fika.Sync.Init();
+        // }
+
+        CursorPatches.Enable();
+
+
+        /* Disabled for 5.0
 
         NetworkTransactionWatcher.Enable();
         ConfirmDialogKeysPatches.Enable();
@@ -88,7 +98,6 @@ public class Plugin : BaseUnityPlugin
         SortPatches.Enable();
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
-        CursorPatches.Enable();
         LimitDragPatches.Enable();
         HideoutCameraPatches.Enable();
         WeaponModdingPatches.Enable();
@@ -122,10 +131,8 @@ public class Plugin : BaseUnityPlugin
         new RotateKeybindPatch().Enable();
         new HideInviteUIPatch().Enable();
         ServicesPatches.Enable();
-    }
+        */
 
-    public void Start()
-    {
         CheckForOldInterop();
     }
 
@@ -135,12 +142,12 @@ public class Plugin : BaseUnityPlugin
         return instance != null && instance.InRaid;
     }
 
-    public static bool TextboxActive()
-    {
-        return EventSystem.current?.currentSelectedGameObject != null &&
-            EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
-            EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
-    }
+    // public static bool TextboxActive()
+    // {
+    //     return EventSystem.current?.currentSelectedGameObject != null &&
+    //         EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
+    //         EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
+    // }
 
     private void CheckForOldInterop()
     {
@@ -148,9 +155,11 @@ public class Plugin : BaseUnityPlugin
         if (pluginsWithOldDependency.Any())
         {
             var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
-            Logger.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
+            Log.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
         }
     }
+
+    /* Interop disabled for 5.0
 
     private static bool? IsFikaPresent;
     private static readonly System.Version MinimumFikaVersion = new("1.1.3");
@@ -163,7 +172,7 @@ public class Plugin : BaseUnityPlugin
             {
                 if (pluginInfo.Metadata.Version < MinimumFikaVersion)
                 {
-                    Instance.Logger.LogError($"Unsupported Fika version! {MinimumFikaVersion} or newer is required");
+                    Instance.Log.LogError($"Unsupported Fika version! {MinimumFikaVersion} or newer is required");
                 }
 
                 IsFikaPresent = true;
@@ -199,5 +208,16 @@ public class Plugin : BaseUnityPlugin
         }
 
         return IsPITFireteamPresent.Value;
+    }
+    */
+
+    private static void LogUnhandled(object sender, UnhandledExceptionEventArgs args)
+    {
+        Instance.Log.LogFatal($"Unhandled exception on a background thread: {args.ExceptionObject}");
+    }
+
+    private static void LogUnobserved(object sender, UnobservedTaskExceptionEventArgs args)
+    {
+        Instance.Log.LogError($"Unobserved task exception: {args.Exception}");
     }
 }

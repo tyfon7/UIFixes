@@ -1,12 +1,13 @@
 <Project>
   <PropertyGroup>
-    <Version>6.0.4</Version>
-    <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\4.1</SPTPath>
+    <Version>7.0.0</Version>
+    <SPTPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\5.0</SPTPath>
     <FikaPath>$(MSBuildThisFileDirectory)..\..\..\..\SPT\Fika</FikaPath>
     <AssemblySearchPaths>
-      $(SPTPath)\EscapeFromTarkov_Data\Managed;
-      $(SPTPath)\BepInEx\plugins\spt;
-      $(SPTPath)\BepInEx\plugins\spt\ConfigurationManager;
+      $(SPTPath)\BepInEx\core;
+      $(SPTPath)\BepInEx\interop;
+      $(SPTPath)\BepInEx\plugins\sptushonka;
+      $(SPTPath)\BepInEx\plugins\sptushonka\ConfigurationManager;
       $(FikaPath);
       $(AssemblySearchPaths)
     </AssemblySearchPaths>

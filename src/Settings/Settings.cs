@@ -2,12 +2,15 @@
 using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using BepInEx.Unity.IL2CPP;
 using UnityEngine;
 
 namespace UIFixes;
 
 internal partial class Settings
 {
+    /** Disabled for 5.0
+
     // Interface
     public static ConfigEntry<bool> KeepMessagesOpen { get; set; }
     public static ConfigEntry<bool> AutofillQuestTurnIns { get; set; }
@@ -49,7 +52,9 @@ internal partial class Settings
     public static ConfigEntry<bool> RebindConsumables { get; set; }
 
     // Mouse
+    */
     public static ConfigEntry<bool> UnlockCursor { get; set; }
+    /*
     public static ConfigEntry<bool> WeaponZoomScroll { get; set; }
     public static ConfigEntry<bool> WeaponPanDrag { get; set; }
     public static ConfigEntry<bool> CharacterPanZoom { get; set; }
@@ -184,12 +189,14 @@ internal partial class Settings
     public static ConfigEntry<bool> PerItemContainerPositions { get; set; }
     public static ConfigEntry<bool> HighlightPrioritizedWindowBorder { get; set; }
 
+    */
+
     public static List<ConfigEntryBase> AllConfigs = [];
 
-    public static IEnumerable<ConfigEntryBase> SyncedConfigs()
-    {
-        return AllConfigs.Where(c => c.IsSynced());
-    }
+    // public static IEnumerable<ConfigEntryBase> SyncedConfigs()
+    // {
+    //     return AllConfigs.Where(c => c.IsSynced());
+    // }
 
     public static ConfigurationManager.ConfigurationManager ConfigManager { get; set; }
 
@@ -198,7 +205,9 @@ internal partial class Settings
     {
         var configEntries = AllConfigs;
 
-        ConfigManager = Chainloader.PluginInfos["com.bepis.bepinex.configurationmanager"].Instance as ConfigurationManager.ConfigurationManager;
+        //ConfigManager = Chainloader.PluginInfos["com.bepis.bepinex.configurationmanager"].Instance as ConfigurationManager.ConfigurationManager;
+
+        /* Disabled for 5.0
 
         // Interface
         configEntries.Add(KeepMessagesOpen = config.Bind(
@@ -510,6 +519,7 @@ internal partial class Settings
                 new ConfigurationManagerAttributes { })));
 
         // Mouse
+        */
         configEntries.Add(UnlockCursor = config.Bind(
             Section.Mouse,
             "Unlock Cursor",
@@ -518,7 +528,7 @@ internal partial class Settings
                 "Unlock cursor in Windowed, Maximized Windowed, and FullScreen Windowed modes. Note that you must alt-tab out of the game and back in for this to take effect.",
                 null,
                 new ConfigurationManagerAttributes { })));
-
+        /*
         configEntries.Add(WeaponZoomScroll = config.Bind(
             Section.Mouse,
             "Enable Weapon Preview Zoom",
@@ -1463,26 +1473,27 @@ internal partial class Settings
                 "Outline the prioritized window with yellow",
                 null,
                 new ConfigurationManagerAttributes { })));
+        */
 
         RecalcOrder(configEntries);
 
-        EnableMultiSelectInRaid.DependOn(EnableMultiSelect);
-        ShowMultiSelectDebug.DependOn(EnableMultiSelect, false);
-        EnableMultiClick.DependOn(EnableMultiSelect);
+        // EnableMultiSelectInRaid.DependOn(EnableMultiSelect);
+        // ShowMultiSelectDebug.DependOn(EnableMultiSelect, false);
+        // EnableMultiClick.DependOn(EnableMultiSelect);
 
-        EnableMultiClick.MakeExclusive(AutoOpenSortingTable, false);
+        // EnableMultiClick.MakeExclusive(AutoOpenSortingTable, false);
 
-        ExtraSwapFeedback.DependOn(SwapItems);
-        SwapMags.DependOn(SwapItems);
-        AlwaysSwapMags.DependOn(SwapMags, false);
-        SwapImpossibleContainers.DependOn(SwapItems, false);
+        // ExtraSwapFeedback.DependOn(SwapItems);
+        // SwapMags.DependOn(SwapItems);
+        // AlwaysSwapMags.DependOn(SwapMags, false);
+        // SwapImpossibleContainers.DependOn(SwapItems, false);
 
-        ReorderGrids.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
-        PrioritizeSmallerGrids.DependOn(ReorderGrids, false);
+        // ReorderGrids.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
+        // PrioritizeSmallerGrids.DependOn(ReorderGrids, false);
 
-        ModifyEquippedPlates.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
+        // ModifyEquippedPlates.Require(!Plugin.FikaPresent(), "Incompatible with Fika");
 
-        ShowGroupInvitePanel.Force(Plugin.PITFireteamPresent(), "PIT Fireteam is present");
+        // ShowGroupInvitePanel.Force(Plugin.PITFireteamPresent(), "PIT Fireteam is present");
     }
 
     private static void RecalcOrder(List<ConfigEntryBase> configEntries)
