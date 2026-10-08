@@ -41,7 +41,6 @@ public class Plugin : BasePlugin
 
         CursorPatches.Enable();
 
-
         /* Disabled for 5.0
 
         NetworkTransactionWatcher.Enable();
@@ -133,7 +132,7 @@ public class Plugin : BasePlugin
         ServicesPatches.Enable();
         */
 
-        CheckForOldInterop();
+        // CheckForOldInterop();
     }
 
     public static bool InRaid()
@@ -142,22 +141,22 @@ public class Plugin : BasePlugin
         return instance != null && instance.InRaid;
     }
 
-    // public static bool TextboxActive()
-    // {
-    //     return EventSystem.current?.currentSelectedGameObject != null &&
-    //         EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
-    //         EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
-    // }
-
-    private void CheckForOldInterop()
+    public static bool TextboxActive()
     {
-        var pluginsWithOldDependency = Chainloader.PluginInfos.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
-        if (pluginsWithOldDependency.Any())
-        {
-            var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
-            Log.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
-        }
+        return EventSystem.current?.currentSelectedGameObject != null &&
+            EventSystem.current.currentSelectedGameObject.activeInHierarchy &&
+            EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
+
+    // private void CheckForOldInterop()
+    // {
+    //     var pluginsWithOldDependency = Chainloader.PluginInfos.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
+    //     if (pluginsWithOldDependency.Any())
+    //     {
+    //         var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
+    //         Log.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
+    //     }
+    // }
 
     /* Interop disabled for 5.0
 

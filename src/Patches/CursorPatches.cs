@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using EFT.UI;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 
 namespace UIFixes;
@@ -25,13 +25,13 @@ public static class CursorPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(bool cursorVisible, FullScreenMode fullscreenMode, Action ____lockModeChanged)
+        public static bool Prefix(bool cursorVisible, FullScreenMode fullscreenMode)
         {
             Cursor.lockState = cursorVisible ?
                 Settings.UnlockCursor.Value && WindowedModes.Contains(fullscreenMode) ? CursorLockMode.None : CursorLockMode.Confined :
                 CursorLockMode.Locked;
 
-            ____lockModeChanged?.Invoke();
+            CursorSwitcher.LockModeChangedField?.Invoke();
 
             return false;
         }

@@ -3,15 +3,15 @@
   <Import Project="Shared.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>Tyfon.UIFixes</AssemblyName>
     <Description>SPT UI Fixes</Description>
     <SPTModType>Client</SPTModType>
     <LangVersion>latest</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Configurations>Debug;Release</Configurations>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems> <!-- Switching to allow-listing for
-    5.0 iterative work-->
+    <!-- Switching to allow-listing for 5.0 iterative work-->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,6 +23,7 @@
     <Compile Include="src\ConfigurationManagerAttributes.cs" />
     <Compile Include="src\Settings\Settings.cs" />
     <Compile Include="src\Settings\SettingSections.cs" />
+    <Compile Include="src\Settings\SettingExtensions.cs" />
     <Compile Include="src\Patches\CursorPatches.cs" />
   </ItemGroup>
 
@@ -33,6 +34,7 @@
     <Reference Include="BepInEx.Core" />
     <Reference Include="BepInEx.Unity.IL2CPP" />
 
+    <Reference Include="0Harmony" />
     <Reference Include="AnimationSystem.Types" />
     <Reference Include="Assembly-CSharp" />
     <Reference Include="Comfort" />
@@ -53,11 +55,18 @@
     <Reference Include="UnityEngine.UI" />
     <Reference Include="UnityEngine.UIModule" />
 
+    <Reference Include="Il2Cppmscorlib" />
+    <Reference Include="Il2CppInterop.Runtime" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="UIFixes.Net\UIFixes.Net.csproj" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2"
+      PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- <ItemGroup>
+    <ProjectReference Include="UIFixes.Net\UIFixes.Net.csproj" />
+  </ItemGroup> -->
 
   <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent"
     Condition="'$(Configuration)'=='Release'">

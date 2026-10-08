@@ -5,10 +5,10 @@ VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UIFixes", "UIFixes.csproj", "{240CCF3A-4A9E-4C7D-96BB-AD7C375892BF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UIFixes.Test", "UIFixes.Test\UIFixes.Test.csproj", "{FE27D858-0061-4BAD-BE4D-FABBDB53213F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIFixes.Net", "UIFixes.Net\UIFixes.Net.csproj", "{D5C191DF-05DA-4F82-96B1-06461478AB6B}"
-EndProject
+#Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UIFixes.Test", "UIFixes.Test\UIFixes.Test.csproj", "{FE27D858-0061-4BAD-BE4D-FABBDB53213F}"
+#EndProject
+#Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIFixes.Net", "UIFixes.Net\UIFixes.Net.csproj", "{D5C191DF-05DA-4F82-96B1-06461478AB6B}"
+#EndProject
 Project("{CFE2A86A-9121-468D-8544-CAA9A43F344F}") = "UIFixes.Server", "UIFixes.Server\UIFixes.Server.csproj", "{1EE03F69-A427-4BE7-BCD5-62EBD99595C7}"
 EndProject
 

@@ -14,7 +14,7 @@ public record ModMetadata : IModMetadata
 
     public SemanticVersioning.Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version.ToString(3));
 
-    public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
+    public SemanticVersioning.Range SptVersion { get; init; } = new("~5.0.0");
 
     public List<string> Incompatibilities { get; init; }
 

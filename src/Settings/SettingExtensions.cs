@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using BepInEx.Configuration;
+using BepInEx.Unity.IL2CPP.Configuration;
 using UnityEngine;
 
 namespace UIFixes;
@@ -115,7 +116,7 @@ public static class SettingExtensions
     {
         if (!requirement)
         {
-            Plugin.Instance.Logger.LogInfo($"Disabling '{config.Definition.Key}'; {explanation}");
+            Plugin.Instance.Log.LogInfo($"Disabling '{config.Definition.Key}'; {explanation}");
 
             config.Value = false;
             config.SetReadonly(true, explanation);
@@ -126,7 +127,7 @@ public static class SettingExtensions
     {
         if (requirement)
         {
-            Plugin.Instance.Logger.LogInfo($"Enabling '{config.Definition.Key}'; {explanation}");
+            Plugin.Instance.Log.LogInfo($"Enabling '{config.Definition.Key}'; {explanation}");
 
             config.Value = true;
             config.SetReadonly(true, explanation);
