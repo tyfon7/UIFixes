@@ -2,7 +2,7 @@ using System.Reflection;
 using EFT.UI;
 using EFT.Utilities;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

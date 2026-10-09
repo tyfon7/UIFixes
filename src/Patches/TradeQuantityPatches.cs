@@ -2,7 +2,7 @@
 using EFT.Trading;
 using EFT.UI;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine.EventSystems;
 

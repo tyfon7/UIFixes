@@ -7,7 +7,7 @@ using EFT.InputSystem;
 using EFT.InventoryLogic;
 using EFT.Settings;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 
 namespace UIFixes;

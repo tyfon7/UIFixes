@@ -9,7 +9,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.Settings;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

@@ -5,7 +5,7 @@ using EFT;
 using EFT.InventoryLogic;
 using HarmonyLib;
 using JsonType;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

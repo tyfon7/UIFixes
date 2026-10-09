@@ -2,7 +2,7 @@ using System.Reflection;
 using EFT.Trading;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

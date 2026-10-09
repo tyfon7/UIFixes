@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Comfort.Common;
 using EFT.InventoryLogic;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

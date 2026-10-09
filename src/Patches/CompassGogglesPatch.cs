@@ -3,7 +3,7 @@ using AnimationEventSystem;
 using EFT;
 using EFT.ItemInHandSubsystem;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

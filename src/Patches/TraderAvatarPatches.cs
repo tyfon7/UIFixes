@@ -8,8 +8,8 @@ using EFT.InventoryLogic;
 using EFT.Quests;
 using EFT.UI;
 using HarmonyLib;
-using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
+using SPTushonka.Reflection.Patching;
+using SPTushonka.Reflection.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 

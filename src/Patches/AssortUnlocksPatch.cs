@@ -7,8 +7,8 @@ using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
 using Newtonsoft.Json;
-using SPT.Common.Http;
-using SPT.Reflection.Patching;
+using SPTushonka.Common.Http;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

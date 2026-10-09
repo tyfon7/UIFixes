@@ -6,7 +6,7 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.Builds;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

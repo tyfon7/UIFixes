@@ -7,7 +7,7 @@ using EFT.Hideout;
 using EFT.InputSystem;
 using EFT.UI;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine.UI;
 
 namespace UIFixes;

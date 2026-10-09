@@ -13,7 +13,7 @@ using EFT.UI.DragAndDrop;
 using EFT.UI.Insurance;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine;
 

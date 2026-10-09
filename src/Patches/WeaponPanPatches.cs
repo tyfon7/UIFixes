@@ -4,7 +4,7 @@ using EFT.UI;
 using EFT.UI.Screens;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

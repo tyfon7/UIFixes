@@ -6,7 +6,7 @@ using EFT.Trading;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using static EFT.UI.TraderScreensGroup;

@@ -112,9 +112,9 @@ public static class AddOfferClickablePricesPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(bool ____sellInOnePiece)
+        public static void Prefix(AddOfferWindow __instance)
         {
-            WasBulk = ____sellInOnePiece;
+            WasBulk = __instance._sellInOnePiece;
         }
 
         [PatchPostfix]

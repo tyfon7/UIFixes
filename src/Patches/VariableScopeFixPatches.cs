@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 using EFT;
 using EFT.CameraControl;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 
 namespace UIFixes;

@@ -8,7 +8,7 @@ using EFT.UI.Chat;
 using EFT.UI.Ragfair;
 using EFT.UI.Utilities.LightScroller;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;

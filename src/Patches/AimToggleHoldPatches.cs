@@ -9,7 +9,7 @@ using EFT.Settings;
 using EFT.Settings.Game;
 using EFT.UI;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

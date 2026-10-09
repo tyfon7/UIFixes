@@ -8,7 +8,7 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.UI.WeaponModding;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

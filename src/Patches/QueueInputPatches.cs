@@ -3,7 +3,7 @@ using Comfort.Common;
 using EFT;
 using EFT.InputSystem;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

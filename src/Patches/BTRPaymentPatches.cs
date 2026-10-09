@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using EFT.InventoryLogic;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 

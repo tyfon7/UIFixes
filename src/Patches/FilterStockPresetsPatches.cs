@@ -7,8 +7,8 @@ using EFT.UI;
 using EFT.UI.Builds;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
+using SPTushonka.Reflection.Patching;
+using SPTushonka.Reflection.Utils;
 using TMPro;
 using UnityEngine.UI;
 
