@@ -56,7 +56,6 @@ public class Plugin : BasePlugin
         HideoutSearchPatches.Enable();
         HideoutLevelPatches.Enable();
         InspectWindowResizePatches.Enable();
-        new RemoveDoorActionsPatch().Enable();
         ScrollPatches.Enable();
         StackFirItemsPatches.Enable();
         
