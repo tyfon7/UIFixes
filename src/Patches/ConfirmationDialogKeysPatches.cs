@@ -1,8 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,28 +30,26 @@ public static class ConfirmDialogKeysPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(R.DialogWindow.Type, "Update");
+            return AccessTools.Method(typeof(BaseMessageWindow).BaseType, nameof(BaseMessageWindow.Update));
         }
 
         [PatchPostfix]
-        public static void Postfix(object __instance, bool ____availableToAccept)
+        public static void Postfix(DialogWindow<DialogWindowContext> __instance)
         {
-            var instance = new R.DialogWindow(__instance);
-
             // Special case for StashSearchWindow
             if (__instance is StashSearchWindow)
             {
                 return;
             }
 
-            if (!____availableToAccept)
+            if (!__instance._availableToAccept)
             {
                 return;
             }
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                instance.Accept();
+                __instance.Accept();
                 return;
             }
         }
@@ -65,13 +64,13 @@ public static class ConfirmDialogKeysPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemUiContext __instance, SplitDialog ____splitDialog)
+        public static void Postfix(ItemUiContext __instance)
         {
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Space))
             {
-                if (____splitDialog != null && ____splitDialog.gameObject.activeSelf)
+                if (__instance._splitDialog != null && __instance._splitDialog.gameObject.activeSelf)
                 {
-                    ____splitDialog.Accept();
+                    __instance._splitDialog.Accept();
                     return;
                 }
 
@@ -111,9 +110,9 @@ public static class ConfirmDialogKeysPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(AddOfferWindow __instance, InteractableElement ____addOfferButton)
+        public static void Postfix(AddOfferWindow __instance)
         {
-            if (!____addOfferButton.isActiveAndEnabled || !____addOfferButton.Interactable)
+            if (!__instance._addOfferButton.isActiveAndEnabled || !__instance._addOfferButton.Interactable)
             {
                 return;
             }
@@ -148,8 +147,9 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                button.onClick.AddListener(__instance.Close);
-                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+                Action onClose = __instance.Close; // Necessary for some reason
+                button.onClick.AddListener(onClose);
+                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }
     }
@@ -176,7 +176,8 @@ public static class ConfirmDialogKeysPatches
             {
                 button.transition = Selectable.Transition.None;
                 button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
-                button.onClick.AddListener(__instance.CG_Awake);
+                Action onClick = __instance._cancelAction.Invoke; // necessary
+                button.onClick.AddListener(onClick);
             }
         }
     }
@@ -203,8 +204,9 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                button.onClick.AddListener(__instance.Close);
-                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+                Action onClose = __instance.Close; // Necessary for some reason
+                button.onClick.AddListener(onClose);
+                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }
     }
@@ -231,8 +233,9 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                button.onClick.AddListener(__instance.CloseSilent);
-                __instance.R().UI.AddDisposable(button.onClick.RemoveAllListeners);
+                Action onClose = __instance.CloseSilent; // Necessary for some reason
+                button.onClick.AddListener(onClose);
+                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
             }
         }
     }

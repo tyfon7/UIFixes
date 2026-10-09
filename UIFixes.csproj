@@ -21,10 +21,17 @@
   <ItemGroup>
     <Compile Include="src\Plugin.cs" />
     <Compile Include="src\ConfigurationManagerAttributes.cs" />
+    <Compile Include="src\Il2CppExtensions.cs" />
     <Compile Include="src\Settings\Settings.cs" />
-    <Compile Include="src\Settings\SettingSections.cs" />
     <Compile Include="src\Settings\SettingExtensions.cs" />
+    <Compile Include="src\Settings\SettingSections.cs" />
+    <Compile Include="src\Settings\SettingTypes.cs" />
+    <Compile Include="src\Patches\AddOfferClickablePricesPatches.cs" />
+    <Compile Include="src\Patches\AFKPatches.cs" />
+    <Compile Include="src\Patches\ConfirmationDialogKeysPatches.cs" />
     <Compile Include="src\Patches\CursorPatches.cs" />
+    <Compile Include="src\Patches\InspectWindowStatsPatches.cs" />
+    <Compile Include="src\Patches\SwapPatches.cs" />
   </ItemGroup>
 
   <ItemGroup>

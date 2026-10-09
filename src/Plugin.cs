@@ -39,12 +39,16 @@ public class Plugin : BasePlugin
         //     Fika.Sync.Init();
         // }
 
+        AddOfferClickablePricesPatches.Enable();
+        AFKPatches.Enable();
+        ConfirmDialogKeysPatches.Enable();
         CursorPatches.Enable();
+        InspectWindowStatsPatches.Enable();
+        SwapPatches.Enable();
 
         /* Disabled for 5.0
 
         NetworkTransactionWatcher.Enable();
-        ConfirmDialogKeysPatches.Enable();
         MailPatches.Enable();
         FixTooltipPatches.Enable();
         QuickAccessPanelPatches.Enable();
@@ -52,11 +56,10 @@ public class Plugin : BasePlugin
         HideoutSearchPatches.Enable();
         HideoutLevelPatches.Enable();
         InspectWindowResizePatches.Enable();
-        InspectWindowStatsPatches.Enable();
         new RemoveDoorActionsPatch().Enable();
         ScrollPatches.Enable();
         StackFirItemsPatches.Enable();
-        SwapPatches.Enable();
+        
         SyncScrollPositionPatches.Enable();
         new TransferConfirmPatch().Enable();
         PlayerModelViewPatches.Enable();
@@ -68,7 +71,6 @@ public class Plugin : BasePlugin
         FixFleaPatches.Enable();
         FleaPrevSearchPatches.Enable();
         KeepOfferWindowOpenPatches.Enable();
-        AddOfferClickablePricesPatches.Enable();
         new AssortUnlocksPatch().Enable(); // TODO: Implement server side
         new AutofillQuestItemsPatch().Enable();
         ContextMenuPatches.Enable();

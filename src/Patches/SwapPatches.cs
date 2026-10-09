@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT;
@@ -10,8 +8,9 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
+using Il2CppSystem.Collections.Generic;
+using Il2CppSystem.Threading.Tasks;
+using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -63,7 +62,7 @@ public static class SwapPatches
         new WeaponApplyPatch().Enable();
 
         new DetectFilterForSwapPatch().Enable();
-        new FixNoGridErrorPatch().Enable();
+        //new FixNoGridErrorPatch().Enable();
         new SwapOperationRaiseEventsPatch().Enable();
         new RememberSwapGridHoverPatch().Enable();
         new InspectWindowUpdateStatsOnSwapPatch().Enable();
@@ -80,10 +79,11 @@ public static class SwapPatches
         }
 
         // Haha no
-        if (MultiSelect.Active)
-        {
-            return false;
-        }
+        // TODO: Multiselect
+        // if (MultiSelect.Active)
+        // {
+        //     return false;
+        // }
 
         if (BlockSwaps)
         {
@@ -106,7 +106,7 @@ public static class SwapPatches
         }
 
         // Check if the source container is a non-interactable GridView. Specifically for StashSearch, but may exist in other scenarios?
-        if (SourceContainer != null && SourceContainer is GridView && new R.GridView(SourceContainer).NonInteractable)
+        if (SourceContainer != null && SourceContainer is GridView gridView && gridView._nonInteractable)
         {
             return false;
         }
@@ -222,21 +222,17 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(
-            DraggedItemView __instance,
-            IContainerView ____currentContainerUnderCursor,
-            ItemContext ____currentTargetItemContext,
-            ItemUiContext ____uiContext)
+        public static void Postfix(DraggedItemView __instance)
         {
             if (DidForceSwapChange())
             {
-                ____uiContext.CheckCompatibleItems(); // Rerun highlighting
-                if (____currentContainerUnderCursor != null)
+                __instance._uiContext.CheckCompatibleItems(); // Rerun highlighting
+                if (__instance._currentContainerUnderCursor != null)
                 {
                     // Clear tooltip since the following won't
-                    ____uiContext.Tooltip.Close();
-                    ____currentContainerUnderCursor.HighlightItemViewPosition(__instance.ItemContext, ____currentTargetItemContext, false);
-                    UpdateSwapHighlight(__instance, ____currentContainerUnderCursor, ____currentTargetItemContext);
+                    __instance._uiContext.Tooltip.Close();
+                    __instance._currentContainerUnderCursor.HighlightItemViewPosition(__instance.ItemContext, __instance._currentTargetItemContext, false);
+                    UpdateSwapHighlight(__instance, __instance._currentContainerUnderCursor, __instance._currentTargetItemContext);
                 }
             }
         }
@@ -254,15 +250,12 @@ public static class SwapPatches
         public static void Prefix(
             DraggedItemView __instance,
             IContainerView containerUnderCursor,
-            ItemContext itemUnderCursor,
-            IContainerView ____currentContainerUnderCursor,
-            ItemContext ____currentTargetItemContext,
-            LocationInGrid ____currentLocationInGrid)
+            ItemContext itemUnderCursor)
         {
             // Copy logic to avoid running unless pointer location changes
             GridView gridView = containerUnderCursor as GridView;
             LocationInGrid locationInGrid = gridView != null ? gridView.CalculateItemLocation(__instance.ItemContext) : null;
-            if (containerUnderCursor == ____currentContainerUnderCursor && itemUnderCursor == ____currentTargetItemContext && locationInGrid == ____currentLocationInGrid)
+            if (containerUnderCursor == __instance._currentContainerUnderCursor && itemUnderCursor == __instance._currentTargetItemContext && locationInGrid == __instance._currentLocationInGrid)
             {
                 return;
             }
@@ -303,7 +296,7 @@ public static class SwapPatches
         if (operation.Succeeded && operation.Value is SwapResult swapOperation)
         {
             // show blue highlight
-            color = R.GridView.SwapColor;
+            color = GridView._swapColor;
             targetItem = swapOperation.Item2; // It's not necessarily itemUnderCursor, e.g. swapping mags on a weapon
             if (swapOperation.To2 is GridItemAddress gridAddress)
             {
@@ -316,7 +309,7 @@ public static class SwapPatches
             error._grid == gridItemAddress.Grid)
         {
             // show red highlight
-            color = R.GridView.InvalidOperationColor;
+            color = GridView.InvalidOperationColor;
             targetItem = error._item;
         }
         else
@@ -466,13 +459,11 @@ public static class SwapPatches
             DragItemContext itemContext,
             ItemContext targetItemContext,
             ref OperationResult operation,
-            ref bool __result,
-            Dictionary<string, ItemView> ___ItemViews,
-            ItemController ____itemController)
+            ref bool __result)
         {
             if (IsForceSwapPressed())
             {
-                __result = CanSwap(__instance, itemContext, targetItemContext, ____itemController, ref operation, ___ItemViews, true);
+                __result = CanSwap(__instance, itemContext, targetItemContext, __instance._itemController, ref operation, __instance.ItemViews, true);
                 return false;
             }
 
@@ -485,18 +476,23 @@ public static class SwapPatches
             DragItemContext itemContext,
             ItemContext targetItemContext,
             ref OperationResult operation,
-            ref bool __result,
-            Dictionary<string, ItemView> ___ItemViews,
-            ItemController ____itemController)
+            ref bool __result)
         {
             // Unsure if this runs when the prefix returns false, so only do anything if !force
-            if (!IsForceSwapPressed() && CanSwap(__instance, itemContext, targetItemContext, ____itemController, ref operation, ___ItemViews, false))
+            if (!IsForceSwapPressed() && CanSwap(__instance, itemContext, targetItemContext, __instance._itemController, ref operation, __instance.ItemViews, false))
             {
                 __result = true;
             }
         }
 
-        private static bool CanSwap(GridView gridView, DragItemContext itemContext, ItemContext targetItemContext, ItemController itemController, ref OperationResult operation, Dictionary<string, ItemView> itemViews, bool prefix)
+        private static bool CanSwap(
+            GridView gridView,
+            DragItemContext itemContext,
+            ItemContext targetItemContext,
+            ItemController itemController,
+            ref OperationResult operation,
+            Dictionary<string, ItemView> itemViews,
+            bool prefix)
         {
             // BSG's "move entire stacks" code loops inside AcceptItem - don't want this method to run on 2nd+ calls. Swap only happens
             // on the first. This still works fine with multi-select since that calls AcceptItem per item 
@@ -758,16 +754,17 @@ public static class SwapPatches
             if (result.Failed && result.Error is ItemManipulator.ResizeError)
             {
                 // When the slot is a weapon mod slot and this swap would trigger a resize, the resize left/up code needs to run
-                Item weapon = itemToAddress.GetRootItemNotEquipment();
-                if (weapon != null)
-                {
-                    WeaponModdingPatches.TryMoving(
-                        weapon,
-                        itemController,
-                        simulate,
-                        ref result,
-                        () => ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate));
-                }
+                // TODO: Re-enable with resize patches
+                // Item weapon = itemToAddress.GetRootItemNotEquipment();
+                // if (weapon != null)
+                // {
+                //     WeaponModdingPatches.TryMoving(
+                //         weapon,
+                //         itemController,
+                //         simulate,
+                //         ref result,
+                //         () => ItemManipulator.Swap(item, itemToAddress, targetItem, targetToAddress, itemController, simulate));
+                // }
             }
 
             operation = result;
@@ -786,13 +783,13 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(Weapon __instance, ItemController itemController, Item item, bool simulate, ref OperationResult __result)
         {
-            if (!Settings.SwapItems.Value || MultiSelect.Active)
+            if (!Settings.SwapItems.Value) // TODO: Multiselect: || MultiSelect.Active)
             {
                 return;
             }
 
             // Check if the source container is a non-interactable GridView. Specifically for StashSearch, but may exist in other scenarios?
-            if (SourceContainer != null && SourceContainer is GridView && new R.GridView(SourceContainer).NonInteractable)
+            if (SourceContainer != null && SourceContainer is GridView sourceGridView && sourceGridView._nonInteractable)
             {
                 return;
             }
@@ -886,22 +883,23 @@ public static class SwapPatches
     }
 
     // Since 3.9 EFT handles slots in addition to containers here, they get the wrong error
-    public class FixNoGridErrorPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return AccessTools.Method(typeof(ItemManipulator.CG_QuickFindAppropriatePlace), nameof(ItemManipulator.CG_QuickFindAppropriatePlace.method_1));
-        }
+    // TODO: Is this fixable in 5.0? Can't patch generated methods like this anymore, they only exist in cpp (if at all)
+    // public class FixNoGridErrorPatch : ModulePatch
+    // {
+    //     protected override MethodBase GetTargetMethod()
+    //     {
+    //         return AccessTools.Method(typeof(ItemManipulator.CG_QuickFindAppropriatePlace), nameof(ItemManipulator.CG_QuickFindAppropriatePlace.method_1));
+    //     }
 
-        [PatchPostfix]
-        public static void Postfix(ItemManipulator.CG_QuickFindAppropriatePlace __instance, IEnumerable<IContainer> containersToPut, ref OperationResult<IItemOperationResult> __result)
-        {
-            if (!containersToPut.Any(c => c is Grid) && __result.Error == __instance.noSpaceError)
-            {
-                __result = new(__instance.noActionsError);
-            }
-        }
-    }
+    //     [PatchPostfix]
+    //     public static void Postfix(ItemManipulator.CG_QuickFindAppropriatePlace __instance, IEnumerable<IContainer> containersToPut, ref OperationResult<IItemOperationResult> __result)
+    //     {
+    //         if (!containersToPut.Any(c => c is Grid) && __result.Error == __instance.noSpaceError)
+    //         {
+    //             __result = new(__instance.noActionsError);
+    //         }
+    //     }
+    // }
 
     // When dragging an item around, by default it updates an ItemSpecificationPanel when you drag an item on top of a slot
     // It doesn't do anything when you drag an item from a slot onto some other item elsewhere. But with swap, update the item panel then too.

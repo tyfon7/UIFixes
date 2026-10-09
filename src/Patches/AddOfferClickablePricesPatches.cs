@@ -1,10 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using EFT.InventoryLogic;
-using EFT.UI;
 using EFT.UI.Ragfair;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
 
@@ -24,7 +24,7 @@ public static class AddOfferClickablePricesPatches
         protected override MethodBase GetTargetMethod()
         {
             // Called when prices are loaded
-            return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel.CG_UpdatePrices));
+            return AccessTools.Method(typeof(ItemMarketPricesPanel), nameof(ItemMarketPricesPanel._UpdatePrices_b__22_0));
         }
 
         [PatchPostfix]
@@ -58,9 +58,9 @@ public static class AddOfferClickablePricesPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(AddOfferWindow __instance, ref float priceFloat, bool ____sellInOnePiece)
+        public static void Prefix(AddOfferWindow __instance, ref float priceFloat)
         {
-            if (____sellInOnePiece)
+            if (__instance._sellInOnePiece)
             {
                 priceFloat *= __instance.OfferItemCount;
             }
@@ -78,7 +78,7 @@ public static class AddOfferClickablePricesPatches
         [PatchPostfix]
         public static void Postfix(AddOfferWindow __instance)
         {
-            __instance._sellInOnePieceToggle.onValueChanged.AddListener(bulk =>
+            Action<bool> onChange = bulk =>
             {
                 if (!Settings.UpdatePriceOnBulk.Value)
                 {
@@ -95,8 +95,9 @@ public static class AddOfferClickablePricesPatches
                 // SetRequirement will multiply (or not), so just need the individual price
                 double individualPrice = bulk ? currentPrice : currentPrice / __instance.OfferItemCount;
                 __instance.PricesPanelOnOnPriceClick((float)individualPrice);
-            });
+            };
 
+            __instance._sellInOnePieceToggle.onValueChanged.AddListener(onChange);
         }
     }
 
@@ -117,30 +118,24 @@ public static class AddOfferClickablePricesPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(
-            AddOfferWindow __instance,
-            Item item,
-            bool selected,
-            RequirementView[] ____requirementViews,
-            bool ____sellInOnePiece,
-            RagfairNewOfferContext ____offerContext)
+        public static void Postfix(AddOfferWindow __instance, Item item, bool selected)
         {
             // Bulk can autochange when selecting/deselecting, so bail if this isn't a bulk to bulk change
-            if (!WasBulk || !____sellInOnePiece)
+            if (!WasBulk || !__instance._sellInOnePiece)
             {
                 return;
             }
 
             // BSG doesn't handle the case of bulk staying true when switching between items
-            __instance.SetSellInOnePiece(____sellInOnePiece);
+            __instance.SetSellInOnePiece(__instance._sellInOnePiece);
 
             // Bail if option is disabled; if the selected item is null (deselecting/changing items) or if the number of selected itms is 0
-            if (!Settings.UpdatePriceOnBulk.Value || ____offerContext.SelectedItem == null || __instance.OfferItemCount < 1)
+            if (!Settings.UpdatePriceOnBulk.Value || __instance._offerContext.SelectedItem == null || __instance.OfferItemCount < 1)
             {
                 return;
             }
 
-            var rublesRequirement = ____requirementViews.First(rv => rv.name == "Requirement (RUB)");
+            var rublesRequirement = __instance._requirementViews.First(rv => rv.name == "Requirement (RUB)");
             double currentPrice = rublesRequirement.Requirement.PreciseCount;
 
             // Need to figure out the price per item *before* this item was added/removed

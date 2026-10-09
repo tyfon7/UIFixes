@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +9,8 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.Utilities;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using Il2CppSystem.Collections.Generic;
+using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,42 +42,40 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(
-            ItemSpecificationPanel __instance,
-            Item ____item,
-            SimpleTooltip ____secondaryTooltip,
-            ref ViewList<ItemAttribute, CompactCharacteristicPanel> ____compactBarAttributeViewers,
-            ViewList<ItemAttribute, CompactCharacteristicDropdownPanel> ____createdCompatibleAttrivieViewers)
+        public static void Postfix(ItemSpecificationPanel __instance)
         {
-            if (!Settings.ShowModStats.Value || ____item is not Mod)
+            if (!Settings.ShowModStats.Value || __instance._item is not Mod)
             {
                 return;
             }
 
-            var deepAttributes = GetDeepAttributes(____item, out bool changed);
+            var deepAttributes = GetDeepAttributes(__instance._item, out bool changed);
             if (!changed)
             {
                 return;
             }
 
             // Clean up existing one
-            if (____compactBarAttributeViewers is IDisposable compactPanels)
+            if (__instance._compactBarAttributeViewers is IDisposable compactPanels)
             {
                 compactPanels.Dispose();
             }
 
-            ____compactBarAttributeViewers = new ViewList<ItemAttribute, CompactCharacteristicPanel>(
+            // Need to explicitly declare the action so the type information is there for conversion to Il2CppSystem.Action below
+            Action<ItemAttribute, CompactCharacteristicPanel> callback = (attribute, viewer) => viewer.Show(attribute, __instance._secondaryTooltip, __instance.Examined, 100);
+
+            __instance._compactBarAttributeViewers = new ViewList<ItemAttribute, CompactCharacteristicPanel>(
                 deepAttributes,
                 __instance._compactCharTemplate,
                 __instance._compactPanel,
-                (attribute, viewer) => viewer.Show(attribute, ____secondaryTooltip, __instance.Examined, 100)); ;
+                callback);
 
-            if (____compactBarAttributeViewers.Any())
+            if (__instance._compactBarAttributeViewers.Any())
             {
-                ____compactBarAttributeViewers.Last().Value.OnTextWidthCalculated += __instance.CompactItemTextCalculated;
-                int siblingIndex = ____compactBarAttributeViewers.Last().Value.Transform.GetSiblingIndex();
+                __instance._compactBarAttributeViewers.Last().Value.OnTextWidthCalculated += __instance.CompactItemTextCalculated;
+                int siblingIndex = __instance._compactBarAttributeViewers.Last().Value.Transform.GetSiblingIndex();
 
-                foreach (var item in ____createdCompatibleAttrivieViewers)
+                foreach (var item in __instance._createdCompatibleAttrivieViewers)
                 {
                     item.Value.Transform.SetSiblingIndex(++siblingIndex);
                 }
@@ -116,12 +114,16 @@ public static class InspectWindowStatsPatches
             {
                 float maxDurability = armorComponents.Sum(c => c.Repairable.Durability);
 
-                var itemAttributeClass = new ItemAttribute(EItemAttributeId.ArmorPoints)
+                Func<float> getBase = () => maxDurability;
+                Func<string> getString = () => Math.Round(maxDurability, 1).ToString(CultureInfo.InvariantCulture);
+                Func<EItemAttributeDisplayType> getDisplay = () => EItemAttributeDisplayType.Compact;
+
+                var itemAttributeClass = new ItemAttribute(EItemAttributeId.ArmorPoints.ToIl2CppEnum())
                 {
                     Name = EItemAttributeId.ArmorPoints.GetName(),
-                    Base = () => maxDurability,
-                    StringValue = () => Math.Round(maxDurability, 1).ToString(CultureInfo.InvariantCulture),
-                    DisplayType = () => EItemAttributeDisplayType.Compact
+                    Base = getBase,
+                    StringValue = getString,
+                    DisplayType = getDisplay
                 };
 
                 compareItem.Attributes.Insert(0, itemAttributeClass);
@@ -129,7 +131,7 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, Item compareItem, ViewList<ItemAttribute, CompactCharacteristicPanel> ____compactBarAttributeViewers)
+        public static void Postfix(ItemSpecificationPanel __instance, Item compareItem)
         {
             if (!Settings.ShowModStats.Value || compareItem is not Mod)
             {
@@ -142,7 +144,12 @@ public static class InspectWindowStatsPatches
                 return;
             }
 
-            ItemSpecificationPanel.CG_Compare(____compactBarAttributeViewers, deepAttributes); // Updates attributes, name is due to be called from Compare
+            // Do this manually to update, no longer have access to the code that would do this
+            foreach (var (attribute, panel) in __instance._compactBarAttributeViewers)
+            {
+                var changedAttribute = deepAttributes.FirstOrDefault(a => a.Id.Equals(attribute.Id));
+                panel.CompareWith(changedAttribute);
+            }
         }
     }
 
@@ -159,9 +166,9 @@ public static class InspectWindowStatsPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ItemSpecificationPanel __instance, ContextInteractions<EItemInfoButton> contextInteractions, Item ____item)
+        public static void Postfix(ItemSpecificationPanel __instance, ContextInteractions<EItemInfoButton> contextInteractions)
         {
-            if (____item is not Mod)
+            if (__instance._item is not Mod)
             {
                 return;
             }
@@ -180,16 +187,13 @@ public static class InspectWindowStatsPatches
             }
             Settings.ShowModStats.SettingChanged += OnSettingChanged;
 
-            static void OnClick()
-            {
-                Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
-            }
+            Action onClick = () => Settings.ShowModStats.Value = !Settings.ShowModStats.Value;
 
             void CreateButton()
             {
                 Sprite sprite = ResourcesCache.Pop<Sprite>("Characteristics/Icons/Modding");
                 toggleButton = (ContextMenuButton)UnityEngine.Object.Instantiate(buttonsContainer._buttonTemplate, buttonsContainer._buttonsContainer, false);
-                toggleButton.Show(GetLabel(), null, sprite, OnClick, null);
+                toggleButton.Show(GetLabel(), null, sprite, onClick, null);
                 toggleButton.transform.SetSiblingIndex(toggleButton.transform.GetSiblingIndex() - 1);
                 buttonsContainer.BindButton(toggleButton); // add to disposable list
             }
@@ -198,7 +202,7 @@ public static class InspectWindowStatsPatches
             contextInteractions.OnRedrawRequired += CreateButton;
 
             // And unsubscribe when the window goes away
-            buttonsContainer.R().UI.AddDisposable(() =>
+            buttonsContainer.UI.AddDisposable(() =>
             {
                 contextInteractions.OnRedrawRequired -= CreateButton;
                 Settings.ShowModStats.SettingChanged -= OnSettingChanged;
@@ -255,47 +259,48 @@ public static class InspectWindowStatsPatches
             }
         }
 
+        // 5.0: RIP to transpiler methods
         // This transpiler looks for where it rounds a float to an int, and skips that. Instead it calls ToString("0.0#") on it
-        [PatchTranspiler]
-        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
-        {
-            int skip = 0;
-            CodeInstruction lastInstruction = null;
-            CodeInstruction currentInstruction = null;
-            foreach (var instruction in instructions)
-            {
-                if (lastInstruction == null)
-                {
-                    lastInstruction = instruction;
-                    continue;
-                }
+        // [PatchTranspiler]
+        // public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
+        // {
+        //     int skip = 0;
+        //     CodeInstruction lastInstruction = null;
+        //     CodeInstruction currentInstruction = null;
+        //     foreach (var instruction in instructions)
+        //     {
+        //         if (lastInstruction == null)
+        //         {
+        //             lastInstruction = instruction;
+        //             continue;
+        //         }
 
-                currentInstruction = instruction;
+        //         currentInstruction = instruction;
 
-                if (skip > 0)
-                {
-                    --skip;
-                }
-                else if (currentInstruction.Calls(RoundToIntMethod))
-                {
-                    yield return new CodeInstruction(OpCodes.Ldloca_S, 17);
-                    yield return new CodeInstruction(OpCodes.Ldstr, "0.0#");
-                    yield return new CodeInstruction(OpCodes.Call, ToStringMethod);
-                    skip = 4;
-                }
-                else
-                {
-                    yield return lastInstruction;
-                }
+        //         if (skip > 0)
+        //         {
+        //             --skip;
+        //         }
+        //         else if (currentInstruction.Calls(RoundToIntMethod))
+        //         {
+        //             yield return new CodeInstruction(OpCodes.Ldloca_S, 17);
+        //             yield return new CodeInstruction(OpCodes.Ldstr, "0.0#");
+        //             yield return new CodeInstruction(OpCodes.Call, ToStringMethod);
+        //             skip = 4;
+        //         }
+        //         else
+        //         {
+        //             yield return lastInstruction;
+        //         }
 
-                lastInstruction = instruction;
-            }
+        //         lastInstruction = instruction;
+        //     }
 
-            if (currentInstruction != null)
-            {
-                yield return currentInstruction;
-            }
-        }
+        //     if (currentInstruction != null)
+        //     {
+        //         yield return currentInstruction;
+        //     }
+        // }
     }
 
 
@@ -333,7 +338,7 @@ public static class InspectWindowStatsPatches
             }
 
             itemUiContext.RegisterView(itemContext);
-            __instance.R().UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
+            __instance.UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
         }
     }
 
@@ -401,22 +406,21 @@ public static class InspectWindowStatsPatches
         const string decreasingColorHex = "#C40000";
 
         string text = textMesh.text;
-        var wrappedPanel = panel.R();
-        ItemAttribute attribute = wrappedPanel.ItemAttribute;
+        ItemAttribute attribute = panel.ItemAttribute;
 
         // Holy shit did they mess up MOA. Half of the calculation is done in the StringValue() method, so calculating delta from Base() loses all that
         // Plus, they round the difference to the nearest integer (!?)
         // Completely redo it
-        if ((EItemAttributeId)attribute.Id == EItemAttributeId.CenterOfImpact)
+        if (attribute.Id.ToEnum<EItemAttributeId>() == EItemAttributeId.CenterOfImpact)
         {
-            var compareAttribute = wrappedPanel.CompareItemAttribute;
+            var compareAttribute = panel.CompareItemAttribute;
             if (compareAttribute != null)
             {
-                string currentStringValue = attribute.StringValue();
+                string currentStringValue = attribute.StringValue.Invoke();
                 var moaMatch = Regex.Match(currentStringValue, @"^(\S+)");
                 if (float.TryParse(moaMatch.Groups[1].Value, out float moa))
                 {
-                    string compareStringValue = compareAttribute.StringValue();
+                    string compareStringValue = compareAttribute.StringValue.Invoke();
                     moaMatch = Regex.Match(compareStringValue, @"^(\S+)");
                     if (float.TryParse(moaMatch.Groups[1].Value, out float compareMoa))
                     {
@@ -447,7 +451,7 @@ public static class InspectWindowStatsPatches
                 string color = (attribute.LessIsGood && value < 0) || (!attribute.LessIsGood && value > 0) ? increasingColorHex : decreasingColorHex;
 
                 // Except some that have a space weren't actually formatted with P1 and are 0-100 with a manually added " %"
-                text = NonPercentPercents.Contains((EItemAttributeId)attribute.Id)
+                text = NonPercentPercents.Contains(attribute.Id.ToEnum<EItemAttributeId>())
                     ? Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value + "%)</color>")
                     : Regex.Replace(text, @"%\([+-].*\)", "%<color=" + color + ">(" + sign + value.ToString("P1") + ")</color>");
             }
@@ -501,7 +505,7 @@ public static class InspectWindowStatsPatches
     private static List<ItemAttribute> GetDeepAttributes(Item item, out bool changed)
     {
         changed = false;
-        var itemAttributes = item.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
+        var itemAttributes = item.Attributes.Where(a => a.DisplayType.Invoke() == EItemAttributeDisplayType.Compact).ToIl2CppList();
         foreach (var subItem in item.GetAllItems()) // This get all items, recursively
         {
             if (subItem == item)
@@ -509,55 +513,57 @@ public static class InspectWindowStatsPatches
                 continue;
             }
 
-            var subAttributes = subItem.Attributes.Where(a => a.DisplayType() == EItemAttributeDisplayType.Compact).ToList();
-            itemAttributes = CombineAttributes(itemAttributes, subAttributes).ToList();
+            var subAttributes = subItem.Attributes.Where(a => a.DisplayType.Invoke() == EItemAttributeDisplayType.Compact).ToIl2CppList();
+            itemAttributes = CombineAttributes(itemAttributes, subAttributes);
             changed = true;
         }
 
         return itemAttributes;
     }
 
-    private static IEnumerable<ItemAttribute> CombineAttributes(IList<ItemAttribute> first, IList<ItemAttribute> second)
+    private static List<ItemAttribute> CombineAttributes(IList<ItemAttribute> first, IList<ItemAttribute> second)
     {
-        foreach (EItemAttributeId id in first.Select(a => a.Id).Union(second.Select(a => a.Id)).Select(v => (EItemAttributeId)v))
+        List<ItemAttribute> result = [];
+
+        foreach (var id in first.Select(a => a.Id).Union(second.Select(a => a.Id)))
         {
             // Need to cast the id since it's of type Enum for some reason
-            var attribute = first.FirstOrDefault(a => (EItemAttributeId)a.Id == id);
-            var other = second.FirstOrDefault(a => (EItemAttributeId)a.Id == id);
+            var attribute = first.FirstOrDefault(a => a.Id.Equals(id));
+            var other = second.FirstOrDefault(a => a.Id.Equals(id));
             if (attribute == null)
             {
-                yield return other;
+                result.Add(other);
             }
             else if (other == null)
             {
-                yield return attribute;
+                result.Add(attribute);
             }
             else
             {
                 var combined = attribute.Clone();
-                switch (attribute.Id)
+                switch (attribute.Id.ToEnum<EItemAttributeId>())
                 {
                     case EItemAttributeId.EffectiveDist:
                     case EItemAttributeId.SightingRange:
-                        combined.Base = () => Math.Max(attribute.Base(), other.Base());
-                        combined.StringValue = () => combined.Base().ToString();
+                        combined.Base = (Func<float>)(() => Math.Max(attribute.Base.Invoke(), other.Base.Invoke()));
+                        combined.StringValue = (Func<string>)(() => combined.Base.Invoke().ToString());
                         break;
                     case EItemAttributeId.Accuracy:
                     case EItemAttributeId.Recoil:
-                        combined.Base = () => attribute.Base() + other.Base();
-                        combined.StringValue = () => combined.Base() + "%";
+                        combined.Base = (Func<float>)(() => attribute.Base.Invoke() + other.Base.Invoke());
+                        combined.StringValue = (Func<string>)(() => combined.Base.Invoke() + "%");
                         break;
                     case EItemAttributeId.Loudness:
                     case EItemAttributeId.Ergonomics:
                     case EItemAttributeId.Velocity:
-                        combined.Base = () => attribute.Base() + other.Base();
-                        combined.StringValue = () => combined.Base().ToString();
+                        combined.Base = (Func<float>)(() => attribute.Base.Invoke() + other.Base.Invoke());
+                        combined.StringValue = (Func<string>)(() => combined.Base.Invoke().ToString());
                         break;
                     case EItemAttributeId.DurabilityBurn:
                     case EItemAttributeId.HeatFactor:
                     case EItemAttributeId.CoolFactor:
-                        combined.Base = () => attribute.Base() + other.Base();
-                        combined.StringValue = () => combined.Base().ToString("P1");
+                        combined.Base = (Func<float>)(() => attribute.Base.Invoke() + other.Base.Invoke());
+                        combined.StringValue = (Func<string>)(() => combined.Base.Invoke().ToString("P1"));
                         break;
                     case EItemAttributeId.RaidModdable:
                         break;
@@ -565,9 +571,11 @@ public static class InspectWindowStatsPatches
                         break;
                 }
 
-                yield return combined;
+                result.Add(combined);
             }
         }
+
+        return result;
     }
 
     public static string RemoveTrailingZeros(string input)
