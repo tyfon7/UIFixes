@@ -3,6 +3,7 @@ using System.Linq;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
+using BepInEx.Unity.IL2CPP.Configuration;
 using UnityEngine;
 
 namespace UIFixes;
@@ -24,11 +25,11 @@ internal partial class Settings
     // public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
     // public static ConfigEntry<bool> ShowGroupInvitePanel { get; set; } // Advanced
 
-    // // Dialogs
-    // public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
-    // public static ConfigEntry<bool> OneClickPresetSave { get; set; }
+    // Dialogs
+    public static ConfigEntry<WeaponPresetConfirmationOption> ShowPresetConfirmations { get; set; }
+    public static ConfigEntry<bool> OneClickPresetSave { get; set; }
     // public static ConfigEntry<bool> ShowStockPresets { get; set; }
-    // public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
+    public static ConfigEntry<TransferConfirmationOption> ShowTransferConfirmations { get; set; }
     public static ConfigEntry<bool> ClickOutOfDialogs { get; set; } // Advanced
 
     // // Gameplay
@@ -54,13 +55,11 @@ internal partial class Settings
     // public static ConfigEntry<bool> WeaponZoomScroll { get; set; }
     // public static ConfigEntry<bool> WeaponPanDrag { get; set; }
     // public static ConfigEntry<bool> CharacterPanZoom { get; set; }
-    // public static ConfigEntry<int> MouseScrollMulti { get; set; }
-    // public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
-    // public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
+    public static ConfigEntry<int> MouseScrollMulti { get; set; }
+    public static ConfigEntry<bool> UseRaidMouseScrollMulti { get; set; } // Advanced
+    public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
-    // // Interface Keybinds
-    // public static ConfigEntry<bool> UseHomeEnd { get; set; }
-    // public static ConfigEntry<bool> RebindPageUpDown { get; set; }
+    // Interface Keybinds
     // public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
     // public static ConfigEntry<bool> SuppressKeybindsInTextbox { get; set; }
 
@@ -151,7 +150,7 @@ internal partial class Settings
     // public static ConfigEntry<bool> QuestHandOverQuestItemsIcon { get; set; }
     // public static ConfigEntry<bool> RememberLastTrader { get; set; }
     // public static ConfigEntry<bool> ShowOutOfStockCheckbox { get; set; }
-    // public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> PurchaseAllKeybind { get; set; }
 
     // // FleaMarket
     // public static ConfigEntry<bool> EnableFleaHistory { get; set; }
@@ -319,24 +318,24 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // // Dialogs
-        // configEntries.Add(ShowPresetConfirmations = config.Bind(
-        //     Section.Dialogs,
-        //     "Show Weapon Preset Confirmation Dialog",
-        //     WeaponPresetConfirmationOption.OnClose,
-        //     new ConfigDescription(
-        //         "When to show a confirmation dialog when you leave and/or close an unsaved weapon preset",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        // Dialogs
+        configEntries.Add(ShowPresetConfirmations = config.Bind(
+            Section.Dialogs,
+            "Show Weapon Preset Confirmation Dialog",
+            WeaponPresetConfirmationOption.OnClose,
+            new ConfigDescription(
+                "When to show a confirmation dialog when you leave and/or close an unsaved weapon preset",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(OneClickPresetSave = config.Bind(
-        //     Section.Dialogs,
-        //     "One Click Save Weapon Presets",
-        //     true,
-        //     new ConfigDescription(
-        //         "Save weapon presets without being prompted to confirm the name of the preset. Save As will prompt as normal.",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(OneClickPresetSave = config.Bind(
+            Section.Dialogs,
+            "One Click Save Weapon Presets",
+            true,
+            new ConfigDescription(
+                "Save weapon presets without being prompted to confirm the name of the preset. Save As will prompt as normal.",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // configEntries.Add(ShowStockPresets = config.Bind(
         //     Section.Dialogs,
@@ -347,14 +346,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(ShowTransferConfirmations = config.Bind(
-        //     Section.Dialogs,
-        //     "Show Transfer Items Confirmation Dialog",
-        //     TransferConfirmationOption.Never,
-        //     new ConfigDescription(
-        //         "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(ShowTransferConfirmations = config.Bind(
+            Section.Dialogs,
+            "Show Transfer Items Confirmation Dialog",
+            TransferConfirmationOption.Never,
+            new ConfigDescription(
+                "When to show the confirmation dialog when you close the item transfer screen without taking all the items",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         configEntries.Add(ClickOutOfDialogs = config.Bind(
             Section.Dialogs,
@@ -547,51 +546,34 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(MouseScrollMulti = config.Bind(
-        //     Section.Mouse,
-        //     "Mousewheel Scrolling Speed",
-        //     1,
-        //     new ConfigDescription(
-        //         "How many rows to scroll with the mousewheel",
-        //         new AcceptableValueRange<int>(1, 10),
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(MouseScrollMulti = config.Bind(
+            Section.Mouse,
+            "Mousewheel Scrolling Speed",
+            1,
+            new ConfigDescription(
+                "How many rows to scroll with the mousewheel",
+                new AcceptableValueRange<int>(1, 10),
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
-        //     Section.Mouse,
-        //     "Use Different Scrolling Speed in Raid",
-        //     false,
-        //     new ConfigDescription(
-        //         "Whether to use a separate mousewheel scroll speed in raid",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(UseRaidMouseScrollMulti = config.Bind(
+            Section.Mouse,
+            "Use Different Scrolling Speed in Raid",
+            false,
+            new ConfigDescription(
+                "Whether to use a separate mousewheel scroll speed in raid",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // configEntries.Add(MouseScrollMultiInRaid = config.Bind(
-        //     Section.Mouse,
-        //     "Mousewheel Scrolling Speed in Raid",
-        //     1,
-        //     new ConfigDescription(
-        //         "A separate mousewheel scroll speed for in raid",
-        //         new AcceptableValueRange<int>(1, 10),
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(MouseScrollMultiInRaid = config.Bind(
+            Section.Mouse,
+            "Mousewheel Scrolling Speed in Raid",
+            1,
+            new ConfigDescription(
+                "A separate mousewheel scroll speed for in raid",
+                new AcceptableValueRange<int>(1, 10),
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // // Interface Keybinds
-        // configEntries.Add(UseHomeEnd = config.Bind(
-        //     Section.InterfaceKeybinds,
-        //     "Enable Home/End Keys",
-        //     true,
-        //     new ConfigDescription(
-        //         "Use the Home and End keys to scroll to the top and bottom of inventories",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
-
-        // configEntries.Add(RebindPageUpDown = config.Bind(
-        //     Section.InterfaceKeybinds,
-        //     "Rebind PageUp/PageDown (requires restart)",
-        //     true,
-        //     new ConfigDescription(
-        //         "Change PageUp and PageDown to scroll up and down one page",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        // Interface Keybinds
 
         // configEntries.Add(SearchKeyBind = config.Bind(
         //     Section.InterfaceKeybinds,
@@ -1251,14 +1233,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(PurchaseAllKeybind = config.Bind(
-        //     Section.Trading,
-        //     "Purchase Dialog ALL Shortcut",
-        //     new KeyboardShortcut(KeyCode.A),
-        //     new ConfigDescription(
-        //         "Keybind to set the quantity to all in the item purchase dialog. Equivalent to clicking the ALL button.",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(PurchaseAllKeybind = config.Bind(
+            Section.Trading,
+            "Purchase Dialog ALL Shortcut",
+            new KeyboardShortcut(KeyCode.A),
+            new ConfigDescription(
+                "Keybind to set the quantity to all in the item purchase dialog. Equivalent to clicking the ALL button.",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // // Flea Market
         // configEntries.Add(EnableFleaHistory = config.Bind(

@@ -24,14 +24,14 @@ public static class FocusFleaOfferNumberPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(HandoverRagfairMoneyWindow __instance, TMP_InputField ____inputField)
+        public static void Postfix(HandoverRagfairMoneyWindow __instance)
         {
             AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-            allKeybind.Init(__instance.CG_Awake1); // same as _allItemsButton.onClick
+            allKeybind.Init(__instance._allItemsButton.onClick.Invoke);
 
-            ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
-            ____inputField.ActivateInputField();
-            ____inputField.Select();
+            __instance._inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+            __instance._inputField.ActivateInputField();
+            __instance._inputField.Select();
         }
     }
 
@@ -43,14 +43,14 @@ public static class FocusFleaOfferNumberPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(HandoverExchangeableItemsWindow __instance, TMP_InputField ____inputField)
+        public static void Postfix(HandoverExchangeableItemsWindow __instance)
         {
             AllButtonKeybind allKeybind = __instance.GetOrAddComponent<AllButtonKeybind>();
-            allKeybind.Init(__instance.CG_Awake1); // same as _allItemsButton.onClick
+            allKeybind.Init(__instance._allItemsButton.onClick.Invoke);
 
-            ____inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
-            ____inputField.ActivateInputField();
-            ____inputField.Select();
+            __instance._inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
+            __instance._inputField.ActivateInputField();
+            __instance._inputField.Select();
         }
     }
 

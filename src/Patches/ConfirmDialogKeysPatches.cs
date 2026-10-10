@@ -147,9 +147,11 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                Action onClose = __instance.Close; // Necessary for some reason
+
+                Action onClose = __instance.Close;
                 button.onClick.AddListener(onClose);
-                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
+
+                __instance.UI.AddOnDispose(() => button.onClick.RemoveListener(onClose));
             }
         }
     }
@@ -176,7 +178,7 @@ public static class ConfirmDialogKeysPatches
             {
                 button.transition = Selectable.Transition.None;
                 button.onClick.RemoveAllListeners(); // There's no disposable here so keeping the listener count down
-                Action onClick = __instance._cancelAction.Invoke; // necessary
+                Action onClick = __instance._cancelAction.Invoke;
                 button.onClick.AddListener(onClick);
             }
         }
@@ -204,9 +206,12 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                Action onClose = __instance.Close; // Necessary for some reason
+
+                Action onClose = __instance.Close;
                 button.onClick.AddListener(onClose);
-                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
+
+                __instance.UI.AddOnDispose(() => button.onClick.RemoveListener(onClose));
+
             }
         }
     }
@@ -233,9 +238,10 @@ public static class ConfirmDialogKeysPatches
             if (button != null)
             {
                 button.transition = Selectable.Transition.None;
-                Action onClose = __instance.CloseSilent; // Necessary for some reason
+                Action onClose = __instance.CloseSilent;
                 button.onClick.AddListener(onClose);
-                __instance.UI.AddDisposable(button.onClick.RemoveAllListeners);
+
+                __instance.UI.AddOnDispose(() => button.onClick.RemoveListener(onClose));
             }
         }
     }

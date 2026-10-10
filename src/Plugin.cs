@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using BepInEx;
-using BepInEx.Bootstrap;
 using BepInEx.Unity.IL2CPP;
 using Comfort.Common;
 using EFT;
@@ -41,9 +39,12 @@ public class Plugin : BasePlugin
 
         AddOfferClickablePricesPatches.Enable();
         AFKPatches.Enable();
+        ConfirmationPatches.Enable();
         ConfirmDialogKeysPatches.Enable();
         CursorPatches.Enable();
+        FocusFleaOfferNumberPatches.Enable();
         InspectWindowStatsPatches.Enable();
+        ScrollPatches.Enable();
         SwapPatches.Enable();
 
         /* Disabled for 5.0
@@ -52,15 +53,12 @@ public class Plugin : BasePlugin
         MailPatches.Enable();
         FixTooltipPatches.Enable();
         QuickAccessPanelPatches.Enable();
-        FocusFleaOfferNumberPatches.Enable();
         HideoutSearchPatches.Enable();
         HideoutLevelPatches.Enable();
         InspectWindowResizePatches.Enable();
-        ScrollPatches.Enable();
         StackFirItemsPatches.Enable();
-        
+
         SyncScrollPositionPatches.Enable();
-        new TransferConfirmPatch().Enable();
         PlayerModelViewPatches.Enable();
         WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();

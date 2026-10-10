@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -13,7 +12,6 @@ using Il2CppSystem.Collections.Generic;
 using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace UIFixes;
 
@@ -202,7 +200,7 @@ public static class InspectWindowStatsPatches
             contextInteractions.OnRedrawRequired += CreateButton;
 
             // And unsubscribe when the window goes away
-            buttonsContainer.UI.AddDisposable(() =>
+            buttonsContainer.UI.AddOnDispose(() =>
             {
                 contextInteractions.OnRedrawRequired -= CreateButton;
                 Settings.ShowModStats.SettingChanged -= OnSettingChanged;
