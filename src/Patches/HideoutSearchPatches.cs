@@ -18,7 +18,7 @@ public static class HideoutSearchPatches
 
     private static float LastAbsoluteDownScrollPosition = -1f;
 
-    private static void ClearLastScrollPosition() => LastAbsoluteDownScrollPosition = -1f;
+    private static readonly Action ClearLastScrollPosition = () => LastAbsoluteDownScrollPosition = -1f;
 
     public static void Enable()
     {
@@ -37,13 +37,13 @@ public static class HideoutSearchPatches
     {
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(ProductionPanel.CG_Class1944), nameof(ProductionPanel.CG_Class1944.method_2));
+            return AccessTools.Method(typeof(ProductionPanel.__c__DisplayClass15_0), nameof(ProductionPanel.__c__DisplayClass15_0._ShowProduceView_b__2));
         }
 
         [PatchPostfix]
-        public static void Postfix(ProductionPanel.CG_Class1944 __instance, ProductionScheme scheme, ProduceView view)
+        public static void Postfix(ProductionPanel.__c__DisplayClass15_0 __instance, ProductionScheme scheme, ProduceView view)
         {
-            ValidationInputField searchField = __instance.productionPanel_0._searchInputField;
+            ValidationInputField searchField = __instance.__4__this._searchInputField;
             if (searchField.text.Length > 0 && scheme.endProduct.LocalizedName().IndexOf(searchField.text, StringComparison.InvariantCultureIgnoreCase) < 0)
             {
                 view.GameObject.SetActive(false);
@@ -81,11 +81,11 @@ public static class HideoutSearchPatches
         }
 
         [PatchPrefix]
-        public static void Prefix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+        public static void Prefix(ProductionPanel __instance)
         {
             if (LastSearches.TryGetValue(__instance.AreaData.ToString(), out string lastSearch))
             {
-                ____searchInputField.text = lastSearch;
+                __instance._searchInputField.text = lastSearch;
             }
 
             ScrollPatches.KeyScrollListener listener = __instance.GetComponentInParent<ScrollPatches.KeyScrollListener>();
@@ -93,7 +93,7 @@ public static class HideoutSearchPatches
         }
 
         [PatchPostfix]
-        public static void Postfix(ProductionPanel __instance, ValidationInputField ____searchInputField)
+        public static void Postfix(ProductionPanel __instance)
         {
             // Force it to render immediately, at full height, even if the search filtering would reduce the number of children
             if (__instance.GetSortedSchemes(true).Count() > 2)
@@ -104,10 +104,10 @@ public static class HideoutSearchPatches
                 areaScreenSubstrate.ViewListCreated();
             }
 
-            ____searchInputField.GetOrAddComponent<SearchKeyListener>();
+            __instance._searchInputField.GetOrAddComponent<SearchKeyListener>();
 
-            ____searchInputField.ActivateInputField();
-            ____searchInputField.Select();
+            __instance._searchInputField.ActivateInputField();
+            __instance._searchInputField.Select();
         }
     }
 
@@ -121,13 +121,14 @@ public static class HideoutSearchPatches
 
         // Copied directly from GetSortedSchemes
         [PatchPrefix]
-        public static bool Prefix(ProductionPanel __instance, ref IEnumerable<ProductionScheme> __result, BaseHideoutScheme[] ____schemes)
+        public static bool Prefix(ProductionPanel __instance, ref Il2CppCollections.IEnumerable<ProductionScheme> __result)
         {
-            __result = ____schemes.OfType<ProductionScheme>().Where(scheme => !scheme.locked)
+            __result = __instance._schemes.OfType<ProductionScheme>().Where(scheme => !scheme.locked)
                 .OrderBy(scheme => scheme.endProduct.LocalizedName().Contains(__instance._searchInputField.text) ? 0 : 1) // search-matching items first
-                .ThenBy(__instance.CG_GetSortedSchemes)
+                .ThenBy(__instance.Method_Private_Int32_ProductionScheme_PDM_0)
                 .ThenBy(scheme => scheme.FavoriteIndex)
-                .ThenBy(scheme => scheme.Level);
+                .ThenBy(scheme => scheme.Level)
+                .ToIl2CppList();
 
             return false;
         }

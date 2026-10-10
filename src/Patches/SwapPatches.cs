@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Comfort.Common;
@@ -8,8 +9,6 @@ using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
-using Il2CppSystem.Collections.Generic;
-using Il2CppSystem.Threading.Tasks;
 using SPTushonka.Reflection.Patching;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -377,7 +376,7 @@ public static class SwapPatches
         }
 
         [PatchPostfix]
-        public static async void Postfix(Task __result)
+        public static async void Postfix(Il2CppTasks.Task __result)
         {
             await __result;
             InAcceptItem = false;
@@ -491,7 +490,7 @@ public static class SwapPatches
             ItemContext targetItemContext,
             ItemController itemController,
             ref OperationResult operation,
-            Dictionary<string, ItemView> itemViews,
+            Il2CppCollections.Dictionary<string, ItemView> itemViews,
             bool prefix)
         {
             // BSG's "move entire stacks" code loops inside AcceptItem - don't want this method to run on 2nd+ calls. Swap only happens

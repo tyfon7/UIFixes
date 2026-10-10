@@ -5,7 +5,6 @@ using Comfort.Common;
 using EFT.UI;
 using EFT.UI.Builds;
 using HarmonyLib;
-using Il2CppSystem.Threading.Tasks;
 using SPTushonka.Reflection.Patching;
 
 namespace UIFixes;
@@ -37,7 +36,7 @@ public static class ConfirmationPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(TransferItemsScreen __instance, ref Task<bool> __result)
+        public static bool Prefix(TransferItemsScreen __instance, ref Il2CppTasks.Task<bool> __result)
         {
             if (Settings.ShowTransferConfirmations.Value == TransferConfirmationOption.Always)
             {
@@ -75,7 +74,7 @@ public static class ConfirmationPatches
         }
 
         [PatchPrefix]
-        public static bool Prefix(ref Task<bool> __result)
+        public static bool Prefix(ref Il2CppTasks.Task<bool> __result)
         {
             if (Settings.ShowPresetConfirmations.Value == WeaponPresetConfirmationOption.Always)
             {
@@ -87,7 +86,7 @@ public static class ConfirmationPatches
                 return true;
             }
 
-            __result = Task.FromResult(true);
+            __result = Il2CppTasks.Task.FromResult(true);
             return false;
         }
     }

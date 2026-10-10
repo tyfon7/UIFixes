@@ -17,7 +17,7 @@ public static class HideoutCameraPatches
         new HideoutZoomPatch().Enable();
     }
 
-    // Prevent the hideout camera from moving due to screen-edge when an area is selected or inventory is open
+    // They fixed edge scrolling and panning, but they forgot rotate!
     public class HideoutCameraPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()

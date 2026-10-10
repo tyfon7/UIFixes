@@ -8,7 +8,6 @@ using EFT.UI;
 using EFT.UI.DragAndDrop;
 using EFT.Utilities;
 using HarmonyLib;
-using Il2CppSystem.Collections.Generic;
 using SPTushonka.Reflection.Patching;
 using TMPro;
 using UnityEngine;
@@ -136,7 +135,7 @@ public static class InspectWindowStatsPatches
                 return;
             }
 
-            List<ItemAttribute> deepAttributes = GetDeepAttributes(compareItem, out bool changed);
+            var deepAttributes = GetDeepAttributes(compareItem, out bool changed);
             if (!changed)
             {
                 return;
@@ -336,7 +335,7 @@ public static class InspectWindowStatsPatches
             }
 
             itemUiContext.RegisterView(itemContext);
-            __instance.UI.AddDisposable(() => itemUiContext.UnregisterView(itemContext));
+            __instance.UI.AddOnDispose(() => itemUiContext.UnregisterView(itemContext));
         }
     }
 
@@ -500,7 +499,7 @@ public static class InspectWindowStatsPatches
         textMesh.text = text;
     }
 
-    private static List<ItemAttribute> GetDeepAttributes(Item item, out bool changed)
+    private static Il2CppCollections.List<ItemAttribute> GetDeepAttributes(Item item, out bool changed)
     {
         changed = false;
         var itemAttributes = item.Attributes.Where(a => a.DisplayType.Invoke() == EItemAttributeDisplayType.Compact).ToIl2CppList();
@@ -519,9 +518,9 @@ public static class InspectWindowStatsPatches
         return itemAttributes;
     }
 
-    private static List<ItemAttribute> CombineAttributes(IList<ItemAttribute> first, IList<ItemAttribute> second)
+    private static Il2CppCollections.List<ItemAttribute> CombineAttributes(Il2CppCollections.List<ItemAttribute> first, Il2CppCollections.List<ItemAttribute> second)
     {
-        List<ItemAttribute> result = [];
+        Il2CppCollections.List<ItemAttribute> result = [];
 
         foreach (var id in first.Select(a => a.Id).Union(second.Select(a => a.Id)))
         {

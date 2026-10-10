@@ -17,7 +17,7 @@ namespace UIFixes;
 [BepInDependency("com.bepis.bepinex.configurationmanager", BepInDependency.DependencyFlags.HardDependency)]
 public class Plugin : BasePlugin
 {
-    public static Plugin Instance;
+    public static Plugin Instance { get; private set; }
 
     public override void Load()
     {
@@ -43,6 +43,8 @@ public class Plugin : BasePlugin
         ConfirmDialogKeysPatches.Enable();
         CursorPatches.Enable();
         FocusFleaOfferNumberPatches.Enable();
+        HideoutCameraPatches.Enable();
+        HideoutSearchPatches.Enable();
         InspectWindowStatsPatches.Enable();
         ScrollPatches.Enable();
         SwapPatches.Enable();
@@ -51,16 +53,13 @@ public class Plugin : BasePlugin
 
         NetworkTransactionWatcher.Enable();
         MailPatches.Enable();
-        FixTooltipPatches.Enable();
         QuickAccessPanelPatches.Enable();
-        HideoutSearchPatches.Enable();
         HideoutLevelPatches.Enable();
         InspectWindowResizePatches.Enable();
         StackFirItemsPatches.Enable();
 
         SyncScrollPositionPatches.Enable();
         PlayerModelViewPatches.Enable();
-        WeaponPresetConfirmPatches.Enable();
         WeaponZoomPatches.Enable();
         WeaponPanPatches.Enable();
         WeaponPreviewPatches.Enable();
@@ -97,7 +96,6 @@ public class Plugin : BasePlugin
         ReloadInPlacePatches.Enable();
         BarterOfferPatches.Enable();
         LimitDragPatches.Enable();
-        HideoutCameraPatches.Enable();
         WeaponModdingPatches.Enable();
         TagPatches.Enable();
         TacticalBindsPatches.Enable();

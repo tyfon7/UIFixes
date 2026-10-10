@@ -20,7 +20,7 @@ internal partial class Settings
     // public static ConfigEntry<int> OperationQueueTime { get; set; } // Advanced
     // public static ConfigEntry<int> MailReadQueueTime { get; set; } // Advanced
     // public static ConfigEntry<bool> LimitNonstandardDrags { get; set; } // Advanced
-    // public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
+    public static ConfigEntry<bool> RestoreAsyncScrollPositions { get; set; } // Advanced
     // public static ConfigEntry<bool> RemoveDefaultMagPresetName { get; set; } // Advanced
     // public static ConfigEntry<bool> LoadMagPresetOnBullets { get; set; } // Advanced
     // public static ConfigEntry<bool> ShowGroupInvitePanel { get; set; } // Advanced
@@ -60,7 +60,7 @@ internal partial class Settings
     public static ConfigEntry<int> MouseScrollMultiInRaid { get; set; } // Advanced
 
     // Interface Keybinds
-    // public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SearchKeyBind { get; set; }
     // public static ConfigEntry<bool> SuppressKeybindsInTextbox { get; set; }
 
     // // Item Keybinds
@@ -170,7 +170,7 @@ internal partial class Settings
     // // Hideout
     // public static ConfigEntry<AutoWishlistBehavior> AutoWishlistUpgrades { get; set; }
     // public static ConfigEntry<bool> AutoWishlistCheckFiR { get; set; }
-    // public static ConfigEntry<bool> RememberSearchOnExit { get; set; }
+    public static ConfigEntry<bool> RememberSearchOnExit { get; set; }
 
     // // Weapons
     // public static ConfigEntry<bool> ShowReloadOnInternalMags { get; set; } // Advanced
@@ -282,14 +282,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
-        //     Section.Interface,
-        //     "Restore Async Scroll Positions",
-        //     true,
-        //     new ConfigDescription(
-        //         "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(RestoreAsyncScrollPositions = config.Bind(
+            Section.Interface,
+            "Restore Async Scroll Positions",
+            true,
+            new ConfigDescription(
+                "In scroll views that load content dynamically, scroll down as the content loads to restore old scroll position",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // configEntries.Add(RemoveDefaultMagPresetName = config.Bind(
         //     Section.Interface,
@@ -575,14 +575,14 @@ internal partial class Settings
 
         // Interface Keybinds
 
-        // configEntries.Add(SearchKeyBind = config.Bind(
-        //     Section.InterfaceKeybinds,
-        //     "Highlight Search Box",
-        //     new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
-        //     new ConfigDescription(
-        //         "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(SearchKeyBind = config.Bind(
+            Section.InterfaceKeybinds,
+            "Highlight Search Box",
+            new KeyboardShortcut(KeyCode.F, KeyCode.LeftControl),
+            new ConfigDescription(
+                "Keybind to highlight the search box in hideout crafting, handbook, and flea market",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // configEntries.Add(SuppressKeybindsInTextbox = config.Bind(
         //     Section.InterfaceKeybinds,
@@ -1365,14 +1365,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(RememberSearchOnExit = config.Bind(
-        //     Section.Hideout,
-        //     "Remember Craft Search",
-        //     false,
-        //     new ConfigDescription(
-        //         "Persist the crafting search filter even when you exit that hideout area",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(RememberSearchOnExit = config.Bind(
+            Section.Hideout,
+            "Remember Craft Search",
+            false,
+            new ConfigDescription(
+                "Persist the crafting search filter even when you exit that hideout area",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // configEntries.Add(ShowReloadOnInternalMags = config.Bind(
         //     Section.Weapons,
