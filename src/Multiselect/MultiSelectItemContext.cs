@@ -1,38 +1,53 @@
+using System;
 using EFT.InventoryLogic;
+using Il2CppInterop.Runtime.Attributes;
 
 namespace UIFixes;
 
-public class MultiSelectItemContext : DragItemContext
+public class MultiSelectItemContext : IDisposable
 {
-    public MultiSelectItemContext(ItemContext itemContext, ItemRotation rotation) : base(itemContext, rotation)
+    private readonly DragItemContext _context;
+
+    public DragItemContext ItemContext => _context;
+    public Item Item => _context.Item;
+    public ItemAddress ItemAddress => _context.ItemAddress;
+
+    public MultiSelectItemContext(ItemContext itemContext, ItemRotation rotation)
     {
+        _context = new DragItemContext(itemContext, rotation);
+
         // Adjust event handlers
-        if (Source != null)
+        if (_context.Source != null)
         {
             // Listen for underlying context being disposed, it might mean the item is gone (merged, destroyed, etc)
-            Source.OnDisposed += OnParentDispose;
+            _context.Source.OnDisposed += OnParentDispose;
             // This serves no purpose and causes stack overflows
-            Source.OnCloseDependentWindow -= CloseDependentWindows;
+            // TODO: Still? _context.Source.OnCloseDependentWindow -= CloseDependentWindows;
+
+            // override the valid target containers that CanQuickMoveTo returns
+            _context._availableQuickMoveTargetContainer = _context.Source._availableQuickMoveTargetContainer;
         }
     }
 
+    public static implicit operator DragItemContext(MultiSelectItemContext msic) => msic.ItemContext;
+
     public MultiSelectItemContext Refresh()
     {
-        return Item == Source.Item ? new MultiSelectItemContext(Source, ItemRotation) : null;
+        return Item == _context.Source.Item ? new MultiSelectItemContext(_context.Source, _context.ItemRotation) : null;
     }
 
     public void UpdateDragContext(DragItemContext itemContext)
     {
-        SetPosition(itemContext.CursorPosition, itemContext.ItemPosition);
-        ItemRotation = itemContext.ItemRotation;
+        _context.SetPosition(itemContext.CursorPosition, itemContext.ItemPosition);
+        _context.ItemRotation = itemContext.ItemRotation;
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
-        base.Dispose();
-        if (Source != null)
+        _context.Dispose();
+        if (_context.Source != null)
         {
-            Source.OnDisposed -= OnParentDispose;
+            _context.Source.OnDisposed -= OnParentDispose;
         }
     }
 
@@ -45,14 +60,5 @@ public class MultiSelectItemContext : DragItemContext
             // This item was entirely merged away, or went into a magazine
             MultiSelect.Deselect(this);
         }
-    }
-
-    // used by ItemUiContext.QuickFindAppropriatePlace, the one that picks a container, i.e. ctrl-click
-    // DragItemContext (drag) defaults to None, but we want what the underlying item allows
-    public override bool CanQuickMoveTo(ETargetContainer targetContainer)
-    {
-        return Source != null
-            ? Source.CanQuickMoveTo(targetContainer)
-            : base.CanQuickMoveTo(targetContainer);
     }
 }

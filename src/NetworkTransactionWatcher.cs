@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 using Comfort.Common;
 using EFT.InventoryLogic;
 using HarmonyLib;
@@ -32,12 +31,19 @@ public class NetworkTransactionWatcher : IDisposable
     private Callback _innerCallback;
     private readonly TaskCompletionSource _source = new();
 
-    public Task Task => _source.Task;
+    public Il2CppTasks.Task Task => _source.Task;
 
     protected void Watch(ref Callback callback)
     {
         _innerCallback = callback;
-        callback = Callback;
+
+        Action<IResult> newCallback = result =>
+        {
+            _innerCallback?.Invoke(result);
+            _source.TryComplete();
+        };
+
+        callback = newCallback;
     }
 
     public bool Started()
@@ -57,12 +63,6 @@ public class NetworkTransactionWatcher : IDisposable
 
             _source.TrySetCanceled();
         }
-    }
-
-    private void Callback(IResult result)
-    {
-        _innerCallback?.Invoke(result);
-        _source.TryComplete();
     }
 
     public class NetworkTransactionPatch : ModulePatch

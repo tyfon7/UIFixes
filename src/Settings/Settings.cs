@@ -81,23 +81,23 @@ internal partial class Settings
     // public static ConfigEntry<KeyboardShortcut> AddOfferKeyBind { get; set; }
     // public static ConfigEntry<KeyboardShortcut> PinKeyBind { get; set; }
     // public static ConfigEntry<KeyboardShortcut> LockKeyBind { get; set; }
-    // public static ConfigEntry<KeyboardShortcut> SelectAllOfTypeKeyBind { get; set; }
+    public static ConfigEntry<KeyboardShortcut> SelectAllOfTypeKeyBind { get; set; }
     // public static ConfigEntry<KeyboardShortcut> SortingTableKeyBind { get; set; }
     // public static ConfigEntry<KeyboardShortcut> RotateKeyBind { get; set; }
-    // public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
+    public static ConfigEntry<bool> DefaultSortingTableBind { get; set; } // Advanced
     // public static ConfigEntry<bool> ItemContextBlocksTextInputs { get; set; } // Advanced
 
     // // Gameplay Keybinds
     // public static ConfigEntry<ModifierKey> TacticalModeModifier { get; set; }
 
     // // Multiselect
-    // public static ConfigEntry<bool> EnableMultiSelect { get; set; }
-    // public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
-    // public static ConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
-    // public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
-    // public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
-    // public static ConfigEntry<bool> MultiQuickMoveMerge { get; set; }
-    // public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
+    public static ConfigEntry<bool> EnableMultiSelect { get; set; }
+    public static ConfigEntry<bool> EnableMultiSelectInRaid { get; set; } // Advanced
+    public static ConfigEntry<bool> EnableMultiClick { get; set; } // Advanced
+    public static ConfigEntry<KeyboardShortcut> SelectionBoxKey { get; set; }
+    public static ConfigEntry<MultiSelectStrategy> MultiSelectStrat { get; set; }
+    public static ConfigEntry<bool> MultiQuickMoveMerge { get; set; }
+    public static ConfigEntry<bool> ShowMultiSelectDebug { get; set; } // Advanced
 
     // ItemSwapping
     public static ConfigEntry<bool> SwapItems { get; set; }
@@ -747,14 +747,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(SelectAllOfTypeKeyBind = config.Bind(
-        //     Section.ItemKeybinds,
-        //     "Select All of Type",
-        //     new KeyboardShortcut(KeyCode.A, KeyCode.LeftControl),
-        //     new ConfigDescription(
-        //         "Keybind to select all items of the same type in the current container (requires Multiselect)",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(SelectAllOfTypeKeyBind = config.Bind(
+            Section.ItemKeybinds,
+            "Select All of Type",
+            new KeyboardShortcut(KeyCode.A, KeyCode.LeftControl),
+            new ConfigDescription(
+                "Keybind to select all items of the same type in the current container (requires Multiselect)",
+                null,
+                new ConfigurationManagerAttributes { })));
 
         // configEntries.Add(SortingTableKeyBind = config.Bind(
         //     Section.ItemKeybinds,
@@ -774,14 +774,14 @@ internal partial class Settings
         //         null,
         //         new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(DefaultSortingTableBind = config.Bind(
-        //     Section.ItemKeybinds,
-        //     "Shift-Click to Sorting Table",
-        //     true,
-        //     new ConfigDescription(
-        //         "This setting lets you enable/disable the default Tarkov behavior of shift-clicking items to transfer them to the sorting table.",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(DefaultSortingTableBind = config.Bind(
+            Section.ItemKeybinds,
+            "Shift-Click to Sorting Table",
+            true,
+            new ConfigDescription(
+                "This setting lets you enable/disable the default Tarkov behavior of shift-clicking items to transfer them to the sorting table.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // configEntries.Add(ItemContextBlocksTextInputs = config.Bind(
         //    Section.ItemKeybinds,
@@ -803,69 +803,69 @@ internal partial class Settings
         //         new ConfigurationManagerAttributes { })));
 
         // // Multiselect
-        // configEntries.Add(EnableMultiSelect = config.Bind(
-        //     Section.MultiSelect,
-        //     "Enable Multiselect",
-        //     true,
-        //     new ConfigDescription(
-        //         "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(EnableMultiSelect = config.Bind(
+            Section.MultiSelect,
+            "Enable Multiselect",
+            true,
+            new ConfigDescription(
+                "Enable multiselect via Shift-click and drag-to-select. This cannot be used together with Auto-open Sorting Table",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(EnableMultiSelectInRaid = config.Bind(
-        //     Section.MultiSelect,
-        //     "Enable Multiselect In Raid",
-        //     true,
+        configEntries.Add(EnableMultiSelectInRaid = config.Bind(
+            Section.MultiSelect,
+            "Enable Multiselect In Raid",
+            true,
 
-        //     new ConfigDescription(
-        //         "Enable multiselect functionality in raid.",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+            new ConfigDescription(
+                "Enable multiselect functionality in raid.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // configEntries.Add(EnableMultiClick = config.Bind(
-        //     Section.MultiSelect,
-        //     "Enable Multiselect with Shift-Click",
-        //     true,
-        //     new ConfigDescription(
-        //         "Add items to the selection by shift-clicking them. If you disable this, the only way to multiselect is with the selection box",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(EnableMultiClick = config.Bind(
+            Section.MultiSelect,
+            "Enable Multiselect with Shift-Click",
+            true,
+            new ConfigDescription(
+                "Add items to the selection by shift-clicking them. If you disable this, the only way to multiselect is with the selection box",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
-        // configEntries.Add(SelectionBoxKey = config.Bind(
-        //     Section.MultiSelect,
-        //     "Selection Box Key",
-        //     new KeyboardShortcut(KeyCode.Mouse0),
-        //     new ConfigDescription(
-        //         "Mouse button or keyboard key to hold while dragging to create a selection box. Press Reset to use Mouse0 (left mouse button)",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(SelectionBoxKey = config.Bind(
+            Section.MultiSelect,
+            "Selection Box Key",
+            new KeyboardShortcut(KeyCode.Mouse0),
+            new ConfigDescription(
+                "Mouse button or keyboard key to hold while dragging to create a selection box. Press Reset to use Mouse0 (left mouse button)",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(MultiSelectStrat = config.Bind(
-        //     Section.MultiSelect,
-        //     "Multiselect Item Placement",
-        //     MultiSelectStrategy.OriginalSpacing,
-        //     new ConfigDescription(
-        //         "Controls where multiselected items are placed, relative to the item being dragged",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(MultiSelectStrat = config.Bind(
+            Section.MultiSelect,
+            "Multiselect Item Placement",
+            MultiSelectStrategy.OriginalSpacing,
+            new ConfigDescription(
+                "Controls where multiselected items are placed, relative to the item being dragged",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(MultiQuickMoveMerge = config.Bind(
-        //     Section.MultiSelect,
-        //     "Merge stacks on quick move",
-        //     true,
-        //     new ConfigDescription(
-        //         "Controls whether ctrl-clicking will merge stackable items if possible",
-        //         null,
-        //         new ConfigurationManagerAttributes { })));
+        configEntries.Add(MultiQuickMoveMerge = config.Bind(
+            Section.MultiSelect,
+            "Merge stacks on quick move",
+            true,
+            new ConfigDescription(
+                "Controls whether ctrl-clicking will merge stackable items if possible",
+                null,
+                new ConfigurationManagerAttributes { })));
 
-        // configEntries.Add(ShowMultiSelectDebug = config.Bind(
-        //     Section.MultiSelect,
-        //     "Show Multiselect Debug",
-        //     false,
-        //     new ConfigDescription(
-        //         "Enable multi-select debugging display",
-        //         null,
-        //         new ConfigurationManagerAttributes { IsAdvanced = true })));
+        configEntries.Add(ShowMultiSelectDebug = config.Bind(
+            Section.MultiSelect,
+            "Show Multiselect Debug",
+            false,
+            new ConfigDescription(
+                "Enable multi-select debugging display",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true })));
 
         // Item Swapping
         configEntries.Add(SwapItems = config.Bind(

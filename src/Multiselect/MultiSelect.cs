@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Comfort.Common;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using Il2CppInterop.Runtime;
 using TMPro;
 using UnityEngine;
 
@@ -18,9 +20,9 @@ public class MultiSelect
     private static readonly Dictionary<MultiSelectItemContext, GridItemView> SelectedItems = [];
     private static readonly Dictionary<MultiSelectItemContext, GridItemView> SecondaryItems = [];
 
-    public static MultiSelectItemContextTaskSerializer LoadUnloadSerializer { get; private set; }
+    public static TaskSerializer<MultiSelectItemContext> LoadUnloadSerializer { get; private set; }
 
-    public static MultiSelectItemContextTaskSerializer TaskSerializer { get; private set; }
+    public static TaskSerializer<MultiSelectItemContext> TaskSerializer { get; private set; }
 
     public static bool Enabled
     {
@@ -228,29 +230,27 @@ public class MultiSelect
         SecondaryItems.Clear();
     }
 
-    public static MultiSelectItemContextTaskSerializer CreateTaskSerializer(GameObject gameObject)
+    public static TaskSerializer<MultiSelectItemContext> CreateTaskSerializer(GameObject gameObject)
     {
-        // I never null this out, but for once Unity's weird behavior of overriding == null is useful
-        if (TaskSerializer != null)
+        if (TaskSerializer != null && !TaskSerializer.IsCompleted())
         {
-            Plugin.Instance.Logger.LogError("Multiple multi-select task serializers active!");
+            Plugin.Instance.Log.LogError("Multiple multi-select task serializers active!");
         }
 
-        TaskSerializer = gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        TaskSerializer = new TaskSerializer<MultiSelectItemContext>(gameObject);
         return TaskSerializer;
     }
 
-    private static MultiSelectItemContextTaskSerializer CreateLoadUnloadSerializer(GameObject gameObject)
+    private static TaskSerializer<MultiSelectItemContext> CreateLoadUnloadSerializer(GameObject gameObject)
     {
-        // I never null this out, but for once Unity's weird behavior of overriding == null is useful
-        if (LoadUnloadSerializer != null)
+        if (LoadUnloadSerializer != null && !LoadUnloadSerializer.IsCompleted())
         {
-            Plugin.Instance.Logger.LogDebug("Load/Unload serializer active, cancelling old one");
+            Plugin.Instance.Log.LogDebug("Load/Unload serializer active, cancelling old one");
             LoadUnloadSerializer.Cancel();
             LoadUnloadSerializer = null;
         }
 
-        LoadUnloadSerializer = gameObject.AddComponent<MultiSelectItemContextTaskSerializer>();
+        LoadUnloadSerializer = new TaskSerializer<MultiSelectItemContext>(gameObject);
         return LoadUnloadSerializer;
     }
 
@@ -308,7 +308,7 @@ public class MultiSelect
     {
         if (draggedItemView != null && Count > 1)
         {
-            GameObject textOverlay = new("MultiSelectText", [typeof(RectTransform), typeof(TextMeshProUGUI)]);
+            GameObject textOverlay = new("MultiSelectText", [Il2CppType.Of<RectTransform>(), Il2CppType.Of<TextMeshProUGUI>()]);
             textOverlay.transform.SetParent(draggedItemView.transform, false);
             textOverlay.transform.SetAsLastSibling();
             textOverlay.SetActive(true);
@@ -366,7 +366,7 @@ public class MultiSelect
             createdContext = true;
         }
 
-        var contextInteractions = itemUiContext.GetItemContextInteractions(sourceContext, null);
+        var contextInteractions = itemUiContext.GetItemContextInteractions(sourceContext);
         var result = contextInteractions.IsInteractionAvailable(interaction);
 
         if (createdContext)
@@ -396,7 +396,7 @@ public class MultiSelect
                     continue;
                 }
 
-                var itemViews = gridView.R().ItemViews;
+                var itemViews = gridView.ItemViews;
                 if (itemViews.TryGetValue(item.Id, out ItemView itemView) && itemView is GridItemView gridItemView)
                 {
                     Select(gridItemView);
@@ -440,7 +440,7 @@ public class MultiSelect
         ApplyAll(itemUiContext, EItemInfoButton.Unload, context => itemUiContext.UnloadWeapon(context.Item as Weapon), allOrNothing);
     }
 
-    public static Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
+    public static Il2CppTasks.Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
     {
         StopLoading(true);
         if (!allOrNothing || InteractionCount(EItemInfoButton.LoadAmmo, itemUiContext) == Count)
@@ -453,13 +453,14 @@ public class MultiSelect
                 itemContext =>
                 {
                     IgnoreStopLoading = true;
-                    return itemUiContext.LoadAmmoByType(itemContext.Item as Magazine, ammoTemplateId, itemContext.UpdateView);
+                    Action callback = itemContext.ItemContext.UpdateView;
+                    return itemUiContext.LoadAmmoByType(itemContext.Item as Magazine, ammoTemplateId, callback);
                 });
 
             itemUiContext.Tooltip?.Close();
         }
 
-        return Task.CompletedTask;
+        return Il2CppTasks.Task.CompletedTask;
     }
 
     public static void UnloadAmmoAll(ItemUiContext itemUiContext, bool allOrNothing)
@@ -495,7 +496,7 @@ public class MultiSelect
         ApplyAll(itemUiContext, EItemInfoButton.Uninstall, context => itemUiContext.Uninstall(context), allOrNothing);
     }
 
-    private static void ApplyAll(ItemUiContext itemUiContext, EItemInfoButton interaction, Func<MultiSelectItemContext, Task> action, bool allOrNothing)
+    private static void ApplyAll(ItemUiContext itemUiContext, EItemInfoButton interaction, Func<MultiSelectItemContext, Il2CppTasks.Task> action, bool allOrNothing)
     {
         if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
         {
@@ -612,9 +613,6 @@ public class MultiSelect
     }
 }
 
-// Specific type of TaskSerializer because Unity can't understand generics
-public class MultiSelectItemContextTaskSerializer : TaskSerializer<MultiSelectItemContext> { }
-
 public static class MultiSelectExtensions
 {
     public static bool IsSelectable(this ItemView itemView)
@@ -635,7 +633,7 @@ public static class MultiSelectExtensions
         // You can't multi-select trader's items or items being sold
         if (itemView is TradingItemView tradingItemView)
         {
-            if (itemView is not TradingPlayerItemView || tradingItemView.R().IsBeingSold)
+            if (itemView is not TradingPlayerItemView || tradingItemView._isBeingSold.Value)
             {
                 return false;
             }
@@ -658,6 +656,19 @@ public static class MultiSelectExtensions
     }
 
     public static IEnumerable<T> RepeatUntilFull<T>(this T itemContext) where T : ItemContext
+    {
+        if (itemContext.Item is Magazine magazine)
+        {
+            int ammoCount = -1;
+            while (magazine.Count > ammoCount && magazine.Count < magazine.MaxCount)
+            {
+                ammoCount = magazine.Count;
+                yield return itemContext;
+            }
+        }
+    }
+
+    public static IEnumerable<MultiSelectItemContext> RepeatUntilFull(this MultiSelectItemContext itemContext)
     {
         if (itemContext.Item is Magazine magazine)
         {

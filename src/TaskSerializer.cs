@@ -1,39 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
 
 namespace UIFixes;
 
-public class TaskSerializerBase : MonoBehaviour
+public class TaskSerializer<T>
 {
     protected static int GlobalDepth = 0;
-}
 
-public class TaskSerializer<T, TaskT> : TaskSerializerBase
-{
+    private TaskSerializerBehavior _behavior;
     private int _depth;
-    private Func<T, Task<TaskT>> _func;
-    private Func<T, TaskT, bool> _canContinue;
+    private Func<T, Il2CppTasks.Task> _func;
+    private Func<T, bool> _canContinue;
     private IEnumerator<T> _enumerator;
-    private Task<TaskT> _currentTask;
+    private Il2CppTasks.Task _currentTask;
     private TaskCompletionSource _totalTask;
 
-    public Task Initialize(IEnumerable<T> items, Func<T, Task<TaskT>> func, Func<T, TaskT, bool> canContinue = null)
+    public TaskSerializer(GameObject gameObject)
     {
+        if (gameObject == null)
+        {
+            throw new NullReferenceException("gameObject passed to TaskSerializer is null");
+        }
+
+        _behavior = gameObject.AddComponent<TaskSerializerBehavior>();
+        _behavior.OnLateUpdate = OnLateUpdate;
+        _behavior.OnOnDisable = OnOnDisable;
+    }
+
+    public Il2CppTasks.Task Initialize(IEnumerable<T> items, Func<T, Il2CppTasks.Task> func, Func<T, bool> canContinue = null)
+    {
+        if (_behavior == null)
+        {
+            throw new InvalidOperationException("This TaskSerializer is no longer usable");
+        }
+
         _enumerator = items.GetEnumerator();
         _func = func;
         _canContinue = canContinue;
 
         _currentTask = null;
-        _totalTask = new TaskCompletionSource();
+        _totalTask = new();
 
         ++GlobalDepth;
         _depth = GlobalDepth;
 
-        LateUpdate();
+        OnLateUpdate();
 
         return _totalTask.Task;
+    }
+
+    public Il2CppTasks.Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
+    {
+        Il2CppTasks.Task Func(T t)
+        {
+            action(t);
+            return Il2CppTasks.Task.CompletedTask;
+        }
+
+        return Initialize(items, Func, canContinue != null ? (x) => canContinue(x) : null);
     }
 
     public void Cancel()
@@ -45,12 +71,12 @@ public class TaskSerializer<T, TaskT> : TaskSerializerBase
         }
     }
 
-    public void OnDisable()
+    public bool IsCompleted()
     {
-        Cancel();
+        return _totalTask.Task.IsCompleted;
     }
 
-    public void LateUpdate()
+    private void OnLateUpdate()
     {
         if (_totalTask.Task.IsCompleted)
         {
@@ -76,7 +102,7 @@ public class TaskSerializer<T, TaskT> : TaskSerializerBase
                 return;
             }
 
-            if (_canContinue != null && !_canContinue(_enumerator.Current, _currentTask.Result))
+            if (_canContinue != null && !_canContinue(_enumerator.Current))
             {
                 return;
             }
@@ -92,44 +118,30 @@ public class TaskSerializer<T, TaskT> : TaskSerializerBase
         }
     }
 
+    private void OnOnDisable()
+    {
+        Complete();
+    }
+
     private void Complete()
     {
         _totalTask.TryComplete();
         --GlobalDepth;
         _func = null;
-        Destroy(this);
+        UnityEngine.Object.Destroy(_behavior);
+        _behavior = null;
     }
 }
 
-public class TaskSerializer<T> : TaskSerializer<T, bool>
+public class TaskSerializerBehavior : MonoBehaviour
 {
-    public Task Initialize(IEnumerable<T> items, Action<T> action, Func<T, bool> canContinue = null)
-    {
-        Task<bool> Func(T t)
-        {
-            action(t);
-            return Task.FromResult(true);
-        }
+    [HideFromIl2Cpp]
+    public Action OnLateUpdate { get; set; }
 
-        return base.Initialize(items, Func, canContinue != null ? (x, _) => canContinue(x) : null);
-    }
+    [HideFromIl2Cpp]
+    public Action OnOnDisable { get; set; }
 
-    public Task Initialize(IEnumerable<T> items, Func<T, Task> func, Func<T, bool> canContinue = null)
-    {
-        async Task<bool> Wrapper(T t)
-        {
-            try
-            {
-                await func(t);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+    private void LateUpdate() => OnLateUpdate?.Invoke();
 
-        return base.Initialize(items, Wrapper, canContinue != null ? (x, _) => canContinue(x) : null);
-    }
-
+    private void OnDisable() => OnOnDisable?.Invoke();
 }

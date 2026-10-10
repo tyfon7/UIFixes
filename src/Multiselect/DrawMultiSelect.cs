@@ -5,6 +5,7 @@ using Comfort.Common;
 using EFT.UI;
 using EFT.UI.Chat;
 using EFT.UI.DragAndDrop;
+using Il2CppInterop.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -27,11 +28,11 @@ public class DrawMultiSelect : MonoBehaviour
 
     private static readonly Vector2 Deadzone = new(5f, 5f);
 
-    private readonly List<Type> _blockedTypes = [];
+    private readonly List<Il2CppSystem.Type> _blockedTypes = [];
 
     public void Block<T>()
     {
-        _blockedTypes.Add(typeof(T));
+        _blockedTypes.Add(Il2CppType.Of<T>());
     }
 
     public void Start()
@@ -193,11 +194,11 @@ public class DrawMultiSelect : MonoBehaviour
             position = Input.mousePosition
         };
 
-        List<RaycastResult> results = [];
+        Il2CppCollections.List<RaycastResult> results = [];
         _preloaderRaycaster.Raycast(eventData, results); // preload objects are on top, so check that first
         _localRaycaster.Raycast(eventData, results);
 
-        return results.FirstOrDefault().gameObject;
+        return results.FirstOrDefault()?.gameObject;
     }
 
     private bool IsClickable(GameObject mouseTarget)
@@ -216,8 +217,8 @@ public class DrawMultiSelect : MonoBehaviour
 
         // When item are being searched, a search icon is on top of them and intercepts the raycast
         var clickables = allParents
-            .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler || c.name == "Search Icon")
-            .Where(c => c is not EmptySlotMenuTrigger); // ignore empty slots that are right-clickable due to UIFixes
+            .Where(c => c is IPointerClickHandler || c is IPointerDownHandler || c is IPointerUpHandler || c.name == "Search Icon");
+        // TODO .Where(c => c is not EmptySlotMenuTrigger); // ignore empty slots that are right-clickable due to UIFixes
 
         // Windows are clickable to focus them, but that shouldn't block selection
         var windows = allParents
@@ -257,7 +258,7 @@ public class DrawMultiSelect : MonoBehaviour
             return false;
         }
 
-        foreach (Type type in _blockedTypes)
+        foreach (var type in _blockedTypes)
         {
             if (mouseTarget.GetComponentInParent(type) != null)
             {
@@ -276,7 +277,7 @@ public class DrawMultiSelect : MonoBehaviour
         float widthMargin = 0.1f * (itemRect.xMax - itemRect.xMin);
         float heightMargin = 0.1f * (itemRect.yMax - itemRect.yMin);
 
-        List<RaycastResult> raycastResults = [];
+        Il2CppCollections.List<RaycastResult> raycastResults = [];
 
         // Lower left
         eventData.position = new Vector2(itemRect.xMin + widthMargin, itemRect.yMin + heightMargin);

@@ -78,11 +78,10 @@ public static class SwapPatches
         }
 
         // Haha no
-        // TODO: Multiselect
-        // if (MultiSelect.Active)
-        // {
-        //     return false;
-        // }
+        if (MultiSelect.Active)
+        {
+            return false;
+        }
 
         if (BlockSwaps)
         {
@@ -782,7 +781,7 @@ public static class SwapPatches
         [PatchPostfix]
         public static void Postfix(Weapon __instance, ItemController itemController, Item item, bool simulate, ref OperationResult __result)
         {
-            if (!Settings.SwapItems.Value) // TODO: Multiselect: || MultiSelect.Active)
+            if (!Settings.SwapItems.Value || MultiSelect.Active)
             {
                 return;
             }

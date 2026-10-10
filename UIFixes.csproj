@@ -23,6 +23,9 @@
     <Compile Include="src\ConfigurationManagerAttributes.cs" />
     <Compile Include="src\GlobalUsings.cs" />
     <Compile Include="src\Il2CppExtensions.cs" />
+    <Compile Include="src\MultiSelect\*" />
+    <Compile Include="src\NetworkTransactionWatcher.cs" />
+    <Compile Include="src\TaskSerializer.cs" />
     <Compile Include="src\SearchKeyListener.cs" />
     <Compile Include="src\Settings\Settings.cs" />
     <Compile Include="src\Settings\SettingExtensions.cs" />
@@ -33,10 +36,11 @@
     <Compile Include="src\Patches\ConfirmationPatches.cs" />
     <Compile Include="src\Patches\ConfirmDialogKeysPatches.cs" />
     <Compile Include="src\Patches\CursorPatches.cs" />
+    <Compile Include="src\Patches\FocusFleaOfferNumberPatches.cs" />
     <Compile Include="src\Patches\HideoutCameraPatches.cs" />
     <Compile Include="src\Patches\HideoutSearchPatches.cs" />
     <Compile Include="src\Patches\InspectWindowStatsPatches.cs" />
-    <Compile Include="src\Patches\FocusFleaOfferNumberPatches.cs" />
+    <Compile Include="src\Patches\MultiSelectPatches.cs" />
     <Compile Include="src\Patches\ScrollPatches.cs" />
     <Compile Include="src\Patches\SwapPatches.cs" />
   </ItemGroup>
@@ -55,10 +59,13 @@
     <Reference Include="Comfort.Unity" />
     <Reference Include="CommonExtensions" />
     <Reference Include="ConfigurationManager" />
+    <Reference Include="CoreServices" />
     <Reference Include="Diz.Binding" />
+    <Reference Include="DOTween" />
     <!-- <Reference Include="Fika.Core" /> -->
     <Reference Include="ItemComponent.Types" />
     <Reference Include="Newtonsoft.Json" />
+    <Reference Include="SemanticVersioning" />
     <Reference Include="Sirenix.Serialization" />
     <Reference Include="Unity.TextMeshPro" />
     <Reference Include="UnityEngine" />

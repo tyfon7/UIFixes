@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using EFT.InventoryLogic;
 using EFT.UI;
 
@@ -20,12 +19,10 @@ public static class MultiSelectController
         return MultiSelect.SortedItemContexts().Select(ic => ic.Item);
     }
 
-    public static Task Apply(Func<Item, Task> func, ItemUiContext itemUiContext = null)
+    public static Il2CppTasks.Task Apply(Func<Item, Il2CppTasks.Task> func, ItemUiContext itemUiContext = null)
     {
         itemUiContext ??= ItemUiContext.Instance;
-        var taskSerializer = itemUiContext.gameObject.AddComponent<ItemTaskSerializer>();
+        var taskSerializer = new TaskSerializer<Item>(itemUiContext.gameObject);
         return taskSerializer.Initialize(GetItems(), func);
     }
 }
-
-public class ItemTaskSerializer : TaskSerializer<Item> { }

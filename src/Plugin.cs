@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Unity.IL2CPP;
@@ -26,6 +27,7 @@ public class Plugin : BasePlugin
         // TODO: needed this for some logging, check if I still need it later
         AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(LogUnhandled);
         TaskScheduler.UnobservedTaskException += new EventHandler<UnobservedTaskExceptionEventArgs>(LogUnobserved);
+
         Il2CppInjection.RegisterAll(typeof(Plugin).Assembly, Log);
 
         Settings.Init(Config);
@@ -48,6 +50,8 @@ public class Plugin : BasePlugin
         InspectWindowStatsPatches.Enable();
         ScrollPatches.Enable();
         SwapPatches.Enable();
+
+        MultiSelectPatches.Enable();
 
         /* Disabled for 5.0
 
@@ -81,7 +85,6 @@ public class Plugin : BasePlugin
         ContextMenuShortcutPatches.Enable();
         OpenSortingTablePatches.Enable();
         LoadAmmoInRaidPatches.Enable();
-        MultiSelectPatches.Enable();
         LoadMultipleMagazinesPatches.Enable();
         UnloadAmmoPatches.Enable();
         FixTraderControllerPatches.Enable();
@@ -129,7 +132,7 @@ public class Plugin : BasePlugin
         ServicesPatches.Enable();
         */
 
-        // CheckForOldInterop();
+        CheckForOldInterop();
     }
 
     public static bool InRaid()
@@ -145,15 +148,15 @@ public class Plugin : BasePlugin
             EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 
-    // private void CheckForOldInterop()
-    // {
-    //     var pluginsWithOldDependency = Chainloader.PluginInfos.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
-    //     if (pluginsWithOldDependency.Any())
-    //     {
-    //         var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
-    //         Log.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
-    //     }
-    // }
+    private void CheckForOldInterop()
+    {
+        var pluginsWithOldDependency = IL2CPPChainloader.Instance.Plugins.Values.Where(p => p.Dependencies.Any(d => d.DependencyGUID == "Tyfon.UIFixes"));
+        if (pluginsWithOldDependency.Any())
+        {
+            var names = string.Join(",", [.. pluginsWithOldDependency.Select(p => p.Metadata.Name)]);
+            Log.LogWarning($"The following client mods depend on an old version of UI Fixes, and need to update their dependency GUID to 'com.tyfon.uifixes': {names}");
+        }
+    }
 
     /* Interop disabled for 5.0
 
