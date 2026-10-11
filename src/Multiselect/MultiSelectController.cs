@@ -16,7 +16,7 @@ public static class MultiSelectController
 
     public static IEnumerable<Item> GetItems()
     {
-        return MultiSelect.SortedItemContexts().Select(ic => ic.Item);
+        return MultiSelect.SortedItems().Select(i => i.Item);
     }
 
     public static Il2CppTasks.Task Apply(Func<Item, Il2CppTasks.Task> func, ItemUiContext itemUiContext = null)

@@ -1,18 +1,17 @@
 using System;
 using EFT.InventoryLogic;
-using Il2CppInterop.Runtime.Attributes;
 
 namespace UIFixes;
 
-public class MultiSelectItemContext : IDisposable
+public class MultiSelectItem : IDisposable
 {
     private readonly DragItemContext _context;
 
-    public DragItemContext ItemContext => _context;
+    public DragItemContext Context => _context;
     public Item Item => _context.Item;
-    public ItemAddress ItemAddress => _context.ItemAddress;
+    public ItemAddress Address => _context.ItemAddress;
 
-    public MultiSelectItemContext(ItemContext itemContext, ItemRotation rotation)
+    public MultiSelectItem(ItemContext itemContext, ItemRotation rotation)
     {
         _context = new DragItemContext(itemContext, rotation);
 
@@ -29,11 +28,9 @@ public class MultiSelectItemContext : IDisposable
         }
     }
 
-    public static implicit operator DragItemContext(MultiSelectItemContext msic) => msic.ItemContext;
-
-    public MultiSelectItemContext Refresh()
+    public MultiSelectItem Refresh()
     {
-        return Item == _context.Source.Item ? new MultiSelectItemContext(_context.Source, _context.ItemRotation) : null;
+        return Item == _context.Source.Item ? new MultiSelectItem(_context.Source, _context.ItemRotation) : null;
     }
 
     public void UpdateDragContext(DragItemContext itemContext)

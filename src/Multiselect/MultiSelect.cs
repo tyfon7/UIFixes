@@ -17,12 +17,12 @@ public class MultiSelect
     private static GameObject SelectedMarkTemplate = null;
     private static GameObject SelectedBackgroundTemplate = null;
 
-    private static readonly Dictionary<MultiSelectItemContext, GridItemView> SelectedItems = [];
-    private static readonly Dictionary<MultiSelectItemContext, GridItemView> SecondaryItems = [];
+    private static readonly Dictionary<MultiSelectItem, GridItemView> Selection = [];
+    private static readonly Dictionary<MultiSelectItem, GridItemView> SecondarySelection = [];
 
-    public static TaskSerializer<MultiSelectItemContext> LoadUnloadSerializer { get; private set; }
+    public static TaskSerializer<MultiSelectItem> LoadUnloadSerializer { get; private set; }
 
-    public static TaskSerializer<MultiSelectItemContext> TaskSerializer { get; private set; }
+    public static TaskSerializer<MultiSelectItem> TaskSerializer { get; private set; }
 
     public static bool Enabled
     {
@@ -54,11 +54,11 @@ public class MultiSelect
 
     public static void Toggle(GridItemView itemView, bool secondary = false)
     {
-        var dictionary = secondary ? SecondaryItems : SelectedItems;
-        MultiSelectItemContext itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
-        if (itemContext != null)
+        var dictionary = secondary ? SecondarySelection : Selection;
+        MultiSelectItem item = dictionary.FirstOrDefault(i => i.Value == itemView).Key;
+        if (item != null)
         {
-            Deselect(itemContext, secondary);
+            Deselect(item, secondary);
         }
         else
         {
@@ -80,61 +80,61 @@ public class MultiSelect
         // }
 
         // ToList() because modifying the collection
-        foreach (MultiSelectItemContext itemContext in SelectedItems.Keys.ToList())
+        foreach (MultiSelectItem item in Selection.Keys.ToList())
         {
-            Deselect(itemContext);
+            Deselect(item);
         }
     }
 
     public static void Select(GridItemView itemView, bool secondary = false)
     {
-        var dictionary = secondary ? SecondaryItems : SelectedItems;
+        var dictionary = secondary ? SecondarySelection : Selection;
 
-        if (itemView.IsSelectable() && !SelectedItems.Any(x => x.Key.Item == itemView.Item) && !SecondaryItems.Any(x => x.Key.Item == itemView.Item))
+        if (itemView.IsSelectable() && !Selection.Any(x => x.Key.Item == itemView.Item) && !SecondarySelection.Any(x => x.Key.Item == itemView.Item))
         {
-            MultiSelectItemContext itemContext = new(itemView.ItemContext, itemView.ItemRotation);
+            MultiSelectItem item = new(itemView.ItemContext, itemView.ItemRotation);
 
             // Subscribe to window closures to deselect
             var windowContext = itemView.GetComponentInParent<GridWindow>()?.WindowContext ?? itemView.GetComponentInParent<InfoWindow>()?.WindowContext;
             if (windowContext != null)
             {
-                windowContext.OnClose += () => Deselect(itemContext);
+                windowContext.OnClose += () => Deselect(item);
             }
 
             // Thread unsafe way of ensuring we don't multiple subscribe. I'm sure it's fine.
-            itemContext.Item.Owner.AddItemEvent -= OnItemAdded;
-            itemContext.Item.Owner.AddItemEvent += OnItemAdded;
+            item.Item.Owner.AddItemEvent -= OnItemAdded;
+            item.Item.Owner.AddItemEvent += OnItemAdded;
 
             // Cache the gridview in case we need it
             MultiGrid.Cache(itemView.Container as GridView);
 
-            dictionary.Add(itemContext, itemView);
+            dictionary.Add(item, itemView);
             ShowSelection(itemView);
         }
     }
 
-    public static void Deselect(MultiSelectItemContext itemContext, bool secondary = false)
+    public static void Deselect(MultiSelectItem item, bool secondary = false)
     {
-        var dictionary = secondary ? SecondaryItems : SelectedItems;
+        var dictionary = secondary ? SecondarySelection : Selection;
 
-        if (dictionary.TryGetValue(itemContext, out GridItemView itemView))
+        if (dictionary.TryGetValue(item, out GridItemView itemView))
         {
             HideSelection(itemView);
         }
 
-        dictionary.Remove(itemContext);
-        itemContext.Dispose();
+        dictionary.Remove(item);
+        item.Dispose();
     }
 
     public static void Deselect(GridItemView itemView, bool secondary = false)
     {
-        var dictionary = secondary ? SecondaryItems : SelectedItems;
+        var dictionary = secondary ? SecondarySelection : Selection;
 
-        MultiSelectItemContext itemContext = dictionary.FirstOrDefault(x => x.Value == itemView).Key;
-        if (itemContext != null)
+        MultiSelectItem item = dictionary.FirstOrDefault(i => i.Value == itemView).Key;
+        if (item != null)
         {
-            dictionary.Remove(itemContext);
-            itemContext.Dispose();
+            dictionary.Remove(item);
+            item.Dispose();
             HideSelection(itemView);
         }
     }
@@ -143,10 +143,10 @@ public class MultiSelect
     {
         CombineSecondary();
 
-        MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Value == itemView).Key;
-        if (itemContext != null)
+        MultiSelectItem item = Selection.FirstOrDefault(x => x.Value == itemView).Key;
+        if (item != null)
         {
-            SelectedItems[itemContext] = null;
+            Selection[item] = null;
             HideSelection(itemView);
         }
     }
@@ -160,21 +160,21 @@ public class MultiSelect
 
         CombineSecondary();
 
-        MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == itemView.Item).Key;
-        if (itemContext != null)
+        MultiSelectItem item = Selection.FirstOrDefault(i => i.Key.Item == itemView.Item).Key;
+        if (item != null)
         {
             // Refresh the context. Note that the address might still be old
-            Deselect(itemContext);
+            Deselect(item);
             Select(itemView);
         }
     }
 
     public static void OnItemLocked(Item item)
     {
-        MultiSelectItemContext itemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == item).Key;
-        if (itemContext != null)
+        MultiSelectItem msi = Selection.FirstOrDefault(i => i.Key.Item == item).Key;
+        if (msi != null)
         {
-            Deselect(itemContext);
+            Deselect(msi);
         }
     }
 
@@ -189,29 +189,29 @@ public class MultiSelect
 
         CombineSecondary();
 
-        MultiSelectItemContext oldItemContext = SelectedItems.FirstOrDefault(x => x.Key.Item == eventArgs.Item).Key;
-        if (oldItemContext != null)
+        MultiSelectItem oldItem = Selection.FirstOrDefault(x => x.Key.Item == eventArgs.Item).Key;
+        if (oldItem != null)
         {
-            MultiSelectItemContext newContext = oldItemContext.Refresh();
-            if (newContext != null)
+            MultiSelectItem newItem = oldItem.Refresh();
+            if (newItem != null)
             {
-                SelectedItems.Add(newContext, SelectedItems[oldItemContext]);
+                Selection.Add(newItem, Selection[oldItem]);
             }
 
-            SelectedItems.Remove(oldItemContext);
-            oldItemContext.Dispose();
+            Selection.Remove(oldItem);
+            oldItem.Dispose();
         }
     }
 
     public static bool IsSelected(GridItemView itemView, bool secondary = false)
     {
-        var dictionary = secondary ? SecondaryItems : SelectedItems;
-        return dictionary.Any(x => x.Key.Item == itemView.Item);
+        var dictionary = secondary ? SecondarySelection : Selection;
+        return dictionary.Any(i => i.Key.Item == itemView.Item);
     }
 
     public static void Prune()
     {
-        foreach (var entry in SelectedItems.ToList())
+        foreach (var entry in Selection.ToList())
         {
             if (entry.Value == null)
             {
@@ -222,26 +222,26 @@ public class MultiSelect
 
     public static void CombineSecondary()
     {
-        foreach (var entry in SecondaryItems)
+        foreach (var entry in SecondarySelection)
         {
-            SelectedItems.Add(entry.Key, entry.Value);
+            Selection.Add(entry.Key, entry.Value);
         }
 
-        SecondaryItems.Clear();
+        SecondarySelection.Clear();
     }
 
-    public static TaskSerializer<MultiSelectItemContext> CreateTaskSerializer(GameObject gameObject)
+    public static TaskSerializer<MultiSelectItem> CreateTaskSerializer(GameObject gameObject)
     {
         if (TaskSerializer != null && !TaskSerializer.IsCompleted())
         {
             Plugin.Instance.Log.LogError("Multiple multi-select task serializers active!");
         }
 
-        TaskSerializer = new TaskSerializer<MultiSelectItemContext>(gameObject);
+        TaskSerializer = new TaskSerializer<MultiSelectItem>(gameObject);
         return TaskSerializer;
     }
 
-    private static TaskSerializer<MultiSelectItemContext> CreateLoadUnloadSerializer(GameObject gameObject)
+    private static TaskSerializer<MultiSelectItem> CreateLoadUnloadSerializer(GameObject gameObject)
     {
         if (LoadUnloadSerializer != null && !LoadUnloadSerializer.IsCompleted())
         {
@@ -250,54 +250,54 @@ public class MultiSelect
             LoadUnloadSerializer = null;
         }
 
-        LoadUnloadSerializer = new TaskSerializer<MultiSelectItemContext>(gameObject);
+        LoadUnloadSerializer = new TaskSerializer<MultiSelectItem>(gameObject);
         return LoadUnloadSerializer;
     }
 
-    public static IEnumerable<MultiSelectItemContext> ItemContexts
+    public static IEnumerable<MultiSelectItem> Items
     {
-        get { return SelectedItems.Keys; }
+        get { return Selection.Keys; }
     }
 
-    public static IEnumerable<MultiSelectItemContext> SecondaryContexts
+    public static IEnumerable<MultiSelectItem> SecondaryItems
     {
-        get { return SecondaryItems.Keys; }
+        get { return SecondarySelection.Keys; }
     }
 
     public static int Count
     {
-        get { return SelectedItems.Count; }
+        get { return Selection.Count; }
     }
 
     public static int SecondaryCount
     {
-        get { return SecondaryItems.Count; }
+        get { return SecondarySelection.Count; }
     }
 
     public static bool Active
     {
-        get { return SelectedItems.Count > 0 || SecondaryItems.Count > 0; }
+        get { return Selection.Count > 0 || SecondarySelection.Count > 0; }
     }
 
     // Sort the items to prioritize the items that share a grid with the dragged item, prepend the dragContext as the first one
     // Can pass no itemContext, and it just sorts items by their grid order
-    public static IEnumerable<MultiSelectItemContext> SortedItemContexts(DragItemContext first = null, bool prepend = true)
+    public static IEnumerable<MultiSelectItem> SortedItems(DragItemContext first = null, bool prepend = true)
     {
         static int GridOrder(LocationInGrid loc) => 100 * loc.y + loc.x;
 
-        var result = SelectedItems.Keys
-            .Where(ic => first == null || ic.Item != first.Item)
-            .OrderByDescending(ic => ic.ItemAddress is GridItemAddress)
-            .ThenByDescending(ic => first != null && first.ItemAddress.Container.ParentItem == ic.ItemAddress.Container.ParentItem)
-            .ThenBy(ic => ic.ItemAddress is GridItemAddress selectedGridAddress ? GridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
+        var result = Selection.Keys
+            .Where(i => first == null || i.Item != first.Item)
+            .OrderByDescending(i => i.Address is GridItemAddress)
+            .ThenByDescending(i => first != null && first.ItemAddress.Container.ParentItem == i.Address.Container.ParentItem)
+            .ThenBy(i => i.Address is GridItemAddress selectedGridAddress ? GridOrder(MultiGrid.GetGridLocation(selectedGridAddress)) : 0);
 
         if (first != null && prepend)
         {
-            MultiSelectItemContext multiSelectItemContext = SelectedItems.Keys.FirstOrDefault(c => c.Item == first.Item);
-            if (multiSelectItemContext != null)
+            MultiSelectItem item = Selection.Keys.FirstOrDefault(i => i.Item == first.Item);
+            if (item != null)
             {
-                multiSelectItemContext.UpdateDragContext(first);
-                return result.Prepend(multiSelectItemContext);
+                item.UpdateDragContext(first);
+                return result.Prepend(item);
             }
         }
 
@@ -332,8 +332,8 @@ public class MultiSelect
             return true;
         }
 
-        var templateId = ItemContexts.First().Item.TemplateId;
-        return ItemContexts.All(ic => ic.Item.TemplateId == templateId);
+        var templateId = Items.First().Item.TemplateId;
+        return Items.All(i => i.Item.TemplateId == templateId);
     }
 
     // Need to track this centrally because patches to the underlying methods (IsActive, IsInteractive) need to not run
@@ -343,7 +343,7 @@ public class MultiSelect
     {
         CountingInteractions = true;
 
-        int count = ItemContexts.Count(ic => InteractionAvailable(ic, interaction, itemUiContext));
+        int count = Items.Count(i => InteractionAvailable(i.Context, interaction, itemUiContext));
 
         CountingInteractions = false;
         return count;
@@ -422,22 +422,22 @@ public class MultiSelect
 
     public static void EquipAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Equip, context => itemUiContext.EquipItem(context.Item), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Equip, i => itemUiContext.EquipItem(i.Item), allOrNothing);
     }
 
     public static void UnequipAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Unequip, context => itemUiContext.Uninstall(context), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Unequip, i => itemUiContext.Uninstall(i.Context), allOrNothing);
     }
 
     public static void LoadAll(ItemUiContext itemUiContext, CompoundItem[] collections, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Load, context => itemUiContext.LoadWeapon(context.Item as Weapon, collections), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Load, i => itemUiContext.LoadWeapon(i.Item as Weapon, collections), allOrNothing);
     }
 
     public static void UnloadAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Unload, context => itemUiContext.UnloadWeapon(context.Item as Weapon), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Unload, i => itemUiContext.UnloadWeapon(i.Item as Weapon), allOrNothing);
     }
 
     public static Il2CppTasks.Task LoadAmmoAll(ItemUiContext itemUiContext, string ammoTemplateId, bool allOrNothing)
@@ -447,13 +447,13 @@ public class MultiSelect
         {
             var serializer = CreateLoadUnloadSerializer(itemUiContext.gameObject);
             serializer.Initialize(
-                SortedItemContexts()
-                    .Where(ic => ic.Item is Magazine && InteractionAvailable(ic, EItemInfoButton.LoadAmmo, itemUiContext))
-                    .SelectMany(ic => ic.RepeatUntilFull()),
+                SortedItems()
+                    .Where(i => i.Item is Magazine && InteractionAvailable(i.Context, EItemInfoButton.LoadAmmo, itemUiContext))
+                    .SelectMany(i => i.RepeatUntilFull()),
                 itemContext =>
                 {
                     IgnoreStopLoading = true;
-                    Action callback = itemContext.ItemContext.UpdateView;
+                    Action callback = itemContext.Context.UpdateView;
                     return itemUiContext.LoadAmmoByType(itemContext.Item as Magazine, ammoTemplateId, callback);
                 });
 
@@ -470,16 +470,16 @@ public class MultiSelect
         {
             var serializer = CreateLoadUnloadSerializer(itemUiContext.gameObject);
             serializer.Initialize(
-                SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.UnloadAmmo, itemUiContext)),
-                itemContext =>
+                SortedItems().Where(i => InteractionAvailable(i.Context, EItemInfoButton.UnloadAmmo, itemUiContext)),
+                item =>
                 {
-                    if (itemContext.Item is AmmoBox)
+                    if (item.Item is AmmoBox)
                     {
-                        Deselect(itemContext);
+                        Deselect(item);
                     }
 
                     IgnoreStopLoading = true;
-                    return itemUiContext.UnloadAmmo(itemContext);
+                    return itemUiContext.UnloadAmmo(item.Context);
                 });
 
             itemUiContext.Tooltip?.Close();
@@ -488,22 +488,22 @@ public class MultiSelect
 
     public static void InstallAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Install, context => itemUiContext.InstallMod(context, itemUiContext.PlayerCollections), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Install, i => itemUiContext.InstallMod(i.Context, itemUiContext.PlayerCollections), allOrNothing);
     }
 
     public static void UninstallAll(ItemUiContext itemUiContext, bool allOrNothing)
     {
-        ApplyAll(itemUiContext, EItemInfoButton.Uninstall, context => itemUiContext.Uninstall(context), allOrNothing);
+        ApplyAll(itemUiContext, EItemInfoButton.Uninstall, i => itemUiContext.Uninstall(i.Context), allOrNothing);
     }
 
-    private static void ApplyAll(ItemUiContext itemUiContext, EItemInfoButton interaction, Func<MultiSelectItemContext, Il2CppTasks.Task> action, bool allOrNothing)
+    private static void ApplyAll(ItemUiContext itemUiContext, EItemInfoButton interaction, Func<MultiSelectItem, Il2CppTasks.Task> action, bool allOrNothing)
     {
         if (!allOrNothing || InteractionCount(interaction, itemUiContext) == Count)
         {
             var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
             taskSerializer.Initialize(
-                SortedItemContexts().Where(ic => InteractionAvailable(ic, interaction, itemUiContext)),
-                ic => action(ic));
+                SortedItems().Where(i => InteractionAvailable(i.Context, interaction, itemUiContext)),
+                i => action(i));
 
             itemUiContext.Tooltip?.Close();
         }
@@ -535,7 +535,7 @@ public class MultiSelect
         {
             var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
             taskSerializer.Initialize(
-                SortedItemContexts().Where(ic => InteractionAvailable(ic, EItemInfoButton.Unpack, itemUiContext)),
+                SortedItems().Where(i => InteractionAvailable(i.Context, EItemInfoButton.Unpack, itemUiContext)),
                 itemContext =>
                 {
                     Deselect(itemContext);
@@ -549,13 +549,13 @@ public class MultiSelect
     public static void PinAll(ItemUiContext itemUiContext)
     {
         // Pin them all unless they're all pinned, in which case unpin them
-        bool allPinned = ItemContexts.All(ic => ic.Item.PinLockState == EItemPinLockState.Pinned);
+        bool allPinned = Items.All(i => i.Item.PinLockState == EItemPinLockState.Pinned);
         EItemPinLockState state = allPinned ? EItemPinLockState.Free : EItemPinLockState.Pinned;
         EItemInfoButton action = allPinned ? EItemInfoButton.SetUnPin : EItemInfoButton.SetPin;
 
         var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
         taskSerializer.Initialize(
-            SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
+            SortedItems().Where(i => InteractionAvailable(i.Context, action, itemUiContext)),
             itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
 
         itemUiContext.Tooltip?.Close();
@@ -564,13 +564,13 @@ public class MultiSelect
     public static void LockAll(ItemUiContext itemUiContext)
     {
         // Lock them all unless they're all lock, in which case unlock them
-        bool allLocked = ItemContexts.All(ic => ic.Item.PinLockState == EItemPinLockState.Locked);
+        bool allLocked = Items.All(ic => ic.Item.PinLockState == EItemPinLockState.Locked);
         EItemPinLockState state = allLocked ? EItemPinLockState.Free : EItemPinLockState.Locked;
         EItemInfoButton action = allLocked ? EItemInfoButton.SetUnLock : EItemInfoButton.SetLock;
 
         var taskSerializer = CreateTaskSerializer(itemUiContext.gameObject);
         taskSerializer.Initialize(
-            SortedItemContexts().Where(ic => InteractionAvailable(ic, action, itemUiContext)),
+            SortedItems().Where(i => InteractionAvailable(i.Context, action, itemUiContext)),
             itemContext => itemUiContext.SetPinLockState(itemContext.Item, state));
 
         itemUiContext.Tooltip?.Close();
@@ -668,15 +668,15 @@ public static class MultiSelectExtensions
         }
     }
 
-    public static IEnumerable<MultiSelectItemContext> RepeatUntilFull(this MultiSelectItemContext itemContext)
+    public static IEnumerable<MultiSelectItem> RepeatUntilFull(this MultiSelectItem item)
     {
-        if (itemContext.Item is Magazine magazine)
+        if (item.Item is Magazine magazine)
         {
             int ammoCount = -1;
             while (magazine.Count > ammoCount && magazine.Count < magazine.MaxCount)
             {
                 ammoCount = magazine.Count;
-                yield return itemContext;
+                yield return item;
             }
         }
     }

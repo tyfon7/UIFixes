@@ -38,17 +38,17 @@ public class MultiSelectDebug : MonoBehaviour
         builder.AppendFormat("Hovered: <color=aqua>{0}</color>\n", FormatItemContext(ItemUiContext.Instance.CurrentItemContext));
         builder.AppendFormat("Items: <color=yellow>{0}</color>\n", MultiSelect.Count);
 
-        foreach (MultiSelectItemContext itemContext in MultiSelect.SortedItemContexts())
+        foreach (MultiSelectItem item in MultiSelect.SortedItems())
         {
-            builder.AppendFormat("{0}\n", FormatItemContext(itemContext));
+            builder.AppendFormat("{0}\n", FormatItemContext(item.Context));
         }
 
-        if (MultiSelect.SecondaryContexts.Any())
+        if (MultiSelect.SecondaryItems.Any())
         {
             builder.AppendFormat("Secondary Items: <color=yellow>{0}</color>\n", MultiSelect.SecondaryCount);
-            foreach (MultiSelectItemContext itemContext in MultiSelect.SecondaryContexts)
+            foreach (MultiSelectItem item in MultiSelect.SecondaryItems)
             {
-                builder.AppendFormat("x{0} {1}\n", itemContext.Item.StackObjectsCount, itemContext.Item.ToString());
+                builder.AppendFormat("x{0} {1}\n", item.Item.StackObjectsCount, item.Item.ToString());
             }
         }
 

@@ -278,11 +278,11 @@ public static class MultiSelectPatches
             DisableMerge = !Settings.MultiQuickMoveMerge.Value;
             IgnoreItemParent = true;
             Stack<OperationResult> operations = new();
-            foreach (var selectedItemContext in MultiSelect.SortedItemContexts())
+            foreach (var item in MultiSelect.SortedItems())
             {
                 OperationResult operation = moveToSortingTable ?
-                    itemUiContext.QuickMoveToSortingTable(selectedItemContext, itemController, false /*simulate*/) :
-                    itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                    itemUiContext.QuickMoveToSortingTable(item.Context, itemController, false /*simulate*/) :
+                    itemUiContext.QuickFindAppropriatePlace(item.Context, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
                 if (operation.Succeeded && itemController.CanExecute(operation.Value))
                 {
                     operations.Push(operation);
@@ -503,7 +503,7 @@ public static class MultiSelectPatches
 
             var taskSerializer = MultiSelect.CreateTaskSerializer(itemUiContext.gameObject);
             taskSerializer.Initialize(
-                MultiSelect.ItemContexts.Where(ic => ic.Item != itemToSelect),
+                MultiSelect.Items.Where(i => i.Item != itemToSelect),
                 ic => __instance._offerContext.SelectItem(ic.Item));
         }
     }
@@ -786,10 +786,12 @@ public static class MultiSelectPatches
             bool isGridPlacement = targetItem == null;
 
             // If everything selected is the same type and is a stackable type, allow partial success
-            bool allowPartialSuccess = targetItem != null && itemContext.Item is StackableItem && MultiSelect.ItemContexts.All(ic => ic.Item.TemplateId == itemContext.Item.TemplateId);
+            bool allowPartialSuccess = targetItem != null &&
+                itemContext.Item is StackableItem &&
+                MultiSelect.Items.All(i => i.Item.TemplateId == itemContext.Item.TemplateId);
 
             Stack<OperationResult> operations = new();
-            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
+            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItems(itemContext).Select(i => i.Context))
             {
                 if (isGridPlacement)
                 {
@@ -935,17 +937,17 @@ public static class MultiSelectPatches
 
             var serializer = MultiSelect.CreateTaskSerializer(__instance.gameObject);
             __result = serializer.Initialize(
-                MultiSelect.SortedItemContexts(itemContext),
-                async selectedItemContext =>
+                MultiSelect.SortedItems(itemContext),
+                async item =>
                 {
-                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
-                    FindVerticalFirst = selectedItemContext.ItemContext.ItemRotation == ItemRotation.Vertical;
+                    FindOrigin = GetTargetGridAddress(itemContext, item.Context, hoveredAddress);
+                    FindVerticalFirst = item.Context.ItemRotation == ItemRotation.Vertical;
 
                     // Depending on a bunch of stuff and special cases for bullets, need to await different things
-                    if (!Plugin.InRaid() || selectedItemContext.Item is not Ammo)
+                    if (!Plugin.InRaid() || item.Item is not Ammo)
                     {
                         using var watcher = NetworkTransactionWatcher.WatchNext();
-                        await __instance.AcceptItem(selectedItemContext, targetItemContext);
+                        await __instance.AcceptItem(item.Context, targetItemContext);
 
                         // I have no way of knowing that AcceptItem succeeded - it doesn't wait
                         // To allow partial success, there will be failures
@@ -959,7 +961,7 @@ public static class MultiSelectPatches
                     }
 
                     // InRaid and dealing with bullets
-                    await __instance.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
+                    await __instance.AcceptItem(item.Context, targetItemContext); // Will return immediately
                     if (targetItemContext?.Item is Magazine)
                     {
                         await (LoadMagazinePatch.CurrentTask ?? Il2CppTasks.Task.CompletedTask);
@@ -1113,7 +1115,7 @@ public static class MultiSelectPatches
             }
 
             Stack<OperationResult> operations = new();
-            foreach (DragItemContext itemContext in MultiSelect.SortedItemContexts())
+            foreach (DragItemContext itemContext in MultiSelect.SortedItems().Select(i => i.Context))
             {
                 __result = itemContext.CanAccept(__instance.Slot, __instance.ItemController, out operation, false /* simulate */);
                 if (operation.Succeeded)
@@ -1164,8 +1166,8 @@ public static class MultiSelectPatches
             var parentTransform = __instance.transform.parent;
             var serializer = MultiSelect.CreateTaskSerializer(__instance is ModSlotView ? parentTransform.gameObject : __instance.gameObject);
             __result = serializer.Initialize(
-                MultiSelect.SortedItemContexts(),
-                async selectedItemContext =>
+                MultiSelect.SortedItems(),
+                async item =>
                 {
                     // There is a case with SlotViews where the slot view is recreated after each item, so I need to check and refind the instance)
                     if (slotView == null)
@@ -1188,10 +1190,10 @@ public static class MultiSelectPatches
                     }
 
                     // Depending on a bunch of stuff and special cases for bullets, need to await different things
-                    if (!Plugin.InRaid() || selectedItemContext.Item is not Ammo)
+                    if (!Plugin.InRaid() || item.Item is not Ammo)
                     {
                         using var watcher = NetworkTransactionWatcher.WatchNext();
-                        await slotView.AcceptItem(selectedItemContext, targetItemContext);
+                        await slotView.AcceptItem(item.Context, targetItemContext);
 
                         // I have no way of knowing that AcceptItem succeeded -it doesn't wait
                         // To allow partial success, there will be failures
@@ -1205,7 +1207,7 @@ public static class MultiSelectPatches
                     }
 
                     // InRaid and dealing with bullets
-                    await slotView.AcceptItem(selectedItemContext, targetItemContext); // Will return immediately
+                    await slotView.AcceptItem(item.Context, targetItemContext); // Will return immediately
                     if (targetItemContext?.Item is Magazine)
                     {
                         await (LoadMagazinePatch.CurrentTask ?? Il2CppTasks.Task.CompletedTask);
@@ -1280,9 +1282,9 @@ public static class MultiSelectPatches
             }
 
             Il2CppCollections.List<Ammo> ammo = [];
-            foreach (var itemContext in MultiSelect.ItemContexts)
+            foreach (var item in MultiSelect.Items)
             {
-                if (itemContext.Item is Ammo ammoItem)
+                if (item.Item is Ammo ammoItem)
                 {
                     ammo.Add(ammoItem);
                 }
@@ -1336,7 +1338,7 @@ public static class MultiSelectPatches
             DisableMerge = true;
 
             Stack<OperationResult> operations = new();
-            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts(itemContext))
+            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItems(itemContext).Select(i => i.Context))
             {
                 if (__instance._traderAssortment.CanPrepareItemToSell(selectedItemContext.Item))
                 {
@@ -1424,7 +1426,7 @@ public static class MultiSelectPatches
             DisableMerge = true;
 
             // For the rest of the items, still need to use quickfind
-            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItemContexts(itemContext, false))
+            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItems(itemContext, false).Select(i => i.Context))
             {
                 FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
                 FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
@@ -1472,7 +1474,7 @@ public static class MultiSelectPatches
                 return true;
             }
 
-            __result = MultiSelect.ItemContexts.All(ic => __instance._traderAssortment.CanPrepareItemToSell(ic.Item))
+            __result = MultiSelect.Items.All(i => __instance._traderAssortment.CanPrepareItemToSell(i.Item))
                 ? GridView.ValidMoveColor
                 : GridView.InvalidOperationColor;
 
