@@ -779,7 +779,8 @@ public static class MultiSelectPatches
                 return false;
             }
 
-            Item targetItem = __instance.GetTargetItem(targetItemContext);
+            Item targetItem = targetItemContext != null ? __instance.GetTargetItem(targetItemContext) : null;
+
             DisableMerge = targetItem == null;
             DisableMagnify = true;
             bool isGridPlacement = targetItem == null;
@@ -1522,7 +1523,7 @@ public static class MultiSelectPatches
         {
             return AccessTools.Method(
                 typeof(ItemManipulator.__c__DisplayClass3_0),
-                nameof(ItemManipulator.__c__DisplayClass3_0.Method_Internal_OperationResult_1_IItemOperationResult_IEnumerable_1_IContainer_0));
+                nameof(ItemManipulator.__c__DisplayClass3_0.Method_Internal_OperationResult_1_IItemOperationResult_IEnumerable_1_IContainer_PDM_0));
         }
 
         [PatchPrefix]
