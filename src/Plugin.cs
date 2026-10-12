@@ -52,10 +52,11 @@ public class Plugin : BasePlugin
         SwapPatches.Enable();
 
         MultiSelectPatches.Enable();
+        NetworkTransactionWatcher.Enable();
+        new FixGridPrepareItemsPatch().Enable();
 
         /* Disabled for 5.0
 
-        NetworkTransactionWatcher.Enable();
         MailPatches.Enable();
         QuickAccessPanelPatches.Enable();
         HideoutLevelPatches.Enable();
@@ -124,7 +125,6 @@ public class Plugin : BasePlugin
         GridHighlightPatches.Enable();
         QueueInputPatches.Enable();
         new CompassGogglesPatch().Enable();
-        new FixGridPrepareItemsPatch().Enable();
         new FixTraderFiltersPatch().Enable();
         QuickMovePreviewPatches.Enable();
         new RotateKeybindPatch().Enable();

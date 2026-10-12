@@ -13,7 +13,11 @@ public class MultiSelectItem : IDisposable
 
     public MultiSelectItem(ItemContext itemContext, ItemRotation rotation)
     {
-        _context = new DragItemContext(itemContext, rotation);
+        _context = new DragItemContext(itemContext, rotation)
+        {
+            // This forces GridView.CanAccept to use Grid.FindFreeSpace, which I patch, vs GridView.CaculateItemPosition, which isn't correct for multiselect items
+            IgnoreLocation = true
+        };
 
         // Adjust event handlers
         if (_context.Source != null)

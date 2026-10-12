@@ -56,6 +56,7 @@ public static class MultiSelectPatches
         new HandleItemViewKillPatch().Enable();
         new BeginDragPatch().Enable();
         new EndDragPatch().Enable();
+        new KillDraggedItemViewPatch().Enable();
         new DeselectOnLockPatch().Enable();
         new SelectAllPatch().Enable();
 
@@ -76,6 +77,7 @@ public static class MultiSelectPatches
 
         // GridView
         new GridViewCanAcceptPatch().Enable();
+        new GridViewAcceptOncePatch().Enable(); // Debugging
         new GridViewAcceptItemPatch().Enable();
         new GridViewPickTargetPatch().Enable();
         new GridViewDisableHighlightPatch().Enable();
@@ -273,7 +275,6 @@ public static class MultiSelectPatches
 
         private static void QuickMove(GridItemView gridItemView, ItemUiContext itemUiContext, ItemController itemController, bool moveToSortingTable = false)
         {
-            Plugin.Instance.Log.LogInfo("MultiSelectPatches:QuickMove");
             bool succeeded = true;
             DisableMerge = !Settings.MultiQuickMoveMerge.Value;
             IgnoreItemParent = true;
@@ -630,6 +631,20 @@ public static class MultiSelectPatches
         }
     }
 
+    public class KillDraggedItemViewPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(DraggedItemView), nameof(DraggedItemView.Kill));
+        }
+
+        [PatchPostfix]
+        public static void Postfix(DraggedItemView __instance)
+        {
+            MultiSelect.HideDragCount(__instance);
+        }
+    }
+
     public class DeselectOnLockPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -735,9 +750,19 @@ public static class MultiSelectPatches
             ref OperationResult operation,
             ref bool __result)
         {
-            if (InPatch || !MultiSelect.Active)
+            if (!MultiSelect.Active)
             {
                 return true;
+            }
+
+            if (InPatch)
+            {
+                Plugin.Instance.Log.LogDebug($"CanAccept real method started. item={itemContext.Item}, target={targetItemContext?.Item}");
+                return true;
+            }
+            else
+            {
+                Plugin.Instance.Log.LogDebug($"CanAccept patch started. item={itemContext.Item}, target={targetItemContext?.Item}");
             }
 
             MultiGrid.Cache(__instance);
@@ -779,6 +804,8 @@ public static class MultiSelectPatches
                 return false;
             }
 
+            Plugin.Instance.Log.LogDebug($"CanAccept patch past all checks, beginning processing");
+
             Item targetItem = targetItemContext != null ? __instance.GetTargetItem(targetItemContext) : null;
 
             DisableMerge = targetItem == null;
@@ -791,25 +818,28 @@ public static class MultiSelectPatches
                 MultiSelect.Items.All(i => i.Item.TemplateId == itemContext.Item.TemplateId);
 
             Stack<OperationResult> operations = new();
-            foreach (DragItemContext selectedItemContext in MultiSelect.SortedItems(itemContext).Select(i => i.Context))
+            foreach (DragItemContext dragItemContext in MultiSelect.SortedItems(itemContext).Select(i => i.Context))
             {
                 if (isGridPlacement)
                 {
-                    FindOrigin = GetTargetGridAddress(itemContext, selectedItemContext, hoveredAddress);
-                    FindVerticalFirst = selectedItemContext.ItemRotation == ItemRotation.Vertical;
+                    FindOrigin = GetTargetGridAddress(itemContext, dragItemContext, hoveredAddress);
+                    Plugin.Instance.Log.LogDebug($"CanAcceptPatch processing {dragItemContext.Item} FindOrigin={FindOrigin}");
+
+                    FindVerticalFirst = dragItemContext.ItemRotation == ItemRotation.Vertical;
                 }
 
                 if (targetItem is SortingTable)
                 {
-                    operation = __instance._itemUiContext.QuickMoveToSortingTable(selectedItemContext, __instance._itemController, false /* simulate */);
+                    operation = __instance._itemUiContext.QuickMoveToSortingTable(dragItemContext, __instance._itemController, false /* simulate */);
                 }
                 else
                 {
                     operation = targetItem != null
-                        ? __instance._itemController.ExecutePossibleAction(selectedItemContext, targetItem, false /* splitting */, false /* simulate */)
-                        : __instance._itemController.ExecutePossibleAction(selectedItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
+                        ? __instance._itemController.ExecutePossibleAction(dragItemContext, targetItem, false /* splitting */, false /* simulate */)
+                        : __instance._itemController.ExecutePossibleAction(dragItemContext, hoveredAddress, false /* splitting */, false /* simulate */);
                 }
 
+                Plugin.Instance.Log.LogDebug($"CanAcceptPatch {dragItemContext.Item} operation succeeded={operation.Succeeded}");
                 FindOrigin = null;
                 FindVerticalFirst = false;
 
@@ -824,7 +854,7 @@ public static class MultiSelectPatches
                     operations.Push(operation);
                     if (targetItem != null && isGridPlacement) // targetItem was originally null so this is the rest of the items
                     {
-                        ShowPreview(__instance, selectedItemContext, operation);
+                        ShowPreview(__instance, dragItemContext, operation);
                     }
                 }
                 else
@@ -841,6 +871,8 @@ public static class MultiSelectPatches
                 // Set this after the first one
                 targetItem ??= __instance.Grid.ParentItem;
             }
+
+            Plugin.Instance.Log.LogDebug($"CanAccept successes: {operations.Count}/{MultiSelect.Count}");
 
             DisableMerge = false;
 
@@ -871,6 +903,16 @@ public static class MultiSelectPatches
             return false;
         }
 
+        [PatchPostfix]
+        public static void Postfix(ref OperationResult operation)
+        {
+            if (InPatch)
+            {
+                string result = operation.Succeeded ? "success" : operation.Error.ToString();
+                Plugin.Instance.Log.LogDebug($"CanAccept real method postfix result: {result}");
+            }
+        }
+
         // GridView.HighlightItemViewPosition has a blacklist of errors it won't show, but it shows other types.
         // Wrapping an error can get past that
         private class DisplayableErrorWrapper : InventoryError
@@ -896,6 +938,39 @@ public static class MultiSelectPatches
         }
     }
 
+    public class GridViewAcceptOncePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(GridView), nameof(GridView.AcceptOnce));
+        }
+
+        [PatchPrefix]
+        public static void Prefix(DragItemContext itemContext, ItemContext targetItemContext)
+        {
+            if (!MultiSelect.Active)
+            {
+                return;
+            }
+
+            Plugin.Instance.Log.LogDebug($"AcceptOnce started. item={itemContext.Item}, target={targetItemContext?.Item}");
+        }
+
+        [PatchPostfix]
+        public static async void Postfix(Il2CppTasks.Task<OperationResult> __result)
+        {
+            if (!MultiSelect.Active)
+            {
+                return;
+            }
+
+            await __result;
+
+            string result = __result.Result.Succeeded ? "success" : __result.Result.Error.ToString();
+            Plugin.Instance.Log.LogDebug($"AcceptOnce result: {result}");
+        }
+    }
+
     public class GridViewAcceptItemPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -913,14 +988,24 @@ public static class MultiSelectPatches
             // Need to fully implement AcceptItem for the sorting table - normally that just uses null targetItemContext
             if (InPatch && targetItemContext?.Item is SortingTable)
             {
-                MoveToSortingTable(__instance, itemContext, __instance._itemUiContext, __instance._itemController);
+                MoveToSortingTable(itemContext, __instance._itemUiContext, __instance._itemController);
                 __result = Il2CppTasks.Task.CompletedTask;
                 return false;
             }
 
-            if (InPatch || !MultiSelect.Active)
+            if (!MultiSelect.Active)
             {
                 return true;
+            }
+
+            if (InPatch)
+            {
+                Plugin.Instance.Log.LogDebug($"AcceptItem real method started. item={itemContext.Item}, target={targetItemContext?.Item}");
+                return true;
+            }
+            else
+            {
+                Plugin.Instance.Log.LogDebug($"AcceptItem patch started. item={itemContext.Item}, target={targetItemContext?.Item}");
             }
 
             InPatch = true;
@@ -940,7 +1025,9 @@ public static class MultiSelectPatches
                 MultiSelect.SortedItems(itemContext),
                 async item =>
                 {
+                    Plugin.Instance.Log.LogDebug($"AcceptItem processing item: {item.Item}");
                     FindOrigin = GetTargetGridAddress(itemContext, item.Context, hoveredAddress);
+                    Plugin.Instance.Log.LogDebug($"AcceptItem FindOrigin: {FindOrigin}");
                     FindVerticalFirst = item.Context.ItemRotation == ItemRotation.Vertical;
 
                     // Depending on a bunch of stuff and special cases for bullets, need to await different things
@@ -998,7 +1085,7 @@ public static class MultiSelectPatches
             return false;
         }
 
-        private static void MoveToSortingTable(GridView gridView, DragItemContext itemContext, ItemUiContext itemUiContext, ItemController itemController)
+        private static void MoveToSortingTable(DragItemContext itemContext, ItemUiContext itemUiContext, ItemController itemController)
         {
             OperationResult operation = itemUiContext.QuickMoveToSortingTable(itemContext, itemController, true);
             if (operation.Failed || !itemController.CanExecute(operation.Value))
@@ -1538,10 +1625,13 @@ public static class MultiSelectPatches
 
             if (!containersToPut.Any(g => (Il2CppObjectBase)g == FindOrigin.Grid))
             {
+                Plugin.Instance.Log.LogDebug("ReorderContainersPatch: None of the grids are FindOrigin's grid, bad comparison??");
                 return;
             }
 
-            AllowFindSameSpotPatch.DisableItemAddressEquals = true;
+            // TODO: Same spot moves - this is a gross implementation, I'm bypassing a check in GridView.CanAccept that checks if the 
+            // target location is the same as the starting location, which would fail the CanAccept. This bypasses that... but ew.
+            // AllowFindSameSpotPatch.DisableItemAddressEquals = true;
 
             var list = containersToPut.ToIl2CppList();
             while ((Il2CppObjectBase)list[0] != FindOrigin.Grid)
@@ -1606,13 +1696,21 @@ public static class MultiSelectPatches
             bool invertDimensions,
             ref LocationInGrid __result)
         {
-            if (!MultiSelect.Active || FindOrigin == null || FindOrigin.Grid != __instance)
+            if (!MultiSelect.Active)
+            {
+                return true;
+            }
+
+            Plugin.Instance.Log.LogDebug($"FindPlaceToPutPatch FindOrigin={FindOrigin}");
+            if (FindOrigin == null || FindOrigin.Grid != __instance)
             {
                 return true;
             }
 
             int firstStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.x : FindOrigin.LocationInGrid.y : 0;
             int secondStart = FindOrigin != null ? invertDimensions ? FindOrigin.LocationInGrid.y : FindOrigin.LocationInGrid.x : 0;
+
+            Plugin.Instance.Log.LogDebug($"FindPlaceToPutPatch: Starting... firstStart={firstStart}, secondStart={secondStart}");
 
             // Walks the first dimension until it finds a row/column with enough space, 
             // then walks down that row/column until it finds a column/row with enough space
@@ -1651,14 +1749,18 @@ public static class MultiSelectPatches
                             if (!invertDimensions)
                             {
                                 __result = new LocationInGrid(secondDim, firstDim, rotation);
+                                Plugin.Instance.Log.LogDebug($"FindPlaceToPutPatch found a spot: {__result}");
                                 return false;
                             }
                             __result = new LocationInGrid(firstDim, secondDim, rotation);
+                            Plugin.Instance.Log.LogDebug($"FindPlaceToPutPatch found a spot: {__result}");
                             return false;
                         }
                     }
                 }
             }
+
+            Plugin.Instance.Log.LogDebug($"FindPlaceToPutPatch failed?");
 
             __result = null;
             return false;
@@ -1782,14 +1884,14 @@ public static class MultiSelectPatches
             itemGridAddress.Container.ParentItem == selectedGridAddress.Container.ParentItem)
         {
             // Shared a parent with the dragged item - try to keep position
-            LocationInGrid itemLocation = MultiGrid.GetGridLocation(itemGridAddress);
-            LocationInGrid selectedLocation = MultiGrid.GetGridLocation(selectedGridAddress);
-            LocationInGrid hoveredLocation = MultiGrid.GetGridLocation(hoveredGridAddress);
+            LocationInGrid itemLocation = MultiGrid.GetGridLocation(itemGridAddress); // the dragged item's starting location
+            LocationInGrid selectedLocation = MultiGrid.GetGridLocation(selectedGridAddress); // the currently processes items starting location
+            LocationInGrid hoveredLocation = MultiGrid.GetGridLocation(hoveredGridAddress); // the location in the target container's "meta grid"
 
             int xDelta = selectedLocation.x - itemLocation.x;
             int yDelta = selectedLocation.y - itemLocation.y;
 
-            LocationInGrid newLocation = new(hoveredLocation.x + xDelta, hoveredLocation.y + yDelta, selectedLocation.r);
+            LocationInGrid newLocation = new(hoveredLocation.x + xDelta, hoveredLocation.y + yDelta, selectedLocation.r); // target location in the "meta grid"
 
             return MultiGrid.GetRealAddress(hoveredGridAddress.Grid, newLocation);
         }

@@ -52,12 +52,12 @@ public class MultiSelectDebug : MonoBehaviour
             }
         }
 
-        if (MultiSelect.TaskSerializer != null)
+        if (MultiSelect.TaskSerializer != null && !MultiSelect.TaskSerializer.IsCompleted())
         {
             builder.Append("<color=yellow>TaskSerializer active</color>\n");
         }
 
-        if (MultiSelect.LoadUnloadSerializer != null)
+        if (MultiSelect.LoadUnloadSerializer != null && !MultiSelect.LoadUnloadSerializer.IsCompleted())
         {
             builder.Append("<color=red>Load/Unload TaskSerializer active</color>\n");
         }

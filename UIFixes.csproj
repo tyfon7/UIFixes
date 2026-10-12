@@ -37,6 +37,7 @@
     <Compile Include="src\Patches\ConfirmDialogKeysPatches.cs" />
     <Compile Include="src\Patches\CursorPatches.cs" />
     <Compile Include="src\Patches\FocusFleaOfferNumberPatches.cs" />
+    <Compile Include="src\Patches\FixGridPrepareItemsPatch.cs" />
     <Compile Include="src\Patches\HideoutCameraPatches.cs" />
     <Compile Include="src\Patches\HideoutSearchPatches.cs" />
     <Compile Include="src\Patches\InspectWindowStatsPatches.cs" />

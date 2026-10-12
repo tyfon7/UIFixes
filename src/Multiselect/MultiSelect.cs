@@ -325,6 +325,18 @@ public class MultiSelect
         }
     }
 
+    public static void HideDragCount(DraggedItemView draggedItemView)
+    {
+        if (draggedItemView != null)
+        {
+            Transform transform = draggedItemView.transform.Find("MultiSelectText");
+            if (transform != null)
+            {
+                UnityEngine.Object.DestroyImmediate(transform.gameObject);
+            }
+        }
+    }
+
     public static bool AreSameTemplate()
     {
         if (!Active)
