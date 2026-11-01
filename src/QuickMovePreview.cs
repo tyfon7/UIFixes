@@ -98,13 +98,38 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
             return;
         }
 
+        if (MultiSelect.Active)
+        {
+            // Special handling for multiselect, which behaves a little different
+            MultiSelectPatches.DisableMerge = !Settings.MultiQuickMoveMerge.Value;
+            MultiSelectPatches.IgnoreItemParent = true;
+        }
+
         var quickMoveOperation = _itemUiContext.QuickFindAppropriatePlace(_itemContext, _itemController, false, false, true);
-        if (quickMoveOperation.Failed || !_itemController.CanExecute(quickMoveOperation.Value) || quickMoveOperation.Value is not IPossibleDestroyResult moveResult)
+
+        MultiSelectPatches.DisableMerge = false;
+        MultiSelectPatches.IgnoreItemParent = false;
+
+        if (quickMoveOperation.Failed || !_itemController.CanExecute(quickMoveOperation.Value))
         {
             return;
         }
 
-        if (moveResult.To is GridItemAddress gridAddress)
+        ItemAddress toAddress = null;
+        if (quickMoveOperation.Value is IPossibleDestroyResult possibleDestroyResult)
+        {
+            toAddress = possibleDestroyResult.To;
+        }
+        else if (quickMoveOperation.Value is ITransferOrMergeResult transferOrMergeResult)
+        {
+            toAddress = transferOrMergeResult.TargetItem.CurrentAddress;
+        }
+        else
+        {
+            return;
+        }
+
+        if (toAddress is GridItemAddress gridAddress)
         {
             var targetGridView = _itemController.Views.FirstOrDefault(view => view is GridView gridView && gridView.Grid == gridAddress.Grid) as GridView;
             if (targetGridView != null)
@@ -112,7 +137,7 @@ public class QuickMovePreview : MonoBehaviour, IPointerEnterHandler, IPointerExi
                 HighlightGridLocation(targetGridView, gridAddress);
             }
         }
-        else if (moveResult.To is SlotItemAddress slotAddress)
+        else if (toAddress is SlotItemAddress slotAddress)
         {
             var targetSlotView = _itemController.Views.FirstOrDefault(view => view is SlotView slotView && slotView.Slot == slotAddress.Slot) as SlotView;
             if (targetSlotView != null)

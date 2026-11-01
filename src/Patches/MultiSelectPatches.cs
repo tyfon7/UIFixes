@@ -36,8 +36,10 @@ public static class MultiSelectPatches
     private static bool FindVerticalFirst = false;
 
     // Prevents QuickFind from attempting a merge
-    private static bool DisableMerge = false;
-    private static bool IgnoreItemParent = false;
+    public static bool DisableMerge = false;
+
+    // Prevents quick moves from considering the current container
+    public static bool IgnoreItemParent = false;
 
     private static bool DisableMagnify = false; // Causes issues during multi drag
 
@@ -290,6 +292,24 @@ public static class MultiSelectPatches
                 {
                     succeeded = false;
                     break;
+                }
+
+                // Check for partial stack move, move the rest
+                if (operation.Value is TransferResult transferResult && transferResult.Item.StackObjectsCount > 0)
+                {
+
+                    operation = moveToSortingTable ?
+                        itemUiContext.QuickMoveToSortingTable(selectedItemContext, itemController, false /*simulate*/) :
+                        itemUiContext.QuickFindAppropriatePlace(selectedItemContext, itemController, false /*forceStash*/, false /*showWarnings*/, false /*simulate*/);
+                    if (operation.Succeeded && itemController.CanExecute(operation.Value))
+                    {
+                        operations.Push(operation);
+                    }
+                    else
+                    {
+                        succeeded = false;
+                        break;
+                    }
                 }
 
                 if (operation.Value is IDestroyResult destroyResult && destroyResult.ItemsDestroyRequired)
