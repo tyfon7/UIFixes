@@ -85,7 +85,7 @@ public static class RebindConsumablesPatches
         ItemUiContext.Instance.WaitOneFrame(() =>
         {
             List<Item> matchItems = [];
-            controller.GetAcceptableItemsNonAlloc(Slots, matchItems, g => g.TemplateId == unbindOperation.Item.TemplateId);
+            controller.GetAcceptableItemsDeep(Slots, matchItems, g => g.TemplateId == unbindOperation.Item.TemplateId);
 
             var nextItem = matchItems.FirstOrDefault(g => controller.IsAtBindablePlace(g));
             if (nextItem != null)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using EFT.InventoryLogic;
 using EFT.UI;
@@ -67,6 +68,53 @@ public static class Extensions
 
             currentHeight += additionalHeight;
             categories = categories.SelectMany(c => c.OpenCategory()).Where(v => v.gameObject.activeInHierarchy).OfType<CategoryView>();
+        }
+    }
+
+    // This is a version of InventoryController.GetAcceptableItemsNonAlloc that will recurse into containers
+    public static void GetAcceptableItemsDeep<TItem>(
+        this InventoryController inventoryController,
+        EquipmentSlot[] equipmentSlots,
+        IList<TItem> preAllocatedList,
+        Predicate<TItem> predicate = null,
+        Predicate<ContainerCollection> goDeeperPredicate = null) where TItem : Item
+    {
+        InventoryEquipment equipment = inventoryController.Inventory.Equipment;
+        foreach (EquipmentSlot equipmentSlot in equipmentSlots)
+        {
+            var containerCollection = equipment.GetSlot(equipmentSlot).ContainedItem as ContainerCollection;
+            if (containerCollection != null && (goDeeperPredicate == null || goDeeperPredicate(containerCollection)))
+            {
+                GetAcceptableItemsDeeper(containerCollection, preAllocatedList, predicate, goDeeperPredicate);
+            }
+        }
+    }
+
+    private static void GetAcceptableItemsDeeper<TItem>(
+        ContainerCollection containerCollection,
+        IList<TItem> preAllocatedList,
+        Predicate<TItem> predicate = null,
+        Predicate<ContainerCollection> goDeeperPredicate = null) where TItem : Item
+    {
+        if (containerCollection == null)
+        {
+            return;
+        }
+
+        foreach (IContainer container in containerCollection.Containers)
+        {
+            foreach (var item in container.Items)
+            {
+                if (item is TItem titem && (predicate == null || predicate(titem)))
+                {
+                    preAllocatedList.Add(titem);
+                }
+
+                if (item is ContainerCollection nestedContainers && (goDeeperPredicate == null || goDeeperPredicate(nestedContainers)))
+                {
+                    GetAcceptableItemsDeeper(nestedContainers, preAllocatedList, predicate, goDeeperPredicate);
+                }
+            }
         }
     }
 }
